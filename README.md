@@ -1,6 +1,6 @@
 # Opening-&-Notation-Chess-Trainer
 
-A focused chess training app built around **opening line practice**, with **notation training as a secondary objective**.
+A focused chess training app built around **opening line practice**, with **notation training**.
 
 This project is designed to force **active recall**. You are expected to make mistakes, see why they are mistakes, and continue playing
 
