@@ -2,7 +2,7 @@
 
 A focused chess training app built around **opening line practice**, with **notation training as a secondary objective**.
 
-This project is designed to force **active recall**. You are expected to make mistakes, see why they are mistakes, and continue playing. Nothing ends instantly. Learning happens while the position is still on the board.
+This project is designed to force **active recall**. You are expected to make mistakes, see why they are mistakes, and continue playing
 
 
 ---
