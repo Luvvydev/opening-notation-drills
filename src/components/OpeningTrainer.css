@@ -1,0 +1,378 @@
+.ot-container {
+  min-height: 100vh;
+  background: #0f1115;
+  color: #e9edf2;
+  padding: 18px 18px 28px 18px;
+}
+
+.ot-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 8px auto 8px auto;
+  max-width: 1200px;
+  padding: 6px 4px;
+}
+
+.ot-label {
+  font-weight: 800;
+  font-size: 13px;
+  color: #c9d2dd;
+}
+
+.ot-label-plain {
+  margin-right: 2px;
+}
+
+.ot-select {
+  margin-left: 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #0b0d12;
+  color: #e9edf2;
+  font-weight: 800;
+  font-size: 13px;
+}
+
+.ot-line-select {
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #0b0d12;
+  color: #e9edf2;
+  font-weight: 800;
+  font-size: 13px;
+  min-width: 240px;
+  max-width: 320px;
+}
+
+.ot-button {
+  font-weight: 800;
+  font-size: 13px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 10px 12px;
+  cursor: pointer;
+  background: #1a2030;
+  color: #e9edf2;
+  border-radius: 10px;
+}
+
+.ot-button:hover {
+  border-color: rgba(255, 255, 255, 0.22);
+  background: #1d2537;
+}
+
+.ot-button-small {
+  padding: 9px 12px;
+  font-size: 12px;
+  border-radius: 10px;
+}
+
+.ot-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
+.ot-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 900;
+  font-size: 12px;
+  padding: 8px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.03);
+  color: #e9edf2;
+}
+
+.ot-pill-select {
+  display: inline-flex;
+  align-items: center;
+  font-weight: 900;
+  font-size: 12px;
+  padding: 8px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.03);
+  color: #e9edf2;
+  cursor: pointer;
+}
+
+.ot-subtitle {
+  max-width: 1200px;
+  margin: 10px auto 0 auto;
+  font-weight: 900;
+  font-size: 18px;
+  text-align: center;
+}
+
+.ot-subtitle2 {
+  max-width: 1200px;
+  margin: 6px auto 12px auto;
+  font-weight: 700;
+  font-size: 13px;
+  text-align: center;
+  color: #c9d2dd;
+}
+
+.ot-subtitle-complete {
+  color: #37d67a;
+}
+
+.ot-subtitle2-complete {
+  color: rgba(55, 214, 122, 0.85);
+}
+
+.ot-main {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 14px;
+  align-items: start;
+}
+
+@media (max-width: 1100px) {
+  .ot-main {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ot-board {
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 14px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.ot-side {
+  position: sticky;
+  top: 12px;
+}
+
+.ot-panel {
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.02);
+  overflow: hidden;
+}
+
+.ot-panel-header {
+  padding: 12px 12px 10px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ot-panel-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.ot-panel-kicker {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.ot-progress-wrap {
+  margin-top: 10px;
+}
+
+.ot-progress-bar {
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  overflow: hidden;
+}
+
+.ot-progress-fill {
+  height: 100%;
+  background: rgba(244, 197, 66, 0.85);
+  width: 0%;
+}
+
+.ot-panel-body {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ot-card {
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  padding: 10px;
+}
+
+.ot-card-title {
+  font-weight: 900;
+  font-size: 12px;
+  color: #c9d2dd;
+  margin-bottom: 8px;
+}
+
+.ot-progress-bar-mini {
+  height: 8px;
+  margin: 6px 0 10px 0;
+}
+
+.ot-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.ot-stat {
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 10px;
+  padding: 8px;
+}
+
+.ot-stat-k {
+  font-weight: 800;
+  font-size: 11px;
+  color: #aeb9c7;
+}
+
+.ot-stat-v {
+  font-weight: 900;
+  font-size: 13px;
+  color: #e9edf2;
+  margin-top: 4px;
+}
+
+.ot-muted-small {
+  margin-top: 10px;
+  font-size: 11px;
+}
+
+.ot-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 6px 0;
+}
+
+.ot-label2 {
+  font-weight: 800;
+  font-size: 12px;
+  color: #aeb9c7;
+}
+
+.ot-value2 {
+  font-weight: 900;
+  font-size: 12px;
+  color: #e9edf2;
+}
+
+.ot-move-mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+.ot-muted {
+  font-weight: 700;
+  font-size: 12px;
+  color: #c9d2dd;
+}
+
+.ot-steps-title {
+  font-weight: 900;
+  font-size: 12px;
+  margin: 10px 0 8px 0;
+  color: #c9d2dd;
+}
+
+.ot-step {
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 12px;
+  padding: 10px;
+}
+
+.ot-step-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.ot-step-index {
+  font-weight: 900;
+  font-size: 12px;
+  color: #aeb9c7;
+}
+
+.ot-step-move {
+  font-weight: 900;
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+}
+
+.ot-step-expl {
+  font-weight: 700;
+  font-size: 12px;
+  color: #e9edf2;
+  line-height: 1.35;
+}
+
+.ot-step-next {
+  border-color: rgba(244, 197, 66, 0.30);
+}
+
+.ot-mistake {
+  border: 1px solid rgba(255, 80, 80, 0.20);
+  border-radius: 12px;
+  padding: 10px;
+  background: rgba(255, 80, 80, 0.06);
+}
+
+.ot-step-mistake {
+  border-color: rgba(255, 80, 80, 0.30);
+}
+
+.ot-confetti-layer {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 9999;
+}
+
+.ot-confetti {
+  position: absolute;
+  top: -20px;
+  border-radius: 2px;
+  background: rgba(244, 197, 66, 0.95);
+  animation-name: ot-confetti-fall;
+  animation-timing-function: ease-out;
+  animation-fill-mode: forwards;
+}
+
+@keyframes ot-confetti-fall {
+  0% {
+    transform: translateY(-10px) rotate(0deg);
+    opacity: 0.95;
+  }
+  100% {
+    transform: translateY(105vh) rotate(720deg);
+    opacity: 0.0;
+  }
+}

@@ -1,0 +1,59 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  background: #0f1115;
+}
+
+body {
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  font-weight: 600;
+  line-height: 1.4;
+  color: #e9edf2;
+  overflow-x: hidden;
+}
+
+a {
+  color: #c9d2dd;
+  text-decoration: underline;
+}
+
+a:hover {
+  color: #f4c542;
+}
+
+.board-container {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  flex-wrap: wrap;
+  width: 100vw;
+  padding: 18px;
+}
+
+/* For chessboardjsx notation font */
+div[data-testid=bottom-left-a],
+div[data-testid=bottom-left-h],
+div[data-testid=column-a],
+div[data-testid=column-b],
+div[data-testid=column-c],
+div[data-testid=column-d],
+div[data-testid=column-e],
+div[data-testid=column-f],
+div[data-testid=column-g],
+div[data-testid=column-h],
+div[data-testid=bottom-left-1],
+div[data-testid=bottom-left-8],
+div[data-testid=white-square] > div:first-child > div:first-child:not([data-testid]),
+div[data-testid=white-square] > div:first-child > div:last-child:not([data-testid]),
+div[data-testid=black-square] > div:first-child > div:first-child:not([data-testid]),
+div[data-testid=black-square] > div:first-child > div:last-child:not([data-testid]) {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
+  font-weight: 800 !important;
+  color: rgba(255, 255, 255, 0.85) !important;
+}

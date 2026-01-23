@@ -1,0 +1,56 @@
+.about-page {
+  min-height: 100vh;
+  padding: 18px;
+  background: #0f1115;
+  color: #e9edf2;
+}
+
+.text-container {
+  text-align: center;
+  margin: 0 auto;
+  max-width: 1000px;
+}
+
+.about-title {
+  margin: 10px 0 12px 0;
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.text {
+  display: inline-block;
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0px 5% 14px 5%;
+  color: #c9d2dd;
+  line-height: 1.45;
+}
+
+.special-font {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-weight: 900;
+}
+
+.button-container {
+  text-align: center;
+}
+
+.back-button {
+  font-weight: 700;
+  font-size: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  padding: 10px 14px;
+  margin: 14px 6px 10px 6px;
+  cursor: pointer;
+  background: #1a2030;
+  color: #e9edf2;
+  border-radius: 10px;
+}
+
+.back-button:hover {
+  border-color: rgba(255, 255, 255, 0.22);
+  background: #1d2537;
+}

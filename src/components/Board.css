@@ -1,0 +1,32 @@
+#movePrompt {
+  font-size: 28px;
+  text-align: center;
+  color: #e9edf2;
+}
+
+.timer-container {
+  font-size: 28px;
+  text-align: center;
+  font-weight: 800;
+  color: #e9edf2;
+}
+
+.incorrect {
+  animation: flashRed 0.5s ease-in-out;
+}
+
+.correct {
+  animation: flashGreen 0.5s ease-in;
+}
+
+@keyframes flashRed {
+  0% { color: #ff4d4d; }
+  70% { color: #ff4d4d; }
+  100% { color: #e9edf2; }
+}
+
+@keyframes flashGreen {
+  0% { color: #3cff8f; }
+  70% { color: #3cff8f; }
+  100% { color: #e9edf2; }
+}
