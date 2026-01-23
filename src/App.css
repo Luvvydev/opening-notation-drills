@@ -29,10 +29,12 @@ a:hover {
 
 .board-container {
   display: flex;
-  justify-content: space-around;
-  align-items: center;
+  justify-content: center;
+  align-items: flex-start;
   flex-wrap: wrap;
-  width: 100vw;
+  gap: 28px;
+  width: 100%;
+  min-height: 100vh;
   padding: 18px;
 }
 

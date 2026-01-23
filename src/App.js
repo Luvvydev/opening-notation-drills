@@ -9,7 +9,7 @@ import OpeningTrainer from './components/OpeningTrainer';
 class App extends React.Component {
   render () {
     return (
-      <div class="board-container">
+      <div className="board-container">
         <HashRouter basename='/'>
           <Route exact path='/' component={Home} />
           <Route path='/practice' component={Practice} />
