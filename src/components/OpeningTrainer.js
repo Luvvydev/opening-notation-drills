@@ -203,6 +203,52 @@ function _countDoneMovesForSide(stepIndex, side) {
   return n;
 }
 
+
+function _categoryForLine(line) {
+  if (!line) return "Other";
+  if (line.category) return String(line.category);
+  const name = line.name ? String(line.name) : "";
+  // If you already use "Prefix: Title", treat Prefix as category hint.
+  const parts = name.split(":");
+  if (parts.length > 1) return parts[0].trim();
+  return "Other";
+}
+
+function _groupLines(lines) {
+  const out = {};
+  (lines || []).forEach((l) => {
+    const cat = _categoryForLine(l);
+    if (!out[cat]) out[cat] = [];
+    out[cat].push(l);
+  });
+  // stable-ish category order: main ones first, then alpha
+  const preferred = [
+    "Classic London",
+    "Early ...c5 Systems",
+    "Anti Bishop Ideas",
+    "Jobava London",
+    "Aggressive Plans",
+    "Open Sicilian",
+    "Anti-Sicilian",
+    "Closed Sicilian",
+    "Grand Prix",
+    "Moscow/Rossolimo",
+    "Other"
+  ];
+  const cats = Object.keys(out);
+  cats.sort((a, b) => {
+    const ia = preferred.indexOf(a);
+    const ib = preferred.indexOf(b);
+    if (ia !== -1 || ib !== -1) {
+      return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
+    }
+    return a.localeCompare(b);
+  });
+
+  return { cats, map: out };
+}
+
+
 class OpeningTrainer extends Component {
   constructor(props) {
     super(props);
@@ -234,6 +280,12 @@ class OpeningTrainer extends Component {
       showHint: false,
       settingsOpen: false,
       settings: settings
+    ,
+      viewing: false,
+      viewIndex: 0,
+      viewFen: "start",
+      hintFromSquare: null,
+      solveArmed: false
     };
 
     this._countedSeenForRun = false;
@@ -255,6 +307,7 @@ class OpeningTrainer extends Component {
 
   componentDidMount() {
     window.addEventListener("click", this.onWindowClick);
+    window.addEventListener("keydown", this.onKeyDown);
     this.resetLine(false);
   }
 
@@ -262,20 +315,64 @@ class OpeningTrainer extends Component {
     if (this._autoNextTimer) clearTimeout(this._autoNextTimer);
     if (this._confettiTimer) clearTimeout(this._confettiTimer);
     window.removeEventListener("click", this.onWindowClick);
+    window.removeEventListener("keydown", this.onKeyDown);
   }
 
   onWindowClick = () => {
     if (this.state.settingsOpen) this.setState({ settingsOpen: false });
   };
 
+  onKeyDown = (e) => {
+    const t = e && e.target;
+    const tag = t && t.tagName;
+    const editable = t && t.isContentEditable;
+
+    if (editable || tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+
+    const key = e.key;
+
+    if (key === "ArrowUp" || key === "Up") {
+      e.preventDefault();
+      this.viewLive();
+      return;
+    }
+
+    if (key === "ArrowLeft" || key === "Left") {
+      e.preventDefault();
+      this.viewBack();
+      return;
+    }
+
+    if (key === "ArrowRight" || key === "Right") {
+      e.preventDefault();
+      this.viewForward();
+      return;
+    }
+
+    const isSpace = e.code === "Space" || key === " " || key === "Spacebar";
+    if (isSpace) {
+      if (e.repeat) return;
+      e.preventDefault();
+
+      if (this.state.solveArmed) {
+        this.playMoveForMe();
+      } else {
+        this.onHint();
+      }
+    }
+  };
+
+
   getOpeningSet = () => {
     return OPENING_SETS[this.state.openingKey] || OPENING_SETS.london;
   };
 
+  
   getLines = () => {
     const set = this.getOpeningSet();
     return (set && set.lines) || [];
   };
+
 
   getPlayerColor = () => {
     const set = this.getOpeningSet();
@@ -285,6 +382,85 @@ class OpeningTrainer extends Component {
   getLine = () => {
     const lines = this.getLines();
     return lines.find((l) => l.id === this.state.lineId) || lines[0];
+  };
+
+  getHintFromSquare = (expectedSan) => {
+    if (!expectedSan) return null;
+
+    try {
+      const fen = this.state.fen;
+      const g = !fen || fen === "start" ? new Chess() : new Chess(fen);
+      const mv = g.move(expectedSan, { sloppy: true });
+      if (!mv) return null;
+      return mv.from || null;
+    } catch (_) {
+      return null;
+    }
+  };
+
+  onHint = () => {
+    if (this.state.completed) return;
+
+    const line = this.getLine();
+    if (!line) return;
+
+    const expected = line.moves[this.state.stepIndex];
+    if (!expected) return;
+
+    const playerColor = this.getPlayerColor();
+    if (this.game.turn() !== playerColor) return;
+
+    const fromSq = this.getHintFromSquare(expected);
+
+    this.setState({
+      showHint: true,
+      solveArmed: true,
+      hintFromSquare: fromSq
+    });
+  };
+
+  playMoveForMe = () => {
+    if (this.state.completed) return;
+
+    const line = this.getLine();
+    if (!line) return;
+
+    const playerColor = this.getPlayerColor();
+    if (this.game.turn() !== playerColor) return;
+
+    const expected = line.moves[this.state.stepIndex];
+    if (!expected) return;
+
+    if (this.state.viewing) this.viewLive();
+
+    const mv = this.game.move(expected, { sloppy: true });
+    if (!mv) return;
+
+    const flags = typeof mv.flags === "string" ? mv.flags : "";
+    const isCapture = flags.includes("c") || flags.includes("e");
+    this.playSfx(isCapture ? "capture" : "moveSelf");
+
+    const nextStep = this.state.stepIndex + 1;
+
+    this.setState(
+      {
+        fen: this.game.fen(),
+        stepIndex: nextStep,
+        viewing: false,
+        viewIndex: nextStep,
+        viewFen: this.game.fen(),
+        lastMistake: null,
+        wrongAttempt: null,
+        showHint: false,
+        solveArmed: false,
+        hintFromSquare: null,
+        // Solve breaks clean completion
+        mistakeUnlocked: true
+      },
+      () => {
+        this.playAutoMovesIfNeeded();
+      }
+    );
   };
 
   toggleSettingsOpen = (e) => {
@@ -324,6 +500,66 @@ class OpeningTrainer extends Component {
       // ignore
     }
   };
+
+
+  getFenAtIndex = (index) => {
+    const line = this.getLine();
+    if (!line) return "start";
+
+    const g = new Chess();
+    const n = Math.max(0, Math.min(index || 0, line.moves.length));
+
+    for (let i = 0; i < n; i += 1) {
+      const mv = g.move(line.moves[i]);
+      if (!mv) break;
+    }
+
+    return g.fen();
+  };
+
+  getViewIndex = () => {
+    return this.state.viewing ? this.state.viewIndex : this.state.stepIndex;
+  };
+
+  goToViewIndex = (nextIndex) => {
+    const line = this.getLine();
+    if (!line) return;
+
+    const clamped = Math.max(0, Math.min(nextIndex, this.state.stepIndex));
+
+    if (clamped === this.state.stepIndex) {
+      this.setState({
+        viewing: false,
+        viewIndex: clamped,
+        viewFen: this.state.fen
+      });
+      return;
+    }
+
+    this.setState({
+      viewing: true,
+      viewIndex: clamped,
+      viewFen: this.getFenAtIndex(clamped),
+      showHint: false
+    });
+  };
+
+  viewBack = () => {
+    const i = this.getViewIndex();
+    if (i <= 0) return;
+    this.goToViewIndex(i - 1);
+  };
+
+  viewForward = () => {
+    const i = this.getViewIndex();
+    if (i >= this.state.stepIndex) return;
+    this.goToViewIndex(i + 1);
+  };
+
+  viewLive = () => {
+    this.goToViewIndex(this.state.stepIndex);
+  };
+
 
   undoMistake = () => {
     if (!this.state.lastMistake && !this.state.wrongAttempt) return;
@@ -586,6 +822,8 @@ class OpeningTrainer extends Component {
         completed: false,
         mistakeUnlocked: true,
         showHint: false,
+        solveArmed: false,
+        hintFromSquare: null,
         lastMistake: {
           expected: expected,
           played: playedSAN,
@@ -611,7 +849,10 @@ class OpeningTrainer extends Component {
         fen: this.game.fen(),
         stepIndex: nextStep,
         lastMistake: null,
-        wrongAttempt: null
+        wrongAttempt: null,
+        showHint: false,
+        solveArmed: false,
+        hintFromSquare: null
       },
       () => {
         this.playAutoMovesIfNeeded();
@@ -622,6 +863,7 @@ class OpeningTrainer extends Component {
   allowDrag = ({ piece }) => {
     if (this.state.completed) return false;
     if (this.state.wrongAttempt) return false;
+    if (this.state.viewing) return false;
 
     const playerColor = this.getPlayerColor();
     if (this.game.turn() !== playerColor) return false;
@@ -629,35 +871,67 @@ class OpeningTrainer extends Component {
     return piece && piece.charAt(0) === playerColor;
   };
 
-  renderRelevantExplanation = () => {
-    if (!this.state.mistakeUnlocked) return null;
+  stripMovePrefix = (text) => {
+  if (!text) return "";
+  const s = String(text).trim();
 
-    const line = this.getLine();
-    if (!line) return null;
+  const idx = s.indexOf(":");
+  if (idx > 0 && idx <= 8) {
+    const head = s.slice(0, idx).trim();
+    const isSAN =
+      head === "O-O" ||
+      head === "O-O-O" ||
+      /^[KQRBN]?[a-h]?[1-8]?x?[a-h][1-8](=[QRBN])?[+#]?$/.test(head) ||
+      /^[a-h][1-8](=[QRBN])?[+#]?$/.test(head);
 
-    if (this.state.completed) return null;
+    if (isSAN) return s.slice(idx + 1).trim();
+  }
 
-    const i = this.state.stepIndex;
-    const san = line.moves[i];
-    const expl = line.explanations[i] || "";
+  return s;
+};
 
-    if (!san) return null;
+sanitizeExplanation = (text, expectedSan) => {
+  let s = this.stripMovePrefix(text);
+  if (!s) return "";
 
-    return (
-      <div>
-        <div class="ot-steps-title">Current step explanation</div>
-        <div class="ot-step ot-step-next">
-          <div class="ot-step-header">
-            <span class="ot-step-index">
-              Step {i + 1} of {line.moves.length}
-            </span>
-            <span class="ot-step-move ot-move-mono">{san}</span>
-          </div>
-          <div class="ot-step-expl">{expl}</div>
+  if (expectedSan) {
+    const esc = String(expectedSan).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const reSan = new RegExp("\\b" + esc + "\\b", "g");
+    s = s.replace(reSan, "this move");
+  }
+
+  return s;
+};
+
+renderCurrentStepCard = (line, doneYourMoves, totalYourMoves, expectedSan) => {
+  if (!line) return null;
+
+  const canUndo = !!(this.state.lastMistake || this.state.wrongAttempt);
+
+  const unlocked = !!this.state.mistakeUnlocked;
+  const raw = unlocked ? (line.explanations[this.state.stepIndex] || "") : "What's the best move?";
+  const text = unlocked ? this.sanitizeExplanation(raw, expectedSan) : raw;
+
+  return (
+    <div class="ot-card ot-card-current">
+      <div class="ot-card-head">
+        <div class="ot-card-title">Current step</div>
+        <div class="ot-card-head-right">
+          <span class="ot-mini-count">
+            {doneYourMoves}/{totalYourMoves}
+          </span>
+          {canUndo ? (
+            <button class="ot-mini-btn" onClick={this.undoMistake} title="Undo mistake">
+              Undo
+            </button>
+          ) : null}
         </div>
       </div>
-    );
-  };
+
+      <div class="ot-current-text">{text}</div>
+    </div>
+  );
+};
 
   renderConfetti = () => {
     if (!this.state.confettiActive) return null;
@@ -692,13 +966,16 @@ class OpeningTrainer extends Component {
   render() {
     const line = this.getLine();
     if (!line) return null;
-
-    const openingSet = this.getOpeningSet();
-    const openingLabel = openingSet ? openingSet.label : "Opening";
     const lines = this.getLines();
     const summary = _deriveOpeningSummary(this.state.progress, this.state.openingKey, lines);
 
     const nextExpected = line.moves[this.state.stepIndex] || null;
+
+
+    const viewIndex = this.getViewIndex();
+    const boardFen = this.state.viewing ? this.state.viewFen : this.state.fen;
+    const canViewBack = viewIndex > 0;
+    const canViewForward = viewIndex < this.state.stepIndex;
 
     const playerColor = this.getPlayerColor();
 
@@ -716,6 +993,13 @@ class OpeningTrainer extends Component {
         backgroundSize: "70%"
       };
     }
+
+    if (this.state.hintFromSquare) {
+      squareStyles[this.state.hintFromSquare] = {
+        background: "rgba(80, 170, 255, 0.45)"
+      };
+    }
+
 
     const statsForThisLine = _getLineStats(this.state.progress, this.state.openingKey, this.state.lineId);
     const lineCompleted = _isCompleted(statsForThisLine);
@@ -769,7 +1053,7 @@ class OpeningTrainer extends Component {
         <div class="ot-main">
           <div class="ot-board">
             <Chessboard
-              position={this.state.fen}
+              position={boardFen}
               onDrop={this.onDrop}
               allowDrag={this.allowDrag}
               orientation={playerColor === "b" ? "black" : "white"}
@@ -777,24 +1061,6 @@ class OpeningTrainer extends Component {
               calcWidth={calcWidth}
               squareStyles={squareStyles}
             />
-          </div>
-
-          {/* moved Retry and New random here (between board and sidebar) */}
-          <div class="ot-mid-actions">
-            {this.state.lastMistake || this.state.wrongAttempt ? (
-              <button class="ot-button ot-button-small" onClick={this.undoMistake}>
-                Undo
-              </button>
-            ) : null}
-
-            <button class="ot-button ot-button-small" onClick={this.retryLine}>
-              Retry
-            </button>
-            {this.state.linePicker === "random" ? (
-              <button class="ot-button ot-button-small" onClick={this.startRandomLine}>
-                New random
-              </button>
-            ) : null}
           </div>
 
           <div class="ot-side">
@@ -807,16 +1073,25 @@ class OpeningTrainer extends Component {
                       <option value="__divider__" disabled>
                         ─────────
                       </option>
-                      {lines.map((l) => {
-                        const s = _getLineStats(this.state.progress, this.state.openingKey, l.id);
-                        const symbol = _isCompleted(s) ? "✓" : s.timesSeen > 0 ? "•" : "○";
-                        return (
-                          <option key={l.id} value={l.id}>
-                            {symbol} {l.name}
-                          </option>
-                        );
-                      })}
-                    </select>
+                      {(() => {
+                        const grouped = _groupLines(lines);
+                        return grouped.cats.map((cat) => {
+                          const arr = grouped.map[cat] || [];
+                          return (
+                            <optgroup key={cat} label={cat}>
+                              {arr.map((l) => {
+                                const s = _getLineStats(this.state.progress, this.state.openingKey, l.id);
+                                const symbol = _isCompleted(s) ? "✓" : s.timesSeen > 0 ? "•" : "○";
+                                return (
+                                  <option key={l.id} value={l.id}>
+                                    {symbol} {l.name}
+                                  </option>
+                                );
+                              })}
+                            </optgroup>
+                          );
+                        });
+                      })()}</select>
 
                     {/* make this clickable again (compact opening selector in the sidebar) */}
                     <select class="ot-pill-select" value={this.state.openingKey} onChange={this.setOpeningKey}>
@@ -867,91 +1142,120 @@ class OpeningTrainer extends Component {
                 </div>
               </div>
 
-              <div class="ot-panel-body">
-                {/* swapped order: Next expected card first, Progress card second */}
-                <div class="ot-card ot-card-next">
-                  <div class="ot-row ot-hint-row">
-                    <button
-                      class={"ot-button ot-button-small ot-hint-btn" + (this.state.showHint ? " ot-hint-btn-on" : "")}
-                      onClick={() => this.setState({ showHint: !this.state.showHint })}
-                      disabled={!nextExpected}
-                      title={nextExpected ? "Reveal the next expected move" : "Line complete"}
-                    >
-                      Hint
-                    </button>
+  <div class="ot-panel-body">
+    {this.renderCurrentStepCard(line, doneYourMoves, totalYourMoves, nextExpected)}
 
-                    <span
-                      class={"ot-value2 ot-hint-value" + (this.state.showHint ? " ot-move-mono" : "")}
-                      title={this.state.showHint ? "" : "Hint is hidden"}
-                    >
-                      {this.state.showHint ? (nextExpected || "(done)") : "Click Hint to reveal"}
-                    </span>
-                  </div>
-                  <div class="ot-row">
-                    <span class="ot-label2">Your moves</span>
-                    <span class="ot-value2">
-                      {doneYourMoves}/{totalYourMoves}
-                    </span>
-                  </div>
+    <div class="ot-card ot-card-actions">
+      <div class="ot-action-grid">
+        <button class="ot-button ot-button-small" onClick={this.retryLine}>
+          Retry
+        </button>
 
-                  {/* moved streak/best/today/clean here */}
-                  <div class="ot-stat-grid ot-stat-grid-compact">
-                    <div class="ot-stat">
-                      <div class="ot-stat-k">Streak</div>
-                      <div class="ot-stat-v">{summary.streak}</div>
-                    </div>
-                    <div class="ot-stat">
-                      <div class="ot-stat-k">Best</div>
-                      <div class="ot-stat-v">{summary.bestStreak}</div>
-                    </div>
-                    <div class="ot-stat">
-                      <div class="ot-stat-k">Today</div>
-                      <div class="ot-stat-v">{summary.completedToday}</div>
-                    </div>
-                    <div class="ot-stat">
-                      <div class="ot-stat-k">Clean %</div>
-                      <div class="ot-stat-v">{summary.accuracyPct}%</div>
-                    </div>
-                  </div>
-                </div>
+        <button
+          class="ot-button ot-button-small"
+          onClick={this.startRandomLine}
+          disabled={this.state.linePicker !== "random"}
+          title={this.state.linePicker === "random" ? "Pick a new random line" : "Switch to Random line to use this"}
+        >
+          New random
+        </button>
 
-                <div class="ot-card ot-card-progress">
-                  <div class="ot-card-title">Progress</div>
+        <button
+          class={"ot-button ot-button-small ot-hint-btn" + (this.state.showHint ? " ot-hint-btn-on" : "")}
+          onClick={this.onHint}
+          disabled={!nextExpected || this.state.completed || this.state.viewing}
+          title={nextExpected ? "Highlight the piece to move" : "Line complete"}
+        >
+          Hint
+        </button>
 
-                  <div class="ot-row">
-                    <span class="ot-label2">Completed</span>
-                    <span class="ot-value2">
-                      {summary.completed}/{summary.total}
-                    </span>
-                  </div>
+        {this.state.solveArmed ? (
+        <button
+          class="ot-button ot-button-small ot-hint-btn"
+          onClick={this.playMoveForMe}
+          disabled={!nextExpected || this.state.completed || this.state.viewing}
+          title={nextExpected ? "Play the move (breaks clean completion)" : "Line complete"}
+        >
+          Solve
+        </button>
+      ) : null}
 
-                  <div class="ot-progress-bar ot-progress-bar-mini">
-                    <div class="ot-progress-fill" style={{ width: completedPct + "%" }} />
-                  </div>
+        {this.state.showHint ? (
+          <div class="ot-hint-below">
+            Piece highlighted
+          </div>
+        ) : null}
+</div>
+    </div>
 
-                  <div class="ot-muted ot-muted-small">Completed = 1 clean completion.</div>
-                </div>
+    <div class="ot-card ot-card-progress ot-card-progress-min">
+      <div class="ot-progress-top">
+        <span class="ot-mini-count">
+          {summary.completed}/{summary.total}
+        </span>
+      </div>
 
-                {this.state.lastMistake ? (
-                  <div class="ot-mistake">
-                    <div class="ot-steps-title">Mistake</div>
-                    <div class="ot-step ot-step-mistake">
-                      <div class="ot-step-header">
-                        <span class="ot-step-index">Expected</span>
-                        <span class="ot-step-move ot-move-mono">{this.state.lastMistake.expected}</span>
-                      </div>
-                      <div class="ot-step-header">
-                        <span class="ot-step-index">You played</span>
-                        <span class="ot-step-move ot-move-mono">{this.state.lastMistake.played}</span>
-                      </div>
-                      <div class="ot-step-expl">{this.state.lastMistake.explanation}</div>
-                    </div>
-                  </div>
-                ) : null}
+      <div class="ot-progress-bar ot-progress-bar-mini">
+        <div class="ot-progress-fill" style={{ width: completedPct + "%" }} />
+      </div>
+    </div>
 
-                {this.renderRelevantExplanation()}
-              </div>
-            </div>
+    {this.state.lastMistake ? (
+      <div class="ot-mistake">
+        <div class="ot-steps-title">Mistake</div>
+        <div class="ot-step ot-step-mistake">
+          <div class="ot-step-header">
+            <span class="ot-step-index">Expected</span>
+            <span class="ot-step-move ot-move-mono">{this.state.lastMistake.expected}</span>
+          </div>
+          <div class="ot-step-header">
+            <span class="ot-step-index">You played</span>
+            <span class="ot-step-move ot-move-mono">{this.state.lastMistake.played}</span>
+          </div>
+          <div class="ot-step-expl">{this.state.lastMistake.explanation}</div>
+        </div>
+      </div>
+    ) : null}
+
+    <div class="ot-panel-footer">
+      <div class="ot-footer-left">
+        <span class="ot-label2">Mode</span>
+        <select class="ot-select ot-select-compact" value={this.state.openingKey} onChange={this.setOpeningKey}>
+          <option value="london">London</option>
+          <option value="sicilian">Sicilian</option>
+        </select>
+      </div>
+
+      <div class="ot-footer-right">
+        {this.state.viewing ? (
+          <button class="ot-mini-btn" onClick={this.viewLive} title="Jump back to current position">
+            Live
+          </button>
+        ) : null}
+
+        <button
+          class="ot-icon-btn"
+          onClick={this.viewBack}
+          disabled={!canViewBack}
+          title="Back"
+          aria-label="Back"
+        >
+          ‹
+        </button>
+
+        <button
+          class="ot-icon-btn"
+          onClick={this.viewForward}
+          disabled={!canViewForward}
+          title="Forward"
+          aria-label="Forward"
+        >
+          ›
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
           </div>
         </div>
       </div>

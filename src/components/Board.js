@@ -125,7 +125,6 @@ class Board extends Component {
       initMoveData: {},
       nextMove: nextMove,
       nextMoveData: {},
-      nextMoveColor: '',
       history: history,
       nextMoveColor: lastFullMove.color === 'w' ? 'White' : 'Black',
       squareStyles: {},
