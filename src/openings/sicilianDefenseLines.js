@@ -957,6 +957,197 @@ export const sicilianDefenseLines = [
   ]
 },
 
+  {
+    id: "sicilian-closed-mainline-g3-g6",
+    name: "Closed Sicilian: g3 setup vs ...g6",
+    description: "Closed Sicilian: White plays g3 and d3. Black fianchettos and strikes with ...d6 and ...e5.",
+    moves: ["e4", "c5", "Nc3", "Nc6", "g3", "g6", "Bg2", "Bg7", "d3", "d6", "Be3", "e5", "Nf3", "Nge7", "O-O", "O-O"],
+    explanations: [
+      "e4: White takes space and keeps options for Open or Closed setups.",
+      "c5: Sicilian. Black fights for d4 and creates an imbalanced structure.",
+      "Nc3: Closed Sicilian move order, keep the d pawn flexible and develop.",
+      "Nc6: Develop and add control of d4 and e5.",
+      "g3: Commit to a kingside fianchetto and a slower buildup.",
+      "g6: Mirror the fianchetto, aiming for ...Bg7 pressure on the long diagonal.",
+      "Bg2: Place the bishop on the long diagonal and support central breaks later.",
+      "Bg7: Develop bishop and increase control of the center.",
+      "d3: Keep the center closed, support e4, and prepare piece development.",
+      "d6: Solid, supports ...e5 and controls key central squares.",
+      "Be3: Develop and support queenside development, also eyes c5 squares.",
+      "e5: Stake out space and reduce white's easy f4 break, typical Closed Sicilian plan.",
+      "Nf3: Develop naturally and prepare to castle.",
+      "Nge7: Develop flexibly, keeping options like ...f5 or ...Be6.",
+      "O-O: King safety and connect rooks before attacking.",
+      "O-O: Match castling and keep the position stable before choosing pawn breaks."
+    ]
+  },
+
+  {
+    id: "sicilian-closed-mainline-g3-e6",
+    name: "Closed Sicilian: g3 setup vs ...e6",
+    description: "Closed Sicilian where Black chooses ...e6 and ...d5 ideas, staying flexible and solid.",
+    moves: ["e4", "c5", "Nc3", "Nc6", "g3", "e6", "Bg2", "Nge7", "d3", "d5", "exd5", "exd5", "Nf3", "Be6"],
+    explanations: [
+      "e4: White takes central space.",
+      "c5: Sicilian structure, fight for d4.",
+      "Nc3: Closed move order, develop and keep d pawn back.",
+      "Nc6: Develop and pressure d4.",
+      "g3: Prepare Bg2 and a slower kingside buildup.",
+      "e6: Solid, opens the dark bishop and keeps ...d5 in mind.",
+      "Bg2: Fianchetto bishop, supports central control.",
+      "Nge7: Develop without blocking the c pawn and support ...d5.",
+      "d3: Keep the center closed and support e4.",
+      "d5: The typical break in this structure, challenge white's e4 and fight for central equality.",
+      "exd5: Simplify the tension and avoid allowing ...d4 later.",
+      "exd5: Recapture and keep a central pawn presence, opening lines for pieces.",
+      "Nf3: Develop, defend e5 and prepare to castle.",
+      "Be6: Develop and support ...d4 ideas if White is careless."
+    ]
+  },
+
+  {
+    id: "sicilian-closed-f4-plan-quick",
+    name: "Closed Sicilian: quick f4 plan",
+    description: "Closed Sicilian where White plays d3 and f4. Black responds with ...g6 and ...Bg7, then ...d6.",
+    moves: ["e4", "c5", "Nc3", "Nc6", "g3", "g6", "Bg2", "Bg7", "d3", "d6", "f4", "e6", "Nf3", "Nge7", "O-O", "O-O"],
+    explanations: [
+      "e4: White takes space and keeps options open.",
+      "c5: Sicilian counterplay.",
+      "Nc3: Closed move order, develop and keep d pawn flexible.",
+      "Nc6: Develop and contest key central squares.",
+      "g3: Prepare a kingside fianchetto.",
+      "g6: Fianchetto structure for black as well.",
+      "Bg2: Bishop supports central breaks and kingside play.",
+      "Bg7: Black mirrors and sets long diagonal pressure.",
+      "d3: Keep center closed and prepare f4 without losing e4.",
+      "d6: Solid support, keeps ...e5 available.",
+      "f4: Main Closed Sicilian plan, expand on kingside and aim for f5.",
+      "e6: Solid, prepares ...Nge7 and keeps the center flexible.",
+      "Nf3: Develop and support e5 and g5 squares before pushing further.",
+      "Nge7: Develop and keep ...d5 and ...f5 options open.",
+      "O-O: Castle and get the rook to the f file behind the f pawn.",
+      "O-O: Castle and prepare to meet kingside play with central or queenside counterplay."
+    ]
+  },
+
+  {
+    id: "sicilian-closed-early-nge7-0-0",
+    name: "Closed Sicilian: ...Nge7 and quick castling",
+    description: "Simple Closed Sicilian plan for Black: develop pieces, castle, then decide between ...d6 or ...d5 based on White's setup.",
+    moves: ["e4", "c5", "Nc3", "Nc6", "g3", "g6", "Bg2", "Bg7", "d3", "Nge7", "Be3", "O-O", "Qd2", "d6", "f4", "f5"],
+    explanations: [
+      "e4: White takes central space.",
+      "c5: Sicilian counterplay and imbalance.",
+      "Nc3: Closed Sicilian structure, develop and keep d pawn back.",
+      "Nc6: Develop and control d4 and e5.",
+      "g3: Commit to fianchetto and a slower plan.",
+      "g6: Black fianchetto, keeping a flexible structure.",
+      "Bg2: Develop bishop and strengthen kingside.",
+      "Bg7: Develop bishop and control central squares.",
+      "d3: Closed center, support e4.",
+      "Nge7: Develop, keep ...d5 available, and support ...f5 ideas later.",
+      "Be3: Develop and keep options for Qd2 and f4.",
+      "O-O: King safety and connect rooks before committing to pawn breaks.",
+      "Qd2: Typical Closed Sicilian coordination, support f4 and connect rooks.",
+      "d6: Solidify the center and keep ...e5 available later.",
+      "f4: Start the main kingside expansion plan.",
+      "f5: Directly challenge the f pawn and claim space, a common practical reaction."
+    ]
+  },
+  {
+    id: "sicilian-closed-e5-clamp",
+    name: "Closed Sicilian: early ...e5 clamp",
+    description: "Black plays an early ...e5 to clamp down on f4 and seize central space. A very common practical response.",
+    moves: ["e4", "c5", "Nc3", "Nc6", "g3", "g6", "Bg2", "Bg7", "d3", "e5", "Nf3", "d6", "O-O", "Nge7"],
+    explanations: [
+      "e4: White takes central space.",
+      "c5: Sicilian counterplay, fight for d4.",
+      "Nc3: Closed Sicilian structure, flexible development.",
+      "Nc6: Develop and reinforce central control.",
+      "g3: Prepare a kingside fianchetto.",
+      "g6: Black mirrors with a fianchetto.",
+      "Bg2: Bishop supports kingside play and central control.",
+      "Bg7: Black completes the fianchetto.",
+      "d3: Keep the center closed and support e4.",
+      "e5: Key move. Black clamps down on f4 and claims space, forcing White to find slower plans.",
+      "Nf3: Develop and prepare to castle, keeping options for f4 later.",
+      "d6: Support the e5 pawn and keep the position solid.",
+      "O-O: Castle before committing to pawn pushes.",
+      "Nge7: Develop and keep ...f5 and ...Be6 options available."
+    ]
+  },
+
+  {
+    id: "sicilian-closed-botvinnik-style",
+    name: "Closed Sicilian: Botvinnik-style buildup",
+    description: "Classic Closed Sicilian plan with Be3, Qd2, and f4 ideas. Slow but dangerous kingside buildup.",
+    moves: ["e4", "c5", "Nc3", "Nc6", "g3", "g6", "Bg2", "Bg7", "d3", "d6", "Be3", "Nge7", "Qd2", "O-O", "f4", "Rb8", "Nf3"],
+    explanations: [
+      "e4: White takes space.",
+      "c5: Sicilian structure.",
+      "Nc3: Closed setup, avoid early d4.",
+      "Nc6: Develop and contest central squares.",
+      "g3: Prepare Bg2 and a kingside plan.",
+      "g6: Black fianchetto structure.",
+      "Bg2: Strong diagonal pressure.",
+      "Bg7: Black mirrors development.",
+      "d3: Solidify the center.",
+      "d6: Support ...e5 and keep structure flexible.",
+      "Be3: Key Botvinnik idea, supports Qd2 and f4.",
+      "Nge7: Flexible development, keeps ...f5 ideas alive.",
+      "Qd2: Prepare f4, Bh6, and potential kingside pressure.",
+      "O-O: Castle and get the king safe before counterplay starts.",
+      "f4: Commit to kingside space and prepare f5 attacks.",
+      "Rb8: Practical queenside prep, often supports ...b5.",
+      "Nf3: Develop and connect the king side pieces before pushing more pawns."
+    ]
+  },
+
+  {
+    id: "sicilian-closed-direct-d5-break",
+    name: "Closed Sicilian: direct ...d5 break",
+    description: "Black challenges the center immediately with ...d5. White must understand the structure, not memorize moves.",
+    moves: ["e4", "c5", "Nc3", "Nc6", "g3", "e6", "Bg2", "d5", "exd5", "exd5", "d3", "Nf6"],
+    explanations: [
+      "e4: White takes central space.",
+      "c5: Sicilian counterplay.",
+      "Nc3: Closed Sicilian move order.",
+      "Nc6: Develop and pressure d4.",
+      "g3: Prepare a fianchetto.",
+      "e6: Solid setup, opens dark-square bishop.",
+      "Bg2: Develop bishop and support the center.",
+      "d5: Critical break. Black immediately challenges e4 and aims for central equality.",
+      "exd5: Remove the central tension and avoid allowing ...d4 at the wrong moment.",
+      "exd5: Recapture and keep central presence, opening lines for pieces.",
+      "d3: Return to a Closed structure and support e4.",
+      "Nf6: Develop and hit e4, forcing White to keep defending the center."
+    ]
+  },
+
+  {
+    id: "sicilian-closed-rb8-queenside",
+    name: "Closed Sicilian: ...Rb8 queenside expansion",
+    description: "Black prepares queenside play early instead of committing to central breaks. Common in practical games.",
+    moves: ["e4", "c5", "Nc3", "Nc6", "g3", "g6", "Bg2", "Bg7", "d3", "Rb8", "f4", "b5", "Nf3", "b4"],
+    explanations: [
+      "e4: White claims central space.",
+      "c5: Sicilian structure.",
+      "Nc3: Closed Sicilian setup.",
+      "Nc6: Develop and contest central squares.",
+      "g3: Prepare a kingside fianchetto.",
+      "g6: Black mirrors with a fianchetto.",
+      "Bg2: Develop bishop on the long diagonal.",
+      "Bg7: Black completes development.",
+      "d3: Keep the center closed and flexible.",
+      "Rb8: Prepare ...b5 and queenside expansion without committing the center.",
+      "f4: White starts kingside play and prepares f5.",
+      "b5: Black expands on the queenside and aims to open files.",
+      "Nf3: Develop and prepare to castle before pushing more.",
+      "b4: Gain space and kick the knight, trying to open lines on the queenside."
+    ]
+  },
+
+
 
   {
     id: "sicilian-qxd4-line-early-queen",

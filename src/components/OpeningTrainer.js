@@ -46,6 +46,7 @@ function _pickRandomLineId(lines, excludeId) {
 }
 
 const STORAGE_KEY = "notation_trainer_opening_progress_v2";
+const SETTINGS_KEY = "notation_trainer_opening_settings_v1";
 
 function _safeJsonParse(text, fallback) {
   try {
@@ -81,6 +82,31 @@ function _loadProgress() {
 function _saveProgress(progress) {
   try {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+  } catch (_) {
+    // ignore
+  }
+}
+
+function _loadSettings() {
+  const defaults = { showConfetti: true, playSounds: true };
+  try {
+    const raw = window.localStorage.getItem(SETTINGS_KEY);
+    if (!raw) return defaults;
+    const parsed = _safeJsonParse(raw, defaults);
+    if (!parsed || typeof parsed !== "object") return defaults;
+
+    return {
+      showConfetti: parsed.showConfetti !== false,
+      playSounds: parsed.playSounds !== false
+    };
+  } catch (_) {
+    return defaults;
+  }
+}
+
+function _saveSettings(settings) {
+  try {
+    window.localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
   } catch (_) {
     // ignore
   }
@@ -191,6 +217,7 @@ class OpeningTrainer extends Component {
     this._confettiTimer = null;
 
     const progress = _loadProgress();
+    const settings = _loadSettings();
 
     this.state = {
       openingKey: firstSetKey,
@@ -203,20 +230,43 @@ class OpeningTrainer extends Component {
       completed: false,
       confettiActive: false,
       wrongAttempt: null,
-      progress: progress
+      progress: progress,
+      showHint: false,
+      settingsOpen: false,
+      settings: settings
     };
 
     this._countedSeenForRun = false;
+
+    const base = process.env.PUBLIC_URL || "";
+    this.sfx = {
+      capture: new Audio(base + "/sounds/capture.mp3"),
+      illegal: new Audio(base + "/sounds/illegal.mp3"),
+      moveSelf: new Audio(base + "/sounds/move-self.mp3"),
+      moveOpponent: new Audio(base + "/sounds/move-opponent.mp3")
+    };
+
+    Object.values(this.sfx).forEach((a) => {
+      if (!a) return;
+      a.preload = "auto";
+      a.volume = 0.55;
+    });
   }
 
   componentDidMount() {
+    window.addEventListener("click", this.onWindowClick);
     this.resetLine(false);
   }
 
   componentWillUnmount() {
     if (this._autoNextTimer) clearTimeout(this._autoNextTimer);
     if (this._confettiTimer) clearTimeout(this._confettiTimer);
+    window.removeEventListener("click", this.onWindowClick);
   }
+
+  onWindowClick = () => {
+    if (this.state.settingsOpen) this.setState({ settingsOpen: false });
+  };
 
   getOpeningSet = () => {
     return OPENING_SETS[this.state.openingKey] || OPENING_SETS.london;
@@ -237,6 +287,55 @@ class OpeningTrainer extends Component {
     return lines.find((l) => l.id === this.state.lineId) || lines[0];
   };
 
+  toggleSettingsOpen = (e) => {
+    if (e && e.stopPropagation) e.stopPropagation();
+    this.setState({ settingsOpen: !this.state.settingsOpen });
+  };
+
+  setSetting = (key, value) => {
+    const next = { ...(this.state.settings || {}) };
+    next[key] = value;
+    _saveSettings(next);
+    this.setState({ settings: next });
+  };
+
+  _sfxLastAt = {};
+
+  playSfx = (key) => {
+    if (!this.state.settings || !this.state.settings.playSounds) return;
+
+    const a = this.sfx && this.sfx[key];
+    if (!a) return;
+
+    const now = Date.now();
+    const last = this._sfxLastAt[key] || 0;
+
+    // debounce to prevent duplicate overlapping playback
+    if (now - last < 80) return;
+    this._sfxLastAt[key] = now;
+
+    try {
+      if (!a.paused) a.pause();
+      a.currentTime = 0;
+
+      const p = a.play();
+      if (p && typeof p.catch === "function") p.catch(() => {});
+    } catch (_) {
+      // ignore
+    }
+  };
+
+  undoMistake = () => {
+    if (!this.state.lastMistake && !this.state.wrongAttempt) return;
+    this.setState({
+      fen: this.game.fen(),
+      wrongAttempt: null,
+      lastMistake: null,
+      completed: false,
+      showHint: false
+    });
+  };
+
   resetLine = (keepUnlocked) => {
     this.game.reset();
     this.setState(
@@ -246,7 +345,8 @@ class OpeningTrainer extends Component {
         completed: false,
         mistakeUnlocked: keepUnlocked ? this.state.mistakeUnlocked : false,
         lastMistake: null,
-        wrongAttempt: null
+        wrongAttempt: null,
+        showHint: false
       },
       () => {
         this._countedSeenForRun = false;
@@ -267,7 +367,8 @@ class OpeningTrainer extends Component {
         mistakeUnlocked: false,
         lastMistake: null,
         completed: false,
-        wrongAttempt: null
+        wrongAttempt: null,
+        showHint: false
       },
       () => {
         this.resetLine(false);
@@ -297,7 +398,8 @@ class OpeningTrainer extends Component {
         mistakeUnlocked: false,
         lastMistake: null,
         completed: false,
-        wrongAttempt: null
+        wrongAttempt: null,
+        showHint: false
       },
       () => {
         this.resetLine(false);
@@ -324,7 +426,8 @@ class OpeningTrainer extends Component {
         mistakeUnlocked: false,
         lastMistake: null,
         completed: false,
-        wrongAttempt: null
+        wrongAttempt: null,
+        showHint: false
       },
       () => {
         this.resetLine(false);
@@ -396,6 +499,8 @@ class OpeningTrainer extends Component {
     let stepIndex = this.state.stepIndex;
     const playerColor = this.getPlayerColor();
 
+    let didAutoMove = false;
+
     while (stepIndex < line.moves.length && this.game.turn() !== playerColor) {
       const expected = line.moves[stepIndex];
       const mv = this.game.move(expected);
@@ -404,6 +509,7 @@ class OpeningTrainer extends Component {
         return;
       }
       stepIndex += 1;
+      didAutoMove = true;
     }
 
     const completed = stepIndex >= line.moves.length;
@@ -415,6 +521,7 @@ class OpeningTrainer extends Component {
         completed: completed
       },
       () => {
+        if (didAutoMove) this.playSfx("moveOpponent");
         if (completed) this.onCompletedLine();
       }
     );
@@ -427,11 +534,15 @@ class OpeningTrainer extends Component {
     const wasClean = !this.state.mistakeUnlocked;
     this.bumpCompleted(wasClean);
 
-    this.setState({ confettiActive: true });
+    if (this.state.settings && this.state.settings.showConfetti) {
+      this.setState({ confettiActive: true });
 
-    this._confettiTimer = setTimeout(() => {
+      this._confettiTimer = setTimeout(() => {
+        this.setState({ confettiActive: false });
+      }, 1200);
+    } else {
       this.setState({ confettiActive: false });
-    }, 1200);
+    }
 
     if (this.state.linePicker === "random") {
       this._autoNextTimer = setTimeout(() => {
@@ -465,6 +576,8 @@ class OpeningTrainer extends Component {
     if (playedSAN !== expected) {
       const explanation = line.explanations[this.state.stepIndex] || "";
 
+      this.playSfx("illegal");
+
       this.bumpMistake();
       this.game.undo();
 
@@ -472,6 +585,7 @@ class OpeningTrainer extends Component {
         fen: this.game.fen(),
         completed: false,
         mistakeUnlocked: true,
+        showHint: false,
         lastMistake: {
           expected: expected,
           played: playedSAN,
@@ -485,6 +599,10 @@ class OpeningTrainer extends Component {
 
       return;
     }
+
+    const flags = typeof move.flags === "string" ? move.flags : "";
+    const isCapture = flags.includes("c") || flags.includes("e");
+    this.playSfx(isCapture ? "capture" : "moveSelf");
 
     const nextStep = this.state.stepIndex + 1;
 
@@ -629,8 +747,24 @@ class OpeningTrainer extends Component {
           <span class="ot-pill">{this.state.mistakeUnlocked ? "Explanations unlocked" : "Explanations locked"}</span>
         </div>
 
-        <div class={"ot-subtitle" + (lineCompleted ? " ot-subtitle-complete" : "")}>{line.name}</div>
-        <div class={"ot-subtitle2" + (lineCompleted ? " ot-subtitle2-complete" : "")}>{line.description}</div>
+        {/* replaced standalone subtitle rows with a header card (same content, cleaner layout) */}
+        <div class={"ot-line-header" + (lineCompleted ? " ot-line-header-complete" : "")}>
+          {(() => {
+            const raw = (line && line.name) ? String(line.name) : "";
+            const parts = raw.split(":");
+            const hasPrefix = parts.length > 1;
+            const prefix = hasPrefix ? parts[0].trim() : "";
+            const title = hasPrefix ? parts.slice(1).join(":").trim() : raw;
+
+            return (
+              <>
+                {hasPrefix ? <div class="ot-line-kicker">{prefix}</div> : null}
+                <div class={"ot-line-title" + (lineCompleted ? " ot-line-title-complete" : "")}>{title}</div>
+                <div class={"ot-line-desc" + (lineCompleted ? " ot-line-desc-complete" : "")}>{line.description}</div>
+              </>
+            );
+          })()}
+        </div>
 
         <div class="ot-main">
           <div class="ot-board">
@@ -643,6 +777,24 @@ class OpeningTrainer extends Component {
               calcWidth={calcWidth}
               squareStyles={squareStyles}
             />
+          </div>
+
+          {/* moved Retry and New random here (between board and sidebar) */}
+          <div class="ot-mid-actions">
+            {this.state.lastMistake || this.state.wrongAttempt ? (
+              <button class="ot-button ot-button-small" onClick={this.undoMistake}>
+                Undo
+              </button>
+            ) : null}
+
+            <button class="ot-button ot-button-small" onClick={this.retryLine}>
+              Retry
+            </button>
+            {this.state.linePicker === "random" ? (
+              <button class="ot-button ot-button-small" onClick={this.startRandomLine}>
+                New random
+              </button>
+            ) : null}
           </div>
 
           <div class="ot-side">
@@ -675,7 +827,37 @@ class OpeningTrainer extends Component {
                     <span class="ot-pill">Trainer</span>
                   </div>
 
-                  <span class="ot-pill">{this.state.linePicker === "random" ? "random" : "selected"}</span>
+                  <div class="ot-panel-header-actions" onClick={(e) => e.stopPropagation()}>
+                    <span class="ot-pill">{this.state.linePicker === "random" ? "random" : "selected"}</span>
+
+                    <button class="ot-gear" onClick={this.toggleSettingsOpen} title="Settings">
+                      ⚙
+                    </button>
+
+                    {this.state.settingsOpen ? (
+                      <div class="ot-settings-menu">
+                        <div class="ot-settings-title">Settings</div>
+
+                        <label class="ot-settings-row">
+                          <input
+                            type="checkbox"
+                            checked={!!(this.state.settings && this.state.settings.showConfetti)}
+                            onChange={(e) => this.setSetting("showConfetti", !!e.target.checked)}
+                          />
+                          <span>Show Confetti</span>
+                        </label>
+
+                        <label class="ot-settings-row">
+                          <input
+                            type="checkbox"
+                            checked={!!(this.state.settings && this.state.settings.playSounds)}
+                            onChange={(e) => this.setSetting("playSounds", !!e.target.checked)}
+                          />
+                          <span>Play Sounds</span>
+                        </label>
+                      </div>
+                    ) : null}
+                  </div>
                 </div>
 
                 <div class="ot-progress-wrap">
@@ -686,21 +868,34 @@ class OpeningTrainer extends Component {
               </div>
 
               <div class="ot-panel-body">
-                <div class="ot-card ot-card-progress">
-                  <div class="ot-card-title">Progress</div>
+                {/* swapped order: Next expected card first, Progress card second */}
+                <div class="ot-card ot-card-next">
+                  <div class="ot-row ot-hint-row">
+                    <button
+                      class={"ot-button ot-button-small ot-hint-btn" + (this.state.showHint ? " ot-hint-btn-on" : "")}
+                      onClick={() => this.setState({ showHint: !this.state.showHint })}
+                      disabled={!nextExpected}
+                      title={nextExpected ? "Reveal the next expected move" : "Line complete"}
+                    >
+                      Hint
+                    </button>
 
+                    <span
+                      class={"ot-value2 ot-hint-value" + (this.state.showHint ? " ot-move-mono" : "")}
+                      title={this.state.showHint ? "" : "Hint is hidden"}
+                    >
+                      {this.state.showHint ? (nextExpected || "(done)") : "Click Hint to reveal"}
+                    </span>
+                  </div>
                   <div class="ot-row">
-                    <span class="ot-label2">Completed</span>
+                    <span class="ot-label2">Your moves</span>
                     <span class="ot-value2">
-                      {summary.completed}/{summary.total}
+                      {doneYourMoves}/{totalYourMoves}
                     </span>
                   </div>
 
-                  <div class="ot-progress-bar ot-progress-bar-mini">
-                    <div class="ot-progress-fill" style={{ width: completedPct + "%" }} />
-                  </div>
-
-                  <div class="ot-stat-grid">
+                  {/* moved streak/best/today/clean here */}
+                  <div class="ot-stat-grid ot-stat-grid-compact">
                     <div class="ot-stat">
                       <div class="ot-stat-k">Streak</div>
                       <div class="ot-stat-v">{summary.streak}</div>
@@ -718,33 +913,23 @@ class OpeningTrainer extends Component {
                       <div class="ot-stat-v">{summary.accuracyPct}%</div>
                     </div>
                   </div>
-
-                  <div class="ot-muted ot-muted-small">Completed = 1 clean completion.</div>
                 </div>
 
-                <div class="ot-card">
+                <div class="ot-card ot-card-progress">
+                  <div class="ot-card-title">Progress</div>
+
                   <div class="ot-row">
-                    <span class="ot-label2">Next expected</span>
-                    <span class="ot-value2 ot-move-mono">{nextExpected ? nextExpected : "(done)"}</span>
-                  </div>
-                  <div class="ot-row">
-                    <span class="ot-label2">Your moves</span>
+                    <span class="ot-label2">Completed</span>
                     <span class="ot-value2">
-                      {doneYourMoves}/{totalYourMoves}
+                      {summary.completed}/{summary.total}
                     </span>
                   </div>
 
-                  {/* retry button in the right panel */}
-                  <div class="ot-actions">
-                    <button class="ot-button ot-button-small" onClick={this.retryLine}>
-                      Retry
-                    </button>
-                    {this.state.linePicker === "random" ? (
-                      <button class="ot-button ot-button-small" onClick={this.startRandomLine}>
-                        New random
-                      </button>
-                    ) : null}
+                  <div class="ot-progress-bar ot-progress-bar-mini">
+                    <div class="ot-progress-fill" style={{ width: completedPct + "%" }} />
                   </div>
+
+                  <div class="ot-muted ot-muted-small">Completed = 1 clean completion.</div>
                 </div>
 
                 {this.state.lastMistake ? (
