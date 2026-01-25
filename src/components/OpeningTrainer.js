@@ -1012,6 +1012,20 @@ renderCurrentStepCard = (line, doneYourMoves, totalYourMoves, expectedSan) => {
 
         <TopNav active="openings" title="Openings Trainer" />
 
+
+        {/* Per-line progress (moved to top) */}
+        <div class="ot-top-line">
+          <div class="ot-top-line-row">
+            <div class="ot-top-line-count">
+              
+            </div>
+          </div>
+
+          <div class="ot-progress-bar ot-progress-bar-top">
+            <div class="ot-progress-fill" style={{ width: yourProgressPct + "%" }} />
+          </div>
+        </div>
+
         <div class="ot-controls">
           <span class="ot-label ot-label-plain">Mode:</span>
 
@@ -1025,33 +1039,23 @@ renderCurrentStepCard = (line, doneYourMoves, totalYourMoves, expectedSan) => {
           </button>
 
           <button class="ot-button" onClick={this.startRandomLine}>
-            New random line
+            Next
           </button>
 
           <span class="ot-pill">{this.state.mistakeUnlocked ? "Explanations unlocked" : "Explanations locked"}</span>
         </div>
 
         {/* replaced standalone subtitle rows with a header card (same content, cleaner layout) */}
-        <div class={"ot-line-header" + (lineCompleted ? " ot-line-header-complete" : "")}>
-          {(() => {
-            const raw = (line && line.name) ? String(line.name) : "";
-            const parts = raw.split(":");
-            const hasPrefix = parts.length > 1;
-            const prefix = hasPrefix ? parts[0].trim() : "";
-            const title = hasPrefix ? parts.slice(1).join(":").trim() : raw;
-
-            return (
-              <>
-                {hasPrefix ? <div class="ot-line-kicker">{prefix}</div> : null}
-                <div class={"ot-line-title" + (lineCompleted ? " ot-line-title-complete" : "")}>{title}</div>
-                <div class={"ot-line-desc" + (lineCompleted ? " ot-line-desc-complete" : "")}>{line.description}</div>
-              </>
-            );
-          })()}
-        </div>
 
         <div class="ot-main">
           <div class="ot-board">
+
+            <div class="ot-board-head">
+              <select class="ot-opening-select" value={this.state.openingKey} onChange={this.setOpeningKey}>
+                <option value="london">London</option>
+                <option value="sicilian">Sicilian Defense</option>
+              </select>
+            </div>
             <Chessboard
               position={boardFen}
               onDrop={this.onDrop}
@@ -1063,199 +1067,160 @@ renderCurrentStepCard = (line, doneYourMoves, totalYourMoves, expectedSan) => {
             />
           </div>
 
+          
           <div class="ot-side">
             <div class="ot-panel">
-              <div class="ot-panel-header">
-                <div class="ot-panel-header-row">
-                  <div class="ot-panel-kicker">
-                    <select class="ot-line-select" value={this.state.linePicker} onChange={this.setLinePicker}>
-                      <option value="random">Random line</option>
-                      <option value="__divider__" disabled>
-                        ─────────
+              <div class="ot-panel-body">
+                  {this.renderCurrentStepCard(line, doneYourMoves, totalYourMoves, nextExpected)}
+
+                  <div class="ot-card ot-card-actions">
+                    <div class="ot-action-grid">
+                      <button class="ot-button ot-button-small" onClick={this.retryLine}>
+                        Retry
+                      </button>
+
+                      <button
+                        class="ot-button ot-button-small"
+                        onClick={this.startRandomLine}
+                        disabled={this.state.linePicker !== "random"}
+                        title={
+                          this.state.linePicker === "random"
+                            ? "Pick a new random line"
+                            : "Switch to Random line to use this"
+                        }
+                      >
+                        Next
+                      </button>
+
+                      <button
+                        class={
+                          "ot-button ot-button-small ot-hint-btn" +
+                          (this.state.showHint ? " ot-hint-btn-on" : "")
+                        }
+                        onClick={this.state.solveArmed ? this.playMoveForMe : this.onHint}
+                        disabled={!nextExpected || this.state.completed || this.state.viewing}
+                        title={
+                          !nextExpected
+                            ? "Line complete"
+                            : this.state.solveArmed
+                            ? "Play the move (breaks clean completion)"
+                            : "Highlight the piece to move"
+                        }
+                      >
+                        {this.state.solveArmed ? "Solve" : "Hint"}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="ot-nav-row">
+
+      <div class="ot-nav-left">
+        <select class="ot-line-select ot-line-select-compact" value={this.state.linePicker} onChange={this.setLinePicker}>
+          <option value="random">Random line</option>
+          <option value="__divider__" disabled>
+            ─────────
+          </option>
+          {(() => {
+            const grouped = _groupLines(lines);
+            return grouped.cats.map((cat) => {
+              const arr = grouped.map[cat] || [];
+              return (
+                <optgroup key={cat} label={cat}>
+                  {arr.map((l) => {
+                    const s = _getLineStats(this.state.progress, this.state.openingKey, l.id);
+                    const symbol = _isCompleted(s) ? "✓" : s.timesSeen > 0 ? "•" : "○";
+                    return (
+                      <option key={l.id} value={l.id}>
+                        {symbol} {l.name}
                       </option>
-                      {(() => {
-                        const grouped = _groupLines(lines);
-                        return grouped.cats.map((cat) => {
-                          const arr = grouped.map[cat] || [];
-                          return (
-                            <optgroup key={cat} label={cat}>
-                              {arr.map((l) => {
-                                const s = _getLineStats(this.state.progress, this.state.openingKey, l.id);
-                                const symbol = _isCompleted(s) ? "✓" : s.timesSeen > 0 ? "•" : "○";
-                                return (
-                                  <option key={l.id} value={l.id}>
-                                    {symbol} {l.name}
-                                  </option>
-                                );
-                              })}
-                            </optgroup>
-                          );
-                        });
-                      })()}</select>
+                    );
+                  })}
+                </optgroup>
+              );
+            });
+          })()}
+        </select>
 
-                    {/* make this clickable again (compact opening selector in the sidebar) */}
-                    <select class="ot-pill-select" value={this.state.openingKey} onChange={this.setOpeningKey}>
-                      <option value="london">London</option>
-                      <option value="sicilian">Sicilian</option>
-                    </select>
+        <div class="ot-panel-header-actions" onClick={(e) => e.stopPropagation()}>
+          <button class="ot-gear" onClick={this.toggleSettingsOpen} title="Settings">
+            ⚙
+          </button>
 
-                    <span class="ot-pill">Trainer</span>
-                  </div>
+          {this.state.settingsOpen ? (
+            <div class="ot-settings-menu">
+              <div class="ot-settings-title">Settings</div>
 
-                  <div class="ot-panel-header-actions" onClick={(e) => e.stopPropagation()}>
-                    <span class="ot-pill">{this.state.linePicker === "random" ? "random" : "selected"}</span>
+              <label class="ot-settings-row">
+                <input
+                  type="checkbox"
+                  checked={!!(this.state.settings && this.state.settings.showConfetti)}
+                  onChange={(e) => this.setSetting("showConfetti", !!e.target.checked)}
+                />
+                <span>Show Confetti</span>
+              </label>
 
-                    <button class="ot-gear" onClick={this.toggleSettingsOpen} title="Settings">
-                      ⚙
-                    </button>
-
-                    {this.state.settingsOpen ? (
-                      <div class="ot-settings-menu">
-                        <div class="ot-settings-title">Settings</div>
-
-                        <label class="ot-settings-row">
-                          <input
-                            type="checkbox"
-                            checked={!!(this.state.settings && this.state.settings.showConfetti)}
-                            onChange={(e) => this.setSetting("showConfetti", !!e.target.checked)}
-                          />
-                          <span>Show Confetti</span>
-                        </label>
-
-                        <label class="ot-settings-row">
-                          <input
-                            type="checkbox"
-                            checked={!!(this.state.settings && this.state.settings.playSounds)}
-                            onChange={(e) => this.setSetting("playSounds", !!e.target.checked)}
-                          />
-                          <span>Play Sounds</span>
-                        </label>
-                      </div>
-                    ) : null}
-                  </div>
-                </div>
-
-                <div class="ot-progress-wrap">
-                  <div class="ot-progress-bar">
-                    <div class="ot-progress-fill" style={{ width: yourProgressPct + "%" }} />
-                  </div>
-                </div>
-              </div>
-
-  <div class="ot-panel-body">
-    {this.renderCurrentStepCard(line, doneYourMoves, totalYourMoves, nextExpected)}
-
-    <div class="ot-card ot-card-actions">
-      <div class="ot-action-grid">
-        <button class="ot-button ot-button-small" onClick={this.retryLine}>
-          Retry
-        </button>
-
-        <button
-          class="ot-button ot-button-small"
-          onClick={this.startRandomLine}
-          disabled={this.state.linePicker !== "random"}
-          title={this.state.linePicker === "random" ? "Pick a new random line" : "Switch to Random line to use this"}
-        >
-          New random
-        </button>
-
-        <button
-          class={"ot-button ot-button-small ot-hint-btn" + (this.state.showHint ? " ot-hint-btn-on" : "")}
-          onClick={this.onHint}
-          disabled={!nextExpected || this.state.completed || this.state.viewing}
-          title={nextExpected ? "Highlight the piece to move" : "Line complete"}
-        >
-          Hint
-        </button>
-
-        {this.state.solveArmed ? (
-        <button
-          class="ot-button ot-button-small ot-hint-btn"
-          onClick={this.playMoveForMe}
-          disabled={!nextExpected || this.state.completed || this.state.viewing}
-          title={nextExpected ? "Play the move (breaks clean completion)" : "Line complete"}
-        >
-          Solve
-        </button>
-      ) : null}
-
-        {this.state.showHint ? (
-          <div class="ot-hint-below">
-            Piece highlighted
-          </div>
-        ) : null}
-</div>
-    </div>
-
-    <div class="ot-card ot-card-progress ot-card-progress-min">
-      <div class="ot-progress-top">
-        <span class="ot-mini-count">
-          {summary.completed}/{summary.total}
-        </span>
-      </div>
-
-      <div class="ot-progress-bar ot-progress-bar-mini">
-        <div class="ot-progress-fill" style={{ width: completedPct + "%" }} />
-      </div>
-    </div>
-
-    {this.state.lastMistake ? (
-      <div class="ot-mistake">
-        <div class="ot-steps-title">Mistake</div>
-        <div class="ot-step ot-step-mistake">
-          <div class="ot-step-header">
-            <span class="ot-step-index">Expected</span>
-            <span class="ot-step-move ot-move-mono">{this.state.lastMistake.expected}</span>
-          </div>
-          <div class="ot-step-header">
-            <span class="ot-step-index">You played</span>
-            <span class="ot-step-move ot-move-mono">{this.state.lastMistake.played}</span>
-          </div>
-          <div class="ot-step-expl">{this.state.lastMistake.explanation}</div>
+              <label class="ot-settings-row">
+                <input
+                  type="checkbox"
+                  checked={!!(this.state.settings && this.state.settings.playSounds)}
+                  onChange={(e) => this.setSetting("playSounds", !!e.target.checked)}
+                />
+                <span>Play Sounds</span>
+              </label>
+            </div>
+          ) : null}
         </div>
       </div>
-    ) : null}
 
-    <div class="ot-panel-footer">
-      <div class="ot-footer-left">
-        <span class="ot-label2">Mode</span>
-        <select class="ot-select ot-select-compact" value={this.state.openingKey} onChange={this.setOpeningKey}>
-          <option value="london">London</option>
-          <option value="sicilian">Sicilian</option>
-        </select>
-      </div>
+                    {this.state.viewing ? (
+                      <button class="ot-mini-btn" onClick={this.viewLive} title="Jump back to current position">
+                        Live
+                      </button>
+                    ) : (
+                      <span />
+                    )}
 
-      <div class="ot-footer-right">
-        {this.state.viewing ? (
-          <button class="ot-mini-btn" onClick={this.viewLive} title="Jump back to current position">
-            Live
-          </button>
-        ) : null}
+                    <div class="ot-nav-right">
+                      <button
+                        class="ot-icon-btn"
+                        onClick={this.viewBack}
+                        disabled={!canViewBack}
+                        title="Back"
+                        aria-label="Back"
+                      >
+                        ‹
+                      </button>
 
-        <button
-          class="ot-icon-btn"
-          onClick={this.viewBack}
-          disabled={!canViewBack}
-          title="Back"
-          aria-label="Back"
-        >
-          ‹
-        </button>
+                      <button
+                        class="ot-icon-btn"
+                        onClick={this.viewForward}
+                        disabled={!canViewForward}
+                        title="Forward"
+                        aria-label="Forward"
+                      >
+                        ›
+                      </button>
+                    </div>
+                  </div>
 
-        <button
-          class="ot-icon-btn"
-          onClick={this.viewForward}
-          disabled={!canViewForward}
-          title="Forward"
-          aria-label="Forward"
-        >
-          ›
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
+                  {this.state.lastMistake ? (
+                    <div class="ot-mistake">
+                      <div class="ot-steps-title">Mistake</div>
+                      <div class="ot-step ot-step-mistake">
+                        <div class="ot-step-header">
+                          <span class="ot-step-index">Expected</span>
+                          <span class="ot-step-move ot-move-mono">{this.state.lastMistake.expected}</span>
+                        </div>
+                        <div class="ot-step-header">
+                          <span class="ot-step-index">You played</span>
+                          <span class="ot-step-move ot-move-mono">{this.state.lastMistake.played}</span>
+                        </div>
+                        <div class="ot-step-expl">{this.state.lastMistake.explanation}</div>
+                      </div>
+                    </div>
+                  ) : null}
+              </div>
+            </div>
           </div>
         </div>
       </div>

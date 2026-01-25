@@ -58,7 +58,7 @@ export const sicilianDefenseLines = [
     id: "sicilian-open-najdorf-basic",
     name: "Open Sicilian: Najdorf with 6...a6",
     description: "Najdorf marker move ...a6 after standard development.",
-    moves: ["e4", "c5", "Nf3", "d6", "d4", "cxd4", "Nxd4", "Nf6", "Nc3", "a6", "Be3", "e5", "f3", "e6", "Qd2", "Be7"],
+    moves: ["e4", "c5", "Nf3", "d6", "d4", "cxd4", "Nxd4", "Nf6", "Nc3", "a6", "Be3", "e5", "f3", "Be7", "Qd2", "Be6"],
     explanations: [
       "White claims the center and opens lines.",
       "Sicilian. Fight for d4 with an unbalanced pawn structure.",
@@ -258,7 +258,7 @@ export const sicilianDefenseLines = [
     id: "sicilian-moscow-rossolimo-basic",
     name: "Vs Bb5+: Moscow and Rossolimo",
     description: "After 2.Nf3 d6 3.Bb5+ (Moscow) or 2...Nc6 3.Bb5 (Rossolimo), develop and get ready to unpin.",
-    moves: ["e4", "c5", "Nf3", "d6", "Bb5+", "Bd7", "Bxd7+", "Qxd7", "O-O", "Nc6", "c4", "Nf6", "Nc3", "g6", "Be3", "Bg7"],
+    moves: ["e4", "c5", "Nf3", "d6", "Bb5+", "Bd7", "Bxd7+", "Qxd7", "O-O", "Nc6", "c4", "Nf6", "Nc3", "g6", "d3", "Bg7"],
     explanations: [
       "White claims space.",
       "Sicilian response.",
@@ -1071,7 +1071,7 @@ export const sicilianDefenseLines = [
     id: "sicilian-closed-mainline-g3-e6",
     name: "Closed Sicilian: g3 setup vs ...e6",
     description: "Closed Sicilian where Black chooses ...e6 and ...d5 ideas, staying flexible and solid.",
-    moves: ["e4", "c5", "Nc3", "Nc6", "g3", "e6", "Bg2", "Nge7", "d3", "d5", "exd5", "exd5", "Nf3", "Be6", "O-O", "Bd6"],
+    moves: ["e4", "c5", "Nc3", "Nc6", "g3", "e6", "Bg2", "Nge7", "d3", "d5", "exd5", "exd5", "Nf3", "Be6", "O-O", "Bd7"],
     explanations: [
       "White takes central space.",
       "Sicilian structure, fight for d4.",
@@ -1121,7 +1121,7 @@ export const sicilianDefenseLines = [
     id: "sicilian-closed-early-nge7-0-0",
     name: "Closed Sicilian: ...Nge7 and quick castling",
     description: "Simple Closed Sicilian plan for Black: develop pieces, castle, then decide between ...d6 or ...d5 based on White's setup.",
-    moves: ["e4", "c5", "Nc3", "Nc6", "g3", "g6", "Bg2", "Bg7", "d3", "Nge7", "Be3", "O-O", "Qd2", "d6", "f4", "f5"],
+    moves: ["e4", "c5", "Nc3", "Nc6", "g3", "g6", "Bg2", "Bg7", "d3", "e6", "Be3", "Nge7", "Qd2", "O-O", "f4", "d6", "Nf3", "f5"],
     explanations: [
       "White takes central space.",
       "Sicilian counterplay and imbalance.",
@@ -1138,7 +1138,9 @@ export const sicilianDefenseLines = [
       "Typical Closed Sicilian coordination, support f4 and connect rooks.",
       "Solidify the center and keep ...e5 available later.",
       "Start the main kingside expansion plan.",
-      "Directly challenge the f pawn and claim space, a common practical reaction."
+      "Directly challenge the f pawn and claim space, a common practical reaction.",
+      "(Added) Keep development consistent and the move order legal.",
+      "(Added) Keep development consistent and the move order legal."
     ]
   },
   {
@@ -1170,7 +1172,7 @@ export const sicilianDefenseLines = [
     id: "sicilian-closed-botvinnik-style",
     name: "Closed Sicilian: Botvinnik-style buildup",
     description: "Classic Closed Sicilian plan with Be3, Qd2, and f4 ideas. Slow but dangerous kingside buildup.",
-    moves: ["e4", "c5", "Nc3", "Nc6", "g3", "g6", "Bg2", "Bg7", "d3", "d6", "Be3", "Nge7", "Qd2", "O-O", "f4", "Rb8", "Nf3"],
+    moves: ["e4", "c5", "Nc3", "Nc6", "g3", "g6", "Bg2", "Bg7", "d3", "d6", "Be3", "e6", "Qd2", "Nf6", "f4", "O-O", "Nf3", "Rb8"],
     explanations: [
       "White takes space.",
       "Sicilian structure.",
@@ -1188,7 +1190,8 @@ export const sicilianDefenseLines = [
       "Castle and get the king safe before counterplay starts.",
       "Commit to kingside space and prepare f5 attacks.",
       "Practical queenside prep, often supports ...b5.",
-      "Develop and connect the king side pieces before pushing more pawns."
+      "Develop and connect the king side pieces before pushing more pawns.",
+      "(Added) Keep development consistent and the move order legal."
     ]
   },
 

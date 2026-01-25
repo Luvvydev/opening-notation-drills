@@ -220,7 +220,7 @@
   border: 1px solid rgba(255, 255, 255, 0.10);
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.02);
-  overflow: hidden;
+  overflow: visible;
 }
 
 .ot-panel-header {
@@ -271,7 +271,7 @@
   background: #0b0d12;
   border-radius: 12px;
   padding: 10px;
-  z-index: 40;
+  z-index: 999;
   box-shadow: 0 16px 38px rgba(0, 0, 0, 0.45);
 }
 
@@ -356,7 +356,7 @@
 
 .ot-stat-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 8px;
 }
 
@@ -605,7 +605,7 @@
 
 .ot-action-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
   align-items: center;
 }
@@ -686,4 +686,105 @@
   .ot-footer-right {
     justify-content: flex-end;
   }
+}
+
+.ot-top-line {
+  max-width: 1200px;
+  margin: 10px auto 12px auto;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 14px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.ot-top-line-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.ot-top-line-count {
+  font-weight: 950;
+  font-size: 13px;
+  color: rgba(201, 210, 221, 0.90);
+}
+
+.ot-progress-bar-top {
+  height: 16px;
+}
+
+
+.ot-board-head {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin-bottom: 10px;
+}
+
+.ot-opening-select {
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #0b0d12;
+  color: #e9edf2;
+  font-weight: 900;
+  font-size: 13px;
+}
+
+
+.ot-nav-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ot-line-select-compact {
+  min-width: 220px;
+  max-width: 420px;
+}
+
+/* Fix board shifting issue */
+.ot-main {
+  align-items: stretch; /* Change from 'start' to 'stretch' */
+}
+
+.ot-board {
+  min-height: 500px; /* Set a minimum height */
+  display: flex;
+  flex-direction: column;
+}
+
+/* Ensure the board container maintains its height */
+@media (max-width: 1100px) {
+  .ot-board {
+    min-height: auto;
+  }
+}
+
+/* Make the right panel scrollable instead of pushing content */
+.ot-side {
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+/* Optional: Add smooth scroll to the panel body */
+.ot-panel-body {
+  max-height: calc(85vh - 120px); /* Adjust based on your header height */
+  overflow-y: auto;
+}
+
+/* Optional: Style the scrollbar for better appearance */
+.ot-panel-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.ot-panel-body::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 3px;
+}
+
+.ot-panel-body::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
 }

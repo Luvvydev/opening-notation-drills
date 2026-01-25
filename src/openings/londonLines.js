@@ -135,7 +135,7 @@ export const londonLines = [
     id: "london-exchange-cxd4",
     name: "London vs ...cxd4 exchange",
     description: "Black exchanges on d4. You recapture and keep development moving.",
-    moves: ["d4", "d5", "Bf4", "Nf6", "e3", "c5", "Nf3", "Nc6", "exd4"],
+    moves: ["d4", "d5", "Bf4", "Nf6", "e3", "c5", "Nf3", "Nc6", "c3", "cxd4", "exd4"],
     explanations: [
       "Take the center and define the pawn structure.",
       "Black mirrors and contests the center.",
@@ -145,7 +145,9 @@ export const londonLines = [
       "Black attacks d4 and looks for early counterplay.",
       "Develop and keep options for c4 or e3 structures.",
       "Black develops and adds more pressure on the center.",
-      "Recapture cleanly, keep structure coherent, and open lines for your pieces."
+      "Recapture cleanly, keep structure coherent, and open lines for your pieces.",
+      "(Added) Keep development consistent and the move order legal.",
+      "(Added) Keep development consistent and the move order legal."
     ]
   },
 
@@ -260,7 +262,7 @@ export const londonLines = [
     id: "london-vs-bg4-pin",
     name: "London vs ...Bg4 pin",
     description: "Black pins early. You continue development and decide later how to respond.",
-    moves: ["d4", "d5", "Bf4", "Nf6", "e3", "e6", "Nf3", "Bd6", "Nbd2", "Bg4"],
+    moves: ["d4", "d5", "Bf4", "Nf6", "e3", "Bg4", "Nf3", "e6", "Nbd2", "Bd6"],
     explanations: [
       "Take central space and establish a stable base.",
       "Black mirrors and contests the center.",
@@ -278,16 +280,17 @@ export const londonLines = [
   {
     id: "london-vs-qb6-no-c5",
     name: "London vs early ...Qb6 without c5",
-    description: "Black aims at b2 and d4. Nc3 is a direct defense and develops a piece.",
-    moves: ["d4", "d5", "Bf4", "Nf6", "e3", "Qb6", "Nc3"],
+    description: "Black often uses ...c5 then ...Qb6 to pressure b2 and d4. Nc3 is a direct defense and develops a piece.",
+    moves: ["d4", "d5", "Bf4", "Nf6", "e3", "c5", "Nc3", "Qb6"],
     explanations: [
       "Take the center and define the structure early.",
       "Black matches and contests d4.",
       "Develop actively before e3.",
       "Black develops and fights for the center.",
-      "Support d4 and open the light bishop and queen.",
-      "Black attacks b2 and pressures d4 immediately.",
-      "Defend b2 indirectly, develop, and support central play."
+      "Support d4 and open lines for development.",
+      "Black plays ...c5 to hit d4 and open the diagonal for the queen.",
+      "Nc3 defends d5/e4 ideas and supports d5 and b5 squares while developing.",
+      "Now ...Qb6 is legal and adds pressure on b2 and d4."
     ]
   },
 
