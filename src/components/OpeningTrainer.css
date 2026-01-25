@@ -589,7 +589,7 @@
   cursor: not-allowed;
 }
 
-.ot-current-text {
+\.ot-current-text {
   font-size: 14px;
   line-height: 1.35;
   color: #e6eef8;
@@ -597,7 +597,19 @@
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(0, 0, 0, 0.18);
+
+  max-height: 86px;
+  overflow-y: auto;
+  word-break: break-word;
+
+  scrollbar-width: none;
 }
+
+.ot-current-text::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
 
 .ot-card-actions {
   padding: 12px;
@@ -744,65 +756,47 @@
   max-width: 420px;
 }
 
-/* Fix board shifting issue */
-.ot-main {
-  align-items: stretch; /* Change from 'start' to 'stretch' */
+/* --- Line picker: icon button + popover --- */
+.ot-line-picker {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.ot-board {
-  min-height: 500px; /* Set a minimum height */
-  display: flex;
-  flex-direction: column;
+.ot-line-popover {
+  position: absolute;
+  left: 0;
+  top: 42px;
+  min-width: 320px;
+  max-width: 520px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #0b0d12;
+  border-radius: 12px;
+  padding: 10px;
+  z-index: 999;
+  box-shadow: 0 16px 38px rgba(0, 0, 0, 0.45);
 }
 
-/* Ensure the board container maintains its height */
-@media (max-width: 1100px) {
-  .ot-board {
-    min-height: auto;
-  }
+.ot-line-popover-title {
+  font-weight: 950;
+  font-size: 12px;
+  color: #e9edf2;
+  margin-bottom: 8px;
 }
 
-/* Make the right panel scrollable instead of pushing content */
-.ot-side {
-  max-height: 85vh;
-  overflow-y: auto;
-}
-
-/* Optional: Add smooth scroll to the panel body */
-.ot-panel-body {
-  max-height: calc(85vh - 120px); /* Adjust based on your header height */
-  overflow-y: auto;
-}
-
-/* Optional: Style the scrollbar for better appearance */
-.ot-panel-body::-webkit-scrollbar {
-  width: 6px;
-}
-
-.ot-panel-body::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 3px;
-}
-
-.ot-panel-body::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 3px;
-}
-
-/* --- Fix layout shift from long Current step text and scrollbar toggles --- */
-body {
-  overflow-y: scroll; /* keep scrollbar width stable to prevent board width jitter */
-}
-
-.ot-current-text {
-  max-height: 86px; /* clamp so long explanations don't resize the whole layout */
-  overflow-y: auto;
-  scrollbar-gutter: stable;
-  word-break: break-word;
-}
-
-/* Settings menu was getting clipped by the scrollable panel body */
-.ot-panel-body {
-  max-height: none !important;
-  overflow: visible !important;
+.ot-icon-btn-tight {
+  width: 38px;
+  height: 34px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  color: #dce6f3;
+  font-size: 18px;
+  font-weight: 900;
+  line-height: 1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }

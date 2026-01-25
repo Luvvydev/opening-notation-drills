@@ -255,6 +255,9 @@ class OpeningTrainer extends Component {
 
     this.game = new Chess();
 
+    this._settingsAnchorEl = null;
+    this._linePickerAnchorEl = null;
+
     const firstSetKey = "london";
     const firstLines = OPENING_SETS[firstSetKey].lines;
     const firstId = _pickRandomLineId(firstLines, null) || (firstLines[0] ? firstLines[0].id : "");
@@ -279,6 +282,7 @@ class OpeningTrainer extends Component {
       progress: progress,
       showHint: false,
       settingsOpen: false,
+      lineMenuOpen: false,
       settings: settings
     ,
       viewing: false,
@@ -306,7 +310,7 @@ class OpeningTrainer extends Component {
   }
 
   componentDidMount() {
-    window.addEventListener("click", this.onWindowClick);
+    window.addEventListener("mousedown", this.onWindowClick);
     window.addEventListener("keydown", this.onKeyDown);
     this.resetLine(false);
   }
@@ -314,12 +318,19 @@ class OpeningTrainer extends Component {
   componentWillUnmount() {
     if (this._autoNextTimer) clearTimeout(this._autoNextTimer);
     if (this._confettiTimer) clearTimeout(this._confettiTimer);
-    window.removeEventListener("click", this.onWindowClick);
+    window.removeEventListener("mousedown", this.onWindowClick);
     window.removeEventListener("keydown", this.onKeyDown);
   }
 
-  onWindowClick = () => {
-    if (this.state.settingsOpen) this.setState({ settingsOpen: false });
+  onWindowClick = (e) => {
+    if (!this.state.settingsOpen && !this.state.lineMenuOpen) return;
+
+    const t = e && e.target;
+
+    if (this._settingsAnchorEl && t && this._settingsAnchorEl.contains(t)) return;
+    if (this._linePickerAnchorEl && t && this._linePickerAnchorEl.contains(t)) return;
+
+    this.setState({ settingsOpen: false, lineMenuOpen: false });
   };
 
   onKeyDown = (e) => {
@@ -467,6 +478,12 @@ class OpeningTrainer extends Component {
     if (e && e.stopPropagation) e.stopPropagation();
     this.setState({ settingsOpen: !this.state.settingsOpen });
   };
+
+  toggleLineMenuOpen = (e) => {
+    if (e && e.stopPropagation) e.stopPropagation();
+    this.setState({ lineMenuOpen: !this.state.lineMenuOpen });
+  };
+
 
   setSetting = (key, value) => {
     const next = { ...(this.state.settings || {}) };
@@ -1115,33 +1132,58 @@ renderCurrentStepCard = (line, doneYourMoves, totalYourMoves, expectedSan) => {
                   <div class="ot-nav-row">
 
       <div class="ot-nav-left">
-        <select class="ot-line-select ot-line-select-compact" value={this.state.linePicker} onChange={this.setLinePicker}>
-          <option value="random">Random line</option>
-          <option value="__divider__" disabled>
-            ─────────
-          </option>
-          {(() => {
-            const grouped = _groupLines(lines);
-            return grouped.cats.map((cat) => {
-              const arr = grouped.map[cat] || [];
-              return (
-                <optgroup key={cat} label={cat}>
-                  {arr.map((l) => {
-                    const s = _getLineStats(this.state.progress, this.state.openingKey, l.id);
-                    const symbol = _isCompleted(s) ? "✓" : s.timesSeen > 0 ? "•" : "○";
-                    return (
-                      <option key={l.id} value={l.id}>
-                        {symbol} {l.name}
-                      </option>
-                    );
-                  })}
-                </optgroup>
-              );
-            });
-          })()}
-        </select>
+        <div class="ot-line-picker" ref={(el) => { this._linePickerAnchorEl = el; }} onClick={(e) => e.stopPropagation()}>
+          <button
+            class="ot-icon-btn-tight"
+            onClick={this.toggleLineMenuOpen}
+            title="Choose line"
+            aria-label="Choose line"
+          >
+            ☰
+          </button>
 
-        <div class="ot-panel-header-actions" onClick={(e) => e.stopPropagation()}>
+          {this.state.lineMenuOpen ? (
+            <div class="ot-line-popover" onClick={(e) => e.stopPropagation()}>
+              <div class="ot-line-popover-title">Line select</div>
+
+              <select
+                class="ot-line-select ot-line-select-compact"
+                value={this.state.linePicker}
+                onChange={(e) => {
+                  this.setLinePicker(e);
+                  this.setState({ lineMenuOpen: false });
+                }}
+              >
+                <option value="random">Random line</option>
+                <option value="__divider__" disabled>
+                  ─────────
+                </option>
+
+                {(() => {
+                  const grouped = _groupLines(lines);
+                  return grouped.cats.map((cat) => {
+                    const arr = grouped.map[cat] || [];
+                    return (
+                      <optgroup key={cat} label={cat}>
+                        {arr.map((l) => {
+                          const s = _getLineStats(this.state.progress, this.state.openingKey, l.id);
+                          const symbol = _isCompleted(s) ? "✓" : s.timesSeen > 0 ? "•" : "○";
+                          return (
+                            <option key={l.id} value={l.id}>
+                              {symbol} {l.name}
+                            </option>
+                          );
+                        })}
+                      </optgroup>
+                    );
+                  });
+                })()}
+              </select>
+            </div>
+          ) : null}
+        </div>
+
+        <div class="ot-panel-header-actions" ref={(el) => { this._settingsAnchorEl = el; }} onClick={(e) => e.stopPropagation()}>
           <button class="ot-gear" onClick={this.toggleSettingsOpen} title="Settings">
             ⚙
           </button>
