@@ -1147,7 +1147,7 @@ renderCurrentStepCard = (line, doneYourMoves, totalYourMoves, expectedSan) => {
           </button>
 
           {this.state.settingsOpen ? (
-            <div class="ot-settings-menu">
+            <div class="ot-settings-menu" onClick={(e) => e.stopPropagation()}>
               <div class="ot-settings-title">Settings</div>
 
               <label class="ot-settings-row">
@@ -1203,22 +1203,7 @@ renderCurrentStepCard = (line, doneYourMoves, totalYourMoves, expectedSan) => {
                     </div>
                   </div>
 
-                  {this.state.lastMistake ? (
-                    <div class="ot-mistake">
-                      <div class="ot-steps-title">Mistake</div>
-                      <div class="ot-step ot-step-mistake">
-                        <div class="ot-step-header">
-                          <span class="ot-step-index">Expected</span>
-                          <span class="ot-step-move ot-move-mono">{this.state.lastMistake.expected}</span>
-                        </div>
-                        <div class="ot-step-header">
-                          <span class="ot-step-index">You played</span>
-                          <span class="ot-step-move ot-move-mono">{this.state.lastMistake.played}</span>
-                        </div>
-                        <div class="ot-step-expl">{this.state.lastMistake.explanation}</div>
-                      </div>
-                    </div>
-                  ) : null}
+                  {/* Mistake box removed (was revealing the expected move) */}
               </div>
             </div>
           </div>

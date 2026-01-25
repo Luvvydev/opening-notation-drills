@@ -788,3 +788,21 @@
   background: rgba(255, 255, 255, 0.15);
   border-radius: 3px;
 }
+
+/* --- Fix layout shift from long Current step text and scrollbar toggles --- */
+body {
+  overflow-y: scroll; /* keep scrollbar width stable to prevent board width jitter */
+}
+
+.ot-current-text {
+  max-height: 86px; /* clamp so long explanations don't resize the whole layout */
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  word-break: break-word;
+}
+
+/* Settings menu was getting clipped by the scrollable panel body */
+.ot-panel-body {
+  max-height: none !important;
+  overflow: visible !important;
+}
