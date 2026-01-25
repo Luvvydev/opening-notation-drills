@@ -920,7 +920,7 @@ sanitizeExplanation = (text, expectedSan) => {
   return s;
 };
 
-renderCurrentStepCard = (line, doneYourMoves, totalYourMoves, expectedSan) => {
+renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
   if (!line) return null;
 
   const canUndo = !!(this.state.lastMistake || this.state.wrongAttempt);
@@ -930,9 +930,13 @@ renderCurrentStepCard = (line, doneYourMoves, totalYourMoves, expectedSan) => {
   const text = unlocked ? this.sanitizeExplanation(raw, expectedSan) : raw;
 
   return (
-    <div class="ot-card ot-card-current">
-      <div class="ot-card-head">
-        <div class="ot-card-title">Current step</div>
+    <div class="ot-coach">
+      <div class="ot-coach-head">
+        <div class="ot-coach-left">
+          <div class="ot-buddy" title="Your drill buddy">♞</div>
+          <div class="ot-coach-title"></div>
+        </div>
+
         <div class="ot-card-head-right">
           <span class="ot-mini-count">
             {doneYourMoves}/{totalYourMoves}
@@ -945,7 +949,9 @@ renderCurrentStepCard = (line, doneYourMoves, totalYourMoves, expectedSan) => {
         </div>
       </div>
 
-      <div class="ot-current-text">{text}</div>
+      <div class="ot-bubble">
+        <div class="ot-coach-text">{text}</div>
+      </div>
     </div>
   );
 };
@@ -1088,164 +1094,171 @@ renderCurrentStepCard = (line, doneYourMoves, totalYourMoves, expectedSan) => {
           <div class="ot-side">
             <div class="ot-panel">
               <div class="ot-panel-body">
-                  {this.renderCurrentStepCard(line, doneYourMoves, totalYourMoves, nextExpected)}
+              {this.renderCoachArea(line, doneYourMoves, totalYourMoves, nextExpected)}
 
-                  <div class="ot-card ot-card-actions">
-                    <div class="ot-action-grid">
-                      <button class="ot-button ot-button-small" onClick={this.retryLine}>
-                        Retry
-                      </button>
+              <div class="ot-dock">
+                <div class="ot-dock-left">
+                  <div
+                    class="ot-line-picker"
+                    ref={(el) => {
+                      this._linePickerAnchorEl = el;
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <button
+                      class="ot-icon-btn-tight"
+                      onClick={this.toggleLineMenuOpen}
+                      title="Choose line"
+                      aria-label="Choose line"
+                    >
+                      ☰
+                    </button>
 
-                      <button
-                        class="ot-button ot-button-small"
-                        onClick={this.startRandomLine}
-                        disabled={this.state.linePicker !== "random"}
-                        title={
-                          this.state.linePicker === "random"
-                            ? "Pick a new random line"
-                            : "Switch to Random line to use this"
-                        }
-                      >
-                        Next
-                      </button>
+                    {this.state.lineMenuOpen ? (
+                      <div class="ot-line-popover" onClick={(e) => e.stopPropagation()}>
+                        <div class="ot-line-popover-title">Line select</div>
 
-                      <button
-                        class={
-                          "ot-button ot-button-small ot-hint-btn" +
-                          (this.state.showHint ? " ot-hint-btn-on" : "")
-                        }
-                        onClick={this.state.solveArmed ? this.playMoveForMe : this.onHint}
-                        disabled={!nextExpected || this.state.completed || this.state.viewing}
-                        title={
-                          !nextExpected
-                            ? "Line complete"
-                            : this.state.solveArmed
-                            ? "Play the move (breaks clean completion)"
-                            : "Highlight the piece to move"
-                        }
-                      >
-                        {this.state.solveArmed ? "Solve" : "Hint"}
-                      </button>
-                    </div>
+                        <select
+                          class="ot-line-select ot-line-select-compact"
+                          value={this.state.linePicker}
+                          onChange={(e) => {
+                            this.setLinePicker(e);
+                            this.setState({ lineMenuOpen: false });
+                          }}
+                        >
+                          <option value="random">Random line</option>
+                          <option value="__divider__" disabled>
+                            ─────────
+                          </option>
+
+                          {(() => {
+                            const grouped = _groupLines(lines);
+                            return grouped.cats.map((cat) => {
+                              const arr = grouped.map[cat] || [];
+                              return (
+                                <optgroup key={cat} label={cat}>
+                                  {arr.map((l) => {
+                                    const s = _getLineStats(this.state.progress, this.state.openingKey, l.id);
+                                    const symbol = _isCompleted(s) ? "✓" : s.timesSeen > 0 ? "•" : "○";
+                                    return (
+                                      <option key={l.id} value={l.id}>
+                                        {symbol} {l.name}
+                                      </option>
+                                    );
+                                  })}
+                                </optgroup>
+                              );
+                            });
+                          })()}
+                        </select>
+                      </div>
+                    ) : null}
                   </div>
 
-                  <div class="ot-nav-row">
+                  <div
+                    class="ot-panel-header-actions"
+                    ref={(el) => {
+                      this._settingsAnchorEl = el;
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <button class="ot-gear" onClick={this.toggleSettingsOpen} title="Settings" aria-label="Settings">
+                      ⚙
+                    </button>
 
-      <div class="ot-nav-left">
-        <div class="ot-line-picker" ref={(el) => { this._linePickerAnchorEl = el; }} onClick={(e) => e.stopPropagation()}>
-          <button
-            class="ot-icon-btn-tight"
-            onClick={this.toggleLineMenuOpen}
-            title="Choose line"
-            aria-label="Choose line"
-          >
-            ☰
-          </button>
+                    {this.state.settingsOpen ? (
+                      <div class="ot-settings-menu" onClick={(e) => e.stopPropagation()}>
+                        <div class="ot-settings-title">Settings</div>
 
-          {this.state.lineMenuOpen ? (
-            <div class="ot-line-popover" onClick={(e) => e.stopPropagation()}>
-              <div class="ot-line-popover-title">Line select</div>
+                        <label class="ot-settings-row">
+                          <input
+                            type="checkbox"
+                            checked={!!(this.state.settings && this.state.settings.showConfetti)}
+                            onChange={(e) => this.setSetting("showConfetti", !!e.target.checked)}
+                          />
+                          <span>Show Confetti</span>
+                        </label>
 
-              <select
-                class="ot-line-select ot-line-select-compact"
-                value={this.state.linePicker}
-                onChange={(e) => {
-                  this.setLinePicker(e);
-                  this.setState({ lineMenuOpen: false });
-                }}
-              >
-                <option value="random">Random line</option>
-                <option value="__divider__" disabled>
-                  ─────────
-                </option>
-
-                {(() => {
-                  const grouped = _groupLines(lines);
-                  return grouped.cats.map((cat) => {
-                    const arr = grouped.map[cat] || [];
-                    return (
-                      <optgroup key={cat} label={cat}>
-                        {arr.map((l) => {
-                          const s = _getLineStats(this.state.progress, this.state.openingKey, l.id);
-                          const symbol = _isCompleted(s) ? "✓" : s.timesSeen > 0 ? "•" : "○";
-                          return (
-                            <option key={l.id} value={l.id}>
-                              {symbol} {l.name}
-                            </option>
-                          );
-                        })}
-                      </optgroup>
-                    );
-                  });
-                })()}
-              </select>
-            </div>
-          ) : null}
-        </div>
-
-        <div class="ot-panel-header-actions" ref={(el) => { this._settingsAnchorEl = el; }} onClick={(e) => e.stopPropagation()}>
-          <button class="ot-gear" onClick={this.toggleSettingsOpen} title="Settings">
-            ⚙
-          </button>
-
-          {this.state.settingsOpen ? (
-            <div class="ot-settings-menu" onClick={(e) => e.stopPropagation()}>
-              <div class="ot-settings-title">Settings</div>
-
-              <label class="ot-settings-row">
-                <input
-                  type="checkbox"
-                  checked={!!(this.state.settings && this.state.settings.showConfetti)}
-                  onChange={(e) => this.setSetting("showConfetti", !!e.target.checked)}
-                />
-                <span>Show Confetti</span>
-              </label>
-
-              <label class="ot-settings-row">
-                <input
-                  type="checkbox"
-                  checked={!!(this.state.settings && this.state.settings.playSounds)}
-                  onChange={(e) => this.setSetting("playSounds", !!e.target.checked)}
-                />
-                <span>Play Sounds</span>
-              </label>
-            </div>
-          ) : null}
-        </div>
-      </div>
-
-                    {this.state.viewing ? (
-                      <button class="ot-mini-btn" onClick={this.viewLive} title="Jump back to current position">
-                        Live
-                      </button>
-                    ) : (
-                      <span />
-                    )}
-
-                    <div class="ot-nav-right">
-                      <button
-                        class="ot-icon-btn"
-                        onClick={this.viewBack}
-                        disabled={!canViewBack}
-                        title="Back"
-                        aria-label="Back"
-                      >
-                        ‹
-                      </button>
-
-                      <button
-                        class="ot-icon-btn"
-                        onClick={this.viewForward}
-                        disabled={!canViewForward}
-                        title="Forward"
-                        aria-label="Forward"
-                      >
-                        ›
-                      </button>
-                    </div>
+                        <label class="ot-settings-row">
+                          <input
+                            type="checkbox"
+                            checked={!!(this.state.settings && this.state.settings.playSounds)}
+                            onChange={(e) => this.setSetting("playSounds", !!e.target.checked)}
+                          />
+                          <span>Play Sounds</span>
+                        </label>
+                      </div>
+                    ) : null}
                   </div>
+                </div>
 
-                  {/* Mistake box removed (was revealing the expected move) */}
+                <div class="ot-dock-center">
+                  <button class="ot-button ot-button-small ot-button-dock" onClick={this.retryLine}>
+                    Retry
+                  </button>
+
+                  <button
+                    class="ot-button ot-button-small ot-button-dock"
+                    onClick={this.startRandomLine}
+                    disabled={this.state.linePicker !== "random"}
+                    title={
+                      this.state.linePicker === "random"
+                        ? "Pick a new random line"
+                        : "Switch to Random line to use this"
+                    }
+                  >
+                    Next
+                  </button>
+
+                  <button
+                    class={
+                      "ot-button ot-button-small ot-button-dock ot-hint-btn" +
+                      (this.state.showHint ? " ot-hint-btn-on" : "")
+                    }
+                    onClick={this.state.solveArmed ? this.playMoveForMe : this.onHint}
+                    disabled={!nextExpected || this.state.completed || this.state.viewing}
+                    title={
+                      !nextExpected
+                        ? "Line complete"
+                        : this.state.solveArmed
+                        ? "Play the move (breaks clean completion)"
+                        : "Highlight the piece to move"
+                    }
+                  >
+                    {this.state.solveArmed ? "Solve" : "Hint"}
+                  </button>
+                </div>
+
+                <div class="ot-dock-right">
+                  {this.state.viewing ? (
+                    <button class="ot-mini-btn" onClick={this.viewLive} title="Jump back to current position">
+                      Live
+                    </button>
+                  ) : null}
+
+                  <button
+                    class="ot-icon-btn"
+                    onClick={this.viewBack}
+                    disabled={!canViewBack}
+                    title="Back"
+                    aria-label="Back"
+                  >
+                    ‹
+                  </button>
+
+                  <button
+                    class="ot-icon-btn"
+                    onClick={this.viewForward}
+                    disabled={!canViewForward}
+                    title="Forward"
+                    aria-label="Forward"
+                  >
+                    ›
+                  </button>
+                </div>
+              </div>
+
+{/* Mistake box removed (was revealing the expected move) */}
               </div>
             </div>
           </div>
