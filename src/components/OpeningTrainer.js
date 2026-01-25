@@ -999,14 +999,16 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
   const canUndo = !!(this.state.lastMistake || this.state.wrongAttempt);
 
   const unlocked = !!this.state.mistakeUnlocked;
-  const raw = unlocked ? (line.explanations[this.state.stepIndex] || "") : "What's the best move?";
+
+  // Sync explanation with viewIndex when using the back and forward buttons
+  const coachIndex = this.getViewIndex();
+  const raw = unlocked ? (line.explanations[coachIndex] || "") : "What's the best move?";
   const text = unlocked ? this.sanitizeExplanation(raw, expectedSan) : raw;
 
   return (
     <div class="ot-coach">
       <div class="ot-coach-head">
         <div class="ot-coach-left">
-          <div class="ot-buddy" title="Your drill buddy">♞</div>
           <div class="ot-coach-title"></div>
         </div>
 
@@ -1023,7 +1025,10 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
       </div>
 
       <div class="ot-bubble">
-        <div class="ot-coach-text">{text}</div>
+        <div class="ot-bubble-row">
+          <div class="ot-buddy" title="Your drill buddy">♞</div>
+          <div class="ot-coach-text">{text}</div>
+        </div>
       </div>
     </div>
   );
@@ -1069,6 +1074,7 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
 
 
     const viewIndex = this.getViewIndex();
+    const coachExpected = line.moves[viewIndex] || null;
     const boardFen = this.state.viewing ? this.state.viewFen : this.state.fen;
     const canViewBack = viewIndex > 0;
     const canViewForward = viewIndex < this.state.stepIndex;
@@ -1193,7 +1199,7 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
           <div class="ot-side">
             <div class="ot-panel">
               <div class="ot-panel-body">
-              {this.renderCoachArea(line, doneYourMoves, totalYourMoves, nextExpected)}
+              {this.renderCoachArea(line, doneYourMoves, totalYourMoves, coachExpected)}
 
               <div class="ot-dock">
                 <div class="ot-dock-left">
