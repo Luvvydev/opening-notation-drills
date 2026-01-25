@@ -258,7 +258,16 @@ class OpeningTrainer extends Component {
     this._settingsAnchorEl = null;
     this._linePickerAnchorEl = null;
 
-    const firstSetKey = "london";
+    let firstSetKey = "london";
+    try {
+      const search = (props && props.location && props.location.search) || "";
+      const params = new URLSearchParams(search);
+      const fromHome = params.get("opening");
+      if (fromHome && OPENING_SETS[fromHome]) firstSetKey = fromHome;
+    } catch (_) {
+      // ignore
+    }
+
     const firstLines = OPENING_SETS[firstSetKey].lines;
     const firstId = _pickRandomLineId(firstLines, null) || (firstLines[0] ? firstLines[0].id : "");
 
