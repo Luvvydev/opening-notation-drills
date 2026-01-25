@@ -30,7 +30,9 @@ class Board extends Component {
       time: 60,
       timerCount: 0,
       incorrect: false,
-      correct: false
+      correct: false,
+      selectedSquare: null,
+      legalTargets: []
     }
   }
 
@@ -166,12 +168,14 @@ class Board extends Component {
           answer: 'correct', 
           fen: game.fen(), 
           correctMoves: this.state.correctMoves+1,
-          correct: true
+          correct: true,
+          selectedSquare: null,
+          legalTargets: []
         });
        } else if (sourceSquare === targetSquare) {
         // Skip if piece is dropped onto original square
        } else {
-         this.setState({ answer: 'incorrect', incorrect: true });
+         this.setState({ answer: 'incorrect', incorrect: true, selectedSquare: null, legalTargets: [] });
        }
   }
 
@@ -183,6 +187,60 @@ class Board extends Component {
       return false;
     }
   }
+
+  clearSelection = () => {
+    if (this.state.selectedSquare || (this.state.legalTargets && this.state.legalTargets.length)) {
+      this.setState({ selectedSquare: null, legalTargets: [] });
+    }
+  };
+
+  getLegalTargets = (fromSquare) => {
+    if (!fromSquare) return [];
+    try {
+      const moves = game.moves({ square: fromSquare, verbose: true });
+      if (!moves || !moves.length) return [];
+      return moves.map((m) => m.to);
+    } catch (_) {
+      return [];
+    }
+  };
+
+  onSquareClick = (square) => {
+    const piece = game.get(square);
+    // only let user interact with the correct side to move (the expected move color)
+    if (!this.allowDrag({ piece: piece ? (piece.color + piece.type.toUpperCase()) : "" })) return;
+
+    if (!this.state.selectedSquare) {
+      if (!piece) return;
+      const targets = this.getLegalTargets(square);
+      this.setState({ selectedSquare: square, legalTargets: targets });
+      return;
+    }
+
+    if (square === this.state.selectedSquare) {
+      this.clearSelection();
+      return;
+    }
+
+    // switch selection if clicking another own piece
+    if (piece && piece.color === this.state.nextMoveData.color) {
+      const targets = this.getLegalTargets(square);
+      this.setState({ selectedSquare: square, legalTargets: targets });
+      return;
+    }
+
+    const from = this.state.selectedSquare;
+    const to = square;
+    this.setState({ selectedSquare: null, legalTargets: [] }, () => {
+      this.onDrop({ sourceSquare: from, targetSquare: to, piece: (this.state.nextMoveData.color + this.state.nextMoveData.piece.toUpperCase()) });
+    });
+  };
+
+  onSquareRightClick = () => {
+    this.clearSelection();
+  };
+
+
 
   // Wait for movePrompt animation to end
   onAnimationEnd = () => {
@@ -205,6 +263,31 @@ class Board extends Component {
     const incorrect = this.state.incorrect;
     const correct = this.state.correct;
 
+
+    const renderSquareStyles = { ...(this.state.squareStyles || {}) };
+
+    if (this.state.selectedSquare) {
+      renderSquareStyles[this.state.selectedSquare] = {
+        ...(renderSquareStyles[this.state.selectedSquare] || {}),
+        boxShadow: "inset 0 0 0 3px rgba(170, 80, 255, 0.75)"
+      };
+    }
+
+    if (this.state.legalTargets && this.state.legalTargets.length) {
+      for (const toSq of this.state.legalTargets) {
+        const existing = renderSquareStyles[toSq] || {};
+        const dot = "radial-gradient(circle at center, rgba(170, 80, 255, 0.55) 18%, rgba(0,0,0,0) 20%)";
+        const mergedBg = existing.backgroundImage ? (existing.backgroundImage + ", " + dot) : dot;
+        renderSquareStyles[toSq] = {
+          ...existing,
+          backgroundImage: mergedBg,
+          backgroundRepeat: existing.backgroundRepeat ? existing.backgroundRepeat + ", no-repeat" : "no-repeat",
+          backgroundPosition: existing.backgroundPosition ? existing.backgroundPosition + ", center" : "center",
+          backgroundSize: existing.backgroundSize ? existing.backgroundSize + ", 100% 100%" : "100% 100%"
+        };
+      }
+    }
+
     return (
       <div>
         <Timer 
@@ -212,12 +295,14 @@ class Board extends Component {
           display={this.props.timed ? 'block' : 'none'} />
         <Chessboard
           position={this.state.fen} 
-          squareStyles={this.state.squareStyles}
+          squareStyles={renderSquareStyles}
           onDrop={this.onDrop}
           allowDrag={this.allowDrag} 
           showNotation={this.props.showNotation} 
           orientation={this.props.orientation === 'random' ? this.state.orientation : this.props.orientation}
           calcWidth={this.props.calcWidth}
+          onSquareClick={this.onSquareClick}
+          onSquareRightClick={this.onSquareRightClick}
           />
         <div 
         id='movePrompt' >

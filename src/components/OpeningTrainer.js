@@ -289,7 +289,9 @@ class OpeningTrainer extends Component {
       viewIndex: 0,
       viewFen: "start",
       hintFromSquare: null,
-      solveArmed: false
+      solveArmed: false,
+      selectedSquare: null,
+      legalTargets: []
     };
 
     this._countedSeenForRun = false;
@@ -849,7 +851,9 @@ class OpeningTrainer extends Component {
         wrongAttempt: {
           from: sourceSquare,
           to: targetSquare
-        }
+        },
+        selectedSquare: null,
+        legalTargets: []
       });
 
       return;
@@ -869,7 +873,9 @@ class OpeningTrainer extends Component {
         wrongAttempt: null,
         showHint: false,
         solveArmed: false,
-        hintFromSquare: null
+        hintFromSquare: null,
+        selectedSquare: null,
+        legalTargets: []
       },
       () => {
         this.playAutoMovesIfNeeded();
@@ -887,6 +893,73 @@ class OpeningTrainer extends Component {
 
     return piece && piece.charAt(0) === playerColor;
   };
+
+  clearSelection = () => {
+    if (this.state.selectedSquare || (this.state.legalTargets && this.state.legalTargets.length)) {
+      this.setState({ selectedSquare: null, legalTargets: [] });
+    }
+  };
+
+  getLegalTargets = (fromSquare) => {
+    if (!fromSquare) return [];
+    try {
+      const moves = this.game.moves({ square: fromSquare, verbose: true });
+      if (!moves || !moves.length) return [];
+      return moves.map((m) => m.to);
+    } catch (_) {
+      return [];
+    }
+  };
+
+  onSquareClick = (square) => {
+    if (this.state.completed) return;
+    if (this.state.wrongAttempt) return;
+    if (this.state.viewing) return;
+
+    const line = this.getLine();
+    if (!line) return;
+
+    const playerColor = this.getPlayerColor();
+    if (this.game.turn() !== playerColor) return;
+
+    const piece = this.game.get(square);
+
+    // If nothing selected yet: only allow selecting your own piece
+    if (!this.state.selectedSquare) {
+      if (!piece || piece.color !== playerColor) return;
+
+      const targets = this.getLegalTargets(square);
+      this.setState({ selectedSquare: square, legalTargets: targets });
+      return;
+    }
+
+    // Click same square: deselect
+    if (square === this.state.selectedSquare) {
+      this.clearSelection();
+      return;
+    }
+
+    // Clicking another of your pieces switches selection
+    if (piece && piece.color === playerColor) {
+      const targets = this.getLegalTargets(square);
+      this.setState({ selectedSquare: square, legalTargets: targets });
+      return;
+    }
+
+    // Otherwise treat as destination
+    const from = this.state.selectedSquare;
+    const to = square;
+
+    // Clear highlights before attempting move
+    this.setState({ selectedSquare: null, legalTargets: [] }, () => {
+      this.onDrop({ sourceSquare: from, targetSquare: to });
+    });
+  };
+
+  onSquareRightClick = () => {
+    this.clearSelection();
+  };
+
 
   stripMovePrefix = (text) => {
   if (!text) return "";
@@ -1024,6 +1097,30 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
     }
 
 
+
+    // Click-to-move highlights (mobile friendly)
+    if (this.state.selectedSquare) {
+      squareStyles[this.state.selectedSquare] = {
+        ...(squareStyles[this.state.selectedSquare] || {}),
+        boxShadow: "inset 0 0 0 3px rgba(170, 80, 255, 0.75)"
+      };
+    }
+
+    if (this.state.legalTargets && this.state.legalTargets.length) {
+      for (const toSq of this.state.legalTargets) {
+        const existing = squareStyles[toSq] || {};
+        const dot = "radial-gradient(circle at center, rgba(170, 80, 255, 0.55) 18%, rgba(0,0,0,0) 20%)";
+        const mergedBg = existing.backgroundImage ? (existing.backgroundImage + ", " + dot) : dot;
+        squareStyles[toSq] = {
+          ...existing,
+          backgroundImage: mergedBg,
+          backgroundRepeat: existing.backgroundRepeat ? existing.backgroundRepeat + ", no-repeat" : "no-repeat",
+          backgroundPosition: existing.backgroundPosition ? existing.backgroundPosition + ", center" : "center",
+          backgroundSize: existing.backgroundSize ? existing.backgroundSize + ", 100% 100%" : "100% 100%"
+        };
+      }
+    }
+
     const statsForThisLine = _getLineStats(this.state.progress, this.state.openingKey, this.state.lineId);
     const lineCompleted = _isCompleted(statsForThisLine);
 
@@ -1087,6 +1184,8 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
               showNotation={true}
               calcWidth={calcWidth}
               squareStyles={squareStyles}
+              onSquareClick={this.onSquareClick}
+              onSquareRightClick={this.onSquareRightClick}
             />
           </div>
 
