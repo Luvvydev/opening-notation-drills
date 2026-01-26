@@ -47,6 +47,54 @@ function _pickRandomLineId(lines, excludeId) {
 
 const STORAGE_KEY = "notation_trainer_opening_progress_v2";
 const SETTINGS_KEY = "notation_trainer_opening_settings_v1";
+const CUSTOM_REPS_KEY = "notation_trainer_custom_lines_v1";
+
+function _loadCustomLines() {
+  try {
+    const raw = window.localStorage.getItem(CUSTOM_REPS_KEY);
+    if (!raw) return [];
+    const parsed = _safeJsonParse(raw, []);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (_) {
+    return [];
+  }
+}
+
+function _saveCustomLines(lines) {
+  try {
+    window.localStorage.setItem(CUSTOM_REPS_KEY, JSON.stringify(lines || []));
+  } catch (_) {
+    // ignore
+  }
+}
+
+function _makeCustomId() {
+  return "custom-" + Date.now() + "-" + Math.floor(Math.random() * 1000000);
+}
+
+function _splitMovesText(text) {
+  const t = String(text || "").trim();
+  if (!t) return [];
+  return t
+    .split(/[\n\r\t ,]+/g)
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+function _validateSanMoves(moves) {
+  try {
+    const g = new Chess();
+    for (let i = 0; i < moves.length; i += 1) {
+      const san = moves[i];
+      const mv = g.move(san, { sloppy: true });
+      if (!mv) return { ok: false, index: i, san: san };
+    }
+    return { ok: true };
+  } catch (_) {
+    return { ok: false, index: 0, san: "" };
+  }
+}
+
 
 function _safeJsonParse(text, fallback) {
   try {
@@ -223,6 +271,9 @@ class OpeningTrainer extends Component {
   constructor(props) {
     super(props);
 
+    
+
+    this._openCustomOnMount = false;
     this.game = new Chess();
 
     this._settingsAnchorEl = null;
@@ -232,13 +283,18 @@ class OpeningTrainer extends Component {
     try {
       const search = (props && props.location && props.location.search) || "";
       const params = new URLSearchParams(search);
+      
+      this._openCustomOnMount = params.get("custom") === "1";
       const fromHome = params.get("opening");
       if (fromHome && OPENING_SETS[fromHome]) firstSetKey = fromHome;
     } catch (_) {
       // ignore
     }
 
-    const firstLines = OPENING_SETS[firstSetKey].lines;
+    const firstLinesBuiltIn = OPENING_SETS[firstSetKey].lines;
+    const customAll = _loadCustomLines();
+    const customForFirst = customAll.filter((l) => l && l.openingKey === firstSetKey);
+    const firstLines = firstLinesBuiltIn.concat(customForFirst);
     const firstId = _pickRandomLineId(firstLines, null) || (firstLines[0] ? firstLines[0].id : "");
 
     this._autoNextTimer = null;
@@ -262,7 +318,12 @@ class OpeningTrainer extends Component {
       showHint: false,
       settingsOpen: false,
       lineMenuOpen: false,
-      settings: settings
+      settings: settings,
+      customLines: customAll,
+      customModalOpen: false,
+      customName: "",
+      customMovesText: "",
+      customError: ""
     ,
       viewing: false,
       viewIndex: 0,
@@ -294,7 +355,12 @@ class OpeningTrainer extends Component {
     window.addEventListener("mousedown", this.onWindowClick);
     window.addEventListener("keydown", this.onKeyDown);
     this.resetLine(false);
-  }
+  
+    if (this._openCustomOnMount) {
+      this._openCustomOnMount = false;
+      this.openCustomModal();
+    }
+}
 
   componentWillUnmount() {
     if (this._autoNextTimer) clearTimeout(this._autoNextTimer);
@@ -358,12 +424,126 @@ class OpeningTrainer extends Component {
   getOpeningSet = () => {
     return OPENING_SETS[this.state.openingKey] || OPENING_SETS.london;
   };
+openCustomModal = () => {
+  this.setState({
+    customModalOpen: true,
+    customName: "",
+    customMovesText: "",
+    customError: ""
+  });
+};
+
+closeCustomModal = () => {
+  this.setState({ customModalOpen: false, customError: "" });
+};
+
+saveCustomModal = () => {
+  const openingKey = this.state.openingKey;
+  const nameRaw = String(this.state.customName || "").trim();
+  const moves = _splitMovesText(this.state.customMovesText);
+
+  if (!moves.length) {
+    this.setState({ customError: "Paste moves in SAN format first." });
+    return;
+  }
+
+  const v = _validateSanMoves(moves);
+  if (!v.ok) {
+    this.setState({
+      customError: `Bad move at #${(v.index || 0) + 1}: ${v.san || ""}`
+    });
+    return;
+  }
+
+  const name = nameRaw || `My rep (${moves.length} moves)`;
+
+  const nextLine = {
+    id: _makeCustomId(),
+    openingKey: openingKey,
+    category: "My Reps",
+    name: name,
+    description: "",
+    moves: moves,
+    explanations: moves.map(() => "")
+  };
+
+  const existing = (this.state.customLines || []).slice();
+  const next = existing.concat([nextLine]);
+  _saveCustomLines(next);
+
+  this.setState(
+    {
+      customLines: next,
+      customModalOpen: false,
+      customError: "",
+      linePicker: nextLine.id,
+      lineId: nextLine.id,
+      lineMenuOpen: false
+    },
+    () => this.resetLine(false)
+  );
+};
+
+renderCustomModal = () => {
+  if (!this.state.customModalOpen) return null;
+
+  return (
+    <div class="ot-modal-overlay" onMouseDown={this.closeCustomModal}>
+      <div class="ot-modal" onMouseDown={(e) => e.stopPropagation()}>
+        <div class="ot-modal-title">Add custom rep</div>
+
+        {this.state.customError ? <div class="ot-modal-error">{this.state.customError}</div> : null}
+
+        <label class="ot-modal-label">
+          Name (optional)
+          <input
+            class="ot-modal-input"
+            value={this.state.customName}
+            onChange={(e) => this.setState({ customName: e.target.value })}
+            placeholder="Example: My London vs Qb6"
+          />
+        </label>
+
+        <label class="ot-modal-label">
+          Moves (SAN, separated by spaces, commas, or new lines)
+          <textarea
+            class="ot-modal-textarea"
+            value={this.state.customMovesText}
+            onChange={(e) => this.setState({ customMovesText: e.target.value })}
+            placeholder="d4 d5 Bf4 Nf6 e3 e6 Nd2 c5 c3 Nc6"
+          />
+        </label>
+
+        <div class="ot-modal-actions">
+          <button class="ot-button ot-button-small" onClick={this.closeCustomModal}>
+            Cancel
+          </button>
+          <button class="ot-button ot-button-small ot-button-primary" onClick={this.saveCustomModal}>
+            Save
+          </button>
+        </div>
+
+        <div class="ot-modal-hint">
+          Tip: use standard SAN like Nf3, Bb5, O-O, exd5, Qxd8.
+        </div>
+      </div>
+    </div>
+  );
+};
+
 
   
   getLines = () => {
     const set = this.getOpeningSet();
-    return (set && set.lines) || [];
+    const builtIn = (set && set.lines) || [];
+
+    const openingKey = this.state.openingKey;
+    const customAll = this.state.customLines || [];
+    const customForOpening = customAll.filter((l) => l && l.openingKey === openingKey);
+
+    return builtIn.concat(customForOpening);
   };
+
 
 
   getPlayerColor = () => {
@@ -1106,8 +1286,9 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
     return (
       <div class="ot-container">
         {this.renderConfetti()}
+        {this.renderCustomModal()}
 
-        <TopNav title="Chess Opening Reps" />
+        <TopNav title="Chess Opening Drills" />
 {/* Per-line progress (moved to top) */}
         <div class="ot-top-line">
           <div class="ot-top-line-row">
@@ -1191,6 +1372,9 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
                     {this.state.lineMenuOpen ? (
                       <div class="ot-line-popover" onClick={(e) => e.stopPropagation()}>
                         <div class="ot-line-popover-title">Line select</div>
+                        <button class="ot-mini-btn ot-add-rep-btn" onClick={this.openCustomModal} title="Paste a custom rep">
+                          + Add rep
+                        </button>
 
                         <select
                           class="ot-line-select ot-line-select-compact"

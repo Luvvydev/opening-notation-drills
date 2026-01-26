@@ -111,7 +111,14 @@ class Home extends Component {
   goToOpening = (openingKey) => {
     if (!openingKey) return;
     if (!this.props || !this.props.history || !this.props.history.push) return;
-    this.props.history.push(`/openings?opening=${encodeURIComponent(openingKey)}`);
+    this.props.history.push(`/openings?opening=${encodeURIComponent(openingKey)}&custom=1`);
+  };
+
+  goToCreateCustomRep = () => {
+    if (!this.props || !this.props.history || !this.props.history.push) return;
+    // Minimal: land user in Openings Trainer where they can click Menu then + Add rep.
+    // Default to London to keep the flow deterministic.
+    this.props.history.push(`/openings?opening=${encodeURIComponent("london")}&custom=1`);
   };
 
   renderCard = (o) => {
@@ -154,7 +161,7 @@ class Home extends Component {
             <div class="home-course-total">{stats.total} lines total</div>
           </div>
 
-          <div class="home-course-cta">Start learning →</div>
+          <div class="home-course-cta">Start learning ></div>
         </div>
       </div>
     );
@@ -172,7 +179,7 @@ class Home extends Component {
 
     return (
       <div class="home-page">
-      <TopNav title="Chess Opening Reps" />
+      <TopNav title="Chess Opening Drills" />
 <div class="home-courses">
           <div class="home-courses-header">
             <div class="home-search">
@@ -194,8 +201,20 @@ class Home extends Component {
               />
             </div>
 
-            <div class="home-lines-learned">
-              {this.state.totalCompleted}/{this.state.totalLines} lines learned
+            <div class="home-header-right">
+              <button class="home-create-rep" onClick={this.goToCreateCustomRep}>
+                <span class="home-create-rep-icon" role="img" aria-label="create custom line">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 20H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                    <path d="M16.5 3.5L20.5 7.5L8 20H4V16L16.5 3.5Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
+                  </svg>
+                </span>
+                Create custom line
+              </button>
+
+              <div class="home-lines-learned">
+                {this.state.totalCompleted}/{this.state.totalLines} lines learned
+              </div>
             </div>
           </div>
 

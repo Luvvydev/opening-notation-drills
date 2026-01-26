@@ -11,14 +11,14 @@ class About extends Component {
       <div className="about-page">
         <GithubCorner href="https://github.com/Luvvydev" />
 
-        <TopNav active="about" title="Chess Opening Reps" />
+        <TopNav active="about" title="Chess Opening Drills" />
 
         <div className="about-wrap">
           <div className="about-card">
             <h2 className="about-title">Thanks for stopping by!</h2>
 
             <p className="about-lead">
-              Chess Opening Reps is a practice tool for memorizing opening move orders and basic notation through repetition.
+              Chess Opening Drills is a practice tool for memorizing opening move orders and basic notation through repetition.
               It is built for players who already know the rules and want the first phase of the game to feel automatic.
             </p>
 
