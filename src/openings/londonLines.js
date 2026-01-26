@@ -1,5 +1,19 @@
 // src/openings/londonLines.js
 
+// SEO / page intro text for London System drills
+export const londonSEOText = `
+The London System is a solid, low theory chess opening for White starting with d4 and Bf4.
+It focuses on reliable development, strong pawn structure, and repeatable move orders
+rather than sharp tactical battles.
+
+This page is designed for players who already know the rules of chess and want to
+memorize London System move orders through repetition. The drills emphasize correct
+piece placement, common setups, and typical early middlegame transitions.
+
+If your London games fall apart because you forget the move order, these drills are
+meant to lock the structure into memory rather than teach abstract strategy.
+`;
+
 export const londonLines = [
   // Categories: Classic London, Early ...c5 Systems, Anti-Bishop Ideas, Jobava, Aggressive Plans
 

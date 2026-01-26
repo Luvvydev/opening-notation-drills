@@ -1,5 +1,20 @@
 // src/openings/sicilianDefenseLines.js
 
+// SEO / page intro text for Sicilian Defense drills
+export const sicilianSEOText = `
+The Sicilian Defense is the most popular response to 1.e4 and leads to unbalanced,
+dynamic positions. This opening emphasizes asymmetrical pawn structures, active
+piece play, and precise move orders.
+
+This page provides Sicilian Defense opening drills for players who want to memorize
+common setups and early continuations without wading through dense theory.
+The focus is on repetition of correct moves rather than deep analysis.
+
+These drills are best suited for players who already play the Sicilian and want
+their openings to survive beyond the first few moves in real games.
+`;
+
+
 export const sicilianDefenseLines = [
   // Categories: Open Sicilian, Anti-Sicilian, Closed Sicilian, Grand Prix, Moscow/Rossolimo
 
