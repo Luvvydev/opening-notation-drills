@@ -111,7 +111,7 @@ class Home extends Component {
   goToOpening = (openingKey) => {
     if (!openingKey) return;
     if (!this.props || !this.props.history || !this.props.history.push) return;
-    this.props.history.push(`/openings?opening=${encodeURIComponent(openingKey)}&custom=1`);
+    this.props.history.push(`/openings?opening=${encodeURIComponent(openingKey)}`);
   };
 
   goToCreateCustomRep = () => {
