@@ -1,6 +1,6 @@
 {
   "files": {
-    "main.css": "/opening-notation-drills/static/css/main.628537b8.chunk.css",
+    "main.css": "/opening-notation-drills/static/css/main.0171a772.chunk.css",
     "main.js": "/opening-notation-drills/static/js/main.7f9ff0a2.chunk.js",
     "main.js.map": "/opening-notation-drills/static/js/main.7f9ff0a2.chunk.js.map",
     "runtime-main.js": "/opening-notation-drills/static/js/runtime-main.b145df27.js",
@@ -8,15 +8,15 @@
     "static/js/2.cca99c79.chunk.js": "/opening-notation-drills/static/js/2.cca99c79.chunk.js",
     "static/js/2.cca99c79.chunk.js.map": "/opening-notation-drills/static/js/2.cca99c79.chunk.js.map",
     "index.html": "/opening-notation-drills/index.html",
-    "precache-manifest.d77fddbd755ffcb28d94178fb4188b8d.js": "/opening-notation-drills/precache-manifest.d77fddbd755ffcb28d94178fb4188b8d.js",
+    "precache-manifest.d6e1bd230c7fa30d2c58e15096fceb69.js": "/opening-notation-drills/precache-manifest.d6e1bd230c7fa30d2c58e15096fceb69.js",
     "service-worker.js": "/opening-notation-drills/service-worker.js",
-    "static/css/main.628537b8.chunk.css.map": "/opening-notation-drills/static/css/main.628537b8.chunk.css.map",
+    "static/css/main.0171a772.chunk.css.map": "/opening-notation-drills/static/css/main.0171a772.chunk.css.map",
     "static/js/2.cca99c79.chunk.js.LICENSE.txt": "/opening-notation-drills/static/js/2.cca99c79.chunk.js.LICENSE.txt"
   },
   "entrypoints": [
     "static/js/runtime-main.b145df27.js",
     "static/js/2.cca99c79.chunk.js",
-    "static/css/main.628537b8.chunk.css",
+    "static/css/main.0171a772.chunk.css",
     "static/js/main.7f9ff0a2.chunk.js"
   ]
 }
