@@ -151,36 +151,6 @@ function _isCompleted(stats) {
   return (stats && stats.timesClean >= 1) || false;
 }
 
-function _deriveOpeningSummary(progress, openingKey, lines) {
-  _ensureOpening(progress, openingKey);
-  const total = (lines && lines.length) || 0;
-  const statsMap = progress.lines[openingKey] || {};
-
-  let completed = 0;
-  let seen = 0;
-
-  for (const l of lines) {
-    const s = statsMap[l.id];
-    if (!s) continue;
-    if (s.timesSeen > 0) seen += 1;
-    if (_isCompleted(s)) completed += 1;
-  }
-
-  const o = progress.openings[openingKey] || {};
-  const totalCompleted = o.totalCompleted || 0;
-  const totalClean = o.totalClean || 0;
-  const accuracy = totalCompleted > 0 ? Math.round((totalClean / totalCompleted) * 100) : 0;
-
-  return {
-    total,
-    completed,
-    seen,
-    streak: o.streak || 0,
-    bestStreak: o.bestStreak || 0,
-    completedToday: o.completedToday || 0,
-    accuracyPct: accuracy
-  };
-}
 
 function _sideForIndex(i) {
   return i % 2 === 0 ? "w" : "b";
@@ -1077,8 +1047,6 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
     const line = this.getLine();
     if (!line) return null;
     const lines = this.getLines();
-    const summary = _deriveOpeningSummary(this.state.progress, this.state.openingKey, lines);
-
     const nextExpected = line.moves[this.state.stepIndex] || null;
 
 
@@ -1135,20 +1103,12 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
         };
       }
     }
-
-    const statsForThisLine = _getLineStats(this.state.progress, this.state.openingKey, this.state.lineId);
-    const lineCompleted = _isCompleted(statsForThisLine);
-
-    const completedPct = summary.total > 0 ? Math.round((summary.completed / summary.total) * 100) : 0;
-
     return (
       <div class="ot-container">
         {this.renderConfetti()}
 
-        <TopNav active="openings" title="Openings Trainer" />
-
-
-        {/* Per-line progress (moved to top) */}
+        <TopNav title="Chess Opening Reps" />
+{/* Per-line progress (moved to top) */}
         <div class="ot-top-line">
           <div class="ot-top-line-row">
             <div class="ot-top-line-count">

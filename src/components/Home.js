@@ -172,9 +172,8 @@ class Home extends Component {
 
     return (
       <div class="home-page">
-        <TopNav active="home" title="Luvvy Chess Trainers" showSpeedDrill={false} />
-
-        <div class="home-courses">
+      <TopNav title="Chess Opening Reps" />
+<div class="home-courses">
           <div class="home-courses-header">
             <div class="home-search">
               <span class="home-search-icon">
