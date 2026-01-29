@@ -109,7 +109,8 @@ export default function PublicProfile() {
 
   return (
     <>
-      <TopNav title="Chess Opening Drills" />
+      {/* Hide hero here so the public profile layout doesn't get shoved around by the big banner */}
+      <TopNav title="Chess Opening Drills" hideHero />
 
       <style>{`
         .pp-wrap {

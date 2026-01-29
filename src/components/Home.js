@@ -283,7 +283,7 @@ return (
                     <path d="M16.5 3.5L20.5 7.5L8 20H4V16L16.5 3.5Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
                   </svg>
                 </span>
-                Create custom line
+                
               </button>
 
               <div className="home-lines-learned">

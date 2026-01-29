@@ -1,8 +1,10 @@
+// TopNav.js
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import './TopNav.css';
 import { getStreakState } from '../utils/streak';
 import { useAuth } from "../auth/AuthProvider";
+import logo from "../assets/chessdrillslogo.png";
 
 const wittySubtitles = [
   "Because guessing on move six is not a plan",
@@ -23,6 +25,7 @@ const wittySubtitles = [
 
 function TopNav(props) {
   const title = props.title || 'Chess Opening Reps';
+  const hideHero = !!props.hideHero;
 
   const [subtitle, setSubtitle] = useState('');
   const [streak, setStreak] = useState(() => getStreakState());
@@ -78,19 +81,6 @@ function TopNav(props) {
     };
   }, [menuOpen]);
 
-  const homeButton =
-    props.active === 'home' && props.onHome ? (
-      <button className="topnav-button active" onClick={props.onHome}>
-        Home
-      </button>
-    ) : (
-      <Link to="/">
-        <button className={props.active === 'home' ? 'topnav-button active' : 'topnav-button'}>
-          Home
-        </button>
-      </Link>
-    );
-
   const profileHref = user ? "/profile" : "/signup";
 
   const onToggleMenu = () => {
@@ -103,47 +93,19 @@ function TopNav(props) {
       setMenuOpen(false);
       await signOut();
     } catch (e) {
-      // keep silent here; Profile page already has visible error states for edits,
-      // and auth signout failures are rare. If you want, we can surface a toast.
+      // silent
     }
   };
 
   return (
     <>
-      <div className="page-hero">
-        <h1>{title}</h1>
-        <p>{subtitle}</p>
-      </div>
-
       <div className="topnav">
         <div className="topnav-inner">
+          <Link to="/" className="topnav-logo-link" aria-label="Home">
+            <img src={logo} alt="chessdrills.net" className="topnav-logo" />
+          </Link>
+
           <div className="topnav-actions">
-            {homeButton}
-
-            <Link to="/practice">
-              <button className={props.active === 'practice' ? 'topnav-button active' : 'topnav-button'}>
-                Practice Notation
-              </button>
-            </Link>
-
-            <Link to="/openings">
-              <button className={props.active === 'openings' ? 'topnav-button active' : 'topnav-button'}>
-                Openings Trainer
-              </button>
-            </Link>
-
-            <Link to="/about">
-              <button className={props.active === 'about' ? 'topnav-button active' : 'topnav-button'}>
-                About
-              </button>
-            </Link>
-
-            {props.showSpeedDrill ? (
-              <button className="topnav-button primary" onClick={props.onSpeedDrill}>
-                Start Notation Drill
-              </button>
-            ) : null}
-
             <div className="topnav-right" ref={menuWrapRef}>
               <div className="topnav-streak" title={streak.best ? `Best: ${streak.best}` : ""}>
                 <span className="topnav-streak-text">
@@ -166,6 +128,24 @@ function TopNav(props) {
 
                   {menuOpen ? (
                     <div className="topnav-menu" role="menu">
+                      <Link
+                        to="/practice"
+                        className="topnav-menu-item"
+                        role="menuitem"
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        Practice Notation
+                      </Link>
+
+                      <Link
+                        to="/openings"
+                        className="topnav-menu-item"
+                        role="menuitem"
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        Opening Trainer
+                      </Link>
+
                       <Link
                         to={profileHref}
                         className="topnav-menu-item"
@@ -193,11 +173,33 @@ function TopNav(props) {
                   </div>
                 </Link>
               )}
+
+<Link
+  to="/about"
+  title="About"
+  className="topnav-icon-link"
+>
+  <div className={`topnav-profile ${props.active === 'about' ? 'active' : ''}`}>
+    <span className="topnav-profile-icon" aria-hidden="true">ⓘ</span>
+  </div>
+</Link>
             </div>
 
+            {props.showSpeedDrill ? (
+              <button className="topnav-button primary" onClick={props.onSpeedDrill}>
+                Start Notation Drill
+              </button>
+            ) : null}
           </div>
         </div>
       </div>
+
+      {!hideHero ? (
+        <div className="page-hero">
+          <h1>{title}</h1>
+          <p>{subtitle}</p>
+        </div>
+      ) : null}
     </>
   );
 }

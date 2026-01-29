@@ -1,3 +1,4 @@
+// Profile.js
 import React, { useEffect, useRef, useState } from "react";
 import TopNav from "./TopNav";
 import { useAuth } from "../auth/AuthProvider";
@@ -64,7 +65,6 @@ function buildHeatmap(daysMap, weeks) {
     columns.push({ weekStart, cells });
   }
 
-  // Month labels aligned to weeks
   const monthLabels = [];
   let lastMonth = -1;
   for (let w = 0; w < columns.length; w += 1) {
@@ -77,11 +77,6 @@ function buildHeatmap(daysMap, weeks) {
 
   return { columns, monthLabels };
 }
-
-
-
-
-
 
 export default function Profile() {
   const { user } = useAuth();
@@ -169,7 +164,7 @@ export default function Profile() {
 
   return (
     <>
-      <TopNav title="Chess Opening Drills" />
+      <TopNav title="Chess Opening Drills" hideHero />
 
       <div className="profile-wrap">
         <div className="profile-card">
@@ -257,7 +252,6 @@ export default function Profile() {
                   ? userData.activityDays
                   : {};
 
-              // Merge by max per-day count to avoid inflating totals when devices sync.
               const merged = { ...remoteDays };
               Object.keys(localDays).forEach((k) => {
                 const a = Number(merged[k]) || 0;
@@ -270,7 +264,6 @@ export default function Profile() {
 
               return (
                 <div className="activity-scroll">
-
                   <div className="activity-months">
                     {monthLabels.map((m) => (
                       <div
