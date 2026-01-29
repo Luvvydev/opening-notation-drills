@@ -1,0 +1,98 @@
+.streakmodal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.62);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.streakmodal {
+  width: min(520px, calc(100vw - 32px));
+  border-radius: 16px;
+  background: #141418;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.55);
+  padding: 18px 18px 16px;
+  position: relative;
+}
+
+.streakmodal-x {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  font-size: 22px;
+  line-height: 0;
+  cursor: pointer;
+}
+
+.streakmodal-badge {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  display: grid;
+  place-items: center;
+  font-size: 26px;
+  margin: 6px auto 10px;
+}
+
+.streakmodal-title {
+  text-align: center;
+  color: #fff;
+  font-size: 20px;
+  font-weight: 700;
+  margin: 2px 0 4px;
+}
+
+.streakmodal-sub {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.70);
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+.streakmodal-count {
+  text-align: center;
+  padding: 10px 0 8px;
+}
+
+.streakmodal-number {
+  font-size: 56px;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1;
+}
+
+.streakmodal-label {
+  margin-top: 4px;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.70);
+}
+
+.streakmodal-best {
+  text-align: center;
+  margin-top: 8px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.streakmodal-btn {
+  width: 100%;
+  margin-top: 14px;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}

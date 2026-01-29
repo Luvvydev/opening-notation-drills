@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import './TopNav.css';
+import { getStreakState } from '../utils/streak';
 
 const wittySubtitles = [
   "Because guessing on move six is not a plan",
@@ -23,9 +24,32 @@ function TopNav(props) {
   const title = props.title || 'Chess Opening Reps';
 
   const [subtitle, setSubtitle] = useState('');
+  const [streak, setStreak] = useState(() => getStreakState());
 
   useEffect(() => {
     setSubtitle(wittySubtitles[Math.floor(Math.random() * wittySubtitles.length)]);
+  }, []);
+
+  useEffect(() => {
+    const refresh = () => setStreak(getStreakState());
+
+    // Custom event fired by markLineCompletedToday()
+    window.addEventListener("streak:updated", refresh);
+
+    // If user leaves tab open across midnight, update on focus/visibility.
+    const onVis = () => {
+      if (document.visibilityState === "visible") refresh();
+    };
+    document.addEventListener("visibilitychange", onVis);
+
+    // Low cost periodic refresh for safety
+    const t = setInterval(refresh, 60000);
+
+    return () => {
+      window.removeEventListener("streak:updated", refresh);
+      document.removeEventListener("visibilitychange", onVis);
+      clearInterval(t);
+    };
   }, []);
 
   const homeButton =
@@ -76,6 +100,17 @@ function TopNav(props) {
                 Start Notation Drill
               </button>
             ) : null}
+
+<div
+  className="topnav-streak"
+  title={streak.best ? `Best: ${streak.best}` : ""}
+  style={{ marginLeft: "auto", display: "flex", alignItems: "center" }}
+>
+  <span style={{ fontWeight: 700 }}>
+    <span role="img" aria-label="streak">🔥</span> {streak.current || 0}
+  </span>
+</div>
+
           </div>
         </div>
       </div>

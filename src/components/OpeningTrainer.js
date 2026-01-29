@@ -10,6 +10,7 @@ import { staffordGambitLines } from "../openings/staffordGambitLines";
 import TopNav from "./TopNav";
 import { BOARD_THEMES, DEFAULT_THEME } from "../theme/boardThemes";
 import "./OpeningTrainer.css";
+import { markLineCompletedTodayDetailed } from "../utils/streak";
 
 
 const OPENING_SETS = {
@@ -286,8 +287,6 @@ class OpeningTrainer extends Component {
   constructor(props) {
     super(props);
 
-    
-
     this._openCustomOnMount = false;
     this.game = new Chess();
 
@@ -314,6 +313,7 @@ class OpeningTrainer extends Component {
 
     this._autoNextTimer = null;
     this._confettiTimer = null;
+    this._streakToastTimer = null;
 
     const progress = _loadProgress();
     const settings = _loadSettings();
@@ -346,7 +346,9 @@ class OpeningTrainer extends Component {
       hintFromSquare: null,
       solveArmed: false,
       selectedSquare: null,
-      legalTargets: []
+      legalTargets: [],
+      streakToastOpen: false,
+      streakToastText: ""
     };
 
     this._countedSeenForRun = false;
@@ -380,6 +382,7 @@ class OpeningTrainer extends Component {
   componentWillUnmount() {
     if (this._autoNextTimer) clearTimeout(this._autoNextTimer);
     if (this._confettiTimer) clearTimeout(this._confettiTimer);
+    if (this._streakToastTimer) clearTimeout(this._streakToastTimer);
     window.removeEventListener("mousedown", this.onWindowClick);
     window.removeEventListener("keydown", this.onKeyDown);
   }
@@ -546,8 +549,6 @@ renderCustomModal = () => {
   );
 };
 
-
-  
   getLines = () => {
     const set = this.getOpeningSet();
     const builtIn = (set && set.lines) || [];
@@ -558,8 +559,6 @@ renderCustomModal = () => {
 
     return builtIn.concat(customForOpening);
   };
-
-
 
   getPlayerColor = () => {
     const set = this.getOpeningSet();
@@ -679,7 +678,6 @@ renderCustomModal = () => {
     const now = Date.now();
     const last = this._sfxLastAt[key] || 0;
 
-    // debounce to prevent duplicate overlapping playback
     if (now - last < 80) return;
     this._sfxLastAt[key] = now;
 
@@ -694,6 +692,15 @@ renderCustomModal = () => {
     }
   };
 
+  showStreakToast = (text) => {
+    if (this._streakToastTimer) clearTimeout(this._streakToastTimer);
+
+    this.setState({ streakToastOpen: true, streakToastText: text });
+
+    this._streakToastTimer = setTimeout(() => {
+      this.setState({ streakToastOpen: false, streakToastText: "" });
+    }, 2200);
+  };
 
   getFenAtIndex = (index) => {
     const line = this.getLine();
@@ -752,7 +759,6 @@ renderCustomModal = () => {
   viewLive = () => {
     this.goToViewIndex(this.state.stepIndex);
   };
-
 
   undoMistake = () => {
     if (!this.state.lastMistake && !this.state.wrongAttempt) return;
@@ -956,9 +962,15 @@ renderCustomModal = () => {
     );
   };
 
-  onCompletedLine = () => {
-    if (this._autoNextTimer) clearTimeout(this._autoNextTimer);
-    if (this._confettiTimer) clearTimeout(this._confettiTimer);
+onCompletedLine = () => {
+  if (this._autoNextTimer) clearTimeout(this._autoNextTimer);
+  if (this._confettiTimer) clearTimeout(this._confettiTimer);
+
+  const streakResult = markLineCompletedTodayDetailed();
+  if (streakResult && streakResult.didMarkToday && streakResult.state) {
+    const s = streakResult.state;
+    this.showStreakToast(`🔥 ${s.current}`);
+  }
 
     const wasClean = !this.state.mistakeUnlocked;
     this.bumpCompleted(wasClean);
@@ -1098,7 +1110,6 @@ renderCustomModal = () => {
 
     const piece = this.game.get(square);
 
-    // If nothing selected yet: only allow selecting your own piece
     if (!this.state.selectedSquare) {
       if (!piece || piece.color !== playerColor) return;
 
@@ -1107,24 +1118,20 @@ renderCustomModal = () => {
       return;
     }
 
-    // Click same square: deselect
     if (square === this.state.selectedSquare) {
       this.clearSelection();
       return;
     }
 
-    // Clicking another of your pieces switches selection
     if (piece && piece.color === playerColor) {
       const targets = this.getLegalTargets(square);
       this.setState({ selectedSquare: square, legalTargets: targets });
       return;
     }
 
-    // Otherwise treat as destination
     const from = this.state.selectedSquare;
     const to = square;
 
-    // Clear highlights before attempting move
     this.setState({ selectedSquare: null, legalTargets: [] }, () => {
       this.onDrop({ sourceSquare: from, targetSquare: to });
     });
@@ -1133,7 +1140,6 @@ renderCustomModal = () => {
   onSquareRightClick = () => {
     this.clearSelection();
   };
-
 
   stripMovePrefix = (text) => {
   if (!text) return "";
@@ -1174,7 +1180,6 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
 
   const unlocked = !!this.state.mistakeUnlocked;
 
-  // Sync explanation with viewIndex when using the back and forward buttons
   const coachIndex = this.getViewIndex();
   const raw = unlocked ? (line.explanations[coachIndex] || "") : "What's the best move?";
   const text = unlocked ? this.sanitizeExplanation(raw, expectedSan) : raw;
@@ -1244,7 +1249,6 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
     const lines = this.getLines();
     const nextExpected = line.moves[this.state.stepIndex] || null;
 
-
     const viewIndex = this.getViewIndex();
     const coachExpected = line.moves[viewIndex] || null;
     const boardFen = this.state.viewing ? this.state.viewFen : this.state.fen;
@@ -1274,9 +1278,6 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
       };
     }
 
-
-
-    // Click-to-move highlights (mobile friendly)
     if (this.state.selectedSquare) {
       squareStyles[this.state.selectedSquare] = {
         ...(squareStyles[this.state.selectedSquare] || {}),
@@ -1298,10 +1299,35 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
         };
       }
     }
+
     return (
       <div class="ot-container">
         {this.renderConfetti()}
         {this.renderCustomModal()}
+
+        {this.state.streakToastOpen ? (
+          <div
+            style={{
+              position: "fixed",
+              top: 16,
+              left: "50%",
+              transform: "translateX(-50%)",
+              zIndex: 9999,
+              padding: "10px 14px",
+              borderRadius: 12,
+              background: "rgba(20, 20, 25, 0.92)",
+              border: "1px solid rgba(255,255,255,0.12)",
+              color: "white",
+              fontWeight: 700,
+              letterSpacing: "0.1px",
+              maxWidth: "92vw",
+              textAlign: "center",
+              boxShadow: "0 12px 28px rgba(0,0,0,0.35)"
+            }}
+          >
+            {this.state.streakToastText}
+          </div>
+        ) : null}
 
         <TopNav title="Chess Opening Drills" />
 {/* Per-line progress (moved to top) */}
@@ -1339,8 +1365,6 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
 
           <span class="ot-pill">{this.state.mistakeUnlocked ? "Explanations unlocked" : "Explanations locked"}</span>
         </div>
-
-        {/* replaced standalone subtitle rows with a header card (same content, cleaner layout) */}
 
         <div class="ot-main">
           <div class="ot-board">
@@ -1572,7 +1596,6 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
                 </div>
               </div>
 
-{/* Mistake box removed (was revealing the expected move) */}
               </div>
             </div>
           </div>

@@ -197,43 +197,46 @@ class Home extends Component {
     return (
       <div
         key={o.key}
-        class={`home-course-card ${o.accent ? `accent-${o.accent}` : ""}`}
-        role="button"
-        tabIndex={0}
-        onClick={() => this.goToOpening(o.key)}
-        onKeyDown={(e) => {
-          if (e && (e.key === "Enter" || e.key === " ")) this.goToOpening(o.key);
-        }}
-      >
-        <div class="home-course-thumb">
-          <Chessboard
-            draggable={false}
-            position={o.position || "start"}
-            orientation={o.orientation || "white"}
-            showNotation={false}
-            calcWidth={calcThumbWidth}
-            {...BOARD_THEMES[this.state.boardTheme]}
-          />
-        </div>
+className={`home-course-card ${o.accent ? `accent-${o.accent}` : ""}`}
+  role="button"
+  tabIndex={0}
+  onClick={() => this.goToOpening(o.key)}
+  onKeyDown={(e) => {
+    if (e && (e.key === "Enter" || e.key === " ")) this.goToOpening(o.key);
+  }}
+>
+  <div className="home-course-thumb">
+    <Chessboard
+      draggable={false}
+      position={o.position || "start"}
+      orientation={o.orientation || "white"}
+      showNotation={false}
+      calcWidth={calcThumbWidth}
+      {...BOARD_THEMES[this.state.boardTheme]}
+    />
+  </div>
 
-        <div class="home-course-main">
-          <div class="home-course-top">
-            <div class="home-course-title">{o.title}</div>
-            {o.badge ? <div class="home-course-badge">{o.badge}</div> : null}
-          </div>
+  <div className="home-course-main">
+    <div className="home-course-top">
+      <div className="home-course-title">{o.title}</div>
+      {o.badge ? <div className="home-course-badge">{o.badge}</div> : null}
+    </div>
 
-          <div class="home-course-desc">{o.description}</div>
+    <div className="home-course-desc">{o.description}</div>
 
-          <div class="home-course-progress-row">
-            <div class="home-course-progress">
-              <div class="home-course-progress-fill" style={{ width: `${pct}%` }} />
-            </div>
-            <div class="home-course-total">{stats.total} lines total</div>
-          </div>
-
-          <div class="home-course-cta">Start learning &gt;</div>
-        </div>
+    <div className="home-course-progress-row">
+      <div className="home-course-progress">
+        <div
+          className="home-course-progress-fill"
+          style={{ width: `${pct}%` }}
+        />
       </div>
+      <div className="home-course-total">{stats.total} lines total</div>
+    </div>
+
+    <div className="home-course-cta">Start learning &gt;</div>
+  </div>
+</div>
     );
   };
 
@@ -247,33 +250,34 @@ class Home extends Component {
           return t.includes(q) || d.includes(q);
         });
 
-    return (
-      <div class="home-page">
-        <TopNav title="Chess Opening Drills" />
-        <div class="home-courses">
-          <div class="home-courses-header">
-            <div class="home-search">
-              <span class="home-search-icon">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path
-                    d="M10.5 18.5C14.6421 18.5 18 15.1421 18 11C18 6.85786 14.6421 3.5 10.5 3.5C6.35786 3.5 3 6.85786 3 11C3 15.1421 6.35786 18.5 10.5 18.5Z"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  />
-                  <path d="M21 21L16.65 16.65" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                </svg>
-              </span>
-              <input
-                class="home-search-input"
-                placeholder="Search openings..."
-                value={this.state.search}
-                onChange={this.onSearchChange}
+return (
+  <div className="home-page">
+    <TopNav title="Chess Opening Drills" />
+    <div className="home-courses">
+      <div className="home-courses-header">
+        <div className="home-search">
+          <span className="home-search-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M10.5 18.5C14.6421 18.5 18 15.1421 18 11C18 6.85786 14.6421 3.5 10.5 3.5C6.35786 3.5 3 6.85786 3 11C3 15.1421 6.35786 18.5 10.5 18.5Z"
+                stroke="currentColor"
+                strokeWidth="2"
               />
+              <path d="M21 21L16.65 16.65" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          </span>
+          <input
+            className="home-search-input"
+            placeholder="Search openings..."
+            value={this.state.search}
+            onChange={this.onSearchChange}
+          />
+
             </div>
 
-            <div class="home-header-right">
-              <button class="home-create-rep" onClick={this.goToCreateCustomRep}>
-                <span class="home-create-rep-icon" role="img" aria-label="create custom line">
+            <div className="home-header-right">
+              <button className="home-create-rep" onClick={this.goToCreateCustomRep}>
+                <span className="home-create-rep-icon" role="img" aria-label="create custom line">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M12 20H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
                     <path d="M16.5 3.5L20.5 7.5L8 20H4V16L16.5 3.5Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
@@ -282,13 +286,13 @@ class Home extends Component {
                 Create custom line
               </button>
 
-              <div class="home-lines-learned">
+              <div className="home-lines-learned">
                 {this.state.totalCompleted}/{this.state.totalLines} lines learned
               </div>
             </div>
           </div>
 
-          <div class="home-course-grid">{filtered.map(this.renderCard)}</div>
+          <div className="home-course-grid">{filtered.map(this.renderCard)}</div>
         </div>
       </div>
     );
