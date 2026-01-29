@@ -1,185 +1,179 @@
-# Opening-&-Notation-Chess-Trainer
+# Opening & Notation Chess Trainer
 
-A focused chess training app built around **opening line practice**, with **notation training**.
+A focused chess training web app built around opening line drilling and notation recall
 
-This project is designed to force **active recall**. You are expected to make mistakes, see why they are mistakes, and continue playing
+Live site: https://chessdrills.net
 
+This tool expects mistakes. You play moves, get them wrong, see why, and repeat
 
 ---
 
-## Core features
+## Core Features
 
 ### Opening Trainer
 
-The main mode of the application.
+The primary mode of the application.
 
-- Trains **real opening lines**
+- Trains real opening lines, not theory trees
 - Currently supports:
-  - **London System**
-  - **Sicilian Defense**
+  - London System
+  - Sicilian Defense
+  - Ruy Lopez
+  - Fried Liver Attack
+  - Caro-Kann Defense
+  - Stafford Gambit
 - Dozens of curated lines per opening
-- Lines are selected **randomly**
+- Lines are selected randomly
 - You always play the side being trained
 - Opponent replies automatically
 
 #### Behavior on mistakes
 
+- Incorrect moves are marked immediately
+- The board position does not reset
+- Explanations unlock to explain why the move fails
+- You replay the position and continue the line
 
-- Playing a wrong move move is marked incorrect (X)
-- The board position remains
-- Explanations unlock to guide correction
-- You re-start position & continue playing the line
-
-The focus is understanding *why* a move is wrong, not punishment.
+The goal is correction through understanding, not punishment.
 
 #### Completion behavior
 
-- When a line is completed:
-  - A confetti animation triggers
-  - A **new random line** loads automatically
-  - Training continues in an infinite loop
-
-This prevents memorizing order and encourages pattern recognition.
+- Completing a line triggers a confetti animation
+- A new random line loads automatically
+- Training continues in an infinite loop
 
 ---
 
-### Speed Drill
+## Design Goals
 
-A notation fluency drill available from the Home page.
-
-- Timed move entry
-- Wrong moves are marked but not fatal
-- Builds comfort with SAN under time pressure
-- Clicking Home always cancels the drill cleanly
-
-This mode exists to support opening recall
-
----
-
-## Design goals
-
-- Dark, consistent UI 
-- One shared top navigation
-- Short, idea-focused opening lines
+- Dark, consistent UI
+- Single shared top navigation across all pages
+- Short, idea focused opening lines
 - Randomization to prevent rote memorization
-- Feedback that favors learning over punishment
 
 ---
 
-## Tech stack
+## Tech Stack
 
 - React (Create React App)
 - chess.js for rules, legality, and game state
 - chessboardjsx for board rendering
 - No backend
+- No authentication
 - No external APIs
 - All data stored locally in plain JavaScript files
 
 ---
 
-## Project structure
+## Project Structure
 
-src/
-  components/
-    Home.js
-    Board.js
-    OpeningTrainer.js
-    Practice.js
-    Settings.js
-    TopNav.js
-    About.js
-  openings/
-    londonLines.js
-    sicilianDefenseLines.js
+    src/
+      components/
+        Home.js
+        OpeningTrainer.js
+        Practice.js
+        Settings.js
+        TopNav.js
+        About.js
+      openings/
+        londonLines.js
+        sicilianDefenseLines.js
+        ruyLopezLines.js
+        friedLiverAttackLines.js
+        caroKannLines.js
+        staffordGambitLines.js
 
-- OpeningTrainer.js contains all opening logic
-- londonLines.js and sicilianDefenseLines.js are pure data
-- The opening system supports adding more openings later
+Notes:
+
+- OpeningTrainer.js contains all opening logic and flow control
+- Each file in openings is pure data
+- Adding a new opening requires no architectural changes
 
 ---
 
-## Adding or editing opening lines
+## Adding or Editing Opening Lines
 
-Open one of the opening data files:
+Open any file in:
 
-src/openings/londonLines.js  
-src/openings/sicilianDefenseLines.js  
+    src/openings/
 
 Each opening line follows this structure:
 
-{
-  id: "unique-id",
-  name: "Line title",
-  description: "Short description of the idea",
-  moves: ["e4", "c5", "Nf3", "..."],
-  explanations: [
-    "Why this move is played",
-    "What it aims to achieve",
-    "What problem it solves"
-  ]
-}
+    {
+      id: "unique-id",
+      name: "Line title",
+      description: "What the line is trying to teach",
+      moves: ["e4", "c5", "Nf3", "..."],
+      explanations: [
+        "Why this move is played",
+        "What it aims to achieve",
+        "What problem it solves"
+      ]
+    }
 
 Rules:
+
 - moves.length must equal explanations.length
 - Moves are written in SAN
-- Lines should be focused on a single idea or tactical theme
+- Each line should teach one idea, not a full repertoire
 
 ---
 
 ## Environment
 
-### Node version
+### Node Version
 
-This project runs on **Node 16 LTS**.
+This project runs on Node 16 LTS.
 
-The repository includes a `.nvmrc` file containing:
+The repository includes a .nvmrc file containing:
 
-16
+    16
 
-Switch automatically with:
+Activate with:
 
-nvm use
+    nvm use
 
-No OpenSSL legacy flags are required.
-
----
-
-## Running locally
-
-npm install  
-npm start  
+No OpenSSL legacy flags required.
 
 ---
 
-## Why this exists
+## Running Locally
+
+    npm install
+    npm start
+
+---
+
+## Why This Exists
 
 Most opening tools:
+
 - Encourage passive reading
-- Overwhelm with long theory trees
+- Overload users with branching theory
 - Reward clicking instead of recall
 
 This app is designed to:
-- Force active decision-making
-- Allow mistakes without stopping learning
-- Reinforce ideas through repetition
-- Stay small and maintainable
 
-It is closer to drilling tactics than browsing theory.
+- Force active decision making
+- Allow mistakes without blocking progress
+- Reinforce ideas through repetition
+- Stay small, fast, and maintainable
+
 
 ---
 
 ## Status
 
 - Actively developed
-- London System and Sicilian Defense both implemented
-- Randomized, looping opening trainer in place
-- Architecture supports additional openings easily
+- Six openings implemented and live
+- Randomized, looping opening trainer complete
+- Architecture intentionally simple and extensible
 
 ---
 
 ## Author
 
-Built and maintained by **Luvvydev**  
+Built and maintained by Luvvydev  
 GitHub: https://github.com/Luvvydev
 
 ---
