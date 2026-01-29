@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import './TopNav.css';
 import { getStreakState } from '../utils/streak';
+import { useAuth } from "../auth/AuthProvider";
 
 const wittySubtitles = [
   "Because guessing on move six is not a plan",
@@ -26,6 +27,11 @@ function TopNav(props) {
   const [subtitle, setSubtitle] = useState('');
   const [streak, setStreak] = useState(() => getStreakState());
 
+  const { user, signOut } = useAuth();
+
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuWrapRef = useRef(null);
+
   useEffect(() => {
     setSubtitle(wittySubtitles[Math.floor(Math.random() * wittySubtitles.length)]);
   }, []);
@@ -33,16 +39,13 @@ function TopNav(props) {
   useEffect(() => {
     const refresh = () => setStreak(getStreakState());
 
-    // Custom event fired by markLineCompletedToday()
     window.addEventListener("streak:updated", refresh);
 
-    // If user leaves tab open across midnight, update on focus/visibility.
     const onVis = () => {
       if (document.visibilityState === "visible") refresh();
     };
     document.addEventListener("visibilitychange", onVis);
 
-    // Low cost periodic refresh for safety
     const t = setInterval(refresh, 60000);
 
     return () => {
@@ -51,6 +54,29 @@ function TopNav(props) {
       clearInterval(t);
     };
   }, []);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+
+    const onDocMouseDown = (e) => {
+      if (!menuWrapRef.current) return;
+      if (!menuWrapRef.current.contains(e.target)) {
+        setMenuOpen(false);
+      }
+    };
+
+    const onKeyDown = (e) => {
+      if (e.key === "Escape") setMenuOpen(false);
+    };
+
+    document.addEventListener("mousedown", onDocMouseDown);
+    document.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      document.removeEventListener("mousedown", onDocMouseDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [menuOpen]);
 
   const homeButton =
     props.active === 'home' && props.onHome ? (
@@ -65,14 +91,31 @@ function TopNav(props) {
       </Link>
     );
 
+  const profileHref = user ? "/profile" : "/signup";
+
+  const onToggleMenu = () => {
+    if (!user) return;
+    setMenuOpen((v) => !v);
+  };
+
+  const onSignOut = async () => {
+    try {
+      setMenuOpen(false);
+      await signOut();
+    } catch (e) {
+      // keep silent here; Profile page already has visible error states for edits,
+      // and auth signout failures are rare. If you want, we can surface a toast.
+    }
+  };
+
   return (
     <>
-<div className="page-hero">
+      <div className="page-hero">
         <h1>{title}</h1>
         <p>{subtitle}</p>
       </div>
-    
-<div className="topnav">
+
+      <div className="topnav">
         <div className="topnav-inner">
           <div className="topnav-actions">
             {homeButton}
@@ -101,21 +144,61 @@ function TopNav(props) {
               </button>
             ) : null}
 
-<div
-  className="topnav-streak"
-  title={streak.best ? `Best: ${streak.best}` : ""}
-  style={{ marginLeft: "auto", display: "flex", alignItems: "center" }}
->
-  <span style={{ fontWeight: 700 }}>
-    <span role="img" aria-label="streak">🔥</span> {streak.current || 0}
-  </span>
-</div>
+            <div className="topnav-right" ref={menuWrapRef}>
+              <div className="topnav-streak" title={streak.best ? `Best: ${streak.best}` : ""}>
+                <span className="topnav-streak-text">
+                  <span role="img" aria-label="streak">🔥</span> {streak.current || 0}
+                </span>
+              </div>
+
+              {user ? (
+                <>
+                  <button
+                    type="button"
+                    className="topnav-profile topnav-profile-btn"
+                    onClick={onToggleMenu}
+                    aria-haspopup="menu"
+                    aria-expanded={menuOpen ? "true" : "false"}
+                    title="Profile"
+                  >
+                    <span className="topnav-profile-icon" aria-hidden="true">👤</span>
+                  </button>
+
+                  {menuOpen ? (
+                    <div className="topnav-menu" role="menu">
+                      <Link
+                        to={profileHref}
+                        className="topnav-menu-item"
+                        role="menuitem"
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        My Profile
+                      </Link>
+
+                      <button
+                        type="button"
+                        className="topnav-menu-item topnav-menu-danger"
+                        role="menuitem"
+                        onClick={onSignOut}
+                      >
+                        Log out
+                      </button>
+                    </div>
+                  ) : null}
+                </>
+              ) : (
+                <Link to={profileHref} className="topnav-profile-link" title="Sign up">
+                  <div className="topnav-profile">
+                    <span className="topnav-profile-icon" aria-hidden="true">👤</span>
+                  </div>
+                </Link>
+              )}
+            </div>
 
           </div>
         </div>
       </div>
-
-          </>
+    </>
   );
 }
 

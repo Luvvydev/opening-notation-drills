@@ -11,6 +11,7 @@ import TopNav from "./TopNav";
 import { BOARD_THEMES, DEFAULT_THEME } from "../theme/boardThemes";
 import "./OpeningTrainer.css";
 import { markLineCompletedTodayDetailed } from "../utils/streak";
+import { markActivityToday } from "../utils/activityDays";
 
 
 const OPENING_SETS = {
@@ -971,6 +972,9 @@ onCompletedLine = () => {
     const s = streakResult.state;
     this.showStreakToast(`🔥 ${s.current}`);
   }
+
+  // Mark daily activity whenever a line is completed (idempotent per-day)
+  try { markActivityToday(); } catch (_) {}
 
     const wasClean = !this.state.mistakeUnlocked;
     this.bumpCompleted(wasClean);

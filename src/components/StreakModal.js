@@ -42,7 +42,10 @@ export default function StreakModal() {
   const bestLine = data.newBest ? "New best streak" : `Best: ${data.best}`;
 
   return (
-    <div className="streakmodal-backdrop" onMouseDown={() => setOpen(false)}>
+     <div
+    className={"streakmodal-backdrop" + (open ? "" : " hidden")}
+    onMouseDown={() => setOpen(false)}
+  >
       <div className="streakmodal" onMouseDown={(e) => e.stopPropagation()}>
         <button className="streakmodal-x" onClick={() => setOpen(false)} aria-label="Close">
           ×
