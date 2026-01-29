@@ -1,4 +1,3 @@
-
 import React, { Component } from "react";
 import Chessboard from "chessboardjsx";
 import TopNav from "./TopNav";
@@ -8,6 +7,7 @@ import { ruyLopezLines } from "../openings/ruyLopezLines";
 import { friedLiverAttackLines } from "../openings/friedLiverAttackLines";
 import { caroKannLines } from "../openings/caroKannLines";
 import { staffordGambitLines } from "../openings/staffordGambitLines";
+import { BOARD_THEMES, DEFAULT_THEME } from "../theme/boardThemes";
 import "./Home.css";
 
 const STORAGE_KEY = "notation_trainer_opening_progress_v2";
@@ -38,7 +38,7 @@ const OPENINGS = [
     key: "ruy",
     title: "Ruy Lopez",
     description:
-      "A legendary battleground of chess history, rich in strategy and theory, where the world’s strongest players have tested ideas for over a century and tiny advantages are fought for with ruthless precision.",
+      "A legendary battleground of chess history, rich in strategy and theory, where the world's strongest players have tested ideas for over a century and tiny advantages are fought for with ruthless precision.",
     lines: ruyLopezLines,
     accent: "blue",
     badge: "New",
@@ -103,6 +103,27 @@ function _loadProgress() {
   }
 }
 
+function _loadSettings() {
+  const defaults = { 
+    showConfetti: true, 
+    playSounds: true,
+    boardTheme: DEFAULT_THEME 
+  };
+  try {
+    const raw = window.localStorage.getItem("notation_trainer_opening_settings_v1");
+    if (!raw) return defaults;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") return defaults;
+    return {
+      showConfetti: parsed.showConfetti !== false,
+      playSounds: parsed.playSounds !== false,
+      boardTheme: parsed.boardTheme || DEFAULT_THEME
+    };
+  } catch (_) {
+    return defaults;
+  }
+}
+
 function _isCompleted(stats) {
   return (stats && stats.timesClean >= 1) || false;
 }
@@ -131,6 +152,7 @@ class Home extends Component {
     super(props);
 
     const progress = _loadProgress();
+    const settings = _loadSettings();
 
     const perOpening = {};
     let totalCompleted = 0;
@@ -148,7 +170,8 @@ class Home extends Component {
       progress,
       perOpening,
       totalCompleted,
-      totalLines
+      totalLines,
+      boardTheme: settings.boardTheme || DEFAULT_THEME
     };
   }
 
@@ -189,6 +212,7 @@ class Home extends Component {
             orientation={o.orientation || "white"}
             showNotation={false}
             calcWidth={calcThumbWidth}
+            {...BOARD_THEMES[this.state.boardTheme]}
           />
         </div>
 

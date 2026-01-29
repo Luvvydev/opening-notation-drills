@@ -5,6 +5,7 @@ import PGNData from '../PGN/outfile.json';
 import { faCircle as blackCircle } from "@fortawesome/free-solid-svg-icons";
 import { faCircle as whiteCircle } from "@fortawesome/free-regular-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { BOARD_THEMES, DEFAULT_THEME } from '../theme/boardThemes';
 import './Board.css';
 
 const game = new Chess();
@@ -303,6 +304,7 @@ class Board extends Component {
           calcWidth={this.props.calcWidth}
           onSquareClick={this.onSquareClick}
           onSquareRightClick={this.onSquareRightClick}
+          {...BOARD_THEMES[this.props.boardTheme || DEFAULT_THEME]}
           />
         <div 
         id='movePrompt' >

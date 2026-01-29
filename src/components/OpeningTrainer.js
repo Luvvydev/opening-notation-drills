@@ -8,6 +8,7 @@ import { friedLiverAttackLines } from "../openings/friedLiverAttackLines";
 import { caroKannLines, caroKannSEOText } from "../openings/caroKannLines";
 import { staffordGambitLines } from "../openings/staffordGambitLines";
 import TopNav from "./TopNav";
+import { BOARD_THEMES, DEFAULT_THEME } from "../theme/boardThemes";
 import "./OpeningTrainer.css";
 
 
@@ -145,7 +146,11 @@ function _saveProgress(progress) {
 }
 
 function _loadSettings() {
-  const defaults = { showConfetti: true, playSounds: true };
+  const defaults = { 
+    showConfetti: true, 
+    playSounds: true,
+    boardTheme: DEFAULT_THEME 
+  };
   try {
     const raw = window.localStorage.getItem(SETTINGS_KEY);
     if (!raw) return defaults;
@@ -154,7 +159,8 @@ function _loadSettings() {
 
     return {
       showConfetti: parsed.showConfetti !== false,
-      playSounds: parsed.playSounds !== false
+      playSounds: parsed.playSounds !== false,
+      boardTheme: parsed.boardTheme || DEFAULT_THEME
     };
   } catch (_) {
     return defaults;
@@ -1359,6 +1365,7 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
   squareStyles={squareStyles}
   onSquareClick={this.onSquareClick}
   onSquareRightClick={this.onSquareRightClick}
+  {...BOARD_THEMES[this.state.settings.boardTheme || DEFAULT_THEME]}
 />
           </div>
 
@@ -1461,6 +1468,38 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
                             onChange={(e) => this.setSetting("playSounds", !!e.target.checked)}
                           />
                           <span>Play Sounds</span>
+                        </label>
+
+                        <div class="ot-settings-title" style={{ marginTop: "12px" }}>Board Theme</div>
+                        
+                        <label class="ot-settings-row">
+                          <input
+                            type="radio"
+                            name="boardTheme"
+                            checked={this.state.settings.boardTheme === "chesscom"}
+                            onChange={() => this.setSetting("boardTheme", "chesscom")}
+                          />
+                          <span>Chess.com</span>
+                        </label>
+                        
+                        <label class="ot-settings-row">
+                          <input
+                            type="radio"
+                            name="boardTheme"
+                            checked={this.state.settings.boardTheme === "lichess"}
+                            onChange={() => this.setSetting("boardTheme", "lichess")}
+                          />
+                          <span>Lichess</span>
+                        </label>
+                        
+                        <label class="ot-settings-row">
+                          <input
+                            type="radio"
+                            name="boardTheme"
+                            checked={this.state.settings.boardTheme === "darkblue"}
+                            onChange={() => this.setSetting("boardTheme", "darkblue")}
+                          />
+                          <span>Dark Blue</span>
                         </label>
                       </div>
                     ) : null}
