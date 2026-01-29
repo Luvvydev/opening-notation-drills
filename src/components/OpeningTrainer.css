@@ -125,13 +125,19 @@
   color: rgba(55, 214, 122, 0.85);
 }
 
+/* FIX: pin sidebar width so long text can never resize the grid */
 .ot-main {
   max-width: 1200px;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: 1.25fr 0.85fr;
+  grid-template-columns: minmax(0, 1fr) clamp(340px, 32vw, 420px);
   gap: 14px;
   align-items: stretch;
+}
+
+/* keep grid items shrinkable */
+.ot-main > * {
+  min-width: 0;
 }
 
 @media (max-width: 1100px) {
@@ -897,6 +903,8 @@
   overflow-y: auto;
   word-break: break-word;
   scrollbar-width: none;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .ot-coach-text::-webkit-scrollbar {

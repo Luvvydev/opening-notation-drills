@@ -3,12 +3,21 @@ import Chessboard from "chessboardjsx";
 import * as Chess from "chess.js";
 import { londonLines } from "../openings/londonLines";
 import { sicilianDefenseLines } from "../openings/sicilianDefenseLines";
+import { ruyLopezLines } from "../openings/ruyLopezLines";
+import { friedLiverAttackLines } from "../openings/friedLiverAttackLines";
+import { caroKannLines, caroKannSEOText } from "../openings/caroKannLines";
+import { staffordGambitLines } from "../openings/staffordGambitLines";
 import TopNav from "./TopNav";
 import "./OpeningTrainer.css";
 
+
 const OPENING_SETS = {
   london: { key: "london", label: "London", playerColor: "w", lines: londonLines },
-  sicilian: { key: "sicilian", label: "Sicilian Defense", playerColor: "b", lines: sicilianDefenseLines }
+  sicilian: { key: "sicilian", label: "Sicilian Defense", playerColor: "b", lines: sicilianDefenseLines },
+  ruy: { key: "ruy", label: "Ruy Lopez", playerColor: "w", lines: ruyLopezLines },
+  friedliver: { key: "friedliver", label: "Fried Liver Attack", playerColor: "w", lines: friedLiverAttackLines },
+  carokann: { key: "carokann", label: "Caro-Kann Defense", playerColor: "b", lines: caroKannLines, seoText: caroKannSEOText },
+  stafford: { key: "stafford", label: "Stafford Gambit", playerColor: "b", lines: staffordGambitLines }
 };
 
 const calcWidth = ({ screenWidth, screenHeight }) => {
@@ -1308,6 +1317,10 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
           <select class="ot-select" value={this.state.openingKey} onChange={this.setOpeningKey}>
             <option value="london">London</option>
             <option value="sicilian">Sicilian Defense</option>
+<option value="ruy">Ruy Lopez</option>
+<option value="friedliver">Fried Liver Attack</option>
+                <option value="stafford">Stafford Gambit</option>
+            <option value="carokann">Caro-Kann Defense</option>
           </select>
 
           <button class="ot-button" onClick={this.startLine}>
@@ -1330,19 +1343,23 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
               <select class="ot-opening-select" value={this.state.openingKey} onChange={this.setOpeningKey}>
                 <option value="london">London</option>
                 <option value="sicilian">Sicilian Defense</option>
+<option value="ruy">Ruy Lopez</option>
+<option value="friedliver">Fried Liver Attack</option>
+                <option value="stafford">Stafford Gambit</option>
+            <option value="carokann">Caro-Kann Defense</option>
               </select>
             </div>
-            <Chessboard
-              position={boardFen}
-              onDrop={this.onDrop}
-              allowDrag={this.allowDrag}
-              orientation={playerColor === "b" ? "black" : "white"}
-              showNotation={true}
-              calcWidth={calcWidth}
-              squareStyles={squareStyles}
-              onSquareClick={this.onSquareClick}
-              onSquareRightClick={this.onSquareRightClick}
-            />
+<Chessboard
+  calcWidth={calcWidth}
+  position={boardFen}
+  onDrop={this.onDrop}
+  allowDrag={this.allowDrag}
+  orientation={playerColor === "b" ? "black" : "white"}
+  showNotation={true}
+  squareStyles={squareStyles}
+  onSquareClick={this.onSquareClick}
+  onSquareRightClick={this.onSquareRightClick}
+/>
           </div>
 
           

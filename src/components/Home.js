@@ -1,8 +1,13 @@
+
 import React, { Component } from "react";
 import Chessboard from "chessboardjsx";
 import TopNav from "./TopNav";
 import { londonLines } from "../openings/londonLines";
 import { sicilianDefenseLines } from "../openings/sicilianDefenseLines";
+import { ruyLopezLines } from "../openings/ruyLopezLines";
+import { friedLiverAttackLines } from "../openings/friedLiverAttackLines";
+import { caroKannLines } from "../openings/caroKannLines";
+import { staffordGambitLines } from "../openings/staffordGambitLines";
 import "./Home.css";
 
 const STORAGE_KEY = "notation_trainer_opening_progress_v2";
@@ -12,21 +17,64 @@ const OPENINGS = [
     key: "london",
     title: "London",
     description:
-      "Reliable structure and easy development. Drill the move orders until it stops collapsing in real games.",
+      "A popular 1.d4 opening for White with a reputation for solidity, focusing on reliable structures and clear repeatable plans",
     lines: londonLines,
     accent: "gold",
-    badge: "New",
-    position: "start",
+        position: "start",
     orientation: "white"
   },
   {
     key: "sicilian",
     title: "Sicilian Defense",
     description:
-      "Fight for imbalance as Black. Learn the common setups and the move orders that actually show up.",
+      "Arising after 1.e4 c5, it is a dynamic opening that leads to sharp, unbalanced play and was a favorite weapon of champions like Fischer and Kasparov.",
     lines: sicilianDefenseLines,
     accent: "purple",
     badge: null,
+    position: "start",
+    orientation: "black"
+  },
+  {
+    key: "ruy",
+    title: "Ruy Lopez",
+    description:
+      "A legendary battleground of chess history, rich in strategy and theory, where the world’s strongest players have tested ideas for over a century and tiny advantages are fought for with ruthless precision.",
+    lines: ruyLopezLines,
+    accent: "blue",
+    badge: "New",
+    position: "start",
+    orientation: "white"
+  },
+  {
+    key: "friedliver",
+    title: "Fried Liver Attack",
+    description:
+      "A sharp and entertaining way to attack the king, built around a classic knight sacrifice that punishes Black for grabbing the d5 pawn too boldly.",
+    lines: friedLiverAttackLines,
+    accent: "red",
+    badge: "New",
+    position: "start",
+    orientation: "white"
+  },
+  {
+    key: "stafford",
+    title: "Stafford Gambit",
+    description:
+      "An objectively dubious opening, but extremely venomous in practice, relying on initiative, traps, and precise punishment of even small inaccuracies.",
+    lines: staffordGambitLines,
+    accent: "orange",
+    badge: "New",
+    position: "start",
+    orientation: "black"
+  }
+  ,{
+    key: "carokann",
+    title: "Caro-Kann Defense",
+    description:
+      "Beginning with 1.e4 c6 and usually 2.d4 d5, the Caro-Kann is a battle-tested weapon that combines rock-solid structure with hidden dynamism and has stood up to elite play for generations.",
+    lines: caroKannLines,
+    accent: "green",
+    badge: "New",
     position: "start",
     orientation: "black"
   }
@@ -65,7 +113,7 @@ function _deriveCompletedCount(progress, openingKey, lines) {
 
   let completed = 0;
   for (const l of lines || []) {
-    const s = statsMap[l.id];
+    const s = statsMap[l.id] || {};
     if (_isCompleted(s)) completed += 1;
   }
 
@@ -116,8 +164,6 @@ class Home extends Component {
 
   goToCreateCustomRep = () => {
     if (!this.props || !this.props.history || !this.props.history.push) return;
-    // Minimal: land user in Openings Trainer where they can click Menu then + Add rep.
-    // Default to London to keep the flow deterministic.
     this.props.history.push(`/openings?opening=${encodeURIComponent("london")}&custom=1`);
   };
 
@@ -161,7 +207,7 @@ class Home extends Component {
             <div class="home-course-total">{stats.total} lines total</div>
           </div>
 
-          <div class="home-course-cta">Start learning ></div>
+          <div class="home-course-cta">Start learning &gt;</div>
         </div>
       </div>
     );
@@ -179,8 +225,8 @@ class Home extends Component {
 
     return (
       <div class="home-page">
-      <TopNav title="Chess Opening Drills" />
-<div class="home-courses">
+        <TopNav title="Chess Opening Drills" />
+        <div class="home-courses">
           <div class="home-courses-header">
             <div class="home-search">
               <span class="home-search-icon">
