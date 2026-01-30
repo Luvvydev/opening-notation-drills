@@ -202,7 +202,15 @@ className={`home-course-card ${o.accent ? `accent-${o.accent}` : ""}`}
   tabIndex={0}
   onClick={() => this.goToOpening(o.key)}
   onKeyDown={(e) => {
-    if (e && (e.key === "Enter" || e.key === " ")) this.goToOpening(o.key);
+    if (!e) return;
+    if (e.key === "Enter") {
+      this.goToOpening(o.key);
+      return;
+    }
+    if (e.key === " ") {
+      e.preventDefault();
+      this.goToOpening(o.key);
+    }
   }}
 >
   <div className="home-course-thumb">

@@ -204,3 +204,32 @@
 .topnav-menu-danger:hover {
   background: rgba(255, 90, 90, 0.14);
 }
+
+
+/* --- Micro interactions (polish) --- */
+.topnav-logo-link {
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+
+.topnav-logo-link:active {
+  transform: translateY(1px);
+}
+
+.topnav-button,
+.topnav-profile,
+.topnav-streak {
+  transition: background 120ms ease, border-color 120ms ease, opacity 120ms ease, transform 120ms ease;
+}
+
+.topnav-button:active,
+.topnav-profile:active {
+  transform: translateY(1px);
+}
+
+.topnav-button:focus-visible,
+.topnav-profile:focus-visible,
+.topnav-logo-link:focus-visible {
+  outline: 2px solid rgba(244, 197, 66, 0.55);
+  outline-offset: 3px;
+  border-radius: 12px;
+}

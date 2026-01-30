@@ -233,6 +233,7 @@
 }
 
 .home-course-card {
+  transition: transform 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
   display: grid;
   grid-template-columns: 150px 1fr;
   gap: 16px;
@@ -336,6 +337,7 @@
 
 @media (max-width: 520px) {
   .home-course-card {
+  transition: transform 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
     grid-template-columns: 130px 1fr;
   }
 }
@@ -398,4 +400,20 @@
 .home-create-rep-icon svg {
   width: 14px;
   height: 14px;
+}
+
+
+.home-course-card:hover {
+  border-color: rgba(255, 255, 255, 0.18);
+  box-shadow: 0 12px 44px rgba(0, 0, 0, 0.38);
+  transform: translateY(-1px);
+}
+
+.home-course-card:active {
+  transform: translateY(0px);
+}
+
+.home-course-card:focus-visible {
+  outline: 2px solid rgba(244, 197, 66, 0.55);
+  outline-offset: 3px;
 }

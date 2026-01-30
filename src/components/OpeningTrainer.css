@@ -1086,3 +1086,56 @@
   margin-top: 8px;
   width: 100%;
 }
+
+
+/* Mobile: prevent horizontal overflow from the board sizing */
+.ot-container {
+  overflow-x: hidden;
+}
+
+/* Mobile: allow vertical scroll even when touching the chessboard */
+.ot-board {
+  touch-action: pan-y;
+}
+
+
+/* --- Micro interactions (polish) --- */
+.ot-button,
+.ot-mini-btn,
+.ot-icon-btn,
+.ot-icon-btn-tight,
+.ot-gear,
+.ot-pill-select,
+.ot-opening-select,
+.ot-select,
+.ot-line-select {
+  transition: background 120ms ease, border-color 120ms ease, opacity 120ms ease, transform 120ms ease;
+}
+
+.ot-button:active,
+.ot-mini-btn:active,
+.ot-icon-btn:active,
+.ot-icon-btn-tight:active,
+.ot-gear:active,
+.ot-pill-select:active {
+  transform: translateY(1px);
+}
+
+.ot-button:focus-visible,
+.ot-mini-btn:focus-visible,
+.ot-icon-btn:focus-visible,
+.ot-icon-btn-tight:focus-visible,
+.ot-gear:focus-visible,
+.ot-pill-select:focus-visible,
+.ot-opening-select:focus-visible {
+  outline: 2px solid rgba(244, 197, 66, 0.55);
+  outline-offset: 3px;
+}
+
+.ot-board {
+  cursor: grab;
+}
+
+.ot-board:active {
+  cursor: grabbing;
+}

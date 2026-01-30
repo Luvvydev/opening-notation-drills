@@ -24,11 +24,11 @@ const OPENING_SETS = {
 };
 
 const calcWidth = ({ screenWidth, screenHeight }) => {
-  return (screenWidth || screenHeight) < 1800
-    ? (screenWidth || screenHeight) < 550
-      ? screenWidth
-      : 500
-    : 600;
+  const w = screenWidth || screenHeight || 500;
+  const usable = Math.max(260, w - 68);
+  if (w < 550) return usable;
+  if (w < 1800) return 500;
+  return 600;
 };
 
 const X_SVG_DATA_URI =

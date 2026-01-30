@@ -59,3 +59,39 @@ div[data-testid=black-square] > div:first-child > div:last-child:not([data-testi
   font-weight: 800 !important;
   color: rgba(255, 255, 255, 0.85) !important;
 }
+
+
+/* --- Global micro polish --- */
+:focus-visible {
+  outline: 2px solid rgba(244, 197, 66, 0.55);
+  outline-offset: 2px;
+}
+
+body {
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@media (hover: hover) {
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.14);
+    border-radius: 8px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.22);
+  }
+}
