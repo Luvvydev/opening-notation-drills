@@ -337,8 +337,27 @@
 
 @media (max-width: 520px) {
   .home-course-card {
-  transition: transform 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+    transition: transform 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
     grid-template-columns: 130px 1fr;
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .home-course-main {
+    gap: 8px;
+  }
+
+  .home-course-title {
+    font-size: 18px;
+  }
+
+  .home-course-desc {
+    font-size: 13px;
+    line-height: 1.3;
+  }
+
+  .home-course-progress-row {
+    gap: 10px;
   }
 }
 
@@ -392,7 +411,7 @@
   }
 
   .home-create-rep {
-    width: 100%;
+    width: auto;
     justify-content: center;
   }
 }
@@ -416,4 +435,34 @@
 .home-course-card:focus-visible {
   outline: 2px solid rgba(244, 197, 66, 0.55);
   outline-offset: 3px;
+}
+
+@media (max-width: 520px) {
+  /* tighten hero on mobile */
+  .home-hero {
+    padding: 18px 14px 6px;
+  }
+
+  .home-title {
+    font-size: 30px;
+  }
+
+  .home-subtitle {
+    font-size: 14px;
+    margin-top: 8px;
+  }
+
+  /* make create-rep read like an action */
+  .home-create-rep {
+    background: rgba(244, 197, 66, 0.14);
+    border-color: rgba(244, 197, 66, 0.35);
+  }
+
+  .home-create-rep::after {
+    content: "Custom rep";
+    font-weight: 800;
+    font-size: 12px;
+    opacity: 0.85;
+    margin-left: 6px;
+  }
 }

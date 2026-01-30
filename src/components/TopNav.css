@@ -233,3 +233,63 @@
   outline-offset: 3px;
   border-radius: 12px;
 }
+
+/* === MOBILE FORMAT FIXES === */
+
+@media (max-width: 520px) {
+  .topnav {
+    padding: calc(env(safe-area-inset-top) + 10px) 0 0 0;
+  }
+
+  .topnav-inner {
+    --topnav-left-nudge: 0px;
+    padding: 0 14px;
+    gap: 10px;
+  }
+
+  .topnav-actions {
+    gap: 10px;
+  }
+
+  .topnav-right {
+    gap: 8px;
+  }
+
+  .topnav-profile {
+    width: 42px;
+    height: 38px;
+    border-radius: 12px;
+  }
+
+  .topnav-streak {
+    height: 38px;
+    padding: 0 10px;
+    border-radius: 12px;
+  }
+
+  .topnav-logo-link {
+    height: 38px;
+    padding: 0;
+  }
+
+  .topnav-logo {
+    height: 48px;
+    margin-left: 0px;
+    transform: translateY(0px);
+  }
+
+  .page-hero {
+    padding: 12px 0 10px;
+    margin-bottom: 6px;
+  }
+
+  .page-hero h1 {
+    font-size: 2.25rem;
+    letter-spacing: -0.015em;
+  }
+
+  .page-hero p {
+    font-size: 0.92rem;
+    margin-top: 6px;
+  }
+}
