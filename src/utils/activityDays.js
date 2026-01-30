@@ -1,3 +1,6 @@
+import { auth, db, serverTimestamp } from "../firebase";
+import { doc, setDoc, increment } from "firebase/firestore";
+
 const LS_ACTIVITY_DAYS_KEY = "chessdrills.activity_days.v1";
 
 function todayYMD() {
@@ -17,18 +20,72 @@ export function getActivityDays() {
   }
 }
 
-export function markActivityToday() {
+function saveActivityDays(days) {
+  try {
+    localStorage.setItem(LS_ACTIVITY_DAYS_KEY, JSON.stringify(days));
+  } catch (_) {}
+}
+
+function emitActivityUpdated() {
+  try {
+    window.dispatchEvent(new Event("activity:updated"));
+  } catch (_) {}
+}
+
+let lastSoftMarkAt = 0;
+let lastRemoteWriteAt = 0;
+
+async function tryWriteRemote(today, amount) {
+  const u = auth && auth.currentUser ? auth.currentUser : null;
+  if (!u || !u.uid) return;
+
+  // Avoid hammering Firestore if we mark activity frequently
+  const now = Date.now();
+  if (now - lastRemoteWriteAt < 20000) return;
+  lastRemoteWriteAt = now;
+
+  try {
+    const ref = doc(db, "users", u.uid);
+
+    await setDoc(
+      ref,
+      {
+        activityDays: { [today]: increment(amount) },
+        updatedAt: serverTimestamp()
+      },
+      { merge: true }
+    );
+  } catch (_) {
+    // ignore
+  }
+}
+
+/**
+ * Hard mark: increments the day counter every time you call it.
+ * Use this for meaningful events like completing a line.
+ */
+export function markActivityToday(amount = 1) {
   const days = getActivityDays();
   const today = todayYMD();
 
   const prev = Number(days[today]) || 0;
-  days[today] = prev + 1;
+  const next = prev + (Number(amount) || 1);
+  days[today] = next;
 
-  try {
-    localStorage.setItem(LS_ACTIVITY_DAYS_KEY, JSON.stringify(days));
-  } catch (_) {}
+  saveActivityDays(days);
+  emitActivityUpdated();
 
-  try {
-    window.dispatchEvent(new Event("activity:updated"));
-  } catch (_) {}
+  tryWriteRemote(today, Number(amount) || 1);
+}
+
+/**
+ * Soft mark: increments at most once per 15 minutes.
+ * Use this for "user is active" signals like making moves, browsing openings, etc.
+ */
+export function touchActivityToday() {
+  const now = Date.now();
+  if (now - lastSoftMarkAt < 15 * 60 * 1000) return;
+  lastSoftMarkAt = now;
+
+  markActivityToday(1);
 }

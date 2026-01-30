@@ -10,8 +10,8 @@ import { staffordGambitLines } from "../openings/staffordGambitLines";
 import TopNav from "./TopNav";
 import { BOARD_THEMES, DEFAULT_THEME } from "../theme/boardThemes";
 import "./OpeningTrainer.css";
-import { markLineCompletedTodayDetailed } from "../utils/streak";
-import { markActivityToday } from "../utils/activityDays";
+import { getStreakState, markLineCompletedTodayDetailed } from "../utils/streak";
+import { getActivityDays, markActivityToday, touchActivityToday } from "../utils/activityDays";
 
 
 const OPENING_SETS = {
@@ -369,9 +369,36 @@ class OpeningTrainer extends Component {
     });
   }
 
+  _backfillActivityFromStreak = () => {
+    // Heatmap uses activity_days, streak uses daily_streak.
+    // Older users may have streak data but no activity history, so backfill 1 square.
+    try {
+      const s = getStreakState();
+      const last = s && s.lastCompletedDate ? String(s.lastCompletedDate) : "";
+      if (!last) return;
+
+      const days = getActivityDays();
+      if (days && Object.prototype.hasOwnProperty.call(days, last)) return;
+
+      const next = { ...(days || {}) };
+      next[last] = Math.max(1, Number(next[last]) || 0);
+
+      try {
+        window.localStorage.setItem("chessdrills.activity_days.v1", JSON.stringify(next));
+      } catch (_) {}
+
+      try {
+        window.dispatchEvent(new Event("activity:updated"));
+      } catch (_) {}
+    } catch (_) {
+      // ignore
+    }
+  };
+
   componentDidMount() {
     window.addEventListener("mousedown", this.onWindowClick);
     window.addEventListener("keydown", this.onKeyDown);
+    this._backfillActivityFromStreak();
     this.resetLine(false);
   
     if (this._openCustomOnMount) {
@@ -507,42 +534,42 @@ renderCustomModal = () => {
   if (!this.state.customModalOpen) return null;
 
   return (
-    <div class="ot-modal-overlay" onMouseDown={this.closeCustomModal}>
-      <div class="ot-modal" onMouseDown={(e) => e.stopPropagation()}>
-        <div class="ot-modal-title">Add custom rep</div>
+    <div className="ot-modal-overlay" onMouseDown={this.closeCustomModal}>
+      <div className="ot-modal" onMouseDown={(e) => e.stopPropagation()}>
+        <div className="ot-modal-title">Add custom rep</div>
 
-        {this.state.customError ? <div class="ot-modal-error">{this.state.customError}</div> : null}
+        {this.state.customError ? <div className="ot-modal-error">{this.state.customError}</div> : null}
 
-        <label class="ot-modal-label">
+        <label className="ot-modal-label">
           Name (optional)
           <input
-            class="ot-modal-input"
+            className="ot-modal-input"
             value={this.state.customName}
             onChange={(e) => this.setState({ customName: e.target.value })}
             placeholder="Example: My London vs Qb6"
           />
         </label>
 
-        <label class="ot-modal-label">
+        <label className="ot-modal-label">
           Moves (SAN, separated by spaces, commas, or new lines)
           <textarea
-            class="ot-modal-textarea"
+            className="ot-modal-textarea"
             value={this.state.customMovesText}
             onChange={(e) => this.setState({ customMovesText: e.target.value })}
             placeholder="d4 d5 Bf4 Nf6 e3 e6 Nd2 c5 c3 Nc6"
           />
         </label>
 
-        <div class="ot-modal-actions">
-          <button class="ot-button ot-button-small" onClick={this.closeCustomModal}>
+        <div className="ot-modal-actions">
+          <button className="ot-button ot-button-small" onClick={this.closeCustomModal}>
             Cancel
           </button>
-          <button class="ot-button ot-button-small ot-button-primary" onClick={this.saveCustomModal}>
+          <button className="ot-button ot-button-small ot-button-primary" onClick={this.saveCustomModal}>
             Save
           </button>
         </div>
 
-        <div class="ot-modal-hint">
+        <div className="ot-modal-hint">
           Tip: use standard SAN like Nf3, Bb5, O-O, exd5, Qxd8.
         </div>
       </div>
@@ -973,10 +1000,10 @@ onCompletedLine = () => {
     this.showStreakToast(`🔥 ${s.current}`);
   }
 
-  // Mark daily activity whenever a line is completed (idempotent per-day)
+  // Mark daily activity for every completed line (heatmap counts lines per day)
   try { markActivityToday(); } catch (_) {}
 
-    const wasClean = !this.state.mistakeUnlocked;
+  const wasClean = !this.state.mistakeUnlocked;
     this.bumpCompleted(wasClean);
 
     if (this.state.settings && this.state.settings.showConfetti) {
@@ -1015,6 +1042,9 @@ onCompletedLine = () => {
     });
 
     if (!move) return;
+
+    // Any legal move counts as activity (throttled to avoid spam)
+    try { touchActivityToday(); } catch (_) {}
 
     const playedSAN = move.san;
 
@@ -1189,28 +1219,28 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
   const text = unlocked ? this.sanitizeExplanation(raw, expectedSan) : raw;
 
   return (
-    <div class="ot-coach">
-      <div class="ot-coach-head">
-        <div class="ot-coach-left">
-          <div class="ot-coach-title"></div>
+    <div className="ot-coach">
+      <div className="ot-coach-head">
+        <div className="ot-coach-left">
+          <div className="ot-coach-title"></div>
         </div>
 
-        <div class="ot-card-head-right">
-          <span class="ot-mini-count">
+        <div className="ot-card-head-right">
+          <span className="ot-mini-count">
             {doneYourMoves}/{totalYourMoves}
           </span>
           {canUndo ? (
-            <button class="ot-mini-btn" onClick={this.undoMistake} title="Undo mistake">
+            <button className="ot-mini-btn" onClick={this.undoMistake} title="Undo mistake">
               Undo
             </button>
           ) : null}
         </div>
       </div>
 
-      <div class="ot-bubble">
-        <div class="ot-bubble-row">
-          <div class="ot-buddy" title="Your drill buddy">♞</div>
-          <div class="ot-coach-text">{text}</div>
+      <div className="ot-bubble">
+        <div className="ot-bubble-row">
+          <div className="ot-buddy" title="Your drill buddy">♞</div>
+          <div className="ot-coach-text">{text}</div>
         </div>
       </div>
     </div>
@@ -1231,7 +1261,7 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
       pieces.push(
         <span
           key={i}
-          class="ot-confetti"
+          className="ot-confetti"
           style={{
             left: left + "vw",
             animationDelay: delay + "s",
@@ -1244,7 +1274,7 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
       );
     }
 
-    return <div class="ot-confetti-layer">{pieces}</div>;
+    return <div className="ot-confetti-layer">{pieces}</div>;
   };
 
   render() {
@@ -1305,7 +1335,7 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
     }
 
     return (
-      <div class="ot-container">
+      <div className="ot-container">
         {this.renderConfetti()}
         {this.renderCustomModal()}
 
@@ -1335,22 +1365,22 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
 
         <TopNav title="Chess Opening Drills" />
 {/* Per-line progress (moved to top) */}
-        <div class="ot-top-line">
-          <div class="ot-top-line-row">
-            <div class="ot-top-line-count">
+        <div className="ot-top-line">
+          <div className="ot-top-line-row">
+            <div className="ot-top-line-count">
               
             </div>
           </div>
 
-          <div class="ot-progress-bar ot-progress-bar-top">
-            <div class="ot-progress-fill" style={{ width: yourProgressPct + "%" }} />
+          <div className="ot-progress-bar ot-progress-bar-top">
+            <div className="ot-progress-fill" style={{ width: yourProgressPct + "%" }} />
           </div>
         </div>
 
-        <div class="ot-controls">
-          <span class="ot-label ot-label-plain">Mode:</span>
+        <div className="ot-controls">
+          <span className="ot-label ot-label-plain">Mode:</span>
 
-          <select class="ot-select" value={this.state.openingKey} onChange={this.setOpeningKey}>
+          <select className="ot-select" value={this.state.openingKey} onChange={this.setOpeningKey}>
             <option value="london">London</option>
             <option value="sicilian">Sicilian Defense</option>
 <option value="ruy">Ruy Lopez</option>
@@ -1359,22 +1389,22 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
             <option value="carokann">Caro-Kann Defense</option>
           </select>
 
-          <button class="ot-button" onClick={this.startLine}>
+          <button className="ot-button" onClick={this.startLine}>
             Restart current line
           </button>
 
-          <button class="ot-button" onClick={this.startRandomLine}>
+          <button className="ot-button" onClick={this.startRandomLine}>
             Next
           </button>
 
-          <span class="ot-pill">{this.state.mistakeUnlocked ? "Explanations unlocked" : "Explanations locked"}</span>
+          <span className="ot-pill">{this.state.mistakeUnlocked ? "Explanations unlocked" : "Explanations locked"}</span>
         </div>
 
-        <div class="ot-main">
-          <div class="ot-board">
+        <div className="ot-main">
+          <div className="ot-board">
 
-            <div class="ot-board-head">
-              <select class="ot-opening-select" value={this.state.openingKey} onChange={this.setOpeningKey}>
+            <div className="ot-board-head">
+              <select className="ot-opening-select" value={this.state.openingKey} onChange={this.setOpeningKey}>
                 <option value="london">London</option>
                 <option value="sicilian">Sicilian Defense</option>
 <option value="ruy">Ruy Lopez</option>
@@ -1398,22 +1428,22 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
           </div>
 
           
-          <div class="ot-side">
-            <div class="ot-panel">
-              <div class="ot-panel-body">
+          <div className="ot-side">
+            <div className="ot-panel">
+              <div className="ot-panel-body">
               {this.renderCoachArea(line, doneYourMoves, totalYourMoves, coachExpected)}
 
-              <div class="ot-dock">
-                <div class="ot-dock-left">
+              <div className="ot-dock">
+                <div className="ot-dock-left">
                   <div
-                    class="ot-line-picker"
+                    className="ot-line-picker"
                     ref={(el) => {
                       this._linePickerAnchorEl = el;
                     }}
                     onClick={(e) => e.stopPropagation()}
                   >
                     <button
-                      class="ot-icon-btn-tight"
+                      className="ot-icon-btn-tight"
                       onClick={this.toggleLineMenuOpen}
                       title="Choose line"
                       aria-label="Choose line"
@@ -1422,14 +1452,14 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
                     </button>
 
                     {this.state.lineMenuOpen ? (
-                      <div class="ot-line-popover" onClick={(e) => e.stopPropagation()}>
-                        <div class="ot-line-popover-title">Line select</div>
-                        <button class="ot-mini-btn ot-add-rep-btn" onClick={this.openCustomModal} title="Paste a custom rep">
+                      <div className="ot-line-popover" onClick={(e) => e.stopPropagation()}>
+                        <div className="ot-line-popover-title">Line select</div>
+                        <button className="ot-mini-btn ot-add-rep-btn" onClick={this.openCustomModal} title="Paste a custom rep">
                           + Add rep
                         </button>
 
                         <select
-                          class="ot-line-select ot-line-select-compact"
+                          className="ot-line-select ot-line-select-compact"
                           value={this.state.linePicker}
                           onChange={(e) => {
                             this.setLinePicker(e);
@@ -1466,21 +1496,21 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
                   </div>
 
                   <div
-                    class="ot-panel-header-actions"
+                    className="ot-panel-header-actions"
                     ref={(el) => {
                       this._settingsAnchorEl = el;
                     }}
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <button class="ot-gear" onClick={this.toggleSettingsOpen} title="Settings" aria-label="Settings">
+                    <button className="ot-gear" onClick={this.toggleSettingsOpen} title="Settings" aria-label="Settings">
                       ⚙
                     </button>
 
                     {this.state.settingsOpen ? (
-                      <div class="ot-settings-menu" onClick={(e) => e.stopPropagation()}>
-                        <div class="ot-settings-title">Settings</div>
+                      <div className="ot-settings-menu" onClick={(e) => e.stopPropagation()}>
+                        <div className="ot-settings-title">Settings</div>
 
-                        <label class="ot-settings-row">
+                        <label className="ot-settings-row">
                           <input
                             type="checkbox"
                             checked={!!(this.state.settings && this.state.settings.showConfetti)}
@@ -1489,7 +1519,7 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
                           <span>Show Confetti</span>
                         </label>
 
-                        <label class="ot-settings-row">
+                        <label className="ot-settings-row">
                           <input
                             type="checkbox"
                             checked={!!(this.state.settings && this.state.settings.playSounds)}
@@ -1498,9 +1528,9 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
                           <span>Play Sounds</span>
                         </label>
 
-                        <div class="ot-settings-title" style={{ marginTop: "12px" }}>Board Theme</div>
+                        <div className="ot-settings-title" style={{ marginTop: "12px" }}>Board Theme</div>
                         
-                        <label class="ot-settings-row">
+                        <label className="ot-settings-row">
                           <input
                             type="radio"
                             name="boardTheme"
@@ -1510,7 +1540,7 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
                           <span>Chess.com</span>
                         </label>
                         
-                        <label class="ot-settings-row">
+                        <label className="ot-settings-row">
                           <input
                             type="radio"
                             name="boardTheme"
@@ -1520,7 +1550,7 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
                           <span>Lichess</span>
                         </label>
                         
-                        <label class="ot-settings-row">
+                        <label className="ot-settings-row">
                           <input
                             type="radio"
                             name="boardTheme"
@@ -1534,13 +1564,13 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
                   </div>
                 </div>
 
-                <div class="ot-dock-center">
-                  <button class="ot-button ot-button-small ot-button-dock" onClick={this.retryLine}>
+                <div className="ot-dock-center">
+                  <button className="ot-button ot-button-small ot-button-dock" onClick={this.retryLine}>
                     Retry
                   </button>
 
                   <button
-                    class="ot-button ot-button-small ot-button-dock"
+                    className="ot-button ot-button-small ot-button-dock"
                     onClick={this.startRandomLine}
                     disabled={this.state.linePicker !== "random"}
                     title={
@@ -1553,7 +1583,7 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
                   </button>
 
                   <button
-                    class={
+                    className={
                       "ot-button ot-button-small ot-button-dock ot-hint-btn" +
                       (this.state.showHint ? " ot-hint-btn-on" : "")
                     }
@@ -1571,15 +1601,15 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
                   </button>
                 </div>
 
-                <div class="ot-dock-right">
+                <div className="ot-dock-right">
                   {this.state.viewing ? (
-                    <button class="ot-mini-btn" onClick={this.viewLive} title="Jump back to current position">
+                    <button className="ot-mini-btn" onClick={this.viewLive} title="Jump back to current position">
                       Live
                     </button>
                   ) : null}
 
                   <button
-                    class="ot-icon-btn"
+                    className="ot-icon-btn"
                     onClick={this.viewBack}
                     disabled={!canViewBack}
                     title="Back"
@@ -1589,7 +1619,7 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
                   </button>
 
                   <button
-                    class="ot-icon-btn"
+                    className="ot-icon-btn"
                     onClick={this.viewForward}
                     disabled={!canViewForward}
                     title="Forward"

@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from "react";
 import TopNav from "./TopNav";
 import { useAuth } from "../auth/AuthProvider";
 import { db, serverTimestamp } from "../firebase";
-import { doc, getDoc, runTransaction } from "firebase/firestore";
+import { doc, onSnapshot, runTransaction } from "firebase/firestore";
 import "./ActivityHeatmap.css";
 import "./Profile.css";
 import { getActivityDays } from "../utils/activityDays";
@@ -46,11 +46,14 @@ function activityLevel(count) {
 }
 
 function buildHeatmap(daysMap, weeks) {
-  const today = new Date();
-  const end = new Date(today);
-  end.setHours(0, 0, 0, 0);
+  const CELL = 16;
+  const GAP = 4;
 
-  const start = startOfWeekSunday(addDays(end, -(weeks * 7 - 1)));
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const endWeekStart = startOfWeekSunday(today);
+  const start = addDays(endWeekStart, -(weeks - 1) * 7);
 
   const columns = [];
   for (let w = 0; w < weeks; w += 1) {
@@ -58,24 +61,52 @@ function buildHeatmap(daysMap, weeks) {
     const cells = [];
     for (let r = 0; r < 7; r += 1) {
       const dt = addDays(weekStart, r);
+      dt.setHours(0, 0, 0, 0);
+
+      const isFuture = dt.getTime() > today.getTime();
       const ymd = ymdFromDate(dt);
-      const c = daysMap && Object.prototype.hasOwnProperty.call(daysMap, ymd) ? daysMap[ymd] : 0;
-      cells.push({ ymd, count: Number(c) || 0, level: activityLevel(c) });
+
+      const raw = !isFuture && daysMap && Object.prototype.hasOwnProperty.call(daysMap, ymd) ? daysMap[ymd] : 0;
+      const count = Number(raw) || 0;
+
+      cells.push({
+        ymd,
+        count,
+        level: isFuture ? 0 : activityLevel(count),
+        isFuture
+      });
     }
     columns.push({ weekStart, cells });
   }
 
   const monthLabels = [];
-  let lastMonth = -1;
+  let lastMonthKey = "";
   for (let w = 0; w < columns.length; w += 1) {
-    const m = columns[w].weekStart.getMonth();
-    if (m !== lastMonth) {
-      monthLabels.push({ weekIndex: w, label: columns[w].weekStart.toLocaleString(undefined, { month: "short" }) });
-      lastMonth = m;
+    const ws = columns[w].weekStart;
+    const y = ws.getFullYear();
+    const m = ws.getMonth(); // 0-11
+    const monthKey = `${y}-${m}`;
+
+    if (monthKey !== lastMonthKey) {
+      const mon = ws.toLocaleString(undefined, { month: "short" });
+
+      // If "Jan" appears twice in a 53 week window, disambiguate by adding the year suffix.
+      const needsYear = mon === "Jan" || (lastMonthKey && lastMonthKey.slice(0, 4) !== String(y));
+      const label = needsYear ? `${mon} '${String(y).slice(2)}` : mon;
+
+      monthLabels.push({
+        weekIndex: w,
+        label,
+        leftPx: w * (CELL + GAP)
+      });
+
+      lastMonthKey = monthKey;
     }
   }
 
-  return { columns, monthLabels };
+  const widthPx = weeks * CELL + (weeks - 1) * GAP;
+
+  return { columns, monthLabels, widthPx };
 }
 
 export default function Profile() {
@@ -84,23 +115,49 @@ export default function Profile() {
   const [displayName, setDisplayName] = useState("");
   const [username, setUsername] = useState("");
   const [userData, setUserData] = useState(null);
+  const [activityTick, setActivityTick] = useState(0);
 
   const [editingUsername, setEditingUsername] = useState(false);
   const [editingDisplayName, setEditingDisplayName] = useState(false);
 
   const usernameInputRef = useRef(null);
   const displayNameInputRef = useRef(null);
+  const heatmapScrollRef = useRef(null);
+
+  useEffect(() => {
+    const onAct = () => setActivityTick((x) => x + 1);
+    window.addEventListener("activity:updated", onAct);
+    return () => window.removeEventListener("activity:updated", onAct);
+  }, []);
+
+  useEffect(() => {
+    const el = heatmapScrollRef.current;
+    if (!el) return;
+    el.scrollLeft = el.scrollWidth;
+  }, [activityTick]);
 
   useEffect(() => {
     if (!user) return;
 
-    (async () => {
-      const snap = await getDoc(doc(db, "users", user.uid));
-      const data = snap.exists() ? snap.data() : {};
-      setUserData(data);
-      setDisplayName(data.displayName || "");
-      setUsername(data.username || "");
-    })();
+    const ref = doc(db, "users", user.uid);
+
+    // Live updates so activityDays written by cloudSync shows up immediately
+    const unsub = onSnapshot(
+      ref,
+      (snap) => {
+        const data = snap.exists() ? snap.data() : {};
+        setUserData(data);
+        setDisplayName(data.displayName || "");
+        setUsername(data.username || "");
+      },
+      () => {
+        // ignore
+      }
+    );
+
+    return () => {
+      try { unsub(); } catch (_) {}
+    };
   }, [user]);
 
   useEffect(() => {
@@ -259,22 +316,22 @@ export default function Profile() {
                 merged[k] = Math.max(a, b);
               });
 
-              const { columns, monthLabels } = buildHeatmap(merged, 53);
+              const { columns, monthLabels, widthPx } = buildHeatmap(merged, 53);
               const any = columns.some((col) => col.cells.some((c) => c.level > 0));
 
               return (
-                <div className="activity-scroll">
-                  <div className="activity-months">
-                    {monthLabels.map((m) => (
-                      <div
-                        key={m.weekIndex + ":" + m.label}
-                        className="activity-month"
-                        style={{ gridColumnStart: m.weekIndex + 1 }}
-                      >
-                        {m.label}
-                      </div>
-                    ))}
-                  </div>
+                <div className="activity-scroll" ref={heatmapScrollRef}>
+                  <div className="activity-months" style={{ width: widthPx }}>
+  {monthLabels.map((m) => (
+    <div
+      key={m.weekIndex + ":" + m.label}
+      className="activity-month"
+      style={{ left: m.leftPx }}
+    >
+      {m.label}
+    </div>
+  ))}
+</div>
 
                   <div className="activity-grid" role="img" aria-label="Activity heatmap">
                     {columns.map((col, w) => (
@@ -282,8 +339,8 @@ export default function Profile() {
                         {col.cells.map((c) => (
                           <div
                             key={c.ymd}
-                            className={`activity-cell level-${c.level}`}
-                            title={`${c.ymd}  ${c.count} line${c.count === 1 ? "" : "s"} completed`}
+                            className={`activity-cell level-${c.level}${c.isFuture ? " is-future" : ""}`}
+                            title={c.isFuture ? "" : `${c.ymd}  ${c.count} activity`}
                           />
                         ))}
                       </div>
@@ -295,7 +352,7 @@ export default function Profile() {
                   )}
 
                   <div className="activity-note">
-                    Each square represents a day. Lighter colors indicate more lines completed.
+                    Each square represents a day. Lighter colors indicate more activity.
                   </div>
                 </div>
               );

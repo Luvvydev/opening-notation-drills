@@ -12,17 +12,17 @@ function ymdFromDate(dt) {
   return `${y}-${m}-${d}`;
 }
 
-function startOfWeekSunday(dt) {
-  const d = new Date(dt);
-  d.setHours(0, 0, 0, 0);
-  const day = d.getDay();
-  d.setDate(d.getDate() - day);
-  return d;
-}
-
 function addDays(dt, days) {
   const d = new Date(dt);
   d.setDate(d.getDate() + days);
+  return d;
+}
+
+function startOfWeekSunday(dt) {
+  const d = new Date(dt);
+  d.setHours(0, 0, 0, 0);
+  const day = d.getDay(); // 0 = Sun
+  d.setDate(d.getDate() - day);
   return d;
 }
 
@@ -35,11 +35,15 @@ function activityLevel(count) {
   return 4;
 }
 
-function buildHeatmap(daysMap, weeks) {
-  const today = new Date();
+function buildHeatmap(daysMap, weeks, endDate = new Date()) {
+  const CELL = 16;
+  const GAP = 4;
+
+  const today = new Date(endDate);
   today.setHours(0, 0, 0, 0);
 
-  const start = startOfWeekSunday(addDays(today, -(weeks * 7 - 1)));
+  const endWeekStart = startOfWeekSunday(today);
+  const start = addDays(endWeekStart, -(weeks - 1) * 7);
 
   const columns = [];
   for (let w = 0; w < weeks; w += 1) {
@@ -47,28 +51,53 @@ function buildHeatmap(daysMap, weeks) {
     const cells = [];
     for (let r = 0; r < 7; r += 1) {
       const dt = addDays(weekStart, r);
+      dt.setHours(0, 0, 0, 0);
+
+      const isFuture = dt.getTime() > today.getTime();
       const ymd = ymdFromDate(dt);
-      const raw = daysMap && Object.prototype.hasOwnProperty.call(daysMap, ymd) ? daysMap[ymd] : 0;
+
+      const raw =
+        !isFuture && daysMap && Object.prototype.hasOwnProperty.call(daysMap, ymd)
+          ? daysMap[ymd]
+          : 0;
       const count = Number(raw) || 0;
-      cells.push({ ymd, count, level: activityLevel(count) });
+
+      cells.push({
+        ymd,
+        count,
+        level: isFuture ? 0 : activityLevel(count),
+        isFuture
+      });
     }
     columns.push({ weekStart, cells });
   }
 
   const monthLabels = [];
-  let lastMonth = -1;
+  let lastMonthKey = "";
   for (let w = 0; w < columns.length; w += 1) {
-    const m = columns[w].weekStart.getMonth();
-    if (m !== lastMonth) {
+    const ws = columns[w].weekStart;
+    const y = ws.getFullYear();
+    const m = ws.getMonth();
+    const monthKey = `${y}-${m}`;
+
+    if (monthKey !== lastMonthKey) {
+      const mon = ws.toLocaleString(undefined, { month: "short" });
+      const needsYear = mon === "Jan" || (lastMonthKey && lastMonthKey.slice(0, 4) !== String(y));
+      const label = needsYear ? `${mon} '${String(y).slice(2)}` : mon;
+
       monthLabels.push({
         weekIndex: w,
-        label: columns[w].weekStart.toLocaleString(undefined, { month: "short" })
+        label,
+        leftPx: w * (CELL + GAP)
       });
-      lastMonth = m;
+
+      lastMonthKey = monthKey;
     }
   }
 
-  return { columns, monthLabels };
+  const widthPx = weeks * CELL + (weeks - 1) * GAP;
+
+  return { columns, monthLabels, widthPx };
 }
 
 function normalizeUsername(raw) {
@@ -234,7 +263,7 @@ export default function PublicProfile() {
                     ? profile.activityDays
                     : {};
 
-                const { columns, monthLabels } = buildHeatmap(days, 53);
+                const { columns, monthLabels, widthPx } = buildHeatmap(days, 53, new Date());
                 const any = columns.some((col) => col.cells.some((c) => c.level > 0));
 
                 if (!any) {
@@ -243,12 +272,12 @@ export default function PublicProfile() {
 
                 return (
                   <div className="activity-scroll">
-                    <div className="activity-months">
+                    <div className="activity-months" style={{ width: widthPx }}>
                       {monthLabels.map((m) => (
                         <div
                           key={m.weekIndex + ":" + m.label}
                           className="activity-month"
-                          style={{ gridColumnStart: m.weekIndex + 1 }}
+                          style={{ left: m.leftPx }}
                         >
                           {m.label}
                         </div>
@@ -261,8 +290,8 @@ export default function PublicProfile() {
                           {col.cells.map((c) => (
                             <div
                               key={c.ymd}
-                              className={`activity-cell level-${c.level}`}
-                              title={`${c.ymd}  ${c.count} line${c.count === 1 ? "" : "s"} completed`}
+                              className={`activity-cell level-${c.level}${c.isFuture ? " is-future" : ""}`}
+                              title={c.isFuture ? "" : `${c.ymd}  ${c.count} activity`}
                             />
                           ))}
                         </div>
