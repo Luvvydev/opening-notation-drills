@@ -94,7 +94,7 @@ const OPENINGS = [
       "Black grabs the c4 pawn early, and White responds by building a big center and using tempo to win it back. These drills focus on key tactical and structural themes after ...dxc4.",
     lines: queensGambitAcceptedLines,
     accent: "teal",
-    badge: "New",
+    badge: null,
     position: "start",
     orientation: "white"
   },
@@ -105,7 +105,7 @@ const OPENINGS = [
       "A classic 1.d4 response where Black defends the center instead of taking c4. These drills cover common structures like the Exchange QGD, Semi-Slav setups, and Ragozin style move orders.",
     lines: queensGambitDeclinedLines,
     accent: "pink",
-    badge: "New",
+    badge: null,
     position: "start",
     orientation: "white"
   }
@@ -117,7 +117,7 @@ const OPENINGS = [
       "Classic 1.e4 e5 development. These drills cover sharp lines like the Evans Gambit and Two Knights ideas.",
     lines: italianGameLines,
     accent: "indigo",
-    badge: "New",
+    badge: null,
     position: "start",
     orientation: "white"
   },
@@ -128,7 +128,7 @@ const OPENINGS = [
       "A hypermodern defense against 1.d4 where Black allows the center and counters with ...e5 or ...c5 and kingside attacks.",
     lines: kingsIndianDefenseLines,
     accent: "slate",
-    badge: "New",
+    badge: null,
     position: "start",
     orientation: "black"
   },
@@ -139,7 +139,7 @@ const OPENINGS = [
       "1.e4 e6 aiming for a strong pawn chain and counterplay with ...c5. These drills focus on Advance and Tarrasch structures.",
     lines: frenchDefenseLines,
     accent: "cyan",
-    badge: "New",
+    badge: null,
     position: "start",
     orientation: "black"
   },
@@ -150,7 +150,7 @@ const OPENINGS = [
       "A risky 1.d4 e5 gambit that leads to fast development and traps. Good for pattern recognition and punishment drills.",
     lines: englundGambitLines,
     accent: "rose",
-    badge: "New",
+    badge: null,
     position: "start",
     orientation: "black"
   }
@@ -169,7 +169,7 @@ const OPENINGS = [
   {
     key: "scotchgame",
     title: "Scotch Game",
-    description: "A direct 1.e4 e5 opening where White hits the center early with d4.",
+    description: "The Scotch Game is an 1.e4 opening that feels like a cheat code. It is simple to learn, crushes new players, but it scales extremely well and remains a serious weapon at every level of play",
     lines: scotchGameLines,
     accent: "orange",
     badge: "New",
