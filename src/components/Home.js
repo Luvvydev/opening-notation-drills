@@ -7,6 +7,8 @@ import { ruyLopezLines } from "../openings/ruyLopezLines";
 import { friedLiverAttackLines } from "../openings/friedLiverAttackLines";
 import { caroKannLines } from "../openings/caroKannLines";
 import { staffordGambitLines } from "../openings/staffordGambitLines";
+import { queensGambitAcceptedLines } from "../openings/queensGambitAcceptedLines";
+import { queensGambitDeclinedLines } from "../openings/queensGambitDeclinedLines";
 import { BOARD_THEMES, DEFAULT_THEME } from "../theme/boardThemes";
 import "./Home.css";
 
@@ -41,7 +43,7 @@ const OPENINGS = [
       "A legendary battleground of chess history, rich in strategy and theory, where the world's strongest players have tested ideas for over a century and tiny advantages are fought for with ruthless precision.",
     lines: ruyLopezLines,
     accent: "blue",
-    badge: "New",
+    badge: null,
     position: "start",
     orientation: "white"
   },
@@ -52,7 +54,7 @@ const OPENINGS = [
       "A sharp and entertaining way to attack the king, built around a classic knight sacrifice that punishes Black for grabbing the d5 pawn too boldly.",
     lines: friedLiverAttackLines,
     accent: "red",
-    badge: "New",
+    badge: null,
     position: "start",
     orientation: "white"
   },
@@ -63,7 +65,7 @@ const OPENINGS = [
       "An objectively dubious opening, but extremely venomous in practice, relying on initiative, traps, and precise punishment of even small inaccuracies.",
     lines: staffordGambitLines,
     accent: "orange",
-    badge: "New",
+    badge: null,
     position: "start",
     orientation: "black"
   }
@@ -74,10 +76,34 @@ const OPENINGS = [
       "Beginning with 1.e4 c6 and usually 2.d4 d5, the Caro-Kann is a battle-tested weapon that combines rock-solid structure with hidden dynamism and has stood up to elite play for generations.",
     lines: caroKannLines,
     accent: "green",
-    badge: "New",
+    badge: null,
     position: "start",
     orientation: "black"
   }
+
+  ,{
+    key: "qga",
+    title: "Queen's Gambit Accepted",
+    description:
+      "Black grabs the c4 pawn early, and White responds by building a big center and using tempo to win it back. These drills focus on key tactical and structural themes after ...dxc4.",
+    lines: queensGambitAcceptedLines,
+    accent: "teal",
+    badge: "New",
+    position: "start",
+    orientation: "white"
+  },
+  {
+    key: "qgd",
+    title: "Queen's Gambit Declined",
+    description:
+      "A classic 1.d4 response where Black defends the center instead of taking c4. These drills cover common structures like the Exchange QGD, Semi-Slav setups, and Ragozin style move orders.",
+    lines: queensGambitDeclinedLines,
+    accent: "pink",
+    badge: "New",
+    position: "start",
+    orientation: "white"
+  }
+
 ];
 
 function _safeJsonParse(text, fallback) {

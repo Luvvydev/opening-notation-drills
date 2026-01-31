@@ -4,9 +4,51 @@ import TopNav from "./TopNav";
 import { useAuth } from "../auth/AuthProvider";
 import { db, serverTimestamp } from "../firebase";
 import { doc, onSnapshot, runTransaction } from "firebase/firestore";
+import Chessboard from "chessboardjsx";
+import { BOARD_THEMES, DEFAULT_THEME } from "../theme/boardThemes";
 import "./ActivityHeatmap.css";
 import "./Profile.css";
 import { getActivityDays } from "../utils/activityDays";
+
+const LS_SETTINGS_KEY = "notation_trainer_opening_settings_v1";
+
+function safeJsonParse(text, fallback) {
+  try {
+    return JSON.parse(text);
+  } catch (_) {
+    return fallback;
+  }
+}
+
+function loadLocalSettings() {
+  const defaults = {
+    showConfetti: true,
+    playSounds: true,
+    boardTheme: DEFAULT_THEME
+  };
+
+  try {
+    const raw = window.localStorage.getItem(LS_SETTINGS_KEY);
+    if (!raw) return defaults;
+    const parsed = safeJsonParse(raw, defaults);
+    return {
+      showConfetti: parsed.showConfetti !== false,
+      playSounds: parsed.playSounds !== false,
+      boardTheme: parsed.boardTheme || DEFAULT_THEME
+    };
+  } catch (_) {
+    return defaults;
+  }
+}
+
+function saveLocalSettings(patch) {
+  const cur = loadLocalSettings();
+  const next = { ...cur, ...(patch || {}) };
+  try {
+    window.localStorage.setItem(LS_SETTINGS_KEY, JSON.stringify(next));
+  } catch (_) {}
+  return next;
+}
 
 function normalizeUsername(raw) {
   return String(raw || "")
@@ -119,6 +161,10 @@ export default function Profile() {
 
   const [editingUsername, setEditingUsername] = useState(false);
   const [editingDisplayName, setEditingDisplayName] = useState(false);
+  const [boardTheme, setBoardTheme] = useState(DEFAULT_THEME);
+  const [previewWidth, setPreviewWidth] = useState(320);
+  const boardPreviewRef = useRef(null);
+
 
   const usernameInputRef = useRef(null);
   const displayNameInputRef = useRef(null);
@@ -128,7 +174,28 @@ export default function Profile() {
     const onAct = () => setActivityTick((x) => x + 1);
     window.addEventListener("activity:updated", onAct);
     return () => window.removeEventListener("activity:updated", onAct);
+  }, [])
+
+  useEffect(() => {
+    // Load theme from localStorage on first mount
+    const s = loadLocalSettings();
+    setBoardTheme(s.boardTheme || DEFAULT_THEME);
   }, []);
+
+  useEffect(() => {
+    const el = boardPreviewRef.current;
+    if (!el) return;
+
+    const recalc = () => {
+      const w = Math.min(360, Math.max(240, el.clientWidth || 320));
+      setPreviewWidth(w);
+    };
+
+    recalc();
+    window.addEventListener("resize", recalc);
+    return () => window.removeEventListener("resize", recalc);
+  }, []);
+;
 
   useEffect(() => {
     const el = heatmapScrollRef.current;
@@ -149,6 +216,12 @@ export default function Profile() {
         setUserData(data);
         setDisplayName(data.displayName || "");
         setUsername(data.username || "");
+
+        const remoteTheme = data && data.settings && data.settings.boardTheme;
+        if (remoteTheme) {
+          setBoardTheme((cur) => (cur === remoteTheme ? cur : remoteTheme));
+          saveLocalSettings({ boardTheme: remoteTheme });
+        }
       },
       () => {
         // ignore
@@ -216,6 +289,25 @@ export default function Profile() {
     setEditingUsername(false);
     setEditingDisplayName(false);
   };
+
+const onChangeBoardTheme = async (nextTheme) => {
+  const next = saveLocalSettings({ boardTheme: nextTheme });
+  setBoardTheme(next.boardTheme || DEFAULT_THEME);
+
+  if (!user) return;
+  try {
+    const ref = doc(db, "users", user.uid);
+    await runTransaction(db, async (tx) => {
+      tx.set(
+        ref,
+        { settings: { boardTheme: nextTheme }, updatedAt: serverTimestamp() },
+        { merge: true }
+      );
+    });
+  } catch (_) {
+    // ignore
+  }
+};
 
   if (!user) return null;
 
@@ -357,6 +449,34 @@ export default function Profile() {
                 </div>
               );
             })()}
+          </div>
+
+          <div className="profile-divider" />
+
+          <div className="profile-section">
+            <div className="profile-section-title">Board Appearance</div>
+
+            <div className="profile-setting-row">
+              <div className="profile-setting-label">Board Color</div>
+              <select
+                className="profile-select"
+                value={boardTheme || DEFAULT_THEME}
+                onChange={(e) => onChangeBoardTheme(e.target.value)}
+              >
+                <option value="chesscom">Chess.com</option>
+                <option value="lichess">Lichess</option>
+                <option value="darkblue">Dark Blue</option>
+              </select>
+            </div>
+
+            <div className="profile-board-preview" ref={boardPreviewRef}>
+              <Chessboard
+                width={previewWidth}
+                position="start"
+                draggable={false}
+                {...BOARD_THEMES[boardTheme || DEFAULT_THEME]}
+              />
+            </div>
           </div>
         </div>
       </div>

@@ -7,6 +7,8 @@ import { ruyLopezLines } from "../openings/ruyLopezLines";
 import { friedLiverAttackLines } from "../openings/friedLiverAttackLines";
 import { caroKannLines, caroKannSEOText } from "../openings/caroKannLines";
 import { staffordGambitLines } from "../openings/staffordGambitLines";
+import { queensGambitAcceptedLines } from "../openings/queensGambitAcceptedLines";
+import { queensGambitDeclinedLines } from "../openings/queensGambitDeclinedLines";
 import TopNav from "./TopNav";
 import { BOARD_THEMES, DEFAULT_THEME } from "../theme/boardThemes";
 import "./OpeningTrainer.css";
@@ -20,7 +22,9 @@ const OPENING_SETS = {
   ruy: { key: "ruy", label: "Ruy Lopez", playerColor: "w", lines: ruyLopezLines },
   friedliver: { key: "friedliver", label: "Fried Liver Attack", playerColor: "w", lines: friedLiverAttackLines },
   carokann: { key: "carokann", label: "Caro-Kann Defense", playerColor: "b", lines: caroKannLines, seoText: caroKannSEOText },
-  stafford: { key: "stafford", label: "Stafford Gambit", playerColor: "b", lines: staffordGambitLines }
+  stafford: { key: "stafford", label: "Stafford Gambit", playerColor: "b", lines: staffordGambitLines },
+  qga: { key: "qga", label: "Queen’s Gambit Accepted", playerColor: "w", lines: queensGambitAcceptedLines },
+  qgd: { key: "qgd", label: "Queen’s Gambit Declined", playerColor: "w", lines: queensGambitDeclinedLines }
 };
 
 const calcWidth = ({ screenWidth, screenHeight }) => {
@@ -1387,6 +1391,8 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
 <option value="friedliver">Fried Liver Attack</option>
                 <option value="stafford">Stafford Gambit</option>
             <option value="carokann">Caro-Kann Defense</option>
+            <option value="qga">Queen’s Gambit Accepted</option>
+            <option value="qgd">Queen’s Gambit Declined</option>
           </select>
 
           <button className="ot-button" onClick={this.startLine}>
@@ -1411,6 +1417,8 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
 <option value="friedliver">Fried Liver Attack</option>
                 <option value="stafford">Stafford Gambit</option>
             <option value="carokann">Caro-Kann Defense</option>
+            <option value="qga">Queen’s Gambit Accepted</option>
+            <option value="qgd">Queen’s Gambit Declined</option>
               </select>
             </div>
 <Chessboard
