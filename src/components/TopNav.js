@@ -134,7 +134,7 @@ function TopNav(props) {
                         role="menuitem"
                         onClick={() => setMenuOpen(false)}
                       >
-                        Practice Notation
+                        Notation Trainer
                       </Link>
 
                       <Link

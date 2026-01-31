@@ -1,7 +1,8 @@
 .profile-wrap {
+  overflow-x: hidden;
   max-width: 1080px;
   margin: 0 auto;
-  padding: 24px 16px 48px;
+  padding: 24px 16px calc(48px + env(safe-area-inset-bottom, 0px));
 }
 
 .profile-card {
@@ -149,5 +150,49 @@
 
   .profile-select {
     min-width: 150px;
+  }
+}
+
+@media (max-width: 520px) {
+  .profile-wrap {
+    padding: 16px 10px calc(56px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .profile-card {
+    padding: 18px 14px 16px;
+    border-radius: 14px;
+  }
+
+  .profile-card h1 {
+    font-size: 28px;
+    margin: 4px 0 14px;
+  }
+
+  .profile-toprow {
+    gap: 14px;
+  }
+
+  .profile-setting-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .profile-select {
+    width: 100%;
+    min-width: 0;
+    height: 40px;
+  }
+
+  .profile-card input {
+    max-width: none;
+  }
+
+  .profile-row {
+    flex-wrap: wrap;
+  }
+
+  .profile-board-preview {
+    padding: 6px 0 2px;
   }
 }

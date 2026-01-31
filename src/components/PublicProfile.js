@@ -272,6 +272,7 @@ export default function PublicProfile() {
 
                 return (
                   <div className="activity-scroll">
+                    <div className="activity-inner">
                     <div className="activity-months" style={{ width: widthPx }}>
                       {monthLabels.map((m) => (
                         <div
@@ -296,6 +297,7 @@ export default function PublicProfile() {
                           ))}
                         </div>
                       ))}
+                    </div>
                     </div>
                   </div>
                 );

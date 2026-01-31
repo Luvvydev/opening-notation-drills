@@ -32,7 +32,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 40px;                 /* matches button height */
+  height: 10px;                 /* matches button height */
   padding: 0 12px;              /* matches button horizontal rhythm */
   padding-left: 0px;  /* was effectively 12px */
   margin-left: 0px;
@@ -43,11 +43,11 @@
 }
 
 .topnav-logo {
-  height: 232px;
+  height: 200px;
   margin-left: var(--topnav-left-nudge);                 /* optically balanced vs buttons */
   width: auto;
   display: block;
-  transform: translateY(-1px);  /* optical correction for swoosh */
+  transform: translateY(0px);  /* optical correction for swoosh */
   cursor: pointer;
 }
 
@@ -245,14 +245,45 @@
     --topnav-left-nudge: 0px;
     padding: 0 14px;
     gap: 10px;
+
+    /* added: allow 2 row layout on phones */
+    flex-wrap: wrap;
+    justify-content: center;
   }
 
   .topnav-actions {
     gap: 10px;
+
+    /* added: move actions under logo */
+    order: 2;
+    flex: 0 0 auto;
   }
 
   .topnav-right {
     gap: 8px;
+
+    /* added: move right cluster under logo */
+    order: 3;
+    flex: 0 0 auto;
+  }
+
+  .topnav-logo-link {
+    height: 96px;
+    padding: 0;
+
+    /* added: give logo its own full row */
+    order: 1;
+    flex: 0 0 100%;
+    justify-content: center;
+  }
+
+  .topnav-logo {
+    height: 96px;
+    margin-left: 0px;
+    transform: translateY(0px);
+
+    /* added: prevent any weird flex shrink behavior */
+    flex: 0 0 auto;
   }
 
   .topnav-profile {
@@ -265,17 +296,6 @@
     height: 38px;
     padding: 0 10px;
     border-radius: 12px;
-  }
-
-  .topnav-logo-link {
-    height: 38px;
-    padding: 0;
-  }
-
-  .topnav-logo {
-    height: 48px;
-    margin-left: 0px;
-    transform: translateY(0px);
   }
 
   .page-hero {

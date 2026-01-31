@@ -165,6 +165,33 @@ export default function Profile() {
   const [previewWidth, setPreviewWidth] = useState(320);
   const boardPreviewRef = useRef(null);
 
+  useEffect(() => {
+    const el = boardPreviewRef.current;
+    if (!el) return;
+
+    const update = () => {
+      const w = el.getBoundingClientRect().width;
+      if (!w || Number.isNaN(w)) return;
+      const next = Math.max(220, Math.min(360, Math.floor(w)));
+      setPreviewWidth(next);
+    };
+
+    update();
+
+    let ro;
+    if (typeof ResizeObserver !== "undefined") {
+      ro = new ResizeObserver(() => update());
+      ro.observe(el);
+    } else {
+      window.addEventListener("resize", update);
+    }
+
+    return () => {
+      if (ro) ro.disconnect();
+      else window.removeEventListener("resize", update);
+    };
+  }, []);
+
 
   const usernameInputRef = useRef(null);
   const displayNameInputRef = useRef(null);
@@ -413,6 +440,7 @@ const onChangeBoardTheme = async (nextTheme) => {
 
               return (
                 <div className="activity-scroll" ref={heatmapScrollRef}>
+                  <div className="activity-inner">
                   <div className="activity-months" style={{ width: widthPx }}>
   {monthLabels.map((m) => (
     <div
@@ -445,6 +473,7 @@ const onChangeBoardTheme = async (nextTheme) => {
 
                   <div className="activity-note">
                     Each square represents a day. Lighter colors indicate more activity.
+                  </div>
                   </div>
                 </div>
               );

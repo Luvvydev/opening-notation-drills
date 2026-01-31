@@ -24,6 +24,9 @@
 .activity-scroll {
   overflow-x: auto;
   overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  max-width: 100%;
+  overscroll-behavior-x: contain;
   padding-bottom: 10px;
 }
 
@@ -109,4 +112,20 @@
 .activity-cell.is-future {
   opacity: 0.35;
   border-color: rgba(255, 255, 255, 0.06);
+}
+
+
+.activity-inner {
+  display: inline-block;
+}
+
+@media (max-width: 520px) {
+  .activity-inner {
+    transform: scale(0.85);
+    transform-origin: left top;
+  }
+
+  .activity-scroll {
+    padding-bottom: 16px;
+  }
 }
