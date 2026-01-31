@@ -291,14 +291,9 @@ return (
       <div className="home-courses-header">
         <div className="home-search">
           <span className="home-search-icon">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path
-                d="M10.5 18.5C14.6421 18.5 18 15.1421 18 11C18 6.85786 14.6421 3.5 10.5 3.5C6.35786 3.5 3 6.85786 3 11C3 15.1421 6.35786 18.5 10.5 18.5Z"
-                stroke="currentColor"
-                strokeWidth="2"
-              />
-              <path d="M21 21L16.65 16.65" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-            </svg>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M16.5 3.5L20.5 7.5L8 20H4V16L16.5 3.5Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
+    </svg>
           </span>
           <input
             className="home-search-input"
@@ -310,15 +305,14 @@ return (
             </div>
 
             <div className="home-header-right">
-              <button className="home-create-rep" onClick={this.goToCreateCustomRep}>
-                <span className="home-create-rep-icon" role="img" aria-label="create custom line">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 20H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                    <path d="M16.5 3.5L20.5 7.5L8 20H4V16L16.5 3.5Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
-                  </svg>
-                </span>
-                
-              </button>
+<button className="home-create-rep" onClick={this.goToCreateCustomRep}>
+  <span className="home-create-rep-icon" role="img" aria-label="create custom line">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M16.5 3.5L20.5 7.5L8 20H4V16L16.5 3.5Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
+    </svg>
+  </span>
+</button>
+
 
               <div className="home-lines-learned">
                 {this.state.totalCompleted}/{this.state.totalLines} lines learned
