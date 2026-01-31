@@ -294,7 +294,7 @@ export const sicilianDefenseLines = [
     ]
   },
 
-  // Added lines from your list
+
 
   {
     id: "sicilian-dragon-yugoslav-rc8-nxe4-sac",
@@ -1154,8 +1154,8 @@ export const sicilianDefenseLines = [
       "Solidify the center and keep ...e5 available later.",
       "Start the main kingside expansion plan.",
       "Directly challenge the f pawn and claim space, a common practical reaction.",
-      "(Added) Keep development consistent and the move order legal.",
-      "(Added) Keep development consistent and the move order legal."
+      "Keep development consistent and the move order legal.",
+      "Keep development consistent and the move order legal."
     ]
   },
   {
@@ -1206,7 +1206,7 @@ export const sicilianDefenseLines = [
       "Commit to kingside space and prepare f5 attacks.",
       "Practical queenside prep, often supports ...b5.",
       "Develop and connect the king side pieces before pushing more pawns.",
-      "(Added) Keep development consistent and the move order legal."
+      "Keep development consistent and the move order legal."
     ]
   },
 

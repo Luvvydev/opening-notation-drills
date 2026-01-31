@@ -9,6 +9,10 @@ import { caroKannLines } from "../openings/caroKannLines";
 import { staffordGambitLines } from "../openings/staffordGambitLines";
 import { queensGambitAcceptedLines } from "../openings/queensGambitAcceptedLines";
 import { queensGambitDeclinedLines } from "../openings/queensGambitDeclinedLines";
+import { frenchDefenseLines } from "../openings/frenchDefenseLines";
+import { englundGambitLines } from "../openings/englundGambitLines";
+import { italianGameLines } from "../openings/italianGameLines";
+import { kingsIndianDefenseLines } from "../openings/kingsIndianDefenseLines";
 import { BOARD_THEMES, DEFAULT_THEME } from "../theme/boardThemes";
 import "./Home.css";
 
@@ -102,6 +106,51 @@ const OPENINGS = [
     badge: "New",
     position: "start",
     orientation: "white"
+  }
+
+  ,{
+    key: "italian",
+    title: "Italian Game",
+    description:
+      "Classic 1.e4 e5 development. These drills cover sharp lines like the Evans Gambit and Two Knights ideas.",
+    lines: italianGameLines,
+    accent: "indigo",
+    badge: "New",
+    position: "start",
+    orientation: "white"
+  },
+  {
+    key: "kingsindian",
+    title: "King's Indian Defense",
+    description:
+      "A hypermodern defense against 1.d4 where Black allows the center and counters with ...e5 or ...c5 and kingside attacks.",
+    lines: kingsIndianDefenseLines,
+    accent: "slate",
+    badge: "New",
+    position: "start",
+    orientation: "black"
+  },
+  {
+    key: "french",
+    title: "French Defense",
+    description:
+      "1.e4 e6 aiming for a strong pawn chain and counterplay with ...c5. These drills focus on Advance and Tarrasch structures.",
+    lines: frenchDefenseLines,
+    accent: "cyan",
+    badge: "New",
+    position: "start",
+    orientation: "black"
+  },
+  {
+    key: "englund",
+    title: "Englund Gambit",
+    description:
+      "A risky 1.d4 e5 gambit that leads to fast development and traps. Good for pattern recognition and punishment drills.",
+    lines: englundGambitLines,
+    accent: "rose",
+    badge: "New",
+    position: "start",
+    orientation: "black"
   }
 
 ];
@@ -284,6 +333,22 @@ className={`home-course-card ${o.accent ? `accent-${o.accent}` : ""}`}
           return t.includes(q) || d.includes(q);
         });
 
+    const withMeta = filtered.map((o, idx) => {
+      const p = (this.state.progress && this.state.progress.openings && this.state.progress.openings[o.key]) || {};
+      const lastPlayedAt = Number(p.lastPlayedAt) || 0;
+      const isNew = o.badge === "New";
+      const group = lastPlayedAt > 0 ? 0 : isNew ? 1 : 2;
+      return { o, idx, lastPlayedAt, group };
+    });
+
+    withMeta.sort((a, b) => {
+      if (a.group !== b.group) return a.group - b.group;
+      if (a.group === 0) return b.lastPlayedAt - a.lastPlayedAt;
+      return a.idx - b.idx;
+    });
+
+    const sorted = withMeta.map((x) => x.o);
+
 return (
   <div className="home-page">
     <TopNav title="Chess Opening Drills" />
@@ -320,7 +385,7 @@ return (
             </div>
           </div>
 
-          <div className="home-course-grid">{filtered.map(this.renderCard)}</div>
+          <div className="home-course-grid">{sorted.map(this.renderCard)}</div>
         </div>
       </div>
     );

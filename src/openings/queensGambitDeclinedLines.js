@@ -1,5 +1,3 @@
-// Auto-generated drill lines
-
 export const queensGambitDeclinedLines = [
   {
     "category": "Queen's Gambit Declined",

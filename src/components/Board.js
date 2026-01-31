@@ -324,7 +324,7 @@ class Board extends Component {
 function Timer(props) {
   return (
     <div 
-      class="timer-container" 
+      className="timer-container" 
       style={props.time < 10 ? {color: 'red', display: props.display} : {display: props.display}} >
       <div>{props.time}</div>
     </div>

@@ -9,6 +9,10 @@ import { caroKannLines, caroKannSEOText } from "../openings/caroKannLines";
 import { staffordGambitLines } from "../openings/staffordGambitLines";
 import { queensGambitAcceptedLines } from "../openings/queensGambitAcceptedLines";
 import { queensGambitDeclinedLines } from "../openings/queensGambitDeclinedLines";
+import { frenchDefenseLines } from "../openings/frenchDefenseLines";
+import { englundGambitLines } from "../openings/englundGambitLines";
+import { italianGameLines } from "../openings/italianGameLines";
+import { kingsIndianDefenseLines } from "../openings/kingsIndianDefenseLines";
 import TopNav from "./TopNav";
 import { BOARD_THEMES, DEFAULT_THEME } from "../theme/boardThemes";
 import "./OpeningTrainer.css";
@@ -25,6 +29,10 @@ const OPENING_SETS = {
   stafford: { key: "stafford", label: "Stafford Gambit", playerColor: "b", lines: staffordGambitLines },
   qga: { key: "qga", label: "Queen’s Gambit Accepted", playerColor: "w", lines: queensGambitAcceptedLines },
   qgd: { key: "qgd", label: "Queen’s Gambit Declined", playerColor: "w", lines: queensGambitDeclinedLines }
+  ,italian: { key: "italian", label: "Italian Game", playerColor: "w", lines: italianGameLines }
+  ,kingsindian: { key: "kingsindian", label: "King's Indian Defense", playerColor: "b", lines: kingsIndianDefenseLines }
+  ,french: { key: "french", label: "French Defense", playerColor: "b", lines: frenchDefenseLines }
+  ,englund: { key: "englund", label: "Englund Gambit", playerColor: "b", lines: englundGambitLines }
 };
 
 const calcWidth = ({ screenWidth, screenHeight }) => {
@@ -910,6 +918,7 @@ renderCustomModal = () => {
 
     const progress = { ...this.state.progress };
     _ensureOpening(progress, openingKey);
+    progress.openings[openingKey].lastPlayedAt = Date.now();
     const s = _getLineStats(progress, openingKey, lineId);
     s.timesSeen += 1;
 
@@ -1393,7 +1402,12 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
             <option value="carokann">Caro-Kann Defense</option>
             <option value="qga">Queen’s Gambit Accepted</option>
             <option value="qgd">Queen’s Gambit Declined</option>
-          </select>
+          
+            <option value="italian">Italian Game</option>
+            <option value="kingsindian">King's Indian Defense</option>
+            <option value="french">French Defense</option>
+            <option value="englund">Englund Gambit</option>
+</select>
 
           <button className="ot-button" onClick={this.startLine}>
             Restart current line
@@ -1419,7 +1433,12 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
             <option value="carokann">Caro-Kann Defense</option>
             <option value="qga">Queen’s Gambit Accepted</option>
             <option value="qgd">Queen’s Gambit Declined</option>
-              </select>
+              
+            <option value="italian">Italian Game</option>
+            <option value="kingsindian">King's Indian Defense</option>
+            <option value="french">French Defense</option>
+            <option value="englund">Englund Gambit</option>
+</select>
             </div>
 <Chessboard
   calcWidth={calcWidth}

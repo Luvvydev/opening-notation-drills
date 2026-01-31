@@ -18,20 +18,13 @@ class About extends Component {
             <h2 className="about-title">Thanks for stopping by!</h2>
 
             <p className="about-lead">
-              Chess Opening Drills is a practice tool for memorizing opening move orders and basic notation through repetition.
-              It is built for players who already know the rules and want the first phase of the game to feel automatic.
+              This is a practice tool for memorizing opening move orders.
             </p>
 
             <p className="about-muted">
-              
+              Buy Me a Coffee supporters get early access to new drills, priority input on upcoming openings,
+              and the option to leave a Discord handle with their donation for direct feedback.
             </p>
-
-            <div className="about-chips" aria-label="What you get">
-              <div className="about-chip">Instant feedback</div>
-              <div className="about-chip">Randomized reps</div>
-              <div className="about-chip">Progress saved</div>
-             
-            </div>
 
             <div className="button-container">
               <a
@@ -40,18 +33,11 @@ class About extends Component {
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <span role="img" aria-label="coffee">☕</span> Buy me a coffee
+                <span role="img" aria-label="coffee">
+                  ☕
+                </span>{' '}
+                Buy Me a Coffee
               </a>
-            </div>
-
-            <div className="about-links">
-              <a href="https://github.com/Luvvydev" aria-label="Luvvydev on GitHub">
-                GitHub
-              </a>
-              <span className="about-dot"></span>
-              <span className="about-smile">
-                <span role="img" aria-label="smile">ㅤ</span>
-              </span>
             </div>
           </div>
         </div>

@@ -160,8 +160,8 @@ export const londonLines = [
       "Develop and keep options for c4 or e3 structures.",
       "Black develops and adds more pressure on the center.",
       "Recapture cleanly, keep structure coherent, and open lines for your pieces.",
-      "(Added) Keep development consistent and the move order legal.",
-      "(Added) Keep development consistent and the move order legal."
+      "Keep development consistent and the move order legal.",
+      "Keep development consistent and the move order legal."
     ]
   },
 
@@ -384,9 +384,7 @@ export const londonLines = [
     ]
   },
 
-  // -----------------------------
-  // Added lines requested by you (deduped by exact move sequence)
-  // -----------------------------
+
 
   {
     id: "london-line-01-nb5-nc7-tactic",
