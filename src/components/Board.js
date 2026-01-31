@@ -33,7 +33,8 @@ class Board extends Component {
       incorrect: false,
       correct: false,
       selectedSquare: null,
-      legalTargets: []
+      legalTargets: [],
+      lastMove: null // { from, to, color }
     }
   }
 
@@ -132,7 +133,8 @@ class Board extends Component {
       nextMoveColor: lastFullMove.color === 'w' ? 'White' : 'Black',
       squareStyles: {},
       answer: '',
-      orientation: orientation
+      orientation: orientation,
+      lastMove: null
     });
 
     setTimeout(() => this.makeInitMove(), 100);
@@ -171,7 +173,12 @@ class Board extends Component {
           correctMoves: this.state.correctMoves+1,
           correct: true,
           selectedSquare: null,
-          legalTargets: []
+          legalTargets: [],
+          lastMove: {
+            from: sourceSquare,
+            to: targetSquare,
+            color: this.state.nextMoveData.color
+          }
         });
        } else if (sourceSquare === targetSquare) {
         // Skip if piece is dropped onto original square
@@ -266,6 +273,18 @@ class Board extends Component {
 
 
     const renderSquareStyles = { ...(this.state.squareStyles || {}) };
+
+    if (this.state.lastMove) {
+      const { from, to } = this.state.lastMove;
+      renderSquareStyles[from] = {
+        ...(renderSquareStyles[from] || {}),
+        backgroundColor: "rgba(255, 215, 0, 0.45)"
+      };
+      renderSquareStyles[to] = {
+        ...(renderSquareStyles[to] || {}),
+        backgroundColor: "rgba(255, 215, 0, 0.45)"
+      };
+    }
 
     if (this.state.selectedSquare) {
       renderSquareStyles[this.state.selectedSquare] = {

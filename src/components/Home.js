@@ -9,6 +9,8 @@ import { caroKannLines } from "../openings/caroKannLines";
 import { staffordGambitLines } from "../openings/staffordGambitLines";
 import { queensGambitAcceptedLines } from "../openings/queensGambitAcceptedLines";
 import { queensGambitDeclinedLines } from "../openings/queensGambitDeclinedLines";
+import { englishOpeningLines } from "../openings/englishOpeningLines";
+import { scotchGameLines } from "../openings/scotchGameLines";
 import { frenchDefenseLines } from "../openings/frenchDefenseLines";
 import { englundGambitLines } from "../openings/englundGambitLines";
 import { italianGameLines } from "../openings/italianGameLines";
@@ -153,7 +155,29 @@ const OPENINGS = [
     orientation: "black"
   }
 
+,
+  {
+    key: "english",
+    title: "English Opening",
+    description: "A flexible 1.c4 opening for White that can transpose into many structures.",
+    lines: englishOpeningLines,
+    accent: "cyan",
+    badge: "New",
+    position: "start",
+    orientation: "white"
+  },
+  {
+    key: "scotchgame",
+    title: "Scotch Game",
+    description: "A direct 1.e4 e5 opening where White hits the center early with d4.",
+    lines: scotchGameLines,
+    accent: "orange",
+    badge: "New",
+    position: "start",
+    orientation: "white"
+  }
 ];
+
 
 function _safeJsonParse(text, fallback) {
   try {

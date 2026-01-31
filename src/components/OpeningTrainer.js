@@ -11,6 +11,8 @@ import { queensGambitAcceptedLines } from "../openings/queensGambitAcceptedLines
 import { queensGambitDeclinedLines } from "../openings/queensGambitDeclinedLines";
 import { frenchDefenseLines } from "../openings/frenchDefenseLines";
 import { englundGambitLines } from "../openings/englundGambitLines";
+import { englishOpeningLines } from "../openings/englishOpeningLines";
+import { scotchGameLines } from "../openings/scotchGameLines";
 import { italianGameLines } from "../openings/italianGameLines";
 import { kingsIndianDefenseLines } from "../openings/kingsIndianDefenseLines";
 import TopNav from "./TopNav";
@@ -32,7 +34,9 @@ const OPENING_SETS = {
   ,italian: { key: "italian", label: "Italian Game", playerColor: "w", lines: italianGameLines }
   ,kingsindian: { key: "kingsindian", label: "King's Indian Defense", playerColor: "b", lines: kingsIndianDefenseLines }
   ,french: { key: "french", label: "French Defense", playerColor: "b", lines: frenchDefenseLines }
-  ,englund: { key: "englund", label: "Englund Gambit", playerColor: "b", lines: englundGambitLines }
+  ,englund: { key: "englund", label: "Englund Gambit", playerColor: "b", lines: englundGambitLines },
+  english: { key: "english", label: "English Opening", playerColor: "w", lines: englishOpeningLines },
+  scotchgame: { key: "scotchgame", label: "Scotch Game", playerColor: "w", lines: scotchGameLines }
 };
 
 const calcWidth = ({ screenWidth, screenHeight }) => {
@@ -361,7 +365,8 @@ class OpeningTrainer extends Component {
       selectedSquare: null,
       legalTargets: [],
       streakToastOpen: false,
-      streakToastText: ""
+      streakToastText: "",
+      lastMove: null // { from, to }
     };
 
     this._countedSeenForRun = false;
@@ -681,7 +686,8 @@ renderCustomModal = () => {
         solveArmed: false,
         hintFromSquare: null,
         // Solve breaks clean completion
-        mistakeUnlocked: true
+        mistakeUnlocked: true,
+        lastMove: { from: mv.from, to: mv.to }
       },
       () => {
         this.playAutoMovesIfNeeded();
@@ -821,7 +827,10 @@ renderCustomModal = () => {
         mistakeUnlocked: keepUnlocked ? this.state.mistakeUnlocked : false,
         lastMistake: null,
         wrongAttempt: null,
-        showHint: false
+        showHint: false,
+        lastMove: null,
+        selectedSquare: null,
+        legalTargets: []
       },
       () => {
         this._countedSeenForRun = false;
@@ -843,7 +852,8 @@ renderCustomModal = () => {
         lastMistake: null,
         completed: false,
         wrongAttempt: null,
-        showHint: false
+        showHint: false,
+        lastMove: null
       },
       () => {
         this.resetLine(false);
@@ -874,7 +884,8 @@ renderCustomModal = () => {
         lastMistake: null,
         completed: false,
         wrongAttempt: null,
-        showHint: false
+        showHint: false,
+        lastMove: null
       },
       () => {
         this.resetLine(false);
@@ -902,7 +913,8 @@ renderCustomModal = () => {
         lastMistake: null,
         completed: false,
         wrongAttempt: null,
-        showHint: false
+        showHint: false,
+        lastMove: null
       },
       () => {
         this.resetLine(false);
@@ -976,6 +988,7 @@ renderCustomModal = () => {
     const playerColor = this.getPlayerColor();
 
     let didAutoMove = false;
+    let lastAutoMove = null;
 
     while (stepIndex < line.moves.length && this.game.turn() !== playerColor) {
       const expected = line.moves[stepIndex];
@@ -984,6 +997,7 @@ renderCustomModal = () => {
         this.setState({ fen: this.game.fen() });
         return;
       }
+      lastAutoMove = mv;
       stepIndex += 1;
       didAutoMove = true;
     }
@@ -994,7 +1008,8 @@ renderCustomModal = () => {
       {
         fen: this.game.fen(),
         stepIndex: stepIndex,
-        completed: completed
+        completed: completed,
+        lastMove: lastAutoMove ? { from: lastAutoMove.from, to: lastAutoMove.to } : this.state.lastMove
       },
       () => {
         if (didAutoMove) this.playSfx("moveOpponent");
@@ -1108,7 +1123,8 @@ onCompletedLine = () => {
         solveArmed: false,
         hintFromSquare: null,
         selectedSquare: null,
-        legalTargets: []
+        legalTargets: [],
+        lastMove: { from: sourceSquare, to: targetSquare }
       },
       () => {
         this.playAutoMovesIfNeeded();
@@ -1229,7 +1245,7 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
 
   const coachIndex = this.getViewIndex();
   const raw = unlocked ? (line.explanations[coachIndex] || "") : "What's the best move?";
-  const text = unlocked ? this.sanitizeExplanation(raw, expectedSan) : raw;
+  const text = unlocked ? this.stripMovePrefix(raw) : raw;
 
   return (
     <div className="ot-coach">
@@ -1310,12 +1326,25 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
     const yourProgressPct = totalYourMoves > 0 ? Math.round((doneYourMoves / totalYourMoves) * 100) : 0;
 
     const squareStyles = {};
+
     if (this.state.wrongAttempt && this.state.wrongAttempt.to) {
       squareStyles[this.state.wrongAttempt.to] = {
         backgroundImage: `url("${X_SVG_DATA_URI}")`,
         backgroundRepeat: "no-repeat",
         backgroundPosition: "center",
         backgroundSize: "70%"
+      };
+    }
+
+    if (this.state.lastMove) {
+      const { from, to } = this.state.lastMove;
+      squareStyles[from] = {
+        ...(squareStyles[from] || {}),
+        backgroundColor: "rgba(255, 215, 0, 0.45)"
+      };
+      squareStyles[to] = {
+        ...(squareStyles[to] || {}),
+        backgroundColor: "rgba(255, 215, 0, 0.45)"
       };
     }
 
@@ -1407,6 +1436,8 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
             <option value="kingsindian">King's Indian Defense</option>
             <option value="french">French Defense</option>
             <option value="englund">Englund Gambit</option>
+<option value="english">English Opening</option>
+<option value="scotchgame">Scotch Game</option>
 </select>
 
           <button className="ot-button" onClick={this.startLine}>
@@ -1438,6 +1469,8 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
             <option value="kingsindian">King's Indian Defense</option>
             <option value="french">French Defense</option>
             <option value="englund">Englund Gambit</option>
+<option value="english">English Opening</option>
+<option value="scotchgame">Scotch Game</option>
 </select>
             </div>
 <Chessboard
