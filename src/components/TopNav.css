@@ -43,7 +43,7 @@
 }
 
 .topnav-logo {
-  height: 200px;
+  height: 80px;
   margin-left: var(--topnav-left-nudge);                 /* optically balanced vs buttons */
   width: auto;
   display: block;
@@ -278,7 +278,7 @@
   }
 
   .topnav-logo {
-    height: 96px;
+    height: 80px;
     margin-left: 0px;
     transform: translateY(0px);
 
