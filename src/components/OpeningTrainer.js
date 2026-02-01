@@ -1,20 +1,8 @@
 import React, { Component } from "react";
 import Chessboard from "chessboardjsx";
 import * as Chess from "chess.js";
-import { londonLines } from "../openings/londonLines";
-import { sicilianDefenseLines } from "../openings/sicilianDefenseLines";
-import { ruyLopezLines } from "../openings/ruyLopezLines";
-import { friedLiverAttackLines } from "../openings/friedLiverAttackLines";
-import { caroKannLines, caroKannSEOText } from "../openings/caroKannLines";
-import { staffordGambitLines } from "../openings/staffordGambitLines";
-import { queensGambitAcceptedLines } from "../openings/queensGambitAcceptedLines";
-import { queensGambitDeclinedLines } from "../openings/queensGambitDeclinedLines";
-import { frenchDefenseLines } from "../openings/frenchDefenseLines";
-import { englundGambitLines } from "../openings/englundGambitLines";
-import { englishOpeningLines } from "../openings/englishOpeningLines";
-import { scotchGameLines } from "../openings/scotchGameLines";
-import { italianGameLines } from "../openings/italianGameLines";
-import { kingsIndianDefenseLines } from "../openings/kingsIndianDefenseLines";
+import { OPENING_SETS as CATALOG_OPENING_SETS } from "../openings/openingCatalog";
+import { useAuth } from "../auth/AuthProvider";
 import TopNav from "./TopNav";
 import { BOARD_THEMES, DEFAULT_THEME } from "../theme/boardThemes";
 import "./OpeningTrainer.css";
@@ -26,22 +14,8 @@ import OpeningTrainerCustomModal from "./openingTrainer/OpeningTrainerCustomModa
 import OpeningTrainerConfetti from "./openingTrainer/OpeningTrainerConfetti";
 
 
-const OPENING_SETS = {
-  london: { key: "london", label: "London", playerColor: "w", lines: londonLines },
-  sicilian: { key: "sicilian", label: "Sicilian Defense", playerColor: "b", lines: sicilianDefenseLines },
-  ruy: { key: "ruy", label: "Ruy Lopez", playerColor: "w", lines: ruyLopezLines },
-  friedliver: { key: "friedliver", label: "Fried Liver Attack", playerColor: "w", lines: friedLiverAttackLines },
-  carokann: { key: "carokann", label: "Caro-Kann Defense", playerColor: "b", lines: caroKannLines, seoText: caroKannSEOText },
-  stafford: { key: "stafford", label: "Stafford Gambit", playerColor: "b", lines: staffordGambitLines },
-  qga: { key: "qga", label: "Queen’s Gambit Accepted", playerColor: "w", lines: queensGambitAcceptedLines },
-  qgd: { key: "qgd", label: "Queen’s Gambit Declined", playerColor: "w", lines: queensGambitDeclinedLines }
-  ,italian: { key: "italian", label: "Italian Game", playerColor: "w", lines: italianGameLines }
-  ,kingsindian: { key: "kingsindian", label: "King's Indian Defense", playerColor: "b", lines: kingsIndianDefenseLines }
-  ,french: { key: "french", label: "French Defense", playerColor: "b", lines: frenchDefenseLines }
-  ,englund: { key: "englund", label: "Englund Gambit", playerColor: "b", lines: englundGambitLines },
-  english: { key: "english", label: "English Opening", playerColor: "w", lines: englishOpeningLines },
-  scotchgame: { key: "scotchgame", label: "Scotch Game", playerColor: "w", lines: scotchGameLines }
-};
+const OPENING_SETS = CATALOG_OPENING_SETS;
+
 
 class OpeningTrainer extends Component {
   constructor(props) {
@@ -155,9 +129,34 @@ class OpeningTrainer extends Component {
     }
   };
 
+
+  isOpeningLocked = (openingKey) => {
+    const set = OPENING_SETS[openingKey];
+    return !!set && set.badge === "New" && !this.props.user;
+  };
+
+  maybeRedirectForLockedOpening = (openingKey) => {
+    if (this.props.authLoading) return false;
+    if (!this.isOpeningLocked(openingKey)) return false;
+
+    const pathname = this.props && this.props.location ? this.props.location.pathname : "/openings";
+    const search = this.props && this.props.location ? this.props.location.search : "";
+    const from = `${pathname}${search}`;
+
+    if (this.props && this.props.history && this.props.history.replace) {
+      this.props.history.replace({
+        pathname: "/signup",
+        state: { from, reason: "new_opening" }
+      });
+    }
+
+    return true;
+  };
+
   componentDidMount() {
     window.addEventListener("mousedown", this.onWindowClick);
     window.addEventListener("keydown", this.onKeyDown);
+    if (this.maybeRedirectForLockedOpening(this.state.openingKey)) return;
     this._backfillActivityFromStreak();
     this.resetLine(false);
   
@@ -167,7 +166,18 @@ class OpeningTrainer extends Component {
     }
 }
 
-  componentWillUnmount() {
+  
+  componentDidUpdate(prevProps, prevState) {
+    if (prevProps.authLoading && !this.props.authLoading) {
+      this.maybeRedirectForLockedOpening(this.state.openingKey);
+    }
+
+    if (prevState.openingKey !== this.state.openingKey) {
+      this.maybeRedirectForLockedOpening(this.state.openingKey);
+    }
+  }
+
+componentWillUnmount() {
     if (this._autoNextTimer) clearTimeout(this._autoNextTimer);
     if (this._confettiTimer) clearTimeout(this._confettiTimer);
     if (this._streakToastTimer) clearTimeout(this._streakToastTimer);
@@ -568,6 +578,7 @@ saveCustomModal = () => {
 
   setOpeningKey = (e) => {
     const nextKey = e && e.target ? e.target.value : "london";
+    if (this.maybeRedirectForLockedOpening(nextKey)) return;
     const nextSet = OPENING_SETS[nextKey] || OPENING_SETS.london;
     const nextLines = nextSet.lines || [];
     const nextId = pickRandomLineId(nextLines, null) || (nextLines[0] ? nextLines[0].id : "");
@@ -1375,4 +1386,9 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
   }
 }
 
-export default OpeningTrainer;
+function OpeningTrainerWithAuth(props) {
+  const { user, authLoading } = useAuth();
+  return <OpeningTrainer {...props} user={user} authLoading={authLoading} />;
+}
+
+export default OpeningTrainerWithAuth;

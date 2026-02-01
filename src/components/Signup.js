@@ -9,6 +9,12 @@ export default function Signup(props) {
   const [password, setPassword] = useState("");
 
   const [error, setError] = useState("");
+
+  const gateReason =
+    props && props.location && props.location.state && props.location.state.reason
+      ? props.location.state.reason
+      : null;
+
   const [busy, setBusy] = useState(false);
 
   const isMountedRef = useRef(true);
@@ -27,7 +33,15 @@ export default function Signup(props) {
 
     try {
       await signUp(email, password);
-      if (props && props.history) props.history.push("/profile");
+      const from =
+        props &&
+        props.location &&
+        props.location.state &&
+        props.location.state.from
+          ? props.location.state.from
+          : "/profile";
+
+      if (props && props.history) props.history.push(from);
     } catch (err) {
       if (isMountedRef.current) {
         setError(err && err.message ? err.message : "Sign up failed");
@@ -94,6 +108,22 @@ export default function Signup(props) {
       <div style={wrapStyle}>
         <div style={cardStyle}>
           <h2 style={{ marginTop: 0, marginBottom: 12 }}>Create Account</h2>
+
+          {gateReason ? (
+            <div
+              style={{
+                marginBottom: 12,
+                padding: 10,
+                borderRadius: 10,
+                border: "1px solid rgba(244, 197, 66, 0.35)",
+                background: "rgba(244, 197, 66, 0.12)",
+                color: "#e9edf2",
+                fontWeight: 700,
+              }}
+            >
+              Create a free account to access new drills.
+            </div>
+          ) : null}
 
           {error ? <div style={errorStyle}>{error}</div> : null}
 
