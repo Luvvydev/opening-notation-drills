@@ -1,11 +1,11 @@
 self.__precacheManifest = (self.__precacheManifest || []).concat([
   {
-    "revision": "6eb090785022aa55581864634157f4d7",
+    "revision": "0020062b282e0d717c6b1ec30fb4648b",
     "url": "/opening-notation-drills/index.html"
   },
   {
-    "revision": "86b8930762970b3e9b2a",
-    "url": "/opening-notation-drills/static/css/main.573c5525.chunk.css"
+    "revision": "879b2e493a19dda34152",
+    "url": "/opening-notation-drills/static/css/main.d11c197f.chunk.css"
   },
   {
     "revision": "8a8d7af59b4508fcaca5",
@@ -16,7 +16,7 @@ self.__precacheManifest = (self.__precacheManifest || []).concat([
     "url": "/opening-notation-drills/static/js/2.50e3a0d3.chunk.js.LICENSE.txt"
   },
   {
-    "revision": "86b8930762970b3e9b2a",
+    "revision": "879b2e493a19dda34152",
     "url": "/opening-notation-drills/static/js/main.9a6d6fa1.chunk.js"
   },
   {
