@@ -32,9 +32,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 10px;                 /* matches button height */
+  height: 40px;                 /* matches button height */
   padding: 0 12px;              /* matches button horizontal rhythm */
-  padding-left: 0px;  /* was effectively 12px */
+  padding-left: 40px;  /* was effectively 12px */
   margin-left: 0px;
 }
 
