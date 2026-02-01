@@ -20,6 +20,10 @@ import { BOARD_THEMES, DEFAULT_THEME } from "../theme/boardThemes";
 import "./OpeningTrainer.css";
 import { getStreakState, markLineCompletedTodayDetailed } from "../utils/streak";
 import { getActivityDays, markActivityToday, touchActivityToday } from "../utils/activityDays";
+import { calcWidth, X_SVG_DATA_URI, pickRandomLineId, splitMovesText, validateSanMoves, countMovesForSide, countDoneMovesForSide, groupLines } from "./openingTrainer/otUtils";
+import { loadProgress, saveProgress, loadSettings, saveSettings, loadCustomLines, saveCustomLines, makeCustomId, ensureOpening, getLineStats, isCompleted } from "./openingTrainer/otStorage";
+import OpeningTrainerCustomModal from "./openingTrainer/OpeningTrainerCustomModal";
+import OpeningTrainerConfetti from "./openingTrainer/OpeningTrainerConfetti";
 
 
 const OPENING_SETS = {
@@ -38,267 +42,6 @@ const OPENING_SETS = {
   english: { key: "english", label: "English Opening", playerColor: "w", lines: englishOpeningLines },
   scotchgame: { key: "scotchgame", label: "Scotch Game", playerColor: "w", lines: scotchGameLines }
 };
-
-const calcWidth = ({ screenWidth, screenHeight }) => {
-  const w = screenWidth || screenHeight || 500;
-  const usable = Math.max(260, w - 68);
-  if (w < 550) return usable;
-  if (w < 1800) return 500;
-  return 600;
-};
-
-const X_SVG_DATA_URI =
-  "data:image/svg+xml;utf8," +
-  encodeURIComponent(
-    `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64">
-      <circle cx="32" cy="32" r="28" fill="#d11f1f"/>
-      <path d="M20 20 L44 44 M44 20 L20 44" stroke="white" stroke-width="6" stroke-linecap="round"/>
-    </svg>`
-  );
-
-function _randInt(min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
-function _pickRandomLineId(lines, excludeId) {
-  if (!lines || !lines.length) return null;
-  if (lines.length === 1) return lines[0].id;
-  let tries = 0;
-  while (tries < 20) {
-    const idx = _randInt(0, lines.length - 1);
-    const id = lines[idx].id;
-    if (id !== excludeId) return id;
-    tries += 1;
-  }
-  return lines[0].id;
-}
-
-const STORAGE_KEY = "notation_trainer_opening_progress_v2";
-const SETTINGS_KEY = "notation_trainer_opening_settings_v1";
-const CUSTOM_REPS_KEY = "notation_trainer_custom_lines_v1";
-
-function _loadCustomLines() {
-  try {
-    const raw = window.localStorage.getItem(CUSTOM_REPS_KEY);
-    if (!raw) return [];
-    const parsed = _safeJsonParse(raw, []);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch (_) {
-    return [];
-  }
-}
-
-function _saveCustomLines(lines) {
-  try {
-    window.localStorage.setItem(CUSTOM_REPS_KEY, JSON.stringify(lines || []));
-  } catch (_) {
-    // ignore
-  }
-}
-
-function _makeCustomId() {
-  return "custom-" + Date.now() + "-" + Math.floor(Math.random() * 1000000);
-}
-
-function _splitMovesText(text) {
-  const t = String(text || "").trim();
-  if (!t) return [];
-  return t
-    .split(/[\n\r\t ,]+/g)
-    .map((s) => s.trim())
-    .filter(Boolean);
-}
-
-function _validateSanMoves(moves) {
-  try {
-    const g = new Chess();
-    for (let i = 0; i < moves.length; i += 1) {
-      const san = moves[i];
-      const mv = g.move(san, { sloppy: true });
-      if (!mv) return { ok: false, index: i, san: san };
-    }
-    return { ok: true };
-  } catch (_) {
-    return { ok: false, index: 0, san: "" };
-  }
-}
-
-
-function _safeJsonParse(text, fallback) {
-  try {
-    return JSON.parse(text);
-  } catch (_) {
-    return fallback;
-  }
-}
-
-function _todayKey() {
-  const d = new Date();
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-}
-
-function _loadProgress() {
-  const empty = { lines: {}, openings: {} };
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return empty;
-    const parsed = _safeJsonParse(raw, empty);
-    if (!parsed || typeof parsed !== "object") return empty;
-    if (!parsed.lines) parsed.lines = {};
-    if (!parsed.openings) parsed.openings = {};
-    return parsed;
-  } catch (_) {
-    return empty;
-  }
-}
-
-function _saveProgress(progress) {
-  try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
-  } catch (_) {
-    // ignore
-  }
-}
-
-function _loadSettings() {
-  const defaults = { 
-    showConfetti: true, 
-    playSounds: true,
-    boardTheme: DEFAULT_THEME 
-  };
-  try {
-    const raw = window.localStorage.getItem(SETTINGS_KEY);
-    if (!raw) return defaults;
-    const parsed = _safeJsonParse(raw, defaults);
-    if (!parsed || typeof parsed !== "object") return defaults;
-
-    return {
-      showConfetti: parsed.showConfetti !== false,
-      playSounds: parsed.playSounds !== false,
-      boardTheme: parsed.boardTheme || DEFAULT_THEME
-    };
-  } catch (_) {
-    return defaults;
-  }
-}
-
-function _saveSettings(settings) {
-  try {
-    window.localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
-  } catch (_) {
-    // ignore
-  }
-}
-
-function _ensureOpening(progress, openingKey) {
-  if (!progress.lines[openingKey]) progress.lines[openingKey] = {};
-  if (!progress.openings[openingKey]) {
-    progress.openings[openingKey] = {
-      streak: 0,
-      bestStreak: 0,
-      completedToday: 0,
-      todayKey: _todayKey(),
-      totalCompleted: 0,
-      totalClean: 0
-    };
-  }
-  const o = progress.openings[openingKey];
-  const t = _todayKey();
-  if (o.todayKey !== t) {
-    o.todayKey = t;
-    o.completedToday = 0;
-    o.streak = 0;
-  }
-}
-
-function _getLineStats(progress, openingKey, lineId) {
-  _ensureOpening(progress, openingKey);
-  const bucket = progress.lines[openingKey];
-  if (!bucket[lineId]) {
-    bucket[lineId] = {
-      timesSeen: 0,
-      timesCompleted: 0,
-      timesClean: 0,
-      lastResult: null
-    };
-  }
-  return bucket[lineId];
-}
-
-function _isCompleted(stats) {
-  return (stats && stats.timesClean >= 1) || false;
-}
-
-
-function _sideForIndex(i) {
-  return i % 2 === 0 ? "w" : "b";
-}
-
-function _countMovesForSide(moves, side) {
-  if (!moves || !moves.length) return 0;
-  let n = 0;
-  for (let i = 0; i < moves.length; i += 1) {
-    if (_sideForIndex(i) === side) n += 1;
-  }
-  return n;
-}
-
-function _countDoneMovesForSide(stepIndex, side) {
-  let n = 0;
-  for (let i = 0; i < stepIndex; i += 1) {
-    if (_sideForIndex(i) === side) n += 1;
-  }
-  return n;
-}
-
-
-function _categoryForLine(line) {
-  if (!line) return "Other";
-  if (line.category) return String(line.category);
-  const name = line.name ? String(line.name) : "";
-  // If you already use "Prefix: Title", treat Prefix as category hint.
-  const parts = name.split(":");
-  if (parts.length > 1) return parts[0].trim();
-  return "Other";
-}
-
-function _groupLines(lines) {
-  const out = {};
-  (lines || []).forEach((l) => {
-    const cat = _categoryForLine(l);
-    if (!out[cat]) out[cat] = [];
-    out[cat].push(l);
-  });
-  // stable-ish category order: main ones first, then alpha
-  const preferred = [
-    "Classic London",
-    "Early ...c5 Systems",
-    "Anti Bishop Ideas",
-    "Jobava London",
-    "Aggressive Plans",
-    "Open Sicilian",
-    "Anti-Sicilian",
-    "Closed Sicilian",
-    "Grand Prix",
-    "Moscow/Rossolimo",
-    "Other"
-  ];
-  const cats = Object.keys(out);
-  cats.sort((a, b) => {
-    const ia = preferred.indexOf(a);
-    const ib = preferred.indexOf(b);
-    if (ia !== -1 || ib !== -1) {
-      return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
-    }
-    return a.localeCompare(b);
-  });
-
-  return { cats, map: out };
-}
-
 
 class OpeningTrainer extends Component {
   constructor(props) {
@@ -323,17 +66,17 @@ class OpeningTrainer extends Component {
     }
 
     const firstLinesBuiltIn = OPENING_SETS[firstSetKey].lines;
-    const customAll = _loadCustomLines();
+    const customAll = loadCustomLines();
     const customForFirst = customAll.filter((l) => l && l.openingKey === firstSetKey);
     const firstLines = firstLinesBuiltIn.concat(customForFirst);
-    const firstId = _pickRandomLineId(firstLines, null) || (firstLines[0] ? firstLines[0].id : "");
+    const firstId = pickRandomLineId(firstLines, null) || (firstLines[0] ? firstLines[0].id : "");
 
     this._autoNextTimer = null;
     this._confettiTimer = null;
     this._streakToastTimer = null;
 
-    const progress = _loadProgress();
-    const settings = _loadSettings();
+    const progress = loadProgress();
+    const settings = loadSettings(DEFAULT_THEME);
 
     this.state = {
       openingKey: firstSetKey,
@@ -503,14 +246,14 @@ closeCustomModal = () => {
 saveCustomModal = () => {
   const openingKey = this.state.openingKey;
   const nameRaw = String(this.state.customName || "").trim();
-  const moves = _splitMovesText(this.state.customMovesText);
+  const moves = splitMovesText(this.state.customMovesText);
 
   if (!moves.length) {
     this.setState({ customError: "Paste moves in SAN format first." });
     return;
   }
 
-  const v = _validateSanMoves(moves);
+  const v = validateSanMoves(moves);
   if (!v.ok) {
     this.setState({
       customError: `Bad move at #${(v.index || 0) + 1}: ${v.san || ""}`
@@ -521,7 +264,7 @@ saveCustomModal = () => {
   const name = nameRaw || `My rep (${moves.length} moves)`;
 
   const nextLine = {
-    id: _makeCustomId(),
+    id: makeCustomId(),
     openingKey: openingKey,
     category: "My Reps",
     name: name,
@@ -532,7 +275,7 @@ saveCustomModal = () => {
 
   const existing = (this.state.customLines || []).slice();
   const next = existing.concat([nextLine]);
-  _saveCustomLines(next);
+  saveCustomLines(next);
 
   this.setState(
     {
@@ -547,52 +290,6 @@ saveCustomModal = () => {
   );
 };
 
-renderCustomModal = () => {
-  if (!this.state.customModalOpen) return null;
-
-  return (
-    <div className="ot-modal-overlay" onMouseDown={this.closeCustomModal}>
-      <div className="ot-modal" onMouseDown={(e) => e.stopPropagation()}>
-        <div className="ot-modal-title">Add custom rep</div>
-
-        {this.state.customError ? <div className="ot-modal-error">{this.state.customError}</div> : null}
-
-        <label className="ot-modal-label">
-          Name (optional)
-          <input
-            className="ot-modal-input"
-            value={this.state.customName}
-            onChange={(e) => this.setState({ customName: e.target.value })}
-            placeholder="Example: My London vs Qb6"
-          />
-        </label>
-
-        <label className="ot-modal-label">
-          Moves (SAN, separated by spaces, commas, or new lines)
-          <textarea
-            className="ot-modal-textarea"
-            value={this.state.customMovesText}
-            onChange={(e) => this.setState({ customMovesText: e.target.value })}
-            placeholder="d4 d5 Bf4 Nf6 e3 e6 Nd2 c5 c3 Nc6"
-          />
-        </label>
-
-        <div className="ot-modal-actions">
-          <button className="ot-button ot-button-small" onClick={this.closeCustomModal}>
-            Cancel
-          </button>
-          <button className="ot-button ot-button-small ot-button-primary" onClick={this.saveCustomModal}>
-            Save
-          </button>
-        </div>
-
-        <div className="ot-modal-hint">
-          Tip: use standard SAN like Nf3, Bb5, O-O, exd5, Qxd8.
-        </div>
-      </div>
-    </div>
-  );
-};
 
   getLines = () => {
     const set = this.getOpeningSet();
@@ -709,7 +406,7 @@ renderCustomModal = () => {
   setSetting = (key, value) => {
     const next = { ...(this.state.settings || {}) };
     next[key] = value;
-    _saveSettings(next);
+    saveSettings(next);
     this.setState({ settings: next });
   };
 
@@ -842,7 +539,7 @@ renderCustomModal = () => {
 
   startRandomLine = () => {
     const lines = this.getLines();
-    const nextId = _pickRandomLineId(lines, this.state.lineId);
+    const nextId = pickRandomLineId(lines, this.state.lineId);
     if (!nextId) return;
     this.setState(
       {
@@ -873,7 +570,7 @@ renderCustomModal = () => {
     const nextKey = e && e.target ? e.target.value : "london";
     const nextSet = OPENING_SETS[nextKey] || OPENING_SETS.london;
     const nextLines = nextSet.lines || [];
-    const nextId = _pickRandomLineId(nextLines, null) || (nextLines[0] ? nextLines[0].id : "");
+    const nextId = pickRandomLineId(nextLines, null) || (nextLines[0] ? nextLines[0].id : "");
 
     this.setState(
       {
@@ -929,12 +626,12 @@ renderCustomModal = () => {
     if (!openingKey || !lineId) return;
 
     const progress = { ...this.state.progress };
-    _ensureOpening(progress, openingKey);
+    ensureOpening(progress, openingKey);
     progress.openings[openingKey].lastPlayedAt = Date.now();
-    const s = _getLineStats(progress, openingKey, lineId);
+    const s = getLineStats(progress, openingKey, lineId);
     s.timesSeen += 1;
 
-    _saveProgress(progress);
+    saveProgress(progress);
     this._countedSeenForRun = true;
     this.setState({ progress });
   };
@@ -945,9 +642,9 @@ renderCustomModal = () => {
     if (!openingKey || !lineId) return;
 
     const progress = { ...this.state.progress };
-    const s = _getLineStats(progress, openingKey, lineId);
+    const s = getLineStats(progress, openingKey, lineId);
     s.lastResult = "fail";
-    _saveProgress(progress);
+    saveProgress(progress);
     this.setState({ progress });
   };
 
@@ -957,9 +654,9 @@ renderCustomModal = () => {
     if (!openingKey || !lineId) return;
 
     const progress = { ...this.state.progress };
-    _ensureOpening(progress, openingKey);
+    ensureOpening(progress, openingKey);
     const o = progress.openings[openingKey];
-    const s = _getLineStats(progress, openingKey, lineId);
+    const s = getLineStats(progress, openingKey, lineId);
 
     s.timesCompleted += 1;
     s.lastResult = wasClean ? "success" : "fail";
@@ -976,7 +673,7 @@ renderCustomModal = () => {
       o.streak = 0;
     }
 
-    _saveProgress(progress);
+    saveProgress(progress);
     this.setState({ progress });
   };
 
@@ -1276,36 +973,6 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
   );
 };
 
-  renderConfetti = () => {
-    if (!this.state.confettiActive) return null;
-
-    const pieces = [];
-    for (let i = 0; i < 60; i += 1) {
-      const left = _randInt(10, 90);
-      const delay = Math.random() * 0.15;
-      const dur = 0.85 + Math.random() * 0.55;
-      const rot = _randInt(0, 360);
-      const size = _randInt(6, 11);
-
-      pieces.push(
-        <span
-          key={i}
-          className="ot-confetti"
-          style={{
-            left: left + "vw",
-            animationDelay: delay + "s",
-            animationDuration: dur + "s",
-            transform: "rotate(" + rot + "deg)",
-            width: size + "px",
-            height: Math.max(4, Math.floor(size * 0.55)) + "px"
-          }}
-        />
-      );
-    }
-
-    return <div className="ot-confetti-layer">{pieces}</div>;
-  };
-
   render() {
     const line = this.getLine();
     if (!line) return null;
@@ -1320,8 +987,8 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
 
     const playerColor = this.getPlayerColor();
 
-    const totalYourMoves = _countMovesForSide(line.moves, playerColor);
-    const doneYourMoves = _countDoneMovesForSide(this.state.stepIndex, playerColor);
+    const totalYourMoves = countMovesForSide(line.moves, playerColor);
+    const doneYourMoves = countDoneMovesForSide(this.state.stepIndex, playerColor);
 
     const yourProgressPct = totalYourMoves > 0 ? Math.round((doneYourMoves / totalYourMoves) * 100) : 0;
 
@@ -1378,8 +1045,17 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
 
     return (
       <div className="ot-container">
-        {this.renderConfetti()}
-        {this.renderCustomModal()}
+        <OpeningTrainerConfetti active={this.state.confettiActive} />
+        <OpeningTrainerCustomModal
+          open={this.state.customModalOpen}
+          error={this.state.customError}
+          name={this.state.customName}
+          movesText={this.state.customMovesText}
+          onChangeName={(v) => this.setState({ customName: v })}
+          onChangeMovesText={(v) => this.setState({ customMovesText: v })}
+          onCancel={this.closeCustomModal}
+          onSave={this.saveCustomModal}
+        />
 
         {this.state.streakToastOpen ? (
           <div
@@ -1532,14 +1208,14 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
                           </option>
 
                           {(() => {
-                            const grouped = _groupLines(lines);
+                            const grouped = groupLines(lines);
                             return grouped.cats.map((cat) => {
                               const arr = grouped.map[cat] || [];
                               return (
                                 <optgroup key={cat} label={cat}>
                                   {arr.map((l) => {
-                                    const s = _getLineStats(this.state.progress, this.state.openingKey, l.id);
-                                    const symbol = _isCompleted(s) ? "✓" : s.timesSeen > 0 ? "•" : "○";
+                                    const s = getLineStats(this.state.progress, this.state.openingKey, l.id);
+                                    const symbol = isCompleted(s) ? "✓" : s.timesSeen > 0 ? "•" : "○";
                                     return (
                                       <option key={l.id} value={l.id}>
                                         {symbol} {l.name}

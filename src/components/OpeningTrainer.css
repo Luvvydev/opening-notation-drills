@@ -930,6 +930,11 @@
   gap: 10px;
 }
 
+.ot-dock-right {
+  flex-wrap: wrap;
+  row-gap: 8px;
+}
+
 .ot-dock-center {
   flex: 1;
   justify-content: center;

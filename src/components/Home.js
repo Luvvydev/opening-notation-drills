@@ -28,7 +28,7 @@ const OPENINGS = [
       "A popular 1.d4 opening for White with a reputation for solidity, focusing on reliable structures and clear repeatable plans",
     lines: londonLines,
     accent: "gold",
-        position: "start",
+    position: "start",
     orientation: "white"
   },
   {
@@ -74,8 +74,8 @@ const OPENINGS = [
     badge: null,
     position: "start",
     orientation: "black"
-  }
-  ,{
+  },
+  {
     key: "carokann",
     title: "Caro-Kann Defense",
     description:
@@ -85,9 +85,8 @@ const OPENINGS = [
     badge: null,
     position: "start",
     orientation: "black"
-  }
-
-  ,{
+  },
+  {
     key: "qga",
     title: "Queen's Gambit Accepted",
     description:
@@ -108,9 +107,8 @@ const OPENINGS = [
     badge: null,
     position: "start",
     orientation: "white"
-  }
-
-  ,{
+  },
+  {
     key: "italian",
     title: "Italian Game",
     description:
@@ -153,9 +151,7 @@ const OPENINGS = [
     badge: null,
     position: "start",
     orientation: "black"
-  }
-
-,
+  },
   {
     key: "english",
     title: "English Opening",
@@ -169,7 +165,8 @@ const OPENINGS = [
   {
     key: "scotchgame",
     title: "Scotch Game",
-    description: "The Scotch Game is an 1.e4 opening that feels like a cheat code. It is simple to learn, crushes new players, but it scales extremely well and remains a serious weapon at every level of play",
+    description:
+      "The Scotch Game is an 1.e4 opening that feels like a cheat code. It is simple to learn, crushes new players, but it scales extremely well and remains a serious weapon at every level of play",
     lines: scotchGameLines,
     accent: "orange",
     badge: "New",
@@ -177,7 +174,6 @@ const OPENINGS = [
     orientation: "white"
   }
 ];
-
 
 function _safeJsonParse(text, fallback) {
   try {
@@ -203,10 +199,10 @@ function _loadProgress() {
 }
 
 function _loadSettings() {
-  const defaults = { 
-    showConfetti: true, 
+  const defaults = {
+    showConfetti: true,
     playSounds: true,
-    boardTheme: DEFAULT_THEME 
+    boardTheme: DEFAULT_THEME
   };
   try {
     const raw = window.localStorage.getItem("notation_trainer_opening_settings_v1");
@@ -270,7 +266,12 @@ class Home extends Component {
       perOpening,
       totalCompleted,
       totalLines,
-      boardTheme: settings.boardTheme || DEFAULT_THEME
+      boardTheme: settings.boardTheme || DEFAULT_THEME,
+      filtersOpen: false,
+      filters: {
+        color: { white: false, black: false },
+        progress: { new: false, inProgress: false, completed: false }
+      }
     };
   }
 
@@ -289,67 +290,81 @@ class Home extends Component {
     this.props.history.push(`/openings?opening=${encodeURIComponent("london")}&custom=1`);
   };
 
+  toggleFilters = () => {
+    this.setState((s) => ({ filtersOpen: !s.filtersOpen }));
+  };
+
+  toggleFilter = (group, key) => {
+    this.setState((s) => ({
+      filters: {
+        ...s.filters,
+        [group]: {
+          ...s.filters[group],
+          [key]: !s.filters[group][key]
+        }
+      }
+    }));
+  };
+
   renderCard = (o) => {
-    const stats = this.state.perOpening[o.key] || { completed: 0, total: (o.lines && o.lines.length) || 0 };
+    const stats =
+      this.state.perOpening[o.key] || { completed: 0, total: (o.lines && o.lines.length) || 0 };
     const pct = stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0;
 
     return (
       <div
         key={o.key}
-className={`home-course-card ${o.accent ? `accent-${o.accent}` : ""}`}
-  role="button"
-  tabIndex={0}
-  onClick={() => this.goToOpening(o.key)}
-  onKeyDown={(e) => {
-    if (!e) return;
-    if (e.key === "Enter") {
-      this.goToOpening(o.key);
-      return;
-    }
-    if (e.key === " ") {
-      e.preventDefault();
-      this.goToOpening(o.key);
-    }
-  }}
->
-  <div className="home-course-thumb">
-    <Chessboard
-      draggable={false}
-      position={o.position || "start"}
-      orientation={o.orientation || "white"}
-      showNotation={false}
-      calcWidth={calcThumbWidth}
-      {...BOARD_THEMES[this.state.boardTheme]}
-    />
-  </div>
+        className={`home-course-card ${o.accent ? `accent-${o.accent}` : ""}`}
+        role="button"
+        tabIndex={0}
+        onClick={() => this.goToOpening(o.key)}
+        onKeyDown={(e) => {
+          if (!e) return;
+          if (e.key === "Enter") {
+            this.goToOpening(o.key);
+            return;
+          }
+          if (e.key === " ") {
+            e.preventDefault();
+            this.goToOpening(o.key);
+          }
+        }}
+      >
+        <div className="home-course-thumb">
+          <Chessboard
+            draggable={false}
+            position={o.position || "start"}
+            orientation={o.orientation || "white"}
+            showNotation={false}
+            calcWidth={calcThumbWidth}
+            {...BOARD_THEMES[this.state.boardTheme]}
+          />
+        </div>
 
-  <div className="home-course-main">
-    <div className="home-course-top">
-      <div className="home-course-title">{o.title}</div>
-      {o.badge ? <div className="home-course-badge">{o.badge}</div> : null}
-    </div>
+        <div className="home-course-main">
+          <div className="home-course-top">
+            <div className="home-course-title">{o.title}</div>
+            {o.badge ? <div className="home-course-badge">{o.badge}</div> : null}
+          </div>
 
-    <div className="home-course-desc">{o.description}</div>
+          <div className="home-course-desc">{o.description}</div>
 
-    <div className="home-course-progress-row">
-      <div className="home-course-progress">
-        <div
-          className="home-course-progress-fill"
-          style={{ width: `${pct}%` }}
-        />
+          <div className="home-course-progress-row">
+            <div className="home-course-progress">
+              <div className="home-course-progress-fill" style={{ width: `${pct}%` }} />
+            </div>
+            <div className="home-course-total">{stats.total} lines total</div>
+          </div>
+
+          <div className="home-course-cta">Start learning &gt;</div>
+        </div>
       </div>
-      <div className="home-course-total">{stats.total} lines total</div>
-    </div>
-
-    <div className="home-course-cta">Start learning &gt;</div>
-  </div>
-</div>
     );
   };
 
   render() {
     const q = (this.state.search || "").trim().toLowerCase();
-    const filtered = !q
+    const searchFiltered = !q
       ? OPENINGS
       : OPENINGS.filter((o) => {
           const t = (o.title || "").toLowerCase();
@@ -357,8 +372,50 @@ className={`home-course-card ${o.accent ? `accent-${o.accent}` : ""}`}
           return t.includes(q) || d.includes(q);
         });
 
+    const filters = this.state.filters || {};
+    const anyChecked = (group) => Object.values(group || {}).some(Boolean);
+
+    const colorActive = anyChecked(filters.color);
+    const progressActive = anyChecked(filters.progress);
+
+    const deriveProgress = (o) => {
+      const stats =
+        this.state.perOpening[o.key] || { completed: 0, total: (o.lines && o.lines.length) || 0 };
+      const p =
+        (this.state.progress &&
+          this.state.progress.openings &&
+          this.state.progress.openings[o.key]) ||
+        {};
+      const lastPlayedAt = Number(p.lastPlayedAt) || 0;
+
+      const isCompleted = stats.total > 0 && stats.completed >= stats.total;
+      const isNew = o.badge === "New" || lastPlayedAt <= 0;
+
+      if (isCompleted) return "completed";
+      if (isNew) return "new";
+      return "inProgress";
+    };
+
+    const filtered = searchFiltered.filter((o) => {
+      if (colorActive) {
+        const ori = (o.orientation || "white").toLowerCase();
+        if (!filters.color[ori]) return false;
+      }
+
+      if (progressActive) {
+        const p = deriveProgress(o);
+        if (!filters.progress[p]) return false;
+      }
+
+      return true;
+    });
+
     const withMeta = filtered.map((o, idx) => {
-      const p = (this.state.progress && this.state.progress.openings && this.state.progress.openings[o.key]) || {};
+      const p =
+        (this.state.progress &&
+          this.state.progress.openings &&
+          this.state.progress.openings[o.key]) ||
+        {};
       const lastPlayedAt = Number(p.lastPlayedAt) || 0;
       const isNew = o.badge === "New";
       const group = lastPlayedAt > 0 ? 0 : isNew ? 1 : 2;
@@ -373,35 +430,105 @@ className={`home-course-card ${o.accent ? `accent-${o.accent}` : ""}`}
 
     const sorted = withMeta.map((x) => x.o);
 
-return (
-  <div className="home-page">
-    <TopNav title="Chess Opening Drills" />
-    <div className="home-courses">
-      <div className="home-courses-header">
-        <div className="home-search">
-          <span className="home-search-icon">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M16.5 3.5L20.5 7.5L8 20H4V16L16.5 3.5Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
-    </svg>
-          </span>
-          <input
-            className="home-search-input"
-            placeholder="Search openings..."
-            value={this.state.search}
-            onChange={this.onSearchChange}
-          />
+    return (
+      <div className="home-page">
+        <TopNav title="Chess Opening Drills" />
+        <div className="home-courses">
+          <div className="home-courses-header">
+            <div className="home-search-wrap">
+              <div className="home-search">
+                <span className="home-search-icon">
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M16.5 3.5L20.5 7.5L8 20H4V16L16.5 3.5Z"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </span>
+                <input
+                  className="home-search-input"
+                  placeholder="Search openings..."
+                  value={this.state.search}
+                  onChange={this.onSearchChange}
+                />
+              </div>
 
+              <button
+                className="home-filter-button"
+                onClick={this.toggleFilters}
+                type="button"
+              >
+                Filters
+              </button>
+
+              {this.state.filtersOpen && (
+                <div className="home-filters-panel">
+                  <div className="filter-section">
+                    <div className="filter-title">Color</div>
+
+                    {["white", "black"].map((k) => (
+                      <label key={k} className="checkbox-container">
+                        {k.charAt(0).toUpperCase() + k.slice(1)}
+                        <input
+                          type="checkbox"
+                          checked={this.state.filters.color[k]}
+                          onChange={() => this.toggleFilter("color", k)}
+                        />
+                        <span className="checkmark" />
+                      </label>
+                    ))}
+                  </div>
+
+                  <div className="filter-section">
+                    <div className="filter-title">Progress</div>
+
+                    {[
+                      ["new", "New"],
+                      ["inProgress", "In Progress"],
+                      ["completed", "Completed"]
+                    ].map(([k, label]) => (
+                      <label key={k} className="checkbox-container">
+                        {label}
+                        <input
+                          type="checkbox"
+                          checked={this.state.filters.progress[k]}
+                          onChange={() => this.toggleFilter("progress", k)}
+                        />
+                        <span className="checkmark" />
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="home-header-right">
-<button className="home-create-rep" onClick={this.goToCreateCustomRep}>
-  <span className="home-create-rep-icon" role="img" aria-label="create custom line">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M16.5 3.5L20.5 7.5L8 20H4V16L16.5 3.5Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
-    </svg>
-  </span>
-</button>
-
+              <button className="home-create-rep" onClick={this.goToCreateCustomRep}>
+                <span className="home-create-rep-icon" role="img" aria-label="create custom line">
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M16.5 3.5L20.5 7.5L8 20H4V16L16.5 3.5Z"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </span>
+              </button>
 
               <div className="home-lines-learned">
                 {this.state.totalCompleted}/{this.state.totalLines} lines learned
