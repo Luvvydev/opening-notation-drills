@@ -152,7 +152,7 @@ function buildHeatmap(daysMap, weeks) {
 }
 
 export default function Profile() {
-  const { user } = useAuth();
+  const { user, membershipTier, membershipActive } = useAuth();
 
   const [displayName, setDisplayName] = useState("");
   const [username, setUsername] = useState("");
@@ -386,7 +386,9 @@ const onChangeBoardTheme = async (nextTheme) => {
 
             <div>
               <div className="profile-label">Membership Status</div>
-              <div className="profile-value">Active Member</div>
+              <div className="profile-value">
+                {membershipActive ? (membershipTier === "lifetime" ? "Lifetime" : "Member") : "Free"}
+              </div>
             </div>
           </div>
 

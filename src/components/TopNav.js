@@ -30,7 +30,7 @@ function TopNav(props) {
   const [subtitle, setSubtitle] = useState('');
   const [streak, setStreak] = useState(() => getStreakState());
 
-  const { user, signOut } = useAuth();
+  const { user, signOut, isMember, membershipTier } = useAuth();
 
   const [menuOpen, setMenuOpen] = useState(false);
   const menuWrapRef = useRef(null);
@@ -112,6 +112,12 @@ function TopNav(props) {
                   <span role="img" aria-label="streak">🔥</span> {streak.current || 0}
                 </span>
               </div>
+
+              {isMember ? (
+                <div className={"topnav-member-pill " + (membershipTier === "lifetime" ? "lifetime" : "member")} title={membershipTier === "lifetime" ? "Lifetime Member" : "Member"}>
+                  {membershipTier === "lifetime" ? "Lifetime" : "Member"}
+                </div>
+              ) : null}
 
               <Link to="/leaderboards" title="Leaderboards" className="topnav-icon-link" aria-label="Leaderboards">
                 <div className={`topnav-profile ${props.active === "leaderboards" ? "active" : ""}`}>

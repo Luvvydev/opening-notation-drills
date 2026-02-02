@@ -22,7 +22,7 @@ function getCollectionName(period) {
 }
 
 export default function Leaderboards() {
-  const { user } = useAuth();
+  const { user, isMember } = useAuth();
 
   const [period, setPeriod] = useState("all");
   const [rows, setRows] = useState([]);
@@ -34,6 +34,11 @@ export default function Leaderboards() {
     let alive = true;
 
     async function load() {
+      if (!user || !isMember) {
+        setRows([]);
+        setLoading(false);
+        return;
+      }
       setLoading(true);
       try {
                 const q = query(collection(db, collectionName), orderBy("score", "desc"), limit(50));
@@ -61,8 +66,7 @@ export default function Leaderboards() {
     return () => {
       alive = false;
     };
-  }, [collectionName]);
-
+  }, [collectionName, user, isMember]);
   const meRank = useMemo(() => {
     if (!user) return null;
     const idx = rows.findIndex((r) => r.uid === user.uid);
@@ -111,39 +115,61 @@ export default function Leaderboards() {
         </div>
 
         <div className="lb-card">
+          {!user ? (
+            <div className="lb-paywall">
+              <div className="lb-paywall-title">Create a free account to upgrade.</div>
+              <div className="lb-paywall-sub">Leaderboards are members only. You need an account to purchase a membership.</div>
+              <div className="lb-paywall-actions">
+                <a className="lb-paywall-btn" href="#/signup">Sign up</a>
+                <a className="lb-paywall-btn secondary" href="#/about">View membership</a>
+              </div>
+            </div>
+          ) : !isMember ? (
+            <div className="lb-paywall">
+              <div className="lb-paywall-title">Leaderboards are members only.</div>
+              <div className="lb-paywall-sub">Upgrade to compete and show your flair.</div>
+              <div className="lb-paywall-actions">
+                <a className="lb-paywall-btn" href="#/about">Upgrade</a>
+              </div>
+            </div>
+          ) : null}
+
           <div className="lb-card-head">
             <div className="lb-card-title"><span role="img" aria-label="drill">🔥</span> Drill Mode</div>
           </div>
 
-          {loading ? (
-            <div className="lb-empty">Loading...</div>
-          ) : rows.length ? (
-            <table className="lb-table">
-              <thead>
-                <tr>
-                  <th style={{ width: 90 }}>Rank</th>
-                  <th>Player</th>
-                  <th style={{ width: 110, textAlign: "right" }}>Points</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((r, i) => {
-                  const isMe = user && r.uid === user.uid;
-                  return (
-                    <tr key={r.uid} className={isMe ? "me" : ""}>
-                      <td>
-                        <span className="lb-rank-pill">#{i + 1}</span>
-                      </td>
-                      <td>{isMe ? r.name + " (you)" : r.name}</td>
-                      <td style={{ textAlign: "right", fontWeight: 800 }}>{r.score}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          ) : (
-            <div className="lb-empty">No scores yet. Play <span role="img" aria-label="drill">🔥</span> Drill Mode.</div>
-          )}
+          {user && isMember && loading ? (
+  <div className="lb-empty">Loading...</div>
+) : user && isMember && rows.length > 0 ? (
+  <table className="lb-table">
+    <thead>
+      <tr>
+        <th style={{ width: 90 }}>Rank</th>
+        <th>Player</th>
+        <th style={{ width: 110, textAlign: "right" }}>Points</th>
+      </tr>
+    </thead>
+    <tbody>
+      {rows.map((r, i) => {
+        const isMe = user && r.uid === user.uid;
+        return (
+          <tr key={r.uid} className={isMe ? "me" : ""}>
+            <td>
+              <span className="lb-rank-pill">#{i + 1}</span>
+            </td>
+            <td>{isMe ? r.name + " (you)" : r.name}</td>
+            <td style={{ textAlign: "right", fontWeight: 800 }}>{r.score}</td>
+          </tr>
+        );
+      })}
+    </tbody>
+  </table>
+) : user && isMember ? (
+  <div className="lb-empty">
+    No scores yet. Play <span role="img" aria-label="drill">🔥</span> Drill Mode.
+  </div>
+) : null}
+
         </div>
 
         <div className="lb-note">

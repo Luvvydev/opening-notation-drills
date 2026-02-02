@@ -143,21 +143,51 @@ class OpeningTrainer extends Component {
 
   isOpeningLocked = (openingKey) => {
     const set = OPENING_SETS[openingKey];
-    return !!set && set.badge === "New" && !this.props.user;
+    if (!set) return false;
+
+    // "New" openings are gated behind a free account signup.
+    if (set.access === "signup" && !this.props.user) return true;
+
+    // Member-only openings.
+    if (set.access === "member" && !this.props.isMember) return true;
+
+    // Time-based early access for members.
+    if (set.earlyAccessUntil && !this.props.isMember) {
+      try {
+        const until = new Date(set.earlyAccessUntil);
+        if (!Number.isNaN(until.getTime()) && Date.now() < until.getTime()) return true;
+      } catch (_) {}
+    }
+
+    return false;
   };
 
   maybeRedirectForLockedOpening = (openingKey) => {
     if (this.props.authLoading) return false;
     if (!this.isOpeningLocked(openingKey)) return false;
 
+    const set = OPENING_SETS[openingKey];
     const pathname = this.props && this.props.location ? this.props.location.pathname : "/openings";
     const search = this.props && this.props.location ? this.props.location.search : "";
     const from = `${pathname}${search}`;
 
+    const reason = set && set.access === "member" ? "member_opening" : "new_opening";
+
+    // Account required gates to signup, membership gates to About upgrade.
+    if (set && set.access === "signup" && !this.props.user) {
+      if (this.props && this.props.history && this.props.history.replace) {
+        this.props.history.replace({
+          pathname: "/signup",
+          state: { from, reason }
+        });
+      }
+      return true;
+    }
+
     if (this.props && this.props.history && this.props.history.replace) {
       this.props.history.replace({
-        pathname: "/signup",
-        state: { from, reason: "new_opening" }
+        pathname: "/about",
+        state: { from, reason }
       });
     }
 
@@ -1134,6 +1164,35 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
 
   setGameMode = (nextMode) => {
     const mode = nextMode || "learn";
+
+    if ((mode === "practice" || mode === "drill") && !this.props.user) {
+      const pathname = this.props && this.props.location ? this.props.location.pathname : "/openings";
+      const search = this.props && this.props.location ? this.props.location.search : "";
+      const from = `${pathname}${search}`;
+
+      if (this.props && this.props.history && this.props.history.replace) {
+        this.props.history.replace({
+          pathname: "/signup",
+          state: { from, reason: "membership_requires_account" }
+        });
+      }
+      return;
+    }
+
+    if ((mode === "practice" || mode === "drill") && !this.props.isMember) {
+      const pathname = this.props && this.props.location ? this.props.location.pathname : "/openings";
+      const search = this.props && this.props.location ? this.props.location.search : "";
+      const from = `${pathname}${search}`;
+
+      if (this.props && this.props.history && this.props.history.replace) {
+        this.props.history.replace({
+          pathname: "/about",
+          state: { from, reason: "membership_required" }
+        });
+      }
+      return;
+    }
+
     if (mode === this.state.gameMode) return;
 
     this.setState(
@@ -1287,6 +1346,7 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
           className={"ot-mode-card" + (mode === "practice" ? " active" : "")}
           onClick={() => this.setGameMode("practice")}
           type="button"
+          disabled={!this.props.isMember}
         >
           <div className="ot-mode-card-title"><span role="img" aria-label="practice">🎯</span> Practice</div>
           <div className="ot-mode-card-sub">Auto next. Help unlocks explanations.</div>
@@ -1296,6 +1356,7 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
           className={"ot-mode-card" + (mode === "drill" ? " active" : "")}
           onClick={() => this.setGameMode("drill")}
           type="button"
+          disabled={!this.props.isMember}
         >
           <div className="ot-mode-card-title"><span role="img" aria-label="drill">🔥</span> Drill</div>
           <div className="ot-mode-card-sub">No hints. Streak resets on mistake.</div>
@@ -1768,8 +1829,16 @@ render() {
 }
 
 function OpeningTrainerWithAuth(props) {
-  const { user, authLoading } = useAuth();
-  return <OpeningTrainer {...props} user={user} authLoading={authLoading} />;
+  const { user, authLoading, isMember, membershipTier } = useAuth();
+  return (
+    <OpeningTrainer
+      {...props}
+      user={user}
+      authLoading={authLoading}
+      isMember={!!isMember}
+      membershipTier={membershipTier}
+    />
+  );
 }
 
 export default OpeningTrainerWithAuth;

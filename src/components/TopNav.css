@@ -313,3 +313,25 @@
     margin-top: 6px;
   }
 }
+
+
+.topnav-member-pill {
+  margin-left: 10px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(20, 24, 33, 0.60);
+  color: #e9edf2;
+  user-select: none;
+}
+
+.topnav-member-pill.member {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+.topnav-member-pill.lifetime {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}

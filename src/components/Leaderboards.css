@@ -125,3 +125,50 @@
   font-size: 12px;
   font-weight: 700;
 }
+
+
+.lb-paywall {
+  margin: 0 0 18px 0;
+  padding: 14px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(20, 24, 33, 0.55);
+}
+
+.lb-paywall-title {
+  font-weight: 900;
+  font-size: 14px;
+  margin: 0 0 6px 0;
+  color: #e9edf2;
+}
+
+.lb-paywall-sub {
+  margin: 0 0 12px 0;
+  color: rgba(201, 210, 221, 0.85);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.lb-paywall-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.lb-paywall-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 9px 12px;
+  border-radius: 12px;
+  font-weight: 800;
+  text-decoration: none;
+  color: #0b0d12;
+  background: #e9edf2;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+}
+
+.lb-paywall-btn.secondary {
+  background: transparent;
+  color: #e9edf2;
+}

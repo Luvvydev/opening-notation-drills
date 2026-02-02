@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { auth } from "../firebase";
+import { auth, db } from "../firebase";
+import { doc, onSnapshot } from "firebase/firestore";
 import { syncAccountFromLocalAndCloud } from "../utils/accountSync";
 import {
   signInWithEmailAndPassword,
@@ -14,6 +15,8 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
+  const [userDoc, setUserDoc] = useState(null);
+  const [userDocLoading, setUserDocLoading] = useState(true);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (u) => {
@@ -37,7 +40,33 @@ export function AuthProvider({ children }) {
     });
 
     return () => unsub();
-  }, []);
+  }, [])
+
+  useEffect(() => {
+    if (!user || !user.uid) {
+      setUserDoc(null);
+      setUserDocLoading(false);
+      return;
+    }
+
+    setUserDocLoading(true);
+
+    const ref = doc(db, "users", user.uid);
+    const off = onSnapshot(
+      ref,
+      (snap) => {
+        setUserDoc(snap.exists() ? snap.data() : null);
+        setUserDocLoading(false);
+      },
+      () => {
+        setUserDoc(null);
+        setUserDocLoading(false);
+      }
+    );
+
+    return () => off();
+  }, [user]);
+
 
 const signUp = (email, password) => {
   return createUserWithEmailAndPassword(
@@ -58,9 +87,25 @@ const signIn = (email, password) => {
 
 const signOut = () => firebaseSignOut(auth);
 
+  const membershipTier = (userDoc && userDoc.membershipTier) || "free";
+  const membershipActive = !!(userDoc && userDoc.membershipActive);
+  const isMember = membershipActive && (membershipTier === "member" || membershipTier === "lifetime");
+
   const value = useMemo(() => {
-    return { user, authLoading, syncing, signUp, signIn, signOut };
-  }, [user, authLoading, syncing]);
+    return {
+      user,
+      authLoading,
+      syncing,
+      userDoc,
+      userDocLoading,
+      membershipTier,
+      membershipActive,
+      isMember,
+      signUp,
+      signIn,
+      signOut
+    };
+  }, [user, authLoading, syncing, userDoc, userDocLoading, membershipTier, membershipActive, isMember]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

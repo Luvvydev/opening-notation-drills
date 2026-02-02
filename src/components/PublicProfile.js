@@ -114,7 +114,7 @@ function getMembershipStatus(profileData) {
   if (profileData && typeof profileData.publicBadge === "string" && profileData.publicBadge.trim()) {
     return profileData.publicBadge.trim();
   }
-  return "Member";
+  return "";
 }
 
 export default function PublicProfile() {

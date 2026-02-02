@@ -22,6 +22,8 @@ export const OPENING_CATALOG = [
     lines: londonLines,
     accent: "gold",
     badge: null,
+    access: "free",
+    earlyAccessUntil: null,
     position: "start",
     orientation: "white",
     playerColor: "w"
@@ -34,6 +36,8 @@ export const OPENING_CATALOG = [
     lines: sicilianDefenseLines,
     accent: "purple",
     badge: null,
+    access: "free",
+    earlyAccessUntil: null,
     position: "start",
     orientation: "black",
     playerColor: "b"
@@ -46,6 +50,8 @@ export const OPENING_CATALOG = [
     lines: ruyLopezLines,
     accent: "blue",
     badge: null,
+    access: "free",
+    earlyAccessUntil: null,
     position: "start",
     orientation: "white",
     playerColor: "w"
@@ -58,6 +64,8 @@ export const OPENING_CATALOG = [
     lines: friedLiverAttackLines,
     accent: "red",
     badge: null,
+    access: "free",
+    earlyAccessUntil: null,
     position: "start",
     orientation: "white",
     playerColor: "w"
@@ -70,6 +78,8 @@ export const OPENING_CATALOG = [
     lines: staffordGambitLines,
     accent: "green",
     badge: null,
+    access: "free",
+    earlyAccessUntil: null,
     position: "start",
     orientation: "black",
     playerColor: "b"
@@ -83,6 +93,8 @@ export const OPENING_CATALOG = [
     seoText: caroKannSEOText,
     accent: "orange",
     badge: null,
+    access: "free",
+    earlyAccessUntil: null,
     position: "start",
     orientation: "black",
     playerColor: "b"
@@ -95,6 +107,8 @@ export const OPENING_CATALOG = [
     lines: queensGambitAcceptedLines,
     accent: "pink",
     badge: null,
+    access: "free",
+    earlyAccessUntil: null,
     position: "start",
     orientation: "white",
     playerColor: "w"
@@ -107,6 +121,8 @@ export const OPENING_CATALOG = [
     lines: queensGambitDeclinedLines,
     accent: "rose",
     badge: null,
+    access: "free",
+    earlyAccessUntil: null,
     position: "start",
     orientation: "black",
     playerColor: "b"
@@ -119,6 +135,8 @@ export const OPENING_CATALOG = [
     lines: italianGameLines,
     accent: "teal",
     badge: null,
+    access: "free",
+    earlyAccessUntil: null,
     position: "start",
     orientation: "white",
     playerColor: "w"
@@ -131,6 +149,8 @@ export const OPENING_CATALOG = [
     lines: kingsIndianDefenseLines,
     accent: "indigo",
     badge: null,
+    access: "free",
+    earlyAccessUntil: null,
     position: "start",
     orientation: "black",
     playerColor: "b"
@@ -143,6 +163,8 @@ export const OPENING_CATALOG = [
     lines: frenchDefenseLines,
     accent: "slate",
     badge: null,
+    access: "free",
+    earlyAccessUntil: null,
     position: "start",
     orientation: "black",
     playerColor: "b"
@@ -155,6 +177,8 @@ export const OPENING_CATALOG = [
     lines: englundGambitLines,
     accent: "gray",
     badge: null,
+    access: "free",
+    earlyAccessUntil: null,
     position: "start",
     orientation: "black",
     playerColor: "b"
@@ -166,6 +190,8 @@ export const OPENING_CATALOG = [
     lines: englishOpeningLines,
     accent: "cyan",
     badge: "New",
+    access: "signup",
+    earlyAccessUntil: null,
     position: "start",
     orientation: "white",
     playerColor: "w"
@@ -178,6 +204,8 @@ export const OPENING_CATALOG = [
     lines: scotchGameLines,
     accent: "amber",
     badge: "New",
+    access: "signup",
+    earlyAccessUntil: null,
     position: "start",
     orientation: "white",
     playerColor: "w"
@@ -191,6 +219,8 @@ export const OPENING_SETS = OPENING_CATALOG.reduce((acc, o) => {
     playerColor: o.playerColor,
     lines: o.lines,
     badge: o.badge,
+    access: o.access,
+    earlyAccessUntil: o.earlyAccessUntil,
     seoText: o.seoText
   };
   return acc;
