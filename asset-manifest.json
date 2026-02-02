@@ -1,23 +1,23 @@
 {
   "files": {
-    "main.css": "/opening-notation-drills/static/css/main.d11c197f.chunk.css",
-    "main.js": "/opening-notation-drills/static/js/main.9a6d6fa1.chunk.js",
-    "main.js.map": "/opening-notation-drills/static/js/main.9a6d6fa1.chunk.js.map",
+    "main.css": "/opening-notation-drills/static/css/main.2165f0fb.chunk.css",
+    "main.js": "/opening-notation-drills/static/js/main.2b5dad12.chunk.js",
+    "main.js.map": "/opening-notation-drills/static/js/main.2b5dad12.chunk.js.map",
     "runtime-main.js": "/opening-notation-drills/static/js/runtime-main.b145df27.js",
     "runtime-main.js.map": "/opening-notation-drills/static/js/runtime-main.b145df27.js.map",
-    "static/js/2.50e3a0d3.chunk.js": "/opening-notation-drills/static/js/2.50e3a0d3.chunk.js",
-    "static/js/2.50e3a0d3.chunk.js.map": "/opening-notation-drills/static/js/2.50e3a0d3.chunk.js.map",
+    "static/js/2.90eed38b.chunk.js": "/opening-notation-drills/static/js/2.90eed38b.chunk.js",
+    "static/js/2.90eed38b.chunk.js.map": "/opening-notation-drills/static/js/2.90eed38b.chunk.js.map",
     "index.html": "/opening-notation-drills/index.html",
-    "precache-manifest.f2f34f920f36774a38997b0bbf067f48.js": "/opening-notation-drills/precache-manifest.f2f34f920f36774a38997b0bbf067f48.js",
+    "precache-manifest.2b9a7823ed1e064d627f708b59a80f14.js": "/opening-notation-drills/precache-manifest.2b9a7823ed1e064d627f708b59a80f14.js",
     "service-worker.js": "/opening-notation-drills/service-worker.js",
-    "static/css/main.d11c197f.chunk.css.map": "/opening-notation-drills/static/css/main.d11c197f.chunk.css.map",
-    "static/js/2.50e3a0d3.chunk.js.LICENSE.txt": "/opening-notation-drills/static/js/2.50e3a0d3.chunk.js.LICENSE.txt",
+    "static/css/main.2165f0fb.chunk.css.map": "/opening-notation-drills/static/css/main.2165f0fb.chunk.css.map",
+    "static/js/2.90eed38b.chunk.js.LICENSE.txt": "/opening-notation-drills/static/js/2.90eed38b.chunk.js.LICENSE.txt",
     "static/media/chessdrillslogo.png": "/opening-notation-drills/static/media/chessdrillslogo.48a60fec.png"
   },
   "entrypoints": [
     "static/js/runtime-main.b145df27.js",
-    "static/js/2.50e3a0d3.chunk.js",
-    "static/css/main.d11c197f.chunk.css",
-    "static/js/main.9a6d6fa1.chunk.js"
+    "static/js/2.90eed38b.chunk.js",
+    "static/css/main.2165f0fb.chunk.css",
+    "static/js/main.2b5dad12.chunk.js"
   ]
 }
