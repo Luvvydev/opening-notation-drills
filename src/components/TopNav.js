@@ -113,6 +113,12 @@ function TopNav(props) {
                 </span>
               </div>
 
+              <Link to="/leaderboards" title="Leaderboards" className="topnav-icon-link" aria-label="Leaderboards">
+                <div className={`topnav-profile ${props.active === "leaderboards" ? "active" : ""}`}>
+                  <span className="topnav-profile-icon" aria-hidden="true">🏆</span>
+                </div>
+              </Link>
+
               {user ? (
                 <>
                   <button

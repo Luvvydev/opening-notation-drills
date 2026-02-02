@@ -1,0 +1,127 @@
+/* src/components/Leaderboards.css */
+
+.lb-wrap {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 18px 16px 28px 16px;
+  color: #e9edf2;
+}
+
+.lb-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.lb-h1 {
+  font-size: 34px;
+  font-weight: 900;
+  letter-spacing: -0.3px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.lb-tabs {
+  display: flex;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 6px;
+  border-radius: 12px;
+}
+
+.lb-tab {
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 0;
+  background: transparent;
+  color: rgba(233, 237, 242, 0.8);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.lb-tab.active {
+  background: rgba(0, 0, 0, 0.35);
+  color: #ffffff;
+}
+
+.lb-sub {
+  margin-top: 10px;
+  color: rgba(233, 237, 242, 0.82);
+  font-weight: 700;
+}
+
+.lb-rank {
+  color: #ffd54a;
+  font-weight: 900;
+}
+
+.lb-score {
+  opacity: 0.9;
+}
+
+.lb-card {
+  margin-top: 16px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+}
+
+.lb-card-head {
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+}
+
+.lb-card-title {
+  font-weight: 900;
+  font-size: 18px;
+}
+
+.lb-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.lb-table th {
+  text-align: left;
+  color: rgba(233, 237, 242, 0.72);
+  font-size: 12px;
+  letter-spacing: 0.2px;
+  text-transform: uppercase;
+  padding: 12px 16px;
+}
+
+.lb-table td {
+  padding: 12px 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.lb-table tr.me td {
+  background: rgba(255, 213, 74, 0.08);
+}
+
+.lb-rank-pill {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  font-weight: 900;
+}
+
+.lb-empty {
+  padding: 18px 16px;
+  color: rgba(233, 237, 242, 0.75);
+  font-weight: 700;
+}
+
+.lb-note {
+  margin-top: 10px;
+  color: rgba(233, 237, 242, 0.55);
+  font-size: 12px;
+  font-weight: 700;
+}

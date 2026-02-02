@@ -12,6 +12,8 @@ import { calcWidth, X_SVG_DATA_URI, pickRandomLineId, splitMovesText, validateSa
 import { loadProgress, saveProgress, loadSettings, saveSettings, loadCustomLines, saveCustomLines, makeCustomId, ensureOpening, getLineStats, isCompleted } from "./openingTrainer/otStorage";
 import OpeningTrainerCustomModal from "./openingTrainer/OpeningTrainerCustomModal";
 import OpeningTrainerConfetti from "./openingTrainer/OpeningTrainerConfetti";
+import { db } from "../firebase";
+import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 
 
 const OPENING_SETS = CATALOG_OPENING_SETS;
@@ -52,10 +54,19 @@ class OpeningTrainer extends Component {
     const progress = loadProgress();
     const settings = loadSettings(DEFAULT_THEME);
 
+    const drillStats = this.loadDrillStats();
+
     this.state = {
       openingKey: firstSetKey,
       lineId: firstId,
       linePicker: "random",
+      gameMode: "learn",
+      modePanelVisible: true,
+      userHasPlayedThisLine: false,
+      helpUsed: false,
+      drillStreak: 0,
+      drillBestAllTime: (drillStats && drillStats.bestAllTime) || 0,
+      drillRunDead: false,
       fen: "start",
       stepIndex: 0,
       mistakeUnlocked: false,
@@ -338,12 +349,16 @@ saveCustomModal = () => {
 
   onHint = () => {
     if (this.state.completed) return;
+    if (this.state.gameMode === "drill") return;
 
     const line = this.getLine();
     if (!line) return;
 
     const expected = line.moves[this.state.stepIndex];
     if (!expected) return;
+
+    const mode = this.state.gameMode || "learn";
+    if (mode === "drill") return;
 
     const playerColor = this.getPlayerColor();
     if (this.game.turn() !== playerColor) return;
@@ -353,7 +368,8 @@ saveCustomModal = () => {
     this.setState({
       showHint: true,
       solveArmed: true,
-      hintFromSquare: fromSq
+      hintFromSquare: fromSq,
+      helpUsed: true
     });
   };
 
@@ -368,6 +384,9 @@ saveCustomModal = () => {
 
     const expected = line.moves[this.state.stepIndex];
     if (!expected) return;
+
+    const mode = this.state.gameMode || "learn";
+    if (mode === "drill") return;
 
     if (this.state.viewing) this.viewLive();
 
@@ -393,7 +412,7 @@ saveCustomModal = () => {
         solveArmed: false,
         hintFromSquare: null,
         // Solve breaks clean completion
-        mistakeUnlocked: true,
+        helpUsed: true,
         lastMove: { from: mv.from, to: mv.to }
       },
       () => {
@@ -537,7 +556,10 @@ saveCustomModal = () => {
         showHint: false,
         lastMove: null,
         selectedSquare: null,
-        legalTargets: []
+        legalTargets: [],
+        userHasPlayedThisLine: false,
+        modePanelVisible: true,
+        helpUsed: false
       },
       () => {
         this._countedSeenForRun = false;
@@ -560,7 +582,11 @@ saveCustomModal = () => {
         completed: false,
         wrongAttempt: null,
         showHint: false,
-        lastMove: null
+        lastMove: null,
+        userHasPlayedThisLine: false,
+        modePanelVisible: true,
+        helpUsed: false,
+        drillRunDead: false
       },
       () => {
         this.resetLine(false);
@@ -593,7 +619,11 @@ saveCustomModal = () => {
         completed: false,
         wrongAttempt: null,
         showHint: false,
-        lastMove: null
+        lastMove: null,
+        userHasPlayedThisLine: false,
+        modePanelVisible: true,
+        helpUsed: false,
+        drillRunDead: false
       },
       () => {
         this.resetLine(false);
@@ -622,7 +652,11 @@ saveCustomModal = () => {
         completed: false,
         wrongAttempt: null,
         showHint: false,
-        lastMove: null
+        lastMove: null,
+        userHasPlayedThisLine: false,
+        modePanelVisible: true,
+        helpUsed: false,
+        drillRunDead: false
       },
       () => {
         this.resetLine(false);
@@ -739,25 +773,73 @@ onCompletedLine = () => {
   // Mark daily activity for every completed line (heatmap counts lines per day)
   try { markActivityToday(); } catch (_) {}
 
-  const wasClean = !this.state.mistakeUnlocked;
-    this.bumpCompleted(wasClean);
+  const mode = this.state.gameMode || "learn";
 
-    if (this.state.settings && this.state.settings.showConfetti) {
-      this.setState({ confettiActive: true });
+  const wasClean = !this.state.mistakeUnlocked && !this.state.helpUsed;
+  this.bumpCompleted(wasClean);
 
-      this._confettiTimer = setTimeout(() => {
-        this.setState({ confettiActive: false });
-      }, 1200);
-    } else {
+  if (mode === "drill") {
+    const nextStreak = this.state.drillRunDead ? 0 : (Number(this.state.drillStreak) || 0) + 1;
+    const nextBest = Math.max(Number(this.state.drillBestAllTime) || 0, nextStreak);
+
+    const statsNow = this.loadDrillStats();
+    const todayKey = this.getTodayKey();
+    const weekKey = this.getIsoWeekKey();
+    const monthKey = this.getMonthKey();
+
+    let bestDay = Number(statsNow.bestDay) || 0;
+    let bestWeek = Number(statsNow.bestWeek) || 0;
+    let bestMonth = Number(statsNow.bestMonth) || 0;
+
+    if (statsNow.dayKey !== todayKey) bestDay = 0;
+    if (statsNow.weekKey !== weekKey) bestWeek = 0;
+    if (statsNow.monthKey !== monthKey) bestMonth = 0;
+
+    bestDay = Math.max(bestDay, nextStreak);
+    bestWeek = Math.max(bestWeek, nextStreak);
+    bestMonth = Math.max(bestMonth, nextStreak);
+
+    const nextStats = {
+      bestAllTime: Math.max(Number(statsNow.bestAllTime) || 0, nextStreak),
+      dayKey: todayKey,
+      bestDay,
+      weekKey,
+      bestWeek,
+      monthKey,
+      bestMonth
+    };
+
+    this.saveDrillStats(nextStats);
+    this.maybeWriteDrillStatsToFirestore(nextStats);
+
+    this.setState({
+      drillStreak: nextStreak,
+      drillBestAllTime: nextBest,
+      drillRunDead: false,
+      modePanelVisible: true
+    });
+  } else {
+    this.setState({ modePanelVisible: true });
+  }
+
+  if (this.state.settings && this.state.settings.showConfetti) {
+    this.setState({ confettiActive: true });
+
+    this._confettiTimer = setTimeout(() => {
       this.setState({ confettiActive: false });
-    }
+    }, 1200);
+  } else {
+    this.setState({ confettiActive: false });
+  }
 
-    if (this.state.linePicker === "random") {
+  if (this.state.linePicker === "random") {
+    if (mode === "practice" || mode === "drill") {
       this._autoNextTimer = setTimeout(() => {
         this.startRandomLine();
       }, 900);
     }
-  };
+  }
+};
 
   onDrop = ({ sourceSquare, targetSquare }) => {
     if (this.state.completed) return;
@@ -770,6 +852,8 @@ onCompletedLine = () => {
 
     const expected = line.moves[this.state.stepIndex];
     if (!expected) return;
+
+    const mode = this.state.gameMode || "learn";
 
     const move = this.game.move({
       from: sourceSquare,
@@ -785,12 +869,39 @@ onCompletedLine = () => {
     const playedSAN = move.san;
 
     if (playedSAN !== expected) {
-      const explanation = line.explanations[this.state.stepIndex] || "";
-
       this.playSfx("illegal");
 
       this.bumpMistake();
       this.game.undo();
+
+      if (mode === "drill") {
+        this.setState({
+          fen: this.game.fen(),
+          completed: false,
+          showHint: false,
+          solveArmed: false,
+          hintFromSquare: null,
+          lastMistake: {
+            expected: expected,
+            played: playedSAN,
+            explanation: ""
+          },
+          wrongAttempt: {
+            from: sourceSquare,
+            to: targetSquare
+          },
+          selectedSquare: null,
+          legalTargets: [],
+          userHasPlayedThisLine: true,
+          modePanelVisible: false,
+          drillStreak: 0,
+          drillRunDead: true
+        });
+
+        return;
+      }
+
+      const explanation = line.explanations[this.state.stepIndex] || "";
 
       this.setState({
         fen: this.game.fen(),
@@ -809,7 +920,9 @@ onCompletedLine = () => {
           to: targetSquare
         },
         selectedSquare: null,
-        legalTargets: []
+        legalTargets: [],
+        userHasPlayedThisLine: true,
+        modePanelVisible: false
       });
 
       return;
@@ -832,7 +945,9 @@ onCompletedLine = () => {
         hintFromSquare: null,
         selectedSquare: null,
         legalTargets: [],
-        lastMove: { from: sourceSquare, to: targetSquare }
+        lastMove: { from: sourceSquare, to: targetSquare },
+        userHasPlayedThisLine: true,
+        modePanelVisible: false
       },
       () => {
         this.playAutoMovesIfNeeded();
@@ -949,23 +1064,55 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
 
   const canUndo = !!(this.state.lastMistake || this.state.wrongAttempt);
 
-  const unlocked = !!this.state.mistakeUnlocked;
+  const mode = this.state.gameMode || "learn";
+
+  const unlocked = mode === "learn" ? true : mode === "practice" ? (!!this.state.mistakeUnlocked || !!this.state.helpUsed) : false;
 
   const coachIndex = this.getViewIndex();
-  const raw = unlocked ? (line.explanations[coachIndex] || "") : "What's the best move?";
+  const raw = unlocked ? (line.explanations[coachIndex] || "") : mode === "drill" ? "No help in Drill Mode" : "What's the best move?";
   const text = unlocked ? this.stripMovePrefix(raw) : raw;
 
   return (
     <div className="ot-coach">
       <div className="ot-coach-head">
         <div className="ot-coach-left">
-          <div className="ot-coach-title"></div>
+          <div className="ot-coach-title">
+            <span className="ot-mode-pill">
+              {mode === "learn" ? (
+                <>
+                  <span role="img" aria-label="learn">📘</span> Learn
+                </>
+              ) : mode === "practice" ? (
+                <>
+                  <span role="img" aria-label="practice">🎯</span> Practice
+                </>
+              ) : (
+                <>
+                  <span role="img" aria-label="drill">🔥</span> Drill
+                </>
+              )}
+            </span>
+            <span className="ot-open-pill">{this.state.openingKey}</span>
+            <span className="ot-line-pill">{line.name}</span>
+          </div>
         </div>
 
         <div className="ot-card-head-right">
           <span className="ot-mini-count">
             {doneYourMoves}/{totalYourMoves}
           </span>
+          {mode === "drill" ? (
+            <div className="ot-drill-stats">
+              <div className="ot-drill-stat">
+                <div className="ot-drill-label">Score</div>
+                <div className="ot-drill-value">{Number(this.state.drillStreak) || 0}</div>
+              </div>
+              <div className="ot-drill-stat">
+                <div className="ot-drill-label">High</div>
+                <div className="ot-drill-value">{Number(this.state.drillBestAllTime) || 0}</div>
+              </div>
+            </div>
+          ) : null}
           {canUndo ? (
             <button className="ot-mini-btn" onClick={this.undoMistake} title="Undo mistake">
               Undo
@@ -984,7 +1131,238 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
   );
 };
 
-  render() {
+
+  setGameMode = (nextMode) => {
+    const mode = nextMode || "learn";
+    if (mode === this.state.gameMode) return;
+
+    this.setState(
+      {
+        gameMode: mode,
+        modePanelVisible: true,
+        userHasPlayedThisLine: false,
+        helpUsed: false,
+        drillStreak: mode === "drill" ? 0 : this.state.drillStreak,
+        drillRunDead: false,
+        mistakeUnlocked: false,
+        lastMistake: null,
+        wrongAttempt: null,
+        showHint: false,
+        solveArmed: false,
+        hintFromSquare: null,
+        completed: false,
+        lastMove: null,
+        selectedSquare: null,
+        legalTargets: []
+      },
+      () => {
+        this.resetLine(false);
+      }
+    );
+  };
+
+
+  // ---- Drill stats + keys (localStorage + optional Firestore) ----
+  getTodayKey = () => {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  };
+
+  getMonthKey = () => {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    return `${y}-${m}`;
+  };
+
+  getIsoWeekKey = () => {
+    // ISO week date (yyyy-Www)
+    const d = new Date();
+    // Copy and force UTC to avoid DST weirdness
+    const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    // Thursday in current week decides the year
+    const dayNum = date.getUTCDay() || 7;
+    date.setUTCDate(date.getUTCDate() + 4 - dayNum);
+    const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+    const weekNo = Math.ceil(((date - yearStart) / 86400000 + 1) / 7);
+    return `${date.getUTCFullYear()}-W${String(weekNo).padStart(2, "0")}`;
+  };
+
+  loadDrillStats = () => {
+    const key = "chessdrills.drill_stats.v1";
+    try {
+      const raw = window.localStorage.getItem(key);
+      if (!raw) {
+        return {
+          bestAllTime: 0,
+          dayKey: this.getTodayKey(),
+          bestDay: 0,
+          weekKey: this.getIsoWeekKey(),
+          bestWeek: 0,
+          monthKey: this.getMonthKey(),
+          bestMonth: 0
+        };
+      }
+      const obj = JSON.parse(raw);
+
+      return {
+        bestAllTime: Number(obj.bestAllTime) || 0,
+        dayKey: String(obj.dayKey || this.getTodayKey()),
+        bestDay: Number(obj.bestDay) || 0,
+        weekKey: String(obj.weekKey || this.getIsoWeekKey()),
+        bestWeek: Number(obj.bestWeek) || 0,
+        monthKey: String(obj.monthKey || this.getMonthKey()),
+        bestMonth: Number(obj.bestMonth) || 0
+      };
+    } catch (_) {
+      return {
+        bestAllTime: 0,
+        dayKey: this.getTodayKey(),
+        bestDay: 0,
+        weekKey: this.getIsoWeekKey(),
+        bestWeek: 0,
+        monthKey: this.getMonthKey(),
+        bestMonth: 0
+      };
+    }
+  };
+
+  saveDrillStats = (stats) => {
+    const key = "chessdrills.drill_stats.v1";
+    try {
+      window.localStorage.setItem(key, JSON.stringify(stats || {}));
+    } catch (_) {}
+  };
+
+  writeDrillStatsToFirestore = async (stats) => {
+    // No anticheat. Just best streaks reported by client.
+    const user = this.props && this.props.user;
+    const uid = user && user.uid;
+    if (!uid) return;
+
+    try {
+      const ref = doc(db, "users", uid);
+      await setDoc(
+        ref,
+        {
+          drillLeaderboard: {
+            bestAllTime: Number(stats.bestAllTime) || 0,
+            dayKey: String(stats.dayKey || ""),
+            bestDay: Number(stats.bestDay) || 0,
+            weekKey: String(stats.weekKey || ""),
+            bestWeek: Number(stats.bestWeek) || 0,
+            monthKey: String(stats.monthKey || ""),
+            bestMonth: Number(stats.bestMonth) || 0,
+            updatedAt: serverTimestamp()
+          }
+        },
+        { merge: true }
+      );
+    } catch (_) {
+      // ignore write errors (offline, permissions, etc)
+    }
+  };
+
+
+  renderModePanel = () => {
+    const mode = this.state.gameMode || "learn";
+    const show = !this.state.userHasPlayedThisLine || this.state.completed;
+    if (!show) return null;
+
+    return (
+      <div className="ot-mode-panel">
+        <button
+          className={"ot-mode-card ot-mode-card-big" + (mode === "learn" ? " active" : "")}
+          onClick={() => this.setGameMode("learn")}
+          type="button"
+        >
+          <div className="ot-mode-card-title"><span role="img" aria-label="learn">📘</span> Learn</div>
+          <div className="ot-mode-card-sub">Explanations on. No auto next.</div>
+        </button>
+
+        <button
+          className={"ot-mode-card" + (mode === "practice" ? " active" : "")}
+          onClick={() => this.setGameMode("practice")}
+          type="button"
+        >
+          <div className="ot-mode-card-title"><span role="img" aria-label="practice">🎯</span> Practice</div>
+          <div className="ot-mode-card-sub">Auto next. Help unlocks explanations.</div>
+        </button>
+
+        <button
+          className={"ot-mode-card" + (mode === "drill" ? " active" : "")}
+          onClick={() => this.setGameMode("drill")}
+          type="button"
+        >
+          <div className="ot-mode-card-title"><span role="img" aria-label="drill">🔥</span> Drill</div>
+          <div className="ot-mode-card-sub">No hints. Streak resets on mistake.</div>
+        </button>
+      </div>
+    );
+  };
+
+
+  
+  maybeWriteDrillStatsToFirestore = async (stats) => {
+    // Best-effort write, no anticheat. Must never crash UI.
+    try {
+      const u = this.props && this.props.user ? this.props.user : null;
+      if (!u || !u.uid) return;
+
+      // Cache username so we don't read Firestore every completion.
+      let username = "";
+      try {
+        if (this._lbUserCache && this._lbUserCache.uid === u.uid) {
+          username = String(this._lbUserCache.username || "");
+        }
+      } catch (_) {}
+
+      if (!username) {
+        try {
+          const snap = await getDoc(doc(db, "users", u.uid));
+          if (snap.exists()) {
+            const d = snap.data() || {};
+            const un = d.username ? String(d.username).trim() : "";
+            const dn = d.displayName ? String(d.displayName).trim() : "";
+            username = un || dn || "";
+          }
+        } catch (_) {}
+      }
+
+      if (!username) {
+        const dn = u.displayName ? String(u.displayName).trim() : "";
+        const em = u.email ? String(u.email).trim() : "";
+        username = dn || (em ? em.split("@")[0] : "") || "Anonymous";
+      }
+
+      this._lbUserCache = { uid: u.uid, username };
+
+      const pack = (score) => ({
+        uid: u.uid,
+        username: username,
+        score: Number(score) || 0,
+        updatedAt: serverTimestamp()
+      });
+
+      const writes = [];
+
+      // All Time
+      writes.push(setDoc(doc(db, "leaderboards_drill_alltime", u.uid), pack(stats.bestAllTime), { merge: true }));
+
+      // Daily, Weekly, Monthly
+      writes.push(setDoc(doc(db, "leaderboards_drill_daily", u.uid), pack(stats.bestDay), { merge: true }));
+      writes.push(setDoc(doc(db, "leaderboards_drill_weekly", u.uid), pack(stats.bestWeek), { merge: true }));
+      writes.push(setDoc(doc(db, "leaderboards_drill_monthly", u.uid), pack(stats.bestMonth), { merge: true }));
+
+      await Promise.all(writes);
+    } catch (_) {
+      // swallow
+    }
+  };
+render() {
     const line = this.getLine();
     if (!line) return null;
     const lines = this.getLines();
@@ -1179,6 +1557,7 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
             <div className="ot-panel">
               <div className="ot-panel-body">
               {this.renderCoachArea(line, doneYourMoves, totalYourMoves, coachExpected)}
+              {this.renderModePanel()}
 
               <div className="ot-dock">
                 <div className="ot-dock-left">
@@ -1328,6 +1707,7 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
                   >
                     Next
                   </button>
+                  {this.state.gameMode === "drill" ? null : (
 
                   <button
                     className={
@@ -1346,6 +1726,7 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
                   >
                     {this.state.solveArmed ? "Solve" : "Hint"}
                   </button>
+                  )}
                 </div>
 
                 <div className="ot-dock-right">
