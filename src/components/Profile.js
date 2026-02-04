@@ -2,7 +2,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import TopNav from "./TopNav";
 import { useAuth } from "../auth/AuthProvider";
-import { db, serverTimestamp } from "../firebase";
+import { db, serverTimestamp, functions } from "../firebase";
+import { httpsCallable } from "firebase/functions";
 import { doc, onSnapshot, runTransaction } from "firebase/firestore";
 import Chessboard from "chessboardjsx";
 import { BOARD_THEMES, DEFAULT_THEME } from "../theme/boardThemes";
@@ -158,6 +159,8 @@ export default function Profile() {
   const [username, setUsername] = useState("");
   const [userData, setUserData] = useState(null);
   const [activityTick, setActivityTick] = useState(0);
+  const [billingBusy, setBillingBusy] = useState(false);
+  const [billingError, setBillingError] = useState("");
 
   const [editingUsername, setEditingUsername] = useState(false);
   const [editingDisplayName, setEditingDisplayName] = useState(false);
@@ -336,6 +339,34 @@ const onChangeBoardTheme = async (nextTheme) => {
   }
 };
 
+
+
+  const openBillingPortal = async () => {
+    setBillingError("");
+    if (!user) return;
+
+    // Lifetime purchases have no subscription to cancel.
+    if (!membershipActive || membershipTier !== "member") {
+      return;
+    }
+
+    setBillingBusy(true);
+    try {
+      const fn = httpsCallable(functions, "createBillingPortalLink");
+      const res = await fn({});
+      const url = res && res.data && res.data.url ? String(res.data.url) : "";
+      if (url) {
+        window.location.href = url;
+      } else {
+        setBillingError("Could not open billing portal. Try again.");
+      }
+    } catch (_) {
+      setBillingError("Could not open billing portal. Try again.");
+    } finally {
+      setBillingBusy(false);
+    }
+  };
+
   if (!user) return null;
 
   return (
@@ -507,6 +538,41 @@ const onChangeBoardTheme = async (nextTheme) => {
                 draggable={false}
                 {...BOARD_THEMES[boardTheme || DEFAULT_THEME]}
               />
+            </div>
+
+            <div className="profile-membership-tools">
+              <div className="profile-membership-title">Membership</div>
+
+              {!membershipActive ? (
+                <div className="profile-membership-row">
+                  <div className="profile-membership-text">You are on the Free tier.</div>
+                  <button
+                    type="button"
+                    className="profile-membership-btn"
+                    onClick={() => { try { window.location.href = "#/about"; } catch (_) {} }}
+                  >
+                    Upgrade
+                  </button>
+                </div>
+              ) : membershipTier === "lifetime" ? (
+                <div className="profile-membership-row">
+                  <div className="profile-membership-text">Lifetime membership has no subscription to cancel.</div>
+                </div>
+              ) : (
+                <div className="profile-membership-row">
+                  <div className="profile-membership-text">Manage or cancel your subscription via Stripe.</div>
+                  <button
+                    type="button"
+                    className="profile-membership-btn"
+                    onClick={openBillingPortal}
+                    disabled={billingBusy}
+                  >
+                    {billingBusy ? "Opening..." : "Manage subscription"}
+                  </button>
+                </div>
+              )}
+
+              {billingError ? <div className="profile-membership-error">{billingError}</div> : null}
             </div>
           </div>
         </div>

@@ -69,6 +69,38 @@ exports.createCheckoutSession = functions
     return { url: session.url };
   });
 
+
+
+exports.createBillingPortalLink = functions
+  .runWith({ secrets: ["STRIPE_SECRET"] })
+  .https.onCall(async (data, context) => {
+    const uid = requireAuth(context);
+
+    const userSnap = await admin.firestore().doc(`users/${uid}`).get();
+    const userData = userSnap.exists ? userSnap.data() : null;
+
+    const customerId = userData && userData.stripeCustomerId ? String(userData.stripeCustomerId) : "";
+    if (!customerId) {
+      throw new functions.https.HttpsError(
+        "failed-precondition",
+        "No Stripe customer found for this account."
+      );
+    }
+
+    const baseUrl = getBaseUrl();
+    const returnUrl = `${baseUrl}/#/profile?portal=return`;
+
+    const stripe = require("stripe")(STRIPE_SECRET.value());
+
+    const session = await stripe.billingPortal.sessions.create({
+      customer: customerId,
+      return_url: returnUrl
+    });
+
+    return { url: session.url };
+  });
+
+
 exports.stripeWebhook = functions
   .runWith({ secrets: ["STRIPE_SECRET", "STRIPE_WEBHOOK_SECRET"] })
   .https.onRequest(async (req, res) => {

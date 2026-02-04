@@ -94,7 +94,10 @@ class OpeningTrainer extends Component {
       legalTargets: [],
       streakToastOpen: false,
       streakToastText: "",
-      lastMove: null // { from, to }
+      lastMove: null, // { from, to }
+      memberGateOpen: false,
+      memberGateMode: ""
+    
     };
 
     this._countedSeenForRun = false;
@@ -502,6 +505,36 @@ saveCustomModal = () => {
     this._streakToastTimer = setTimeout(() => {
       this.setState({ streakToastOpen: false, streakToastText: "" });
     }, 2200);
+  };
+
+
+  openMemberGate = (mode) => {
+    // Unified UX: even if buttons look disabled, explain why.
+    const m = String(mode || "");
+    this.setState({ memberGateOpen: true, memberGateMode: m });
+  };
+
+  closeMemberGate = () => {
+    this.setState({ memberGateOpen: false, memberGateMode: "" });
+  };
+
+  goToUpgrade = () => {
+    const pathname = this.props && this.props.location ? this.props.location.pathname : "/openings";
+    const search = this.props && this.props.location ? this.props.location.search : "";
+    const from = `${pathname}${search}`;
+
+    // Prefer router state when available, fall back to hash.
+    if (this.props && this.props.history && this.props.history.push) {
+      this.props.history.push({
+        pathname: "/about",
+        state: { from, reason: "membership_required" }
+      });
+      return;
+    }
+
+    try {
+      window.location.href = "#/about";
+    } catch (_) {}
   };
 
   getFenAtIndex = (index) => {
@@ -1180,15 +1213,18 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
     }
 
     if ((mode === "practice" || mode === "drill") && !this.props.isMember) {
-      const pathname = this.props && this.props.location ? this.props.location.pathname : "/openings";
-      const search = this.props && this.props.location ? this.props.location.search : "";
-      const from = `${pathname}${search}`;
-
+      // Don't silently no-op. Explain and offer the upgrade path.
       if (this.props && this.props.history && this.props.history.replace) {
+        const pathname = this.props && this.props.location ? this.props.location.pathname : "/openings";
+        const search = this.props && this.props.location ? this.props.location.search : "";
+        const from = `${pathname}${search}`;
+
         this.props.history.replace({
           pathname: "/about",
           state: { from, reason: "membership_required" }
         });
+      } else {
+        this.openMemberGate(mode);
       }
       return;
     }
@@ -1343,20 +1379,20 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
         </button>
 
         <button
-          className={"ot-mode-card" + (mode === "practice" ? " active" : "")}
-          onClick={() => this.setGameMode("practice")}
+          className={"ot-mode-card" + (mode === "practice" ? " active" : "") + (!this.props.isMember ? " locked" : "")}
+          onClick={() => (this.props.isMember ? this.setGameMode("practice") : this.openMemberGate("practice"))}
           type="button"
-          disabled={!this.props.isMember}
+
         >
           <div className="ot-mode-card-title"><span role="img" aria-label="practice">🎯</span> Practice</div>
           <div className="ot-mode-card-sub">Auto next. Help unlocks explanations.</div>
         </button>
 
         <button
-          className={"ot-mode-card" + (mode === "drill" ? " active" : "")}
-          onClick={() => this.setGameMode("drill")}
+          className={"ot-mode-card" + (mode === "drill" ? " active" : "") + (!this.props.isMember ? " locked" : "")}
+          onClick={() => (this.props.isMember ? this.setGameMode("drill") : this.openMemberGate("drill"))}
           type="button"
-          disabled={!this.props.isMember}
+
         >
           <div className="ot-mode-card-title"><span role="img" aria-label="drill">🔥</span> Drill</div>
           <div className="ot-mode-card-sub">No hints. Streak resets on mistake.</div>
@@ -1506,6 +1542,25 @@ render() {
           onCancel={this.closeCustomModal}
           onSave={this.saveCustomModal}
         />
+
+        {this.state.memberGateOpen ? (
+          <div className="ot-gate-overlay" role="dialog" aria-modal="true">
+            <div className="ot-gate-card">
+              <div className="ot-gate-title">Members only. Upgrade to access Practice and Drill.</div>
+              <div className="ot-gate-sub">
+                {this.state.memberGateMode === "practice" ? "Practice Mode" : "Drill Mode"} requires a paid membership.
+              </div>
+              <div className="ot-gate-actions">
+                <button type="button" className="ot-gate-btn" onClick={this.goToUpgrade}>
+                  Upgrade
+                </button>
+                <button type="button" className="ot-gate-btn secondary" onClick={this.closeMemberGate}>
+                  Not now
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : null}
 
         {this.state.streakToastOpen ? (
           <div

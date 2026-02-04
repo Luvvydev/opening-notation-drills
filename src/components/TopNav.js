@@ -113,9 +113,21 @@ function TopNav(props) {
                 </span>
               </div>
 
-              {isMember ? (
-                <div className={"topnav-member-pill " + (membershipTier === "lifetime" ? "lifetime" : "member")} title={membershipTier === "lifetime" ? "Lifetime Member" : "Member"}>
-                  {membershipTier === "lifetime" ? "Lifetime" : "Member"}
+              {user ? (
+                <div
+                  className={
+                    "topnav-member-pill " +
+                    (isMember ? (membershipTier === "lifetime" ? "lifetime" : "member") : "free")
+                  }
+                  title={
+                    isMember
+                      ? membershipTier === "lifetime"
+                        ? "Lifetime"
+                        : "Member"
+                      : "Free"
+                  }
+                >
+                  {isMember ? (membershipTier === "lifetime" ? "💎" : "⭐") : "🆓"}
                 </div>
               ) : null}
 

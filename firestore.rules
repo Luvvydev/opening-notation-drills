@@ -2,24 +2,80 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    function isMember(uid) {
-      return exists(/databases/$(database)/documents/users/$(uid))
-        && get(/databases/$(database)/documents/users/$(uid)).data.membershipActive == true;
+    function isSignedIn() {
+      return request.auth != null;
     }
 
-    // private per-user state (clients cannot write membership or Stripe linkage fields)
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    // Only server can set these fields. Client can read, but not write or modify them.
+    function isMembershipField(k) {
+      return k in [
+        "membershipActive",
+        "membershipTier",
+        "stripeCustomerId",
+        "stripeSubscriptionId",
+        "stripePaymentIntentId",
+        "membershipUpdatedAt",
+        "membershipSource"
+      ];
+    }
+
+    function isClientAttemptingToWriteMembershipFields() {
+      // On create, resource does not exist. On update, resource exists.
+      return request.resource.data.keys().hasAny([
+        "membershipActive",
+        "membershipTier",
+        "stripeCustomerId",
+        "stripeSubscriptionId",
+        "stripePaymentIntentId",
+        "membershipUpdatedAt",
+        "membershipSource"
+      ])
+      && (
+        !exists(/databases/$(database)/documents/users/$(request.auth.uid)) ||
+        request.resource.data.diff(resource.data).changedKeys().hasAny([
+          "membershipActive",
+          "membershipTier",
+          "stripeCustomerId",
+          "stripeSubscriptionId",
+          "stripePaymentIntentId",
+          "membershipUpdatedAt",
+          "membershipSource"
+        ])
+      );
+    }
+
+    function isMember(uid) {
+      return isSignedIn()
+        && get(/databases/$(database)/documents/users/$(uid)).data.membershipActive == true
+        && (
+          get(/databases/$(database)/documents/users/$(uid)).data.membershipTier == "member" ||
+          get(/databases/$(database)/documents/users/$(uid)).data.membershipTier == "lifetime"
+        );
+    }
+
+    // private per-user state
     match /users/{userId} {
-      allow read: if request.auth != null && request.auth.uid == userId;
+      allow read: if isOwner(userId);
 
-      allow create: if request.auth != null && request.auth.uid == userId;
+      // Client can create their doc but cannot set membership fields.
+      allow create: if isOwner(userId)
+        && !request.resource.data.keys().hasAny([
+          "membershipActive",
+          "membershipTier",
+          "stripeCustomerId",
+          "stripeSubscriptionId",
+          "stripePaymentIntentId",
+          "membershipUpdatedAt",
+          "membershipSource"
+        ]);
 
-      allow update: if request.auth != null
-        && request.auth.uid == userId
-        && !('membershipActive' in request.resource.data)
-        && !('membershipTier' in request.resource.data)
-        && !('stripeCustomerId' in request.resource.data)
-        && !('stripeSubscriptionId' in request.resource.data)
-        && !('stripePaymentIntentId' in request.resource.data);
+      // Client can update non-membership fields only.
+      allow update: if isOwner(userId)
+        && !isClientAttemptingToWriteMembershipFields();
 
       allow delete: if false;
     }
@@ -27,18 +83,18 @@ service cloud.firestore {
     // public profile (safe fields only)
     match /publicProfiles/{username} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if isSignedIn();
     }
 
     // username -> uid mapping (public readable so /u lookup works)
     match /usernames/{username} {
       allow read: if true;
 
-      allow create: if request.auth != null
+      allow create: if isSignedIn()
         && request.resource.data.uid == request.auth.uid
         && !exists(/databases/$(database)/documents/usernames/$(username));
 
-      allow update, delete: if request.auth != null
+      allow update, delete: if isSignedIn()
         && resource.data.uid == request.auth.uid;
     }
 
@@ -46,7 +102,7 @@ service cloud.firestore {
 
     function isValidDrillLeaderboardWrite(uid) {
       return request.resource.data.keys().hasOnly([
-        'uid', 'username', 'score', 'updatedAt'
+        "uid", "username", "score", "updatedAt"
       ])
       && request.resource.data.uid == uid
       && request.resource.data.username is string
@@ -54,50 +110,31 @@ service cloud.firestore {
       && request.resource.data.username.size() <= 24
       && request.resource.data.score is int
       && request.resource.data.score >= 0
-      && request.resource.data.updatedAt is timestamp;
+      && request.resource.data.updatedAt is timestamp
+      && request.resource.data.username == get(/databases/$(database)/documents/users/$(uid)).data.username;
     }
 
     match /leaderboards_drill_daily/{uid} {
-      allow read: if request.auth != null && isMember(request.auth.uid);
-
-      allow create, update: if request.auth != null
-        && request.auth.uid == uid
-        && isMember(uid)
-        && isValidDrillLeaderboardWrite(uid);
-
+      allow read: if isMember(request.auth.uid);
+      allow create, update: if isMember(uid) && isValidDrillLeaderboardWrite(uid);
       allow delete: if false;
     }
 
     match /leaderboards_drill_weekly/{uid} {
-      allow read: if request.auth != null && isMember(request.auth.uid);
-
-      allow create, update: if request.auth != null
-        && request.auth.uid == uid
-        && isMember(uid)
-        && isValidDrillLeaderboardWrite(uid);
-
+      allow read: if isMember(request.auth.uid);
+      allow create, update: if isMember(uid) && isValidDrillLeaderboardWrite(uid);
       allow delete: if false;
     }
 
     match /leaderboards_drill_monthly/{uid} {
-      allow read: if request.auth != null && isMember(request.auth.uid);
-
-      allow create, update: if request.auth != null
-        && request.auth.uid == uid
-        && isMember(uid)
-        && isValidDrillLeaderboardWrite(uid);
-
+      allow read: if isMember(request.auth.uid);
+      allow create, update: if isMember(uid) && isValidDrillLeaderboardWrite(uid);
       allow delete: if false;
     }
 
     match /leaderboards_drill_alltime/{uid} {
-      allow read: if request.auth != null && isMember(request.auth.uid);
-
-      allow create, update: if request.auth != null
-        && request.auth.uid == uid
-        && isMember(uid)
-        && isValidDrillLeaderboardWrite(uid);
-
+      allow read: if isMember(request.auth.uid);
+      allow create, update: if isMember(uid) && isValidDrillLeaderboardWrite(uid);
       allow delete: if false;
     }
   }

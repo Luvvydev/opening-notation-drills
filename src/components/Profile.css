@@ -196,3 +196,51 @@
     padding: 6px 0 2px;
   }
 }
+
+
+.profile-membership-tools {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.10);
+}
+
+.profile-membership-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: rgba(233, 237, 242, 0.65);
+  margin-bottom: 10px;
+}
+
+.profile-membership-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.profile-membership-text {
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.profile-membership-btn {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.95);
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.profile-membership-btn:disabled {
+  opacity: 0.65;
+  cursor: default;
+}
+
+.profile-membership-error {
+  margin-top: 10px;
+  font-size: 13px;
+  color: rgba(255, 180, 180, 0.95);
+}

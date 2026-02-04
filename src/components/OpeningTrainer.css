@@ -1254,3 +1254,67 @@
   color: #e9edf2;
   line-height: 1.1;
 }
+
+
+/* Member gating UX */
+.ot-mode-card.locked {
+  opacity: 0.55;
+}
+
+.ot-mode-card.locked:hover {
+  opacity: 0.7;
+}
+
+.ot-gate-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(0, 0, 0, 0.62);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+}
+
+.ot-gate-card {
+  width: 100%;
+  max-width: 420px;
+  border-radius: 16px;
+  background: rgba(20, 20, 25, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
+  padding: 16px 16px 14px;
+}
+
+.ot-gate-title {
+  font-size: 18px;
+  font-weight: 900;
+  margin-bottom: 6px;
+}
+
+.ot-gate-sub {
+  font-size: 14px;
+  opacity: 0.85;
+  line-height: 1.35;
+}
+
+.ot-gate-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.ot-gate-btn {
+  flex: 1;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.95);
+  font-weight: 900;
+  padding: 10px 12px;
+  cursor: pointer;
+}
+
+.ot-gate-btn.secondary {
+  background: rgba(0, 0, 0, 0.18);
+}
