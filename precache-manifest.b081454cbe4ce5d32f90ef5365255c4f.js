@@ -1,6 +1,6 @@
 self.__precacheManifest = (self.__precacheManifest || []).concat([
   {
-    "revision": "ed72e4194c761f26d85e5762ec842cb7",
+    "revision": "9fadac6bcd2a3b02702f127ca0b6dcfb",
     "url": "/opening-notation-drills/index.html"
   },
   {
