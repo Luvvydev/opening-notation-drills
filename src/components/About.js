@@ -77,9 +77,9 @@ export default function About(props) {
             <div className="about-section-title">Membership perks</div>
 
             <ul className="about-bullets">
-              <li><strong>Practice Mode</strong> repeat random lines on demand</li>
-              <li><strong>Drill Mode</strong> streak tracking and leaderboard scoring</li>
-              <li><strong>Leaderboards</strong> to compete and show your skills</li>
+              <li><strong>Practice Mode:</strong> Master key positions and critical lines. Then repeat them until your openings are flawless.</li>
+              <li><strong>Drill Mode:</strong> Build bulletproof consistency. Test your tactical vision and pattern recognition and scoring that pushes you to beat your personal best.</li>
+              <li><strong>Leaderboards:</strong> Measure your progress on a global scale. Compete, climb the ranks, and see how you stack up against players worldwide.</li>
             </ul>
 
             <p className="about-muted">
@@ -131,7 +131,7 @@ export default function About(props) {
               <div className="about-tier">
                 <div className="about-tier-top">
                   <div className="about-tier-name">5$</div>
-                  <div className="about-tier-price">One time</div>
+                  <div className="about-tier-price">Lifetime</div>
                 </div>
                 <div className="about-tier-desc">
                   Unlock Practice, Drill, Leaderboards, and lifetime badge.
