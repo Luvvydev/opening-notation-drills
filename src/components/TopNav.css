@@ -347,3 +347,138 @@
 .topnav-member-pill:hover {
   background: rgba(255,255,255,0.06);
 }
+/* ===== Homepage blend + menu layering fixes ===== */
+/* Keep TopNav above hero and cards so dropdowns are clickable and never appear "behind" content. */
+.topnav {
+  position: relative;
+  z-index: 1000;
+  overflow: visible;
+}
+
+.topnav-inner {
+  position: relative;
+  z-index: 1000;
+  overflow: visible;
+}
+
+/* Anchor the profile menu positioning to the actions area instead of the page */
+.topnav-actions {
+  position: relative;
+  z-index: 1001;
+}
+
+/* Ensure the menu can sit above everything */
+.topnav-menu {
+  z-index: 2000;
+}
+
+/* Homepage: remove the hard nav rectangle and fade it into the page underlay */
+.home-page .topnav {
+  background: transparent;
+}
+
+.home-page .topnav::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  background: linear-gradient(
+    180deg,
+    rgba(12, 14, 18, 0.86) 0%,
+    rgba(12, 14, 18, 0.46) 55%,
+    rgba(12, 14, 18, 0.00) 100%
+  );
+  backdrop-filter: blur(10px);
+}
+
+
+/* ===== Homepage: fix sharp nav box + ensure profile menu is above everything ===== */
+/* The homepage uses a fixed underlay. Keep TopNav in the top paint layer and render its darkening as a soft radial "cloud"
+   so there are no square corners to notice. */
+.topnav {
+  z-index: 5000; /* stronger than any homepage underlay/content */
+}
+
+.topnav-right {
+  z-index: 5001;
+}
+
+/* Menu must be above hero/board and remain clickable */
+.topnav-menu {
+  z-index: 6000;
+}
+
+/* Homepage: replace the old rectangular fade with a soft radial haze that has no hard edges */
+.home-page .topnav::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 140vw;
+  height: 120px;
+  pointer-events: none;
+  z-index: 0;
+
+  /* No square edges: radial falloff on the sides + vertical falloff at the bottom */
+  background:
+    radial-gradient(70% 140% at 50% 0%,
+      rgba(12, 14, 18, 0.88) 0%,
+      rgba(12, 14, 18, 0.52) 55%,
+      rgba(12, 14, 18, 0.00) 100%);
+  backdrop-filter: blur(10px);
+}
+
+/* Ensure nav content sits above the haze */
+.home-page .topnav-inner {
+  position: relative;
+  z-index: 1;
+}
+
+
+/* ===== Global TopNav transparency + guaranteed menu clickability ===== */
+/* Goal: TopNav should blend on every page (no boxed bar), and menus must sit above everything. */
+
+/* Make the nav transparent everywhere. */
+.topnav {
+  background: transparent !important;
+}
+
+/* Disable any previously-added haze layers (these are what read as a rectangle at the edges). */
+.topnav::before {
+  content: none !important;
+  display: none !important;
+}
+
+/* Remove homepage-only background overrides as well. */
+.home-page .topnav {
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.home-page .topnav::before {
+  content: none !important;
+  display: none !important;
+}
+
+/* Guarantee dropdown is above any high-z UI on trainer pages. */
+.topnav {
+  position: relative;
+  z-index: 20000;
+  overflow: visible;
+}
+
+.topnav-inner,
+.topnav-actions,
+.topnav-right {
+  position: relative;
+  z-index: 20001;
+  overflow: visible;
+}
+
+.topnav-menu {
+  z-index: 30000;
+  opacity: 1;
+}

@@ -14,18 +14,18 @@ const wittySubtitles = [
   "So the opening feels familiar instead of stressful",
   "Build muscle memory before the clock starts ticking",
   "Confidence starts before move one",
-  "Reps now so the middlegame feels easier",
+  "Drills now so the middlegame feels easier",
   "Turn preparation into a quiet advantage",
   "Openings that feel boring to practice and great to play",
   "Because clarity beats scrambling",
   "Get comfortable early and play better later",
   "Less thinking early, more thinking where it matters",
-  "Reps now, blunders later",
+  "Drills now, blunders later",
 ];
 
 function TopNav(props) {
-  const title = props.title || 'Chess Opening Reps';
-  const hideHero = !!props.hideHero;
+  const title = props.title || 'Chess Opening Drills';
+  const hideHero = props.hideHero !== false;
 
   const [subtitle, setSubtitle] = useState('');
   const [streak, setStreak] = useState(() => getStreakState());

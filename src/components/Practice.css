@@ -121,3 +121,8 @@
   border-radius: 50%;
   background: #e9edf2;
 }
+/* Layout fix: TopNav is fixed or sticky, so give the page body enough top padding
+   to prevent the banner from overlapping the board on the Practice page. */
+.page-dark .page-body {
+  padding-top: clamp(64px, 7vh, 92px);
+}

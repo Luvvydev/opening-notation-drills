@@ -140,6 +140,65 @@ class Home extends Component {
     }));
   };
 
+
+startFirstAvailable = () => {
+  const openings = OPENINGS || [];
+  if (!openings.length) return;
+
+  const progressOpenings =
+    (this.state.progress && this.state.progress.openings) || {};
+
+  let best = null;
+  let bestTs = 0;
+
+  for (const o of openings) {
+    const p = progressOpenings[o.key] || {};
+    const ts = Number(p.lastPlayedAt) || 0;
+    if (ts > bestTs) {
+      bestTs = ts;
+      best = o;
+    }
+  }
+
+  this.goToOpening((best || openings[0]).key);
+};
+
+renderHeroBoard = () => {
+  const theme = BOARD_THEMES[this.state.boardTheme] || BOARD_THEMES[DEFAULT_THEME];
+
+  return (
+    <div className="home-hero-board-frame">
+      <div className="home-hero-board-inner">
+        <Chessboard
+          draggable={false}
+          position="start"
+          orientation="white"
+          showNotation={false}
+          width={420}
+          {...theme}
+        />
+      </div>
+
+      <div className="home-hero-stats">
+        <div className="home-hero-stat">
+          <div className="home-hero-stat-value">{this.state.totalLines}</div>
+          <div className="home-hero-stat-label">total lines</div>
+        </div>
+
+        <div className="home-hero-stat">
+          <div className="home-hero-stat-value">{this.state.totalCompleted}</div>
+          <div className="home-hero-stat-label">lines learned</div>
+        </div>
+
+        <div className="home-hero-stat">
+          <div className="home-hero-stat-value">{OPENINGS.length}</div>
+          <div className="home-hero-stat-label">openings</div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
   renderCard = (o) => {
     const stats =
       this.state.perOpening[o.key] || { completed: 0, total: (o.lines && o.lines.length) || 0 };
@@ -197,6 +256,7 @@ class Home extends Component {
   };
 
   render() {
+
     const q = (this.state.search || "").trim().toLowerCase();
     const searchFiltered = !q
       ? OPENINGS
@@ -263,11 +323,51 @@ class Home extends Component {
     });
 
     const sorted = withMeta.map((x) => x.o);
+    const progressOpenings =
+      (this.state.progress && this.state.progress.openings) || {};
+
+    const playedSorted = sorted
+      .map((o) => ({ o, ts: Number((progressOpenings[o.key] || {}).lastPlayedAt) || 0 }))
+      .filter((x) => x.ts > 0)
+      .sort((a, b) => b.ts - a.ts)
+      .map((x) => x.o);
+
+    const recommended = (playedSorted.length ? playedSorted : sorted).slice(0, 2);
 
     return (
-      <div className="home-page">
-        <TopNav title="Chess Opening Drills" />
-        <div className="home-courses">
+<div className="home-page">
+  <TopNav title="Chess Opening Drills"  hideHero />
+
+  <div className="home-hero-v2">
+    <div className="home-hero-v2-inner">
+      <div className="home-hero-v2-left">
+        
+        <div className="home-hero-v2-title">Ready to improve?</div>
+        <div className="home-hero-v2-sub">
+          Start building accurate move recall today!
+        </div>
+
+        <button
+          type="button"
+          className="home-hero-v2-cta"
+          onClick={this.startFirstAvailable}
+        >
+          Start Drilling →
+        </button>
+
+        <div className="home-hero-v2-pillrow">
+          <div className="home-hero-v2-pill">Learn</div>
+          <div className="home-hero-v2-pill">Practice</div>
+          <div className="home-hero-v2-pill">Drill</div>
+        </div>
+      </div>
+
+      <div className="home-hero-v2-right">{this.renderHeroBoard()}</div>
+    </div>
+  </div>
+
+  <div className="home-courses">
+
           <div className="home-courses-header">
             <div className="home-search-wrap">
               <div className="home-search">
@@ -280,10 +380,16 @@ class Home extends Component {
                     xmlns="http://www.w3.org/2000/svg"
                   >
                     <path
-                      d="M16.5 3.5L20.5 7.5L8 20H4V16L16.5 3.5Z"
+                      d="M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z"
                       stroke="currentColor"
                       strokeWidth="2"
                       strokeLinejoin="round"
+                    />
+                    <path
+                      d="M16.5 16.5 21 21"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
                     />
                   </svg>
                 </span>
@@ -370,11 +476,24 @@ class Home extends Component {
             </div>
           </div>
 
+          <div className="home-recommended-v2">
+            <div className="home-section-row">
+              <div className="home-section-title">Recommended for you</div>
+            </div>
+            <div className="home-course-grid">{recommended.map(this.renderCard)}</div>
+          </div>
+
+          <div className="home-section-row home-section-row-tight">
+            <div className="home-section-title">All openings</div>
+          </div>
+
           <div className="home-course-grid">{sorted.map(this.renderCard)}</div>
+        
         </div>
       </div>
     );
   }
+
 }
 
 export default Home;
