@@ -4,7 +4,7 @@ import TopNav from "./TopNav";
 import { useAuth } from "../auth/AuthProvider";
 import { db, serverTimestamp, functions } from "../firebase";
 import { httpsCallable } from "firebase/functions";
-import { doc, onSnapshot, runTransaction } from "firebase/firestore";
+import { doc, onSnapshot, runTransaction, setDoc } from "firebase/firestore";
 import Chessboard from "chessboardjsx";
 import { BOARD_THEMES, DEFAULT_THEME } from "../theme/boardThemes";
 import "./ActivityHeatmap.css";
@@ -161,6 +161,7 @@ export default function Profile() {
   const [activityTick, setActivityTick] = useState(0);
   const [billingBusy, setBillingBusy] = useState(false);
   const [billingError, setBillingError] = useState("");
+  const [profileError, setProfileError] = useState("");
 
   const [editingUsername, setEditingUsername] = useState(false);
   const [editingDisplayName, setEditingDisplayName] = useState(false);
@@ -276,24 +277,43 @@ export default function Profile() {
   }, [editingDisplayName]);
 
   const saveProfile = async () => {
+    setProfileError("");
     const dn = displayName.trim();
     const un = normalizeUsername(username);
 
-    if (!dn || !un || un.length < 3) return;
+    if (!user) return;
 
-    await runTransaction(db, async (tx) => {
-      const userRef = doc(db, "users", user.uid);
-      const usernameRef = doc(db, "usernames", un);
-      const publicRef = doc(db, "publicProfiles", un);
+    if (!dn) {
+      setProfileError("Display name is required.");
+      return;
+    }
 
-      const usernameSnap = await tx.get(usernameRef);
-      if (usernameSnap.exists() && usernameSnap.data().uid !== user.uid) {
-        throw new Error("Username already taken");
-      }
+    if (!un || un.length < 3) {
+      setProfileError("Username must be at least 3 characters.");
+      return;
+    }
 
-      tx.set(usernameRef, { uid: user.uid }, { merge: true });
+    const userRef = doc(db, "users", user.uid);
+    const usernameRef = doc(db, "usernames", un);
+    const publicRef = doc(db, "publicProfiles", un);
 
-      tx.set(
+    try {
+      // 1) Claim username mapping (create if missing, never update)
+      await runTransaction(db, async (tx) => {
+        const snap = await tx.get(usernameRef);
+        if (snap.exists()) {
+          const existingUid = snap.data() && snap.data().uid ? snap.data().uid : "";
+          if (existingUid && existingUid !== user.uid) {
+            throw new Error("Username already taken");
+          }
+          // If it already belongs to this uid, leave it untouched (avoid update permissions).
+          return;
+        }
+        tx.set(usernameRef, { uid: user.uid });
+      });
+
+      // 2) Save private profile fields (this must succeed even if public sync fails)
+      await setDoc(
         userRef,
         {
           displayName: dn,
@@ -304,20 +324,28 @@ export default function Profile() {
         { merge: true }
       );
 
-      tx.set(
-        publicRef,
-        {
-          uid: user.uid,
-          username: un,
-          displayName: dn,
-          updatedAt: serverTimestamp()
-        },
-        { merge: true }
-      );
-    });
+      // 3) Best-effort public profile sync (do not block saving)
+      try {
+        await setDoc(
+          publicRef,
+          {
+            uid: user.uid,
+            username: un,
+            displayName: dn,
+            updatedAt: serverTimestamp()
+          },
+          { merge: true }
+        );
+      } catch (_) {
+        // ignore (public profile rules might be stricter than private profile rules)
+      }
 
-    setEditingUsername(false);
-    setEditingDisplayName(false);
+      setEditingUsername(false);
+      setEditingDisplayName(false);
+    } catch (err) {
+      const msg = err && err.message ? String(err.message) : "Could not save profile. Try again.";
+      setProfileError(msg);
+    }
   };
 
 const onChangeBoardTheme = async (nextTheme) => {
@@ -436,6 +464,12 @@ const onChangeBoardTheme = async (nextTheme) => {
               >
                 Cancel
               </button>
+
+              {profileError ? (
+                <div style={{ marginTop: 10, fontSize: 13, color: "rgba(255, 180, 180, 0.95)" }}>
+                  {profileError}
+                </div>
+              ) : null}
             </div>
           )}
 
