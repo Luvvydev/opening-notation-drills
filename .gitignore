@@ -6,3 +6,4 @@ src/assets/old/
 backupsbeforestripe/
 functions/node_modules/
 functions/.env*
+*.zip
