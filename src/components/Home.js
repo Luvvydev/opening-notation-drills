@@ -101,13 +101,38 @@ class Home extends Component {
       totalCompleted,
       totalLines,
       boardTheme: settings.boardTheme || DEFAULT_THEME,
+      viewportW: typeof window !== "undefined" ? window.innerWidth : 1200,
       filtersOpen: false,
       filters: {
         color: { white: false, black: false },
         progress: { new: false, inProgress: false, completed: false }
       }
     };
+    } 
+
+  componentDidMount() {
+    if (typeof window === "undefined") return;
+    window.addEventListener("resize", this.handleResize);
   }
+
+  componentWillUnmount() {
+    if (typeof window === "undefined") return;
+    window.removeEventListener("resize", this.handleResize);
+  }
+
+  handleResize = () => {
+    this.setState({ viewportW: window.innerWidth });
+  };
+
+  getHeroBoardWidth = () => {
+    const w = (this.state && this.state.viewportW) || 1200;
+    const max = 420;
+
+    // Clamp to viewport on mobile to avoid horizontal overflow.
+    const clamped = Math.max(260, w - 72);
+    return Math.min(max, clamped);
+  };
+
 
   onSearchChange = (e) => {
     this.setState({ search: (e && e.target && e.target.value) || "" });
@@ -174,7 +199,7 @@ renderHeroBoard = () => {
           position="start"
           orientation="white"
           showNotation={false}
-          width={420}
+          width={this.getHeroBoardWidth()}
           {...theme}
         />
       </div>
