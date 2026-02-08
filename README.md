@@ -1,180 +1,140 @@
-# Opening & Notation Chess Trainer
+# ChessDrills
 
-A focused chess training web app built around opening line drilling and notation recall
+A focused chess opening training web app built around **recall & repetition**
 
-Live site: https://chessdrills.net
+Live:
+- https://chessdrills.net
+- https://luvvydev.github.io/opening-notation-drills/#/
 
-This tool expects mistakes. You play moves, get them wrong, see why, and repeat
+Repository:
+- opening-notation-drills
+
+---
+
+## What This App Does
+
+ChessDrills trains opening lines through repetition and immediate feedback.
+
+
+- You play real opening lines
+- Moves are checked instantly
+- Wrong moves do not reset the board
+- Explanations unlock when you fail
+- Completed lines loop into a new random line
+- Training continues indefinitely
+
 
 ---
 
 ## Core Features
 
 ### Opening Trainer
+- Randomized, curated opening lines
+- One idea per line
+- SAN move validation via chess.js
+- Automatic opponent replies
+- Confetti and auto-advance on completion
 
-The primary mode of the application.
+### Openings
+Includes (so far):
+- London System
+- Sicilian Defense
+- Ruy Lopez
+- Italian Game
+- Caro–Kann
+- Fried Liver Attack
+- Stafford Gambit
+- Queen’s Gambit (Accepted & Declined)
+- King’s Indian Defense
+- French Defense
+- English Opening
+- Scotch Game
+- Englund Gambit
 
-- Trains real opening lines, not theory trees
-- Currently supports:
-  - London System
-  - Sicilian Defense
-  - Ruy Lopez
-  - Fried Liver Attack
-  - Caro-Kann Defense
-  - Stafford Gambit
-- Dozens of curated lines per opening
-- Lines are selected randomly
-- You always play the side being trained
-- Opponent replies automatically
-
-#### Behavior on mistakes
-
-- Incorrect moves are marked immediately
-- The board position does not reset
-- Explanations unlock to explain why the move fails
-- You replay the position and continue the line
-
-The goal is correction through understanding, not punishment.
-
-#### Completion behavior
-
-- Completing a line triggers a confetti animation
-- A new random line loads automatically
-- Training continues in an infinite loop
+All opening data lives in plain JavaScript files.
 
 ---
 
-## Design Goals
+## Accounts and Access
 
-- Dark, consistent UI
-- Single shared top navigation across all pages
-- Short, idea focused opening lines
-- Randomization to prevent rote memorization
+### Authentication
+- Firebase Email + Password auth
+- Anonymous users are restricted
+
+### Access Levels
+
+Anonymous:
+- Browse Home
+- Blocked from “New” openings
+- No gated modes
+
+Free account:
+- Access “New” openings
+- Learn mode only
+
+Member (Stripe subscription or lifetime):
+- Practice mode
+- Drill mode
+- Leaderboards
+
+Access is enforced in both UI and Firestore rules.
+
+---
+
+## Membership & Payments
+
+- Stripe Checkout for upgrades
+- Firebase Cloud Functions handle checkout + webhooks
+- Membership state is written server-side into Firestore
+- Billing portal is available from the Profile page
+
+Frontend never sets membership state directly.
 
 ---
 
 ## Tech Stack
 
+Frontend:
 - React (Create React App)
-- chess.js for rules, legality, and game state
-- chessboardjsx for board rendering
-- No backend
-- No authentication
-- No external APIs
-- All data stored locally in plain JavaScript files
+- react-router-dom (HashRouter)
+- chess.js
+- chessboardjsx
+
+Backend:
+- Firebase Auth
+- Firestore
+- Firebase Cloud Functions (Node 20)
+- Stripe Checkout + Webhooks
+
+Hosting:
+- GitHub Pages
+- Custom domain (chessdrills.net)
 
 ---
 
-## Project Structure
+## Local Development
 
-    src/
-      components/
-        Home.js
-        OpeningTrainer.js
-        Practice.js
-        Settings.js
-        TopNav.js
-        About.js
-      openings/
-        londonLines.js
-        sicilianDefenseLines.js
-        ruyLopezLines.js
-        friedLiverAttackLines.js
-        caroKannLines.js
-        staffordGambitLines.js
+Node versions matter.
 
-Notes:
+Frontend (CRA):
 
-- OpeningTrainer.js contains all opening logic and flow control
-- Each file in openings is pure data
-- Adding a new opening requires no architectural changes
-
----
-
-## Adding or Editing Opening Lines
-
-Open any file in:
-
-    src/openings/
-
-Each opening line follows this structure:
-
-    {
-      id: "unique-id",
-      name: "Line title",
-      description: "What the line is trying to teach",
-      moves: ["e4", "c5", "Nf3", "..."],
-      explanations: [
-        "Why this move is played",
-        "What it aims to achieve",
-        "What problem it solves"
-      ]
-    }
-
-Rules:
-
-- moves.length must equal explanations.length
-- Moves are written in SAN
-- Each line should teach one idea, not a full repertoire
-
----
-
-## Environment
-
-### Node Version
-
-This project runs on Node 16 LTS.
-
-The repository includes a .nvmrc file containing:
-
-    16
-
-Activate with:
-
-    nvm use
-
-No OpenSSL legacy flags required.
-
----
-
-## Running Locally
-
-    npm install
+    nvm use 16
     npm start
 
----
+Firebase / Functions:
 
-## Why This Exists
+    nvm use 22
+    firebase deploy
 
-Most opening tools:
-
-- Encourage passive reading
-- Overload users with branching theory
-- Reward clicking instead of recall
-
-This app is designed to:
-
-- Force active decision making
-- Allow mistakes without blocking progress
-- Reinforce ideas through repetition
-- Stay small, fast, and maintainable
-
+The repo includes a .nvmrc set to Node 16.
 
 ---
 
-## Status
+## Project Philosophy
 
-- Actively developed
-- Six openings implemented and live
-- Randomized, looping opening trainer complete
-- Architecture intentionally simple and extensible
+Most chess tools are built around reading and clicking through lines. They hide mistakes and don’t really force you to think.
 
----
-
-## Author
-
-Built and maintained by Luvvydev  
-GitHub: https://github.com/Luvvydev
+ChessDrills is the opposite. You have to choose moves yourself, mistakes are expected, and the same ideas come back again and again until they stick.
 
 ---
 
