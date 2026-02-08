@@ -83,6 +83,8 @@ class Home extends Component {
     const progress = _loadProgress();
     const settings = _loadSettings();
 
+    this.heroFrameRef = React.createRef();
+
     const perOpening = {};
     let totalCompleted = 0;
     let totalLines = 0;
@@ -102,17 +104,20 @@ class Home extends Component {
       totalLines,
       boardTheme: settings.boardTheme || DEFAULT_THEME,
       viewportW: typeof window !== "undefined" ? window.innerWidth : 1200,
+      heroBoardW: null,
       filtersOpen: false,
       filters: {
         color: { white: false, black: false },
         progress: { new: false, inProgress: false, completed: false }
       }
     };
-    } 
+  }
 
   componentDidMount() {
     if (typeof window === "undefined") return;
     window.addEventListener("resize", this.handleResize);
+    this.updateHeroBoardWidth();
+    setTimeout(this.updateHeroBoardWidth, 0);
   }
 
   componentWillUnmount() {
@@ -122,6 +127,20 @@ class Home extends Component {
 
   handleResize = () => {
     this.setState({ viewportW: window.innerWidth });
+    this.updateHeroBoardWidth();
+  };
+
+  updateHeroBoardWidth = () => {
+    const el = this.heroFrameRef && this.heroFrameRef.current;
+    if (!el) return;
+
+    const available = Math.max(260, el.clientWidth - 28);
+    const max = 420;
+    const next = Math.min(max, available);
+
+    if (this.state.heroBoardW !== next) {
+      this.setState({ heroBoardW: next });
+    }
   };
 
   getHeroBoardWidth = () => {
@@ -191,15 +210,18 @@ startFirstAvailable = () => {
 renderHeroBoard = () => {
   const theme = BOARD_THEMES[this.state.boardTheme] || BOARD_THEMES[DEFAULT_THEME];
 
+  const boardW =
+    this.state.heroBoardW != null ? this.state.heroBoardW : this.getHeroBoardWidth();
+
   return (
-    <div className="home-hero-board-frame">
+    <div className="home-hero-board-frame" ref={this.heroFrameRef}>
       <div className="home-hero-board-inner">
         <Chessboard
           draggable={false}
           position="start"
           orientation="white"
           showNotation={false}
-          width={this.getHeroBoardWidth()}
+          width={boardW}
           {...theme}
         />
       </div>
