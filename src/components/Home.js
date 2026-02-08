@@ -373,15 +373,48 @@ renderHeroBoard = () => {
     const progressOpenings =
       (this.state.progress && this.state.progress.openings) || {};
 
-    const playedSorted = sorted
-      .map((o) => ({ o, ts: Number((progressOpenings[o.key] || {}).lastPlayedAt) || 0 }))
-      .filter((x) => x.ts > 0)
-      .sort((a, b) => b.ts - a.ts)
-      .map((x) => x.o);
 
-    const recommended = (playedSorted.length ? playedSorted : sorted).slice(0, 2);
 
-    return (
+        const recommendedCount = 2;
+
+    const getStatsFor = (o) =>
+      this.state.perOpening[o.key] || { completed: 0, total: (o.lines && o.lines.length) || 0 };
+
+    const getLastPlayedAtFor = (o) =>
+      Number((progressOpenings[o.key] || {}).lastPlayedAt) || 0;
+
+    const isCompletedOpening = (o) => {
+      const s = getStatsFor(o);
+      return s.total > 0 && s.completed >= s.total;
+    };
+
+    const isStartedOpening = (o) => getLastPlayedAtFor(o) > 0;
+
+    const isNewOpening = (o) => o.badge === "New";
+
+    const startedNotCompleted = sorted
+      .filter((o) => isStartedOpening(o) && !isCompletedOpening(o))
+      .sort((a, b) => getLastPlayedAtFor(b) - getLastPlayedAtFor(a));
+
+    const recentlyPlayed = sorted
+      .filter((o) => isStartedOpening(o) && isCompletedOpening(o))
+      .sort((a, b) => getLastPlayedAtFor(b) - getLastPlayedAtFor(a));
+
+    const newOpenings = sorted
+      .filter((o) => !isStartedOpening(o) && isNewOpening(o));
+
+    const fallbackCatalog = sorted
+      .filter((o) => !isStartedOpening(o) && !isNewOpening(o));
+
+    const recommendedPool = [
+      ...startedNotCompleted,
+      ...recentlyPlayed,
+      ...newOpenings,
+      ...fallbackCatalog
+    ];
+
+    const recommended = recommendedPool.slice(0, recommendedCount);
+return (
 <div className="home-page">
   <TopNav title="Chess Opening Drills"  hideHero />
 
@@ -523,18 +556,27 @@ renderHeroBoard = () => {
             </div>
           </div>
 
-          <div className="home-recommended-v2">
+          <div className="home-section home-section--recommended">
             <div className="home-section-row">
-              <div className="home-section-title">Recommended for you</div>
+              <div className="home-section-left">
+                <div className="home-section-title">Recommended for you</div>
+                <div className="home-section-sub">Picked based on your recent drills</div>
+              </div>
             </div>
             <div className="home-course-grid">{recommended.map(this.renderCard)}</div>
           </div>
 
-          <div className="home-section-row home-section-row-tight">
-            <div className="home-section-title">All openings</div>
-          </div>
+          <div className="home-section home-section--all">
+            <div className="home-section-row home-section-row-tight">
+              <div className="home-section-left">
+                <div className="home-section-title">All openings</div>
+                <div className="home-section-sub">Browse the full library</div>
+              </div>
+              <div className="home-section-meta">Total: {OPENINGS.length}</div>
+            </div>
 
-          <div className="home-course-grid">{sorted.map(this.renderCard)}</div>
+            <div className="home-course-grid">{sorted.map(this.renderCard)}</div>
+          </div>
         
         </div>
       </div>
