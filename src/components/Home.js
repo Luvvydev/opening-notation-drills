@@ -58,9 +58,14 @@ function _getPreviewFenForOpening(opening) {
 
     const game = new Chess();
     if (moves && moves.length) {
-      // Apply first two plies: white move then black move
-      game.move(moves[0], { sloppy: true });
-      if (moves.length > 1) game.move(moves[1], { sloppy: true });
+      // Apply first 6 plies: W1 B1 W2 B2 W3 B3 (or fewer if the line is shorter)
+      const plies = Math.min(6, moves.length);
+      for (let i = 0; i < plies; i += 1) {
+        const mv = moves[i];
+        if (!mv) break;
+        const ok = game.move(mv, { sloppy: true });
+        if (!ok) break;
+      }
     }
 
     const fen = game.fen() || "start";
