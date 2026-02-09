@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import Chessboard from "chessboardjsx";
+import * as Chess from "chess.js";
 import TopNav from "./TopNav";
 import { OPENING_CATALOG } from "../openings/openingCatalog";
 import { BOARD_THEMES, DEFAULT_THEME } from "../theme/boardThemes";
@@ -8,6 +9,70 @@ import "./Home.css";
 const STORAGE_KEY = "notation_trainer_opening_progress_v2";
 
 const OPENINGS = OPENING_CATALOG;
+
+const _previewFenCache = new Map();
+
+function _tokenizePgnLike(text) {
+  if (!text) return [];
+  const s = String(text).trim();
+  if (!s) return [];
+  const raw = s.split(/\s+/).filter(Boolean);
+  const out = [];
+  for (const t of raw) {
+    // drop move numbers like "1." or "12..." and results
+    if (/^\d+\.{1,3}$/.test(t)) continue;
+    if (t === "*" || t === "1-0" || t === "0-1" || t === "1/2-1/2") continue;
+    out.push(t);
+  }
+  return out;
+}
+
+function _extractMovesFromLine(line) {
+  if (!line) return [];
+  // line can be: string, array of SAN strings, or object containing moves fields
+  if (typeof line === "string") return _tokenizePgnLike(line);
+  if (Array.isArray(line)) {
+    // array might be ["e4", "e5", ...] or include move numbers
+    return _tokenizePgnLike(line.join(" "));
+  }
+  if (typeof line === "object") {
+    if (Array.isArray(line.moves)) return line.moves;
+    if (Array.isArray(line.san)) return line.san;
+    if (typeof line.moves === "string") return _tokenizePgnLike(line.moves);
+    if (typeof line.line === "string") return _tokenizePgnLike(line.line);
+    if (typeof line.pgn === "string") return _tokenizePgnLike(line.pgn);
+    if (typeof line.sequence === "string") return _tokenizePgnLike(line.sequence);
+    if (typeof line.text === "string") return _tokenizePgnLike(line.text);
+  }
+  return [];
+}
+
+function _getPreviewFenForOpening(opening) {
+  const cacheKey = (opening && (opening.key || opening.id || opening.title)) || "unknown";
+  if (_previewFenCache.has(cacheKey)) return _previewFenCache.get(cacheKey);
+
+  try {
+    const lines = (opening && opening.lines) || [];
+    const first = lines && lines.length ? lines[0] : null;
+    const moves = _extractMovesFromLine(first);
+
+    const game = new Chess();
+    if (moves && moves.length) {
+      // Apply first two plies: white move then black move
+      game.move(moves[0], { sloppy: true });
+      if (moves.length > 1) game.move(moves[1], { sloppy: true });
+    }
+
+    const fen = game.fen() || "start";
+    _previewFenCache.set(cacheKey, fen);
+    return fen;
+  } catch (_) {
+    _previewFenCache.set(cacheKey, "start");
+    return "start";
+  }
+}
+
+
 
 function _safeJsonParse(text, fallback) {
   try {
@@ -77,7 +142,7 @@ const snapBoardWidth = (n) => {
 };
 
 // KEY FIX: Ensure card thumbnails use pixel-perfect dimensions
-// 112px is divisible by 8 (112 ÷ 8 = 14px per square), which ensures perfect alignment
+// 160px is divisible by 8 (160 ÷ 8 = 20px per square), which ensures perfect alignment
 const CARD_THUMB_W = 160;
 
 
@@ -278,7 +343,7 @@ renderHeroBoard = () => {
         <div className="home-course-thumb">
           <Chessboard
             draggable={false}
-            position={o.position || "start"}
+            position={(o.position && o.position !== "start") ? o.position : _getPreviewFenForOpening(o)}
             orientation={o.orientation || "white"}
             showNotation={false}
             // KEY FIX: Use exact pixel-perfect dimensions

@@ -265,16 +265,32 @@
   flex: 0 0 auto;
 }
 
-/* Thumbnail chessboard sizing
-   NOTE: Thumbs use Chessboard `width={CARD_THUMB_W}` in Home.js.
-   Do not force a smaller inner size or the board will clip. */
+/* KEY FIX: Ensure the chessboard inside thumbnails is pixel-perfect */
 .home-course-thumb > div {
+  transform: translateZ(0);
+  /* Force integer pixel dimensions */
   width: 160px !important;
   height: 160px !important;
-  transform: translateZ(0);
 }
 
-/* Keep piece sprites centered and consistent inside the thumbnail */
+/* Ensure chessboard squares are aligned properly */
+.home-course-thumb .react-chessboard {
+  position: relative;
+}
+
+.home-course-thumb .react-chessboard .board-b72b1 {
+  width: 160px !important;
+  height: 160px !important;
+}
+
+/* Ensure pieces are centered in their squares */
+.home-course-thumb .react-chessboard .piece-417db {
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  background-size: 85% 85% !important;
+}
+
+/* FIX FOR CHESSBOARDJSX PIECE ALIGNMENT */
 .home-course-thumb div[style*="background-image"] {
   background-position: center !important;
   background-repeat: no-repeat !important;
@@ -282,8 +298,14 @@
   transform: translateZ(0);
 }
 
-.home-course-main {
+/* Ensure chessboard container has exact dimensions */
+.home-course-thumb .chessboard {
+  width: 160px !important;
+  height: 160px !important;
+  position: relative;
+}
 
+.home-course-main {
   display: flex;
   flex-direction: column;
   gap: 10px;
