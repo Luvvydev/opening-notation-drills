@@ -11,6 +11,7 @@ const STORAGE_KEY = "notation_trainer_opening_progress_v2";
 const OPENINGS = OPENING_CATALOG;
 
 const _previewFenCache = new Map();
+const PREVIEW_PLIES = 6;
 
 function _tokenizePgnLike(text) {
   if (!text) return [];
@@ -48,18 +49,52 @@ function _extractMovesFromLine(line) {
 }
 
 function _getPreviewFenForOpening(opening) {
-  const cacheKey = (opening && (opening.key || opening.id || opening.title)) || "unknown";
-  if (_previewFenCache.has(cacheKey)) return _previewFenCache.get(cacheKey);
+  // Fast path: stable key based caching
+  const stableBase =
+    (opening && (opening.key || opening.id || opening.title)) || null;
 
+  if (stableBase) {
+    const stableKey = `${stableBase}|plies=${PREVIEW_PLIES}|pos=${opening.position || "start"}|ori=${opening.orientation || "white"}`;
+    if (_previewFenCache.has(stableKey)) return _previewFenCache.get(stableKey);
+
+    try {
+      const lines = (opening && opening.lines) || [];
+      const first = lines && lines.length ? lines[0] : null;
+      const moves = _extractMovesFromLine(first);
+
+      const game = new Chess();
+      if (moves && moves.length) {
+        // Apply first N plies: W1 B1 W2 B2 W3 B3 (or fewer if the line is shorter)
+        const plies = Math.min(PREVIEW_PLIES, moves.length);
+        for (let i = 0; i < plies; i += 1) {
+          const mv = moves[i];
+          if (!mv) break;
+          const ok = game.move(mv, { sloppy: true });
+          if (!ok) break;
+        }
+      }
+
+      const fen = game.fen() || "start";
+      _previewFenCache.set(stableKey, fen);
+      return fen;
+    } catch (_) {
+      _previewFenCache.set(stableKey, "start");
+      return "start";
+    }
+  }
+
+  // Fallback: build a signature to avoid collisions when key/id/title is missing
   try {
     const lines = (opening && opening.lines) || [];
     const first = lines && lines.length ? lines[0] : null;
     const moves = _extractMovesFromLine(first);
 
+    const signature = `sig|plies=${PREVIEW_PLIES}|pos=${(opening && opening.position) || "start"}|ori=${(opening && opening.orientation) || "white"}|moves=${(moves || []).slice(0, PREVIEW_PLIES).join(" ")}`;
+    if (_previewFenCache.has(signature)) return _previewFenCache.get(signature);
+
     const game = new Chess();
     if (moves && moves.length) {
-      // Apply first 6 plies: W1 B1 W2 B2 W3 B3 (or fewer if the line is shorter)
-      const plies = Math.min(6, moves.length);
+      const plies = Math.min(PREVIEW_PLIES, moves.length);
       for (let i = 0; i < plies; i += 1) {
         const mv = moves[i];
         if (!mv) break;
@@ -69,13 +104,13 @@ function _getPreviewFenForOpening(opening) {
     }
 
     const fen = game.fen() || "start";
-    _previewFenCache.set(cacheKey, fen);
+    _previewFenCache.set(signature, fen);
     return fen;
   } catch (_) {
-    _previewFenCache.set(cacheKey, "start");
     return "start";
   }
 }
+
 
 
 
