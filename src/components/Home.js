@@ -70,11 +70,16 @@ function _deriveCompletedCount(progress, openingKey, lines) {
   return { completed, total };
 }
 
-const calcThumbWidth = ({ screenWidth, screenHeight }) => {
-  const w = screenWidth || screenHeight || 0;
-  if (w && w < 520) return 96;
-  return 120;
+const snapBoardWidth = (n) => {
+  const v = Math.max(0, Math.floor(Number(n) || 0));
+  // Chessboard squares are 1/8 of width. Snap to a multiple of 8 to avoid subpixel piece drift.
+  return Math.max(8, Math.round(v / 8) * 8);
 };
+
+// KEY FIX: Ensure card thumbnails use pixel-perfect dimensions
+// 112px is divisible by 8 (112 ÷ 8 = 14px per square), which ensures perfect alignment
+const CARD_THUMB_W = 160;
+
 
 class Home extends Component {
   constructor(props) {
@@ -136,7 +141,7 @@ class Home extends Component {
 
     const available = Math.max(260, el.clientWidth - 28);
     const max = 420;
-    const next = Math.min(max, available);
+    const next = snapBoardWidth(Math.min(max, available));
 
     if (this.state.heroBoardW !== next) {
       this.setState({ heroBoardW: next });
@@ -149,7 +154,7 @@ class Home extends Component {
 
     // Clamp to viewport on mobile to avoid horizontal overflow.
     const clamped = Math.max(260, w - 72);
-    return Math.min(max, clamped);
+    return snapBoardWidth(Math.min(max, clamped));
   };
 
 
@@ -276,7 +281,8 @@ renderHeroBoard = () => {
             position={o.position || "start"}
             orientation={o.orientation || "white"}
             showNotation={false}
-            calcWidth={calcThumbWidth}
+            // KEY FIX: Use exact pixel-perfect dimensions
+            width={CARD_THUMB_W}
             {...BOARD_THEMES[this.state.boardTheme]}
           />
         </div>

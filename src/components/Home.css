@@ -236,7 +236,7 @@
 .home-course-card {
   transition: transform 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
   display: grid;
-  grid-template-columns: 150px 1fr;
+  grid-template-columns: 190px 1fr;
   gap: 16px;
   padding: 16px;
   border-radius: 16px;
@@ -260,9 +260,30 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 160px;
+  height: 160px;
+  flex: 0 0 auto;
+}
+
+/* Thumbnail chessboard sizing
+   NOTE: Thumbs use Chessboard `width={CARD_THUMB_W}` in Home.js.
+   Do not force a smaller inner size or the board will clip. */
+.home-course-thumb > div {
+  width: 160px !important;
+  height: 160px !important;
+  transform: translateZ(0);
+}
+
+/* Keep piece sprites centered and consistent inside the thumbnail */
+.home-course-thumb div[style*="background-image"] {
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  background-size: 85% 85% !important;
+  transform: translateZ(0);
 }
 
 .home-course-main {
+
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -339,7 +360,7 @@
 @media (max-width: 520px) {
   .home-course-card {
     transition: transform 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
-    grid-template-columns: 130px 1fr;
+    grid-template-columns: 170px 1fr;
     padding: 12px;
     gap: 12px;
   }
@@ -702,12 +723,15 @@
   box-shadow: 0 22px 70px rgba(0, 0, 0, 0.55);
 }
 
-.home-hero-board-inner {
-  display: flex;
-  justify-content: center;
-  border-radius: 14px;
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.10);
+/* FIX FOR MAIN PREVIEW BOARD - ensure pieces are centered */
+.home-hero-board-inner > div {
+  transform: translateZ(0);
+}
+
+.home-hero-board-inner div[style*="background-image"] {
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  background-size: 85% 85% !important;
 }
 
 .home-hero-stats {

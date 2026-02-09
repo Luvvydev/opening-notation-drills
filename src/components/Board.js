@@ -8,6 +8,16 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { BOARD_THEMES, DEFAULT_THEME } from '../theme/boardThemes';
 import './Board.css';
 
+function stripPieceProps(theme) {
+  if (!theme || typeof theme !== "object") return {};
+  const out = {};
+  for (const [k, v] of Object.entries(theme)) {
+    if (String(k).toLowerCase().includes("piece")) continue;
+    out[k] = v;
+  }
+  return out;
+}
+
 const game = new Chess();
 const orientations = ['white', 'black'];
 
@@ -271,6 +281,16 @@ class Board extends Component {
     const incorrect = this.state.incorrect;
     const correct = this.state.correct;
 
+    const effectiveCalcWidth = (dims) => {
+      const base = this.props.calcWidth ? this.props.calcWidth(dims) : Math.min(dims.screenWidth, dims.screenHeight);
+      if (this.props.preview) {
+        const cap = Number(this.props.previewMaxWidth) || 160;
+        return Math.min(base, cap);
+      }
+      return base;
+    };
+
+
 
     const renderSquareStyles = { ...(this.state.squareStyles || {}) };
 
@@ -320,10 +340,10 @@ class Board extends Component {
           allowDrag={this.allowDrag} 
           showNotation={this.props.showNotation} 
           orientation={this.props.orientation === 'random' ? this.state.orientation : this.props.orientation}
-          calcWidth={this.props.calcWidth}
+          calcWidth={effectiveCalcWidth}
           onSquareClick={this.onSquareClick}
           onSquareRightClick={this.onSquareRightClick}
-          {...BOARD_THEMES[this.props.boardTheme || DEFAULT_THEME]}
+          {...stripPieceProps(BOARD_THEMES[this.props.boardTheme || DEFAULT_THEME])}
           />
         <div 
         id='movePrompt' >
