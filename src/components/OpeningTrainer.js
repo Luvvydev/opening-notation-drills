@@ -9,7 +9,10 @@ import "./OpeningTrainer.css";
 import { getStreakState, markLineCompletedTodayDetailed } from "../utils/streak";
 import { getActivityDays, markActivityToday, touchActivityToday } from "../utils/activityDays";
 import { calcWidth, X_SVG_DATA_URI, pickRandomLineId, splitMovesText, validateSanMoves, countMovesForSide, countDoneMovesForSide, groupLines } from "./openingTrainer/otUtils";
-import { loadProgress, saveProgress, loadSettings, saveSettings, loadCustomLines, saveCustomLines, makeCustomId, ensureOpening, getLineStats, isCompleted } from "./openingTrainer/otStorage";
+import { getOrderedLineIds } from "../utils/lineIndex";
+import { pickNextPracticeLineId, pickNextLearnLineId } from "./openingTrainer/practicePicker";
+
+import { loadProgress, saveProgress, loadLearnProgress, saveLearnProgress, loadSettings, saveSettings, loadCustomLines, saveCustomLines, makeCustomId, ensureOpening, getLineStats, isCompleted, ensureLearnOpening, getLearnLineStats } from "./openingTrainer/otStorage";
 import OpeningTrainerCustomModal from "./openingTrainer/OpeningTrainerCustomModal";
 import OpeningTrainerConfetti from "./openingTrainer/OpeningTrainerConfetti";
 import { db } from "../firebase";
@@ -52,6 +55,7 @@ class OpeningTrainer extends Component {
     this._streakToastTimer = null;
 
     const progress = loadProgress();
+    const learnProgress = loadLearnProgress();
     const settings = loadSettings(DEFAULT_THEME);
 
     const drillStats = this.loadDrillStats();
@@ -59,6 +63,9 @@ class OpeningTrainer extends Component {
     this.state = {
       openingKey: firstSetKey,
       lineId: firstId,
+      sessionLineId: null,
+      practiceForceRepeat: false,
+      prevPracticeLineId: null,
       linePicker: "random",
       gameMode: "learn",
       modePanelVisible: true,
@@ -75,6 +82,8 @@ class OpeningTrainer extends Component {
       confettiActive: false,
       wrongAttempt: null,
       progress: progress,
+      learnProgress: learnProgress,
+      learnForceRepeat: false,
       showHint: false,
       settingsOpen: false,
       lineMenuOpen: false,
@@ -612,6 +621,9 @@ saveCustomModal = () => {
       {
         fen: "start",
         stepIndex: 0,
+      viewing: false,
+      viewIndex: 0,
+      viewFen: "start",
         completed: false,
         mistakeUnlocked: keepUnlocked ? this.state.mistakeUnlocked : false,
         lastMistake: null,
@@ -626,7 +638,7 @@ saveCustomModal = () => {
       },
       () => {
         this._countedSeenForRun = false;
-        this.bumpSeen();
+        this.bumpSeenForMode();
         this.playAutoMovesIfNeeded();
       }
     );
@@ -639,7 +651,93 @@ saveCustomModal = () => {
     this.setState(
       {
         lineId: nextId,
+        sessionLineId: nextId,
+        practiceForceRepeat: false,
         linePicker: "random",
+        mistakeUnlocked: false,
+        lastMistake: null,
+        completed: false,
+        wrongAttempt: null,
+        showHint: false,
+        lastMove: null,
+        userHasPlayedThisLine: false,
+        modePanelVisible: true,
+        helpUsed: false,
+        drillRunDead: false
+      },
+      () => {
+        const mode = this.state.gameMode || "learn";
+        if (mode === "practice" && this.state.linePicker === "random") {
+          this.startPracticeLine({ reason: "next" });
+          return;
+        }
+        if (mode === "learn" && this.state.linePicker === "random") {
+          this.startLearnLine({ reason: "next" });
+          return;
+        }
+        this.resetLine(false);
+      }
+    );
+  };
+
+
+
+nextLine = () => {
+  const mode = this.state.gameMode || "learn";
+
+  // For congruent modes, Next means "pick the next line in the current mode"
+  if (this.state.linePicker === "random") {
+    if (mode === "practice") {
+      this.startPracticeLine({ reason: "next_button" });
+      return;
+    }
+    if (mode === "learn") {
+      this.startLearnLine({ reason: "next_button" });
+      return;
+    }
+    // drill falls through to random selection
+  }
+
+  this.startRandomLine();
+};
+
+
+
+  startPracticeLine = (opts) => {
+    const _reason = opts && opts.reason ? String(opts.reason) : "";
+    if (_reason) {
+      // reserved for future analytics hooks
+    }
+    const openingKey = this.state.openingKey;
+    const lineIdsRaw = getOrderedLineIds(openingKey);
+    const lineIds = (lineIdsRaw && lineIdsRaw.length) ? lineIdsRaw : this.getLines().map((l) => l.id);
+    const shouldExcludeRecent = (_reason === "clean_complete" || _reason === "next_button")
+      && !this.state.practiceForceRepeat;
+
+    const excludeLineIds = shouldExcludeRecent
+      ? [this.state.lineId, this.state.prevPracticeLineId].filter(Boolean).map(String)
+      : [];
+
+    const nextId = pickNextPracticeLineId({
+      openingKey,
+      lineIds,
+      progress: this.state.progress,
+      getLineStats,
+      lastLineId: this.state.lineId,
+      forceRepeatLineId: this.state.practiceForceRepeat ? this.state.lineId : null,
+      excludeLineIds
+    });
+
+    const safeNextId = nextId || (lineIds && lineIds.length ? lineIds[0] : null);
+    if (!safeNextId) return;
+
+    this.setState(
+      {
+        lineId: safeNextId,
+        sessionLineId: safeNextId,
+        linePicker: "random",
+        practiceForceRepeat: false,
+        prevPracticeLineId: this.state.lineId,
         mistakeUnlocked: false,
         lastMistake: null,
         completed: false,
@@ -657,6 +755,49 @@ saveCustomModal = () => {
     );
   };
 
+  startLearnLine = (opts) => {
+    const _reason = opts && opts.reason ? String(opts.reason) : "";
+    if (_reason) {
+      // reserved for future analytics hooks
+    }
+
+    const openingKey = this.state.openingKey;
+    const lineIdsRaw = getOrderedLineIds(openingKey);
+    const lineIds = (lineIdsRaw && lineIdsRaw.length) ? lineIdsRaw : this.getLines().map((l) => l.id);
+    const nextId = pickNextLearnLineId({
+      openingKey,
+      lineIds,
+      progress: this.state.learnProgress,
+      getLineStats: getLearnLineStats,
+      lastLineId: this.state.lineId,
+      forceRepeatLineId: this.state.learnForceRepeat ? this.state.lineId : null
+    });
+
+    const safeNextId = nextId || (lineIds && lineIds.length ? lineIds[0] : null);
+    if (!safeNextId) return;
+
+    this.setState(
+      {
+        lineId: safeNextId,
+        sessionLineId: safeNextId,
+        linePicker: "random",
+        learnForceRepeat: false,
+        mistakeUnlocked: false,
+        lastMistake: null,
+        completed: false,
+        wrongAttempt: null,
+        showHint: false,
+        lastMove: null,
+        userHasPlayedThisLine: false,
+        modePanelVisible: true,
+        helpUsed: false,
+        drillRunDead: false
+      },
+      () => {
+        this.resetLine(false);
+      }
+    );
+  };
   startLine = () => {
     this.resetLine(true);
   };
@@ -670,7 +811,35 @@ saveCustomModal = () => {
     if (this.maybeRedirectForLockedOpening(nextKey)) return;
     const nextSet = OPENING_SETS[nextKey] || OPENING_SETS.london;
     const nextLines = nextSet.lines || [];
-    const nextId = pickRandomLineId(nextLines, null) || (nextLines[0] ? nextLines[0].id : "");
+    
+const orderedIdsRaw = getOrderedLineIds(nextKey);
+const orderedIds = (orderedIdsRaw && orderedIdsRaw.length) ? orderedIdsRaw : nextLines.map((l) => l.id);
+
+let nextId = "";
+
+if (this.state.linePicker === "random" && this.state.gameMode === "practice") {
+  nextId = pickNextPracticeLineId({
+    openingKey: nextKey,
+    lineIds: orderedIds,
+    progress: this.state.progress,
+    getLineStats,
+    lastLineId: null,
+    forceRepeatLineId: null
+  }) || "";
+} else if (this.state.linePicker === "random" && this.state.gameMode === "learn") {
+  nextId = pickNextLearnLineId({
+    openingKey: nextKey,
+    lineIds: orderedIds,
+    progress: this.state.learnProgress,
+    getLineStats: getLearnLineStats,
+    lastLineId: null,
+    forceRepeatLineId: null
+  }) || "";
+} else {
+  nextId = pickRandomLineId(nextLines, null) || "";
+}
+
+if (!nextId) nextId = nextLines[0] ? nextLines[0].id : "";
 
     this.setState(
       {
@@ -700,7 +869,16 @@ saveCustomModal = () => {
     if (val === "__divider__") return;
 
     if (val === "random") {
-      this.setState({ linePicker: "random" }, () => {
+      this.setState({ linePicker: "random", practiceForceRepeat: false }, () => {
+        const mode = this.state.gameMode || "learn";
+        if (mode === "practice") {
+          this.startPracticeLine({ reason: "picker_random" });
+          return;
+        }
+        if (mode === "learn") {
+          this.startLearnLine({ reason: "picker_random" });
+          return;
+        }
         this.startRandomLine();
       });
       return;
@@ -710,6 +888,9 @@ saveCustomModal = () => {
       {
         linePicker: val,
         lineId: val,
+        sessionLineId: val,
+        practiceForceRepeat: false,
+        prevPracticeLineId: this.state.lineId,
         mistakeUnlocked: false,
         lastMistake: null,
         completed: false,
@@ -738,6 +919,7 @@ saveCustomModal = () => {
     progress.openings[openingKey].lastPlayedAt = Date.now();
     const s = getLineStats(progress, openingKey, lineId);
     s.timesSeen += 1;
+    s.lastSeenAt = Date.now();
 
     saveProgress(progress);
     this._countedSeenForRun = true;
@@ -752,8 +934,16 @@ saveCustomModal = () => {
     const progress = { ...this.state.progress };
     const s = getLineStats(progress, openingKey, lineId);
     s.lastResult = "fail";
+    s.timesFailed = (Number(s.timesFailed) || 0) + 1;
+    s.lastFailedAt = Date.now();
     saveProgress(progress);
-    this.setState({ progress });
+
+    const patch = { progress };
+    if ((this.state.gameMode || "learn") === "practice") {
+      patch.practiceForceRepeat = true;
+    }
+
+    this.setState(patch);
   };
 
   bumpCompleted = (wasClean) => {
@@ -768,6 +958,7 @@ saveCustomModal = () => {
 
     s.timesCompleted += 1;
     s.lastResult = wasClean ? "success" : "fail";
+    s.lastSeenAt = Date.now();
 
     o.totalCompleted = (o.totalCompleted || 0) + 1;
     o.completedToday = (o.completedToday || 0) + 1;
@@ -779,11 +970,100 @@ saveCustomModal = () => {
       o.bestStreak = Math.max(o.bestStreak || 0, o.streak);
     } else {
       o.streak = 0;
+      s.timesFailed = (Number(s.timesFailed) || 0) + 1;
+      s.lastFailedAt = Date.now();
     }
 
     saveProgress(progress);
     this.setState({ progress });
   };
+
+  bumpLearnSeen = () => {
+    if (this._countedSeenForRun) return;
+    const openingKey = this.state.openingKey;
+    const lineId = this.state.lineId;
+    if (!openingKey || !lineId) return;
+
+    const learnProgress = { ...this.state.learnProgress };
+    ensureLearnOpening(learnProgress, openingKey);
+    learnProgress.openings[openingKey].lastPlayedAt = Date.now();
+
+    const s = getLearnLineStats(learnProgress, openingKey, lineId);
+    s.timesSeen += 1;
+    s.lastSeenAt = Date.now();
+
+    saveLearnProgress(learnProgress);
+    this._countedSeenForRun = true;
+    this.setState({ learnProgress });
+  };
+
+  bumpLearnMistake = () => {
+    const openingKey = this.state.openingKey;
+    const lineId = this.state.lineId;
+    if (!openingKey || !lineId) return;
+
+    const learnProgress = { ...this.state.learnProgress };
+    const s = getLearnLineStats(learnProgress, openingKey, lineId);
+    s.lastResult = "fail";
+    s.timesFailed = (Number(s.timesFailed) || 0) + 1;
+    s.lastFailedAt = Date.now();
+
+    saveLearnProgress(learnProgress);
+    this.setState({ learnProgress, learnForceRepeat: true });
+  };
+
+  bumpLearnCompleted = (wasClean) => {
+    const openingKey = this.state.openingKey;
+    const lineId = this.state.lineId;
+    if (!openingKey || !lineId) return;
+
+    const learnProgress = { ...this.state.learnProgress };
+    ensureLearnOpening(learnProgress, openingKey);
+    const s = getLearnLineStats(learnProgress, openingKey, lineId);
+
+    s.timesCompleted += 1;
+    s.lastResult = wasClean ? "success" : "fail";
+    s.lastSeenAt = Date.now();
+
+    if (wasClean) {
+      s.timesClean += 1;
+    }
+
+    saveLearnProgress(learnProgress);
+    this.setState({ learnProgress });
+  };
+
+  bumpSeenForMode = () => {
+    const mode = this.state.gameMode || "learn";
+    if (mode === "drill") return;
+    if (mode === "learn") {
+      this.bumpLearnSeen();
+    } else {
+      this.bumpSeen();
+    }
+  };
+
+  bumpMistakeForMode = () => {
+    const mode = this.state.gameMode || "learn";
+    if (mode === "drill") return;
+    if (mode === "learn") {
+      this.bumpLearnMistake();
+    } else {
+      this.bumpMistake();
+    }
+  };
+
+  bumpCompletedForMode = (wasClean) => {
+    const mode = this.state.gameMode || "learn";
+    if (mode === "drill") return;
+    if (mode === "learn") {
+      this.bumpLearnCompleted(wasClean);
+    } else {
+      this.bumpCompleted(wasClean);
+    }
+  };
+
+
 
   playAutoMovesIfNeeded = () => {
     const line = this.getLine();
@@ -839,7 +1119,25 @@ onCompletedLine = () => {
   const mode = this.state.gameMode || "learn";
 
   const wasClean = !this.state.mistakeUnlocked && !this.state.helpUsed;
-  this.bumpCompleted(wasClean);
+  this.bumpCompletedForMode(wasClean);
+
+  if (mode === "practice" && !wasClean) {
+    // Practice still advances, but unclean completions will be prioritized again soon.
+    this.setState({ modePanelVisible: true });
+  }
+
+  if (mode === "learn" && !wasClean) {
+    // Learn repeats until clean completion.
+    this.setState({ learnForceRepeat: true, modePanelVisible: true });
+
+    if (this._autoNextTimer) clearTimeout(this._autoNextTimer);
+    this._autoNextTimer = setTimeout(() => {
+      this.resetLine(false);
+      this.playAutoMovesIfNeeded();
+    }, 700);
+
+    return;
+  }
 
   if (mode === "drill") {
     const nextStreak = this.state.drillRunDead ? 0 : (Number(this.state.drillStreak) || 0) + 1;
@@ -895,12 +1193,17 @@ onCompletedLine = () => {
     this.setState({ confettiActive: false });
   }
 
-  if (this.state.linePicker === "random") {
-    if (mode === "practice" || mode === "drill") {
-      this._autoNextTimer = setTimeout(() => {
-        this.startRandomLine();
-      }, 900);
-    }
+  if (mode === "practice") {
+    this._autoNextTimer = setTimeout(() => {
+      this.startPracticeLine({ reason: "clean_complete" });
+    }, 900);
+    return;
+  }
+
+  if (mode === "drill") {
+    this._autoNextTimer = setTimeout(() => {
+      this.startRandomLine();
+    }, 900);
   }
 };
 
@@ -934,7 +1237,7 @@ onCompletedLine = () => {
     if (playedSAN !== expected) {
       this.playSfx("illegal");
 
-      this.bumpMistake();
+      this.bumpMistakeForMode();
       this.game.undo();
 
       if (mode === "drill") {
@@ -1251,13 +1554,18 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
         legalTargets: []
       },
       () => {
+        if (mode === "practice" && this.state.linePicker === "random") {
+          this.startPracticeLine({ reason: "mode_enter" });
+          return;
+        }
+        if (mode === "learn" && this.state.linePicker === "random") {
+          this.startLearnLine({ reason: "mode_enter" });
+          return;
+        }
         this.resetLine(false);
       }
     );
-  };
-
-
-  // ---- Drill stats + keys (localStorage + optional Firestore) ----
+  };// ---- Drill stats + keys (localStorage + optional Firestore) ----
   getTodayKey = () => {
     const d = new Date();
     const y = d.getFullYear();
@@ -1375,7 +1683,7 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
           type="button"
         >
           <div className="ot-mode-card-title"><span role="img" aria-label="learn">📘</span> Learn</div>
-          <div className="ot-mode-card-sub">Explanations on. No auto next.</div>
+          <div className="ot-mode-card-sub">Explanations on. Repeat until clean.</div>
         </button>
 
         <button
@@ -1625,7 +1933,7 @@ render() {
             Restart current line
           </button>
 
-          <button className="ot-button" onClick={this.startRandomLine}>
+          <button className="ot-button" onClick={this.nextLine}>
             Next
           </button>
 
@@ -1813,11 +2121,11 @@ render() {
 
                   <button
                     className="ot-button ot-button-small ot-button-dock"
-                    onClick={this.startRandomLine}
+                    onClick={this.nextLine}
                     disabled={this.state.linePicker !== "random"}
                     title={
                       this.state.linePicker === "random"
-                        ? "Pick a new random line"
+                        ? "Pick the next line"
                         : "Switch to Random line to use this"
                     }
                   >
