@@ -685,19 +685,19 @@ saveCustomModal = () => {
 nextLine = () => {
   const mode = this.state.gameMode || "learn";
 
-  // For congruent modes, Next means "pick the next line in the current mode"
-  if (this.state.linePicker === "random") {
-    if (mode === "practice") {
-      this.startPracticeLine({ reason: "next_button" });
-      return;
-    }
-    if (mode === "learn") {
-      this.startLearnLine({ reason: "next_button" });
-      return;
-    }
-    // drill falls through to random selection
+  // Practice: Next always advances to the next practice-picked line
+  if (mode === "practice") {
+    this.startPracticeLine({ reason: "next_button" });
+    return;
   }
 
+  // Learn: only use the learn picker when Random is selected
+  if (this.state.linePicker === "random" && mode === "learn") {
+    this.startLearnLine({ reason: "next_button" });
+    return;
+  }
+
+  // Drill and fixed-line selections fall back to random selection
   this.startRandomLine();
 };
 
@@ -767,8 +767,8 @@ nextLine = () => {
     const nextId = pickNextLearnLineId({
       openingKey,
       lineIds,
-      progress: this.state.learnProgress,
-      getLineStats: getLearnLineStats,
+      learnProgress: this.state.learnProgress,
+      getLearnLineStats: getLearnLineStats,
       lastLineId: this.state.lineId,
       forceRepeatLineId: this.state.learnForceRepeat ? this.state.lineId : null
     });
@@ -830,8 +830,8 @@ if (this.state.linePicker === "random" && this.state.gameMode === "practice") {
   nextId = pickNextLearnLineId({
     openingKey: nextKey,
     lineIds: orderedIds,
-    progress: this.state.learnProgress,
-    getLineStats: getLearnLineStats,
+    learnProgress: this.state.learnProgress,
+    getLearnLineStats: getLearnLineStats,
     lastLineId: null,
     forceRepeatLineId: null
   }) || "";
@@ -2122,11 +2122,11 @@ render() {
                   <button
                     className="ot-button ot-button-small ot-button-dock"
                     onClick={this.nextLine}
-                    disabled={this.state.linePicker !== "random"}
+                    disabled={this.state.gameMode === "drill" && this.state.linePicker !== "random"}
                     title={
-                      this.state.linePicker === "random"
-                        ? "Pick the next line"
-                        : "Switch to Random line to use this"
+                      this.state.gameMode === "drill" && this.state.linePicker !== "random"
+                        ? "Switch to Random line to use this"
+                        : "Pick the next line"
                     }
                   >
                     Next
@@ -2154,12 +2154,6 @@ render() {
                 </div>
 
                 <div className="ot-dock-right">
-                  {this.state.viewing ? (
-                    <button className="ot-mini-btn" onClick={this.viewLive} title="Jump back to current position">
-                      Live
-                    </button>
-                  ) : null}
-
                   <button
                     className="ot-icon-btn"
                     onClick={this.viewBack}

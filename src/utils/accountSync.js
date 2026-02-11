@@ -6,6 +6,7 @@ const LS_DAILY_STREAK_KEY = "chessdrills.daily_streak.v1";
 const LS_PROGRESS_KEY = "notation_trainer_opening_progress_v2";
 const LS_SETTINGS_KEY = "notation_trainer_opening_settings_v1";
 const LS_CUSTOM_REPS_KEY = "notation_trainer_custom_lines_v1";
+const LS_LEARN_PROGRESS_KEY = "notation_trainer_learn_progress_v1";
 const LS_ACTIVITY_DAYS_KEY = "chessdrills.activity_days.v1";
 
 function safeJsonParse(text, fallback) {
@@ -140,6 +141,59 @@ function mergeProgress(localRaw, remoteRaw) {
   return out;
 }
 
+
+function mergeLearnProgress(localRaw, remoteRaw) {
+  const l = asObj(localRaw);
+  const r = asObj(remoteRaw);
+
+  const out = { openings: {} };
+
+  const lOpenings = asObj(l.openings);
+  const rOpenings = asObj(r.openings);
+
+  const keys = new Set([...Object.keys(rOpenings), ...Object.keys(lOpenings)]);
+  keys.forEach((openingKey) => {
+    const lo = asObj(lOpenings[openingKey]);
+    const ro = asObj(rOpenings[openingKey]);
+
+    const outOpening = { lines: {}, lastPlayedAt: null };
+
+    // Prefer the latest lastPlayedAt timestamp (or keep null)
+    const lLast = lo.lastPlayedAt ? Number(lo.lastPlayedAt) : null;
+    const rLast = ro.lastPlayedAt ? Number(ro.lastPlayedAt) : null;
+    if (lLast != null || rLast != null) {
+      if (lLast == null) outOpening.lastPlayedAt = rLast;
+      else if (rLast == null) outOpening.lastPlayedAt = lLast;
+      else outOpening.lastPlayedAt = Math.max(lLast, rLast);
+    }
+
+    const lLines = asObj(lo.lines);
+    const rLines = asObj(ro.lines);
+    const lineIds = new Set([...Object.keys(rLines), ...Object.keys(lLines)]);
+
+    lineIds.forEach((lineId) => {
+      const a = asObj(rLines[lineId]);
+      const b = asObj(lLines[lineId]);
+
+      const merged = {
+        timesSeen: Math.max(Number(a.timesSeen) || 0, Number(b.timesSeen) || 0),
+        timesCompleted: Math.max(Number(a.timesCompleted) || 0, Number(b.timesCompleted) || 0),
+        timesClean: Math.max(Number(a.timesClean) || 0, Number(b.timesClean) || 0),
+        timesFailed: Math.max(Number(a.timesFailed) || 0, Number(b.timesFailed) || 0),
+        lastResult: (b.lastSeenAt && (!a.lastSeenAt || Number(b.lastSeenAt) > Number(a.lastSeenAt))) ? (b.lastResult || "") : (a.lastResult || ""),
+        lastSeenAt: Math.max(Number(a.lastSeenAt) || 0, Number(b.lastSeenAt) || 0) || null,
+        lastFailedAt: Math.max(Number(a.lastFailedAt) || 0, Number(b.lastFailedAt) || 0) || null
+      };
+
+      outOpening.lines[lineId] = merged;
+    });
+
+    out.openings[openingKey] = outOpening;
+  });
+
+  return out;
+}
+
 function mergeCustomReps(localRaw, remoteRaw) {
   const l = Array.isArray(localRaw) ? localRaw : [];
   const r = Array.isArray(remoteRaw) ? remoteRaw : [];
@@ -193,6 +247,7 @@ export async function syncAccountFromLocalAndCloud(user) {
   const localProgress = loadLS(LS_PROGRESS_KEY, { lines: {}, openings: {} });
   const localSettings = loadLS(LS_SETTINGS_KEY, {});
   const localCustomReps = loadLS(LS_CUSTOM_REPS_KEY, []);
+  const localLearnProgress = loadLS(LS_LEARN_PROGRESS_KEY, { openings: {} });
   const localActivityDays = loadLS(LS_ACTIVITY_DAYS_KEY, {});
 
   // Load remote
@@ -203,6 +258,7 @@ export async function syncAccountFromLocalAndCloud(user) {
   const remoteProgress = asObj(remote.progress);
   const remoteSettings = asObj(remote.settings);
   const remoteCustomReps = Array.isArray(remote.customReps) ? remote.customReps : [];
+  const remoteLearnProgress = asObj(remote.learnProgress);
   const remoteActivityDays = asObj(remote.activityDays);
 
   // Merge
@@ -210,6 +266,7 @@ export async function syncAccountFromLocalAndCloud(user) {
   const mergedProgress = mergeProgress(localProgress, remoteProgress);
   const mergedSettings = mergeSettings(localSettings, remoteSettings);
   const mergedCustomReps = mergeCustomReps(localCustomReps, remoteCustomReps);
+  const mergedLearnProgress = mergeLearnProgress(localLearnProgress, remoteLearnProgress);
   const mergedActivityDays = mergeActivityDays(localActivityDays, remoteActivityDays);
 
   // Write merged back to local
@@ -217,6 +274,7 @@ export async function syncAccountFromLocalAndCloud(user) {
   saveLS(LS_PROGRESS_KEY, mergedProgress);
   saveLS(LS_SETTINGS_KEY, mergedSettings);
   saveLS(LS_CUSTOM_REPS_KEY, mergedCustomReps);
+  saveLS(LS_LEARN_PROGRESS_KEY, mergedLearnProgress);
   saveLS(LS_ACTIVITY_DAYS_KEY, mergedActivityDays);
 
   // Update remote (also store profile fields here)
@@ -233,6 +291,7 @@ export async function syncAccountFromLocalAndCloud(user) {
       progress: mergedProgress,
       settings: mergedSettings,
       customReps: mergedCustomReps,
+      learnProgress: mergedLearnProgress,
       activityDays: mergedActivityDays,
       updatedAt: serverTimestamp()
     },

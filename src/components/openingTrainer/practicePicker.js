@@ -1,5 +1,8 @@
+
 // Weighted practice line selection.
 // Intentionally UI-agnostic. Expects per-line stats to live in progress via getLineStats().
+
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 function clamp01(x) {
   if (x <= 0) return 0;
@@ -9,8 +12,8 @@ function clamp01(x) {
 
 function weightedPick(items, weightFn) {
   let total = 0;
-  const weights = items.map((it) => {
-    const w = Math.max(0, Number(weightFn(it)) || 0);
+  const weights = items.map((it, idx) => {
+    const w = Math.max(0, Number(weightFn(it, idx)) || 0);
     total += w;
     return w;
   });
@@ -34,29 +37,24 @@ export function pickNextPracticeLineId({
   forceRepeatLineId,
   excludeLineIds
 }) {
-  const ids = Array.isArray(lineIds) ? lineIds.filter(Boolean) : [];
-  if (!openingKey || ids.length === 0) return null;
-  const excludes = Array.isArray(excludeLineIds) ? excludeLineIds.map(String).filter(Boolean) : [];
-  const canExclude = ids.length > 1 && excludes.length > 0;
-  const idsFiltered = canExclude ? ids.filter((id) => !excludes.includes(String(id))) : ids;
-  const idsToUse = (idsFiltered && idsFiltered.length) ? idsFiltered : ids;
+  const idsAll = Array.isArray(lineIds) ? lineIds.filter(Boolean) : [];
+  if (!openingKey || idsAll.length === 0) return null;
 
+  const exclude = Array.isArray(excludeLineIds) ? excludeLineIds.filter(Boolean).map(String) : [];
+  const excludeSet = new Set(exclude);
+  const ids = excludeSet.size > 0 ? idsAll.filter((id) => !excludeSet.has(String(id))) : idsAll;
 
-  // Hard rule: if you failed a line, it is the next line again.
   if (forceRepeatLineId) return forceRepeatLineId;
 
   const now = Date.now();
-  const DAY_MS = 24 * 60 * 60 * 1000;
 
-  // Build scored buckets using persisted per-line stats.
-  const scored = idsToUse.map((id) => {
+  const scored = ids.map((id) => {
     const s = getLineStats(progress, openingKey, id);
     const timesSeen = Number(s.timesSeen) || 0;
     const timesCompleted = Number(s.timesCompleted) || 0;
     const timesClean = Number(s.timesClean) || 0;
     const timesFailed = Number(s.timesFailed) || 0;
     const lastFailedAt = Number(s.lastFailedAt) || 0;
-    const lastSeenAt = Number(s.lastSeenAt) || 0;
 
     const accuracy = timesCompleted > 0 ? (timesClean / timesCompleted) : 0;
     const lowAccuracy = 1 - clamp01(accuracy);
@@ -70,7 +68,6 @@ export function pickNextPracticeLineId({
       timesClean,
       timesFailed,
       lastFailedAt,
-      lastSeenAt,
       failedRecently,
       lowAccuracy
     };
@@ -78,7 +75,6 @@ export function pickNextPracticeLineId({
 
   const unseen = scored.filter((x) => x.timesSeen <= 0).map((x) => x.id);
   if (unseen.length > 0) {
-    // Unseen lines first: pick one, but do not immediately repeat the last clean line.
     const pool = unseen.filter((id) => id !== lastLineId);
     const choice = pool.length > 0 ? pool[Math.floor(Math.random() * pool.length)] : unseen[0];
     return choice || null;
@@ -90,41 +86,92 @@ export function pickNextPracticeLineId({
     .map((x) => x.id);
 
   if (recentlyFailed.length > 0) {
-    // Recent failures next: bias to the most recent, but allow some variety.
     const pool = recentlyFailed.slice(0, Math.min(6, recentlyFailed.length));
     const pick = weightedPick(pool, (_id, idx) => 10 - idx);
     return pick || recentlyFailed[0] || null;
   }
 
-  // Otherwise: weighted by low accuracy and failure count.
   const pick = weightedPick(scored, (x) => {
     let w = 1;
-
-    // Emphasize problem lines (but don't get stuck repeating two lines forever).
-    w += x.lowAccuracy * 12;
-    w += Math.min(10, x.timesFailed) * 2;
-
-    // Mildly prefer lines you have not done much.
+    w += x.lowAccuracy * 20;
+    w += Math.min(10, x.timesFailed) * 3;
     w += 1 / (1 + x.timesSeen);
-
-    // Avoid immediate repeats after success.
-    if (x.id === lastLineId) w *= 0.08;
-
-    // Cooldown: strongly de-prioritize lines seen very recently (unless they were failed recently).
-    if (!x.failedRecently && x.lastSeenAt && (now - x.lastSeenAt) < (3 * 60 * 1000)) {
-      w *= 0.15;
-    }
-
+    if (x.id === lastLineId) w *= 0.05;
     return w;
   });
 
   return (pick && pick.id) || null;
 }
 
+export function pickNextLearnLineId({
+  openingKey,
+  lineIds,
+  learnProgress,
+  getLearnLineStats,
+  lastLineId,
+  forceRepeatLineId
+}) {
+  if (!openingKey) return null;
 
-// Learn selection uses the same backbone as practice, but slightly favors unseen lines
-// and recently failed lines to keep sessions feeling progressive.
-export function pickNextLearnLineId(opts) {
-  // Reuse the practice picker. Learn's "force repeat" is handled by passing forceRepeatLineId.
-  return pickNextPracticeLineId(opts);
+  const ids = Array.isArray(lineIds) ? lineIds.filter(Boolean) : [];
+  if (ids.length === 0) return null;
+
+  if (forceRepeatLineId) return forceRepeatLineId;
+
+  const now = Date.now();
+
+  const scored = ids.map((id) => {
+    const s = getLearnLineStats(learnProgress, openingKey, id) || {};
+
+    const timesSeen = Number(s.timesSeen) || 0;
+    const timesCompleted = Number(s.timesCompleted) || 0;
+    const timesClean = Number(s.timesClean) || 0;
+    const timesFailed = Number(s.timesFailed) || 0;
+    const lastFailedAt = Number(s.lastFailedAt) || 0;
+
+    const accuracy = timesCompleted > 0 ? (timesClean / timesCompleted) : 0;
+    const lowAccuracy = 1 - clamp01(accuracy);
+
+    const failedRecently = lastFailedAt > 0 && (now - lastFailedAt) <= DAY_MS;
+
+    return {
+      id,
+      timesSeen,
+      timesCompleted,
+      timesClean,
+      timesFailed,
+      lastFailedAt,
+      failedRecently,
+      lowAccuracy
+    };
+  });
+
+  const unseen = scored.filter((x) => x.timesSeen <= 0).map((x) => x.id);
+  if (unseen.length > 0) {
+    const pool = unseen.filter((id) => id !== lastLineId);
+    const choice = pool.length > 0 ? pool[Math.floor(Math.random() * pool.length)] : unseen[0];
+    return choice || null;
+  }
+
+  const recentlyFailed = scored
+    .filter((x) => x.failedRecently)
+    .sort((a, b) => (b.lastFailedAt || 0) - (a.lastFailedAt || 0))
+    .map((x) => x.id);
+
+  if (recentlyFailed.length > 0) {
+    const pool = recentlyFailed.filter((id) => id !== lastLineId);
+    const choice = pool.length > 0 ? pool[0] : recentlyFailed[0];
+    return choice || null;
+  }
+
+  const pick = weightedPick(scored, (x) => {
+    let w = 1;
+    w += x.lowAccuracy * 20;
+    w += Math.min(10, x.timesFailed) * 3;
+    w += 1 / (1 + x.timesSeen);
+    if (x.id === lastLineId) w *= 0.05;
+    return w;
+  });
+
+  return (pick && pick.id) || null;
 }

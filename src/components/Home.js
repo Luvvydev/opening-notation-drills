@@ -7,6 +7,7 @@ import { BOARD_THEMES, DEFAULT_THEME } from "../theme/boardThemes";
 import "./Home.css";
 
 const STORAGE_KEY = "notation_trainer_opening_progress_v2";
+const LEARN_STORAGE_KEY = "notation_trainer_learn_progress_v1";
 
 const OPENINGS = OPENING_CATALOG;
 
@@ -137,6 +138,21 @@ function _loadProgress() {
   }
 }
 
+
+function _loadLearnProgress() {
+  const empty = { openings: {} };
+  try {
+    const raw = window.localStorage.getItem(LEARN_STORAGE_KEY);
+    if (!raw) return empty;
+    const parsed = _safeJsonParse(raw, empty);
+    if (!parsed || typeof parsed !== "object") return empty;
+    if (!parsed.openings || typeof parsed.openings !== "object") parsed.openings = {};
+    return parsed;
+  } catch (_) {
+    return empty;
+  }
+}
+
 function _loadSettings() {
   const defaults = {
     showConfetti: true,
@@ -191,6 +207,7 @@ class Home extends Component {
     super(props);
 
     const progress = _loadProgress();
+    const learnProgress = _loadLearnProgress();
     const settings = _loadSettings();
 
     this.heroFrameRef = React.createRef();
@@ -209,7 +226,9 @@ class Home extends Component {
     this.state = {
       search: "",
       progress,
-      perOpening,
+      
+      learnProgress,
+perOpening,
       totalCompleted,
       totalLines,
       boardTheme: settings.boardTheme || DEFAULT_THEME,
@@ -307,7 +326,9 @@ startFirstAvailable = () => {
 
   for (const o of openings) {
     const p = progressOpenings[o.key] || {};
-    const ts = Number(p.lastPlayedAt) || 0;
+    const learnOpenings = (this.state.learnProgress && this.state.learnProgress.openings) || {};
+    const lp = learnOpenings[o.key] || {};
+    const ts = Math.max(Number(p.lastPlayedAt) || 0, Number(lp.lastPlayedAt) || 0);
     if (ts > bestTs) {
       bestTs = ts;
       best = o;
@@ -491,8 +512,11 @@ renderHeroBoard = () => {
     const getStatsFor = (o) =>
       this.state.perOpening[o.key] || { completed: 0, total: (o.lines && o.lines.length) || 0 };
 
-    const getLastPlayedAtFor = (o) =>
-      Number((progressOpenings[o.key] || {}).lastPlayedAt) || 0;
+    const getLastPlayedAtFor = (o) => {
+      const pTs = Number((progressOpenings[o.key] || {}).lastPlayedAt) || 0;
+      const lTs = Number(((this.state.learnProgress && this.state.learnProgress.openings && this.state.learnProgress.openings[o.key]) || {}).lastPlayedAt) || 0;
+      return Math.max(pTs, lTs);
+    };
 
     const isCompletedOpening = (o) => {
       const s = getStatsFor(o);

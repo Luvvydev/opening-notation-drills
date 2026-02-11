@@ -142,6 +142,10 @@ export function saveLearnProgress(progress) {
   try {
     window.localStorage.setItem(LEARN_STORAGE_KEY, JSON.stringify(progress || { openings: {} }));
   } catch (_) {}
+
+  try {
+    window.dispatchEvent(new Event("learnprogress:updated"));
+  } catch (_) {}
 }
 
 export function ensureLearnOpening(progress, openingKey) {
