@@ -109,12 +109,21 @@ export function pickNextLearnLineId({
   learnProgress,
   getLearnLineStats,
   lastLineId,
-  forceRepeatLineId
+  forceRepeatLineId,
+  excludeLineIds
 }) {
   if (!openingKey) return null;
 
-  const ids = Array.isArray(lineIds) ? lineIds.filter(Boolean) : [];
-  if (ids.length === 0) return null;
+  const idsAll = Array.isArray(lineIds) ? lineIds.filter(Boolean) : [];
+  if (idsAll.length === 0) return null;
+
+  const exclude = Array.isArray(excludeLineIds) ? excludeLineIds.filter(Boolean).map(String) : [];
+  const excludeSet = new Set(exclude);
+  let ids = excludeSet.size > 0 ? idsAll.filter((id) => !excludeSet.has(String(id))) : idsAll;
+
+  // If exclusions would leave us with nothing, fall back to the full pool.
+  // This prevents the caller fallback to lineIds[0], which can cause loops.
+  if (!ids || ids.length === 0) ids = idsAll;
 
   if (forceRepeatLineId) return forceRepeatLineId;
 
@@ -172,6 +181,13 @@ export function pickNextLearnLineId({
     if (x.id === lastLineId) w *= 0.05;
     return w;
   });
+
+  // If we still picked the same line and alternatives exist, force a different id.
+  // This makes Learn "Next" actually advance.
+  if (pick && pick.id && String(pick.id) === String(lastLineId) && scored.length > 1) {
+    const alt = scored.filter((x) => String(x.id) !== String(lastLineId));
+    if (alt.length > 0) return alt[0].id;
+  }
 
   return (pick && pick.id) || null;
 }

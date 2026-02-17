@@ -22,6 +22,107 @@ import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 const OPENING_SETS = CATALOG_OPENING_SETS;
 
 
+// ---- Learn shuffle bag (prevents repeating same few lines) ----
+const _learnBagKey = (openingKey) => `chessdrills.learn_bag.v1.${String(openingKey || "")}`;
+
+function _shuffleIds(ids) {
+  const a = Array.isArray(ids) ? ids.slice() : [];
+  for (let i = a.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const tmp = a[i];
+    a[i] = a[j];
+    a[j] = tmp;
+  }
+  return a;
+}
+
+function _loadLearnBag(openingKey) {
+  try {
+    const raw = window.localStorage.getItem(_learnBagKey(openingKey));
+    if (!raw) return null;
+    const obj = JSON.parse(raw);
+    if (!obj || !Array.isArray(obj.order)) return null;
+    const idx = Number(obj.idx) || 0;
+    return { order: obj.order.map(String), idx };
+  } catch (_) {
+    return null;
+  }
+}
+
+function _saveLearnBag(openingKey, bag) {
+  try {
+    window.localStorage.setItem(_learnBagKey(openingKey), JSON.stringify(bag || {}));
+  } catch (_) {}
+}
+
+function _sameIdSet(a, b) {
+  if (!Array.isArray(a) || !Array.isArray(b)) return false;
+  if (a.length !== b.length) return false;
+  const sa = a.map(String).slice().sort();
+  const sb = b.map(String).slice().sort();
+  for (let i = 0; i < sa.length; i += 1) {
+    if (sa[i] !== sb[i]) return false;
+  }
+  return true;
+}
+
+function _pickNextLearnFromBag({ openingKey, lineIds, excludeLineIds, lastLineId, forceRepeatLineId }) {
+  if (!openingKey) return null;
+  const idsAll = Array.isArray(lineIds) ? lineIds.filter(Boolean).map(String) : [];
+  if (idsAll.length === 0) return null;
+
+  if (forceRepeatLineId) return String(forceRepeatLineId);
+
+  const exclude = Array.isArray(excludeLineIds) ? excludeLineIds.filter(Boolean).map(String) : [];
+  const excludeSet = new Set(exclude);
+
+  let bag = _loadLearnBag(openingKey);
+  if (!bag || !_sameIdSet(bag.order, idsAll) || bag.order.length === 0) {
+    bag = { order: _shuffleIds(idsAll), idx: 0 };
+  }
+
+  // Try up to N picks from the bag to find a non-excluded line.
+  // If everything is excluded, we will fall back to allowing excluded lines.
+  const maxTries = bag.order.length;
+  let tries = 0;
+  let pick = null;
+
+  while (tries < maxTries) {
+    const i = bag.idx % bag.order.length;
+    const candidate = bag.order[i];
+    bag.idx = i + 1;
+    tries += 1;
+
+    if (excludeSet.size > 0 && excludeSet.has(String(candidate))) continue;
+    if (lastLineId && String(candidate) === String(lastLineId) && bag.order.length > 1) continue;
+
+    pick = candidate;
+    break;
+  }
+
+  // If we couldn't find a non-excluded candidate, allow excluded but still avoid immediate repeat if possible.
+  if (!pick) {
+    for (let k = 0; k < bag.order.length; k += 1) {
+      const candidate = bag.order[(bag.idx + k) % bag.order.length];
+      if (lastLineId && String(candidate) === String(lastLineId) && bag.order.length > 1) continue;
+      pick = candidate;
+      bag.idx = (bag.idx + k + 1) % bag.order.length;
+      break;
+    }
+  }
+
+  // If we've effectively exhausted the bag, reshuffle for the next cycle.
+  if (bag.idx >= bag.order.length) {
+    bag.order = _shuffleIds(idsAll);
+    bag.idx = 0;
+  }
+
+  _saveLearnBag(openingKey, bag);
+  return pick || null;
+}
+
+// ---- End Learn shuffle bag ----
+
 class OpeningTrainer extends Component {
   constructor(props) {
     super(props);
@@ -66,6 +167,8 @@ class OpeningTrainer extends Component {
       sessionLineId: null,
       practiceForceRepeat: false,
       prevPracticeLineId: null,
+      prevLearnLineId: null,
+      learnRecentLineIds: [],
       linePicker: "random",
       gameMode: "learn",
       modePanelVisible: true,
@@ -105,11 +208,21 @@ class OpeningTrainer extends Component {
       streakToastText: "",
       lastMove: null, // { from, to }
       memberGateOpen: false,
-      memberGateMode: ""
+      memberGateMode: "",
+      isMobile: false,
+      mobileBoardSize: null,
+      mobileHeaderMenu: null,
+      learnRewardPending: false,
+      learnNextReady: false
     
     };
-
-    this._countedSeenForRun = false;
+    
+    // Mobile layout measurement refs (used only when isMobile)
+    this._mobileTopbarRef = React.createRef();
+    this._mobilePillsRef = React.createRef();
+    this._mobileCoachRef = React.createRef();
+    this._mobileDockRef = React.createRef();
+this._countedSeenForRun = false;
 
     const base = process.env.PUBLIC_URL || "";
     this.sfx = {
@@ -209,6 +322,8 @@ class OpeningTrainer extends Component {
   componentDidMount() {
     window.addEventListener("mousedown", this.onWindowClick);
     window.addEventListener("keydown", this.onKeyDown);
+    window.addEventListener("resize", this._onResizeMobileLayout);
+    this._onResizeMobileLayout();
     if (this.maybeRedirectForLockedOpening(this.state.openingKey)) return;
     this._backfillActivityFromStreak();
     this.resetLine(false);
@@ -228,6 +343,21 @@ class OpeningTrainer extends Component {
     if (prevState.openingKey !== this.state.openingKey) {
       this.maybeRedirectForLockedOpening(this.state.openingKey);
     }
+ 
+    // Mobile board sizing depends on actual rendered heights (coach text can change as you advance).
+    if (this.state.isMobile) {
+      const lineChanged = prevState.lineId !== this.state.lineId;
+      const stepChanged = prevState.stepIndex !== this.state.stepIndex;
+      const menuChanged = prevState.mobileHeaderMenu !== this.state.mobileHeaderMenu;
+      if (lineChanged || stepChanged || menuChanged) {
+        try {
+          window.requestAnimationFrame(() => this._onResizeMobileLayout());
+        } catch (_) {
+          // ignore
+        }
+      }
+    }
+
   }
 
 componentWillUnmount() {
@@ -236,17 +366,85 @@ componentWillUnmount() {
     if (this._streakToastTimer) clearTimeout(this._streakToastTimer);
     window.removeEventListener("mousedown", this.onWindowClick);
     window.removeEventListener("keydown", this.onKeyDown);
+    window.removeEventListener("resize", this._onResizeMobileLayout);
   }
 
+  _mobileBreakpointPx = 560;
+
+  _isMobileViewport = () => {
+    try {
+      return typeof window !== "undefined" && window.innerWidth <= this._mobileBreakpointPx;
+    } catch (_) {
+      return false;
+    }
+  };
+
+  _computeMobileBoardSize = () => {
+    try {
+      if (typeof window === "undefined") return null;
+
+      const w = Number(window.innerWidth) || 0;
+      const h = Number(window.innerHeight) || 0;
+
+      // Measure real rendered heights so the board can take the remaining space.
+      const getH = (ref) => {
+        try {
+          const el = ref && ref.current;
+          if (!el) return 0;
+          const r = el.getBoundingClientRect();
+          return Math.ceil(r.height || 0);
+        } catch (_) {
+          return 0;
+        }
+      };
+
+      const topbarH = getH(this._mobileTopbarRef);
+      const pillsH = getH(this._mobilePillsRef);
+      const coachH = getH(this._mobileCoachRef);
+      const dockH = getH(this._mobileDockRef) || 56;
+
+      // Keep a little slack for borders and iOS safe areas.
+      const safety = 10 + (typeof window !== "undefined" ? 0 : 0);
+
+      const availH = Math.max(0, h - topbarH - pillsH - coachH - dockH - safety);
+      const stageSidePad = 20; // matches .ot-mobile-stage padding: 0 10px
+      const boardPad = 6; // prevents piece clipping against rounded containers
+      const availW = Math.max(0, w - stageSidePad - boardPad * 2);
+      const availH2 = Math.max(0, availH - boardPad * 2);
+
+      const size = Math.floor(Math.max(0, Math.min(availW, availH2)));
+      if (!size) return null;
+
+      return size;
+    } catch (_) {
+      return null;
+    }
+  };
+
+  _onResizeMobileLayout = () => {
+    const isMobile = this._isMobileViewport();
+    const mobileBoardSize = isMobile ? this._computeMobileBoardSize() : null;
+
+    if (this.state.isMobile === isMobile && this.state.mobileBoardSize === mobileBoardSize) return;
+
+    this.setState({ isMobile, mobileBoardSize });
+  };
+
   onWindowClick = (e) => {
-    if (!this.state.settingsOpen && !this.state.lineMenuOpen) return;
+    if (!this.state.settingsOpen && !this.state.lineMenuOpen && !this.state.mobileHeaderMenu) return;
 
     const t = e && e.target;
 
+    // Clicking pill buttons should not auto-close (otherwise open then instantly close).
+    try {
+      if (t && t.closest && t.closest(".ot-pill-btn")) return;
+    } catch (_) {}
+
     if (this._settingsAnchorEl && t && this._settingsAnchorEl.contains(t)) return;
     if (this._linePickerAnchorEl && t && this._linePickerAnchorEl.contains(t)) return;
+    if (this._desktopMenuEl && t && this._desktopMenuEl.contains(t)) return;
 
-    this.setState({ settingsOpen: false, lineMenuOpen: false });
+    this.setState({ settingsOpen: false, lineMenuOpen: false, mobileHeaderMenu: null });
   };
 
   onKeyDown = (e) => {
@@ -546,6 +744,50 @@ saveCustomModal = () => {
     } catch (_) {}
   };
 
+
+  goHome = () => {
+    // Close any open mobile menus before navigating.
+    if (this.state && (this.state.mobileHeaderMenu || this.state.lineMenuOpen || this.state.settingsOpen)) {
+      this.setState({ mobileHeaderMenu: null, lineMenuOpen: false, settingsOpen: false });
+    }
+
+    // Prefer router navigation if available.
+    if (this.props && typeof this.props.navigate === "function") {
+      this.props.navigate("/");
+      return;
+    }
+    if (this.props && this.props.history && typeof this.props.history.push === "function") {
+      this.props.history.push("/");
+      return;
+    }
+
+    // HashRouter fallback (GitHub Pages).
+    try {
+      window.location.hash = "/";
+      return;
+    } catch (_) {}
+
+    // Last resort.
+    try {
+      window.location.href = "#/";
+    } catch (_) {}
+  };
+
+
+  closeMobileHeaderMenu = () => {
+    if (!this.state.mobileHeaderMenu) return;
+    this.setState({ mobileHeaderMenu: null });
+  };
+
+  toggleMobileHeaderMenu = (which) => {
+    const next = this.state.mobileHeaderMenu === which ? null : which;
+    this.setState({
+      mobileHeaderMenu: next,
+      lineMenuOpen: false,
+      settingsOpen: false
+    });
+  };
+
   getFenAtIndex = (index) => {
     const line = this.getLine();
     if (!line) return "start";
@@ -634,7 +876,9 @@ saveCustomModal = () => {
         legalTargets: [],
         userHasPlayedThisLine: false,
         modePanelVisible: true,
-        helpUsed: false
+        helpUsed: false,
+        learnRewardPending: false,
+        learnNextReady: false
       },
       () => {
         this._countedSeenForRun = false;
@@ -747,6 +991,8 @@ nextLine = () => {
         userHasPlayedThisLine: false,
         modePanelVisible: true,
         helpUsed: false,
+        learnRewardPending: false,
+        learnNextReady: false,
         drillRunDead: false
       },
       () => {
@@ -764,14 +1010,34 @@ nextLine = () => {
     const openingKey = this.state.openingKey;
     const lineIdsRaw = getOrderedLineIds(openingKey);
     const lineIds = (lineIdsRaw && lineIdsRaw.length) ? lineIdsRaw : this.getLines().map((l) => l.id);
-    const nextId = pickNextLearnLineId({
+    const shouldExcludeRecent = (_reason === "clean_complete" || _reason === "next_button")
+      && !this.state.learnForceRepeat;
+
+    const recent = Array.isArray(this.state.learnRecentLineIds) ? this.state.learnRecentLineIds : [];
+    const excludeLineIds = shouldExcludeRecent
+      ? [this.state.lineId, this.state.prevLearnLineId].concat(recent).filter(Boolean).map(String).slice(0, 6)
+      : [];
+
+    let nextId = _pickNextLearnFromBag({
       openingKey,
       lineIds,
-      learnProgress: this.state.learnProgress,
-      getLearnLineStats: getLearnLineStats,
+      excludeLineIds,
       lastLineId: this.state.lineId,
       forceRepeatLineId: this.state.learnForceRepeat ? this.state.lineId : null
     });
+
+    // Safety: if bag selection fails for any reason, fall back to weighted picker
+    if (!nextId) {
+      nextId = pickNextLearnLineId({
+        openingKey,
+        lineIds,
+        learnProgress: this.state.learnProgress,
+        getLearnLineStats: getLearnLineStats,
+        lastLineId: this.state.lineId,
+        forceRepeatLineId: this.state.learnForceRepeat ? this.state.lineId : null,
+        excludeLineIds
+      });
+    }
 
     const safeNextId = nextId || (lineIds && lineIds.length ? lineIds[0] : null);
     if (!safeNextId) return;
@@ -782,6 +1048,8 @@ nextLine = () => {
         sessionLineId: safeNextId,
         linePicker: "random",
         learnForceRepeat: false,
+        prevLearnLineId: this.state.lineId,
+        learnRecentLineIds: [this.state.lineId].concat(recent).filter(Boolean).map(String).slice(0, 6),
         mistakeUnlocked: false,
         lastMistake: null,
         completed: false,
@@ -791,6 +1059,8 @@ nextLine = () => {
         userHasPlayedThisLine: false,
         modePanelVisible: true,
         helpUsed: false,
+        learnRewardPending: false,
+        learnNextReady: false,
         drillRunDead: false
       },
       () => {
@@ -827,11 +1097,10 @@ if (this.state.linePicker === "random" && this.state.gameMode === "practice") {
     forceRepeatLineId: null
   }) || "";
 } else if (this.state.linePicker === "random" && this.state.gameMode === "learn") {
-  nextId = pickNextLearnLineId({
+  nextId = _pickNextLearnFromBag({
     openingKey: nextKey,
     lineIds: orderedIds,
-    learnProgress: this.state.learnProgress,
-    getLearnLineStats: getLearnLineStats,
+    excludeLineIds: [],
     lastLineId: null,
     forceRepeatLineId: null
   }) || "";
@@ -846,6 +1115,9 @@ if (!nextId) nextId = nextLines[0] ? nextLines[0].id : "";
         openingKey: nextKey,
         lineId: nextId,
         linePicker: "random",
+        prevPracticeLineId: null,
+        prevLearnLineId: null,
+        learnRecentLineIds: [],
         mistakeUnlocked: false,
         lastMistake: null,
         completed: false,
@@ -891,6 +1163,8 @@ if (!nextId) nextId = nextLines[0] ? nextLines[0].id : "";
         sessionLineId: val,
         practiceForceRepeat: false,
         prevPracticeLineId: this.state.lineId,
+        prevLearnLineId: this.state.lineId,
+        learnRecentLineIds: [],
         mistakeUnlocked: false,
         lastMistake: null,
         completed: false,
@@ -1183,14 +1457,42 @@ onCompletedLine = () => {
     this.setState({ modePanelVisible: true });
   }
 
-  if (this.state.settings && this.state.settings.showConfetti) {
+  // Confetti + Learn reward gating for Next
+  const wantsConfetti = !!(this.state.settings && this.state.settings.showConfetti);
+
+  // Next is a Learn only reward, reset it on every completion
+  if (mode === "learn") {
+    this.setState({ learnNextReady: false, learnRewardPending: wasClean });
+  }
+
+  if (wantsConfetti) {
     this.setState({ confettiActive: true });
 
     this._confettiTimer = setTimeout(() => {
-      this.setState({ confettiActive: false });
+      this.setState((prev) => {
+        const next = { confettiActive: false };
+
+        // If Learn just completed cleanly, unlock Next after confetti ends
+        if (prev.gameMode === "learn" && prev.learnRewardPending) {
+          next.learnNextReady = true;
+          next.learnRewardPending = false;
+        }
+
+        return next;
+      });
     }, 1200);
   } else {
-    this.setState({ confettiActive: false });
+    this.setState((prev) => {
+      const next = { confettiActive: false };
+
+      // If confetti is disabled, unlock Next immediately on clean Learn completion
+      if (mode === "learn" && wasClean) {
+        next.learnNextReady = true;
+        next.learnRewardPending = false;
+      }
+
+      return next;
+    });
   }
 
   if (mode === "practice") {
@@ -1425,6 +1727,37 @@ sanitizeExplanation = (text, expectedSan) => {
   return s;
 };
 
+
+renderCoachBubble = (line) => {
+  if (!line) return null;
+
+  const mode = this.state.gameMode || "learn";
+  const unlocked =
+    mode === "learn"
+      ? true
+      : mode === "practice"
+      ? !!this.state.mistakeUnlocked || !!this.state.helpUsed
+      : false;
+
+  const coachIndex = this.getViewIndex();
+  const raw = unlocked
+    ? line.explanations[coachIndex] || ""
+    : mode === "drill"
+    ? "No help in Drill Mode"
+    : "What's the best move?";
+
+  const text = unlocked ? this.stripMovePrefix(raw) : raw;
+
+  return (
+    <div className="ot-bubble">
+      <div className="ot-bubble-row">
+        <div className="ot-buddy" title="Your drill buddy">♞</div>
+        <div className="ot-coach-text">{text}</div>
+      </div>
+    </div>
+  );
+};
+
 renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
   if (!line) return null;
 
@@ -1439,11 +1772,11 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
   const text = unlocked ? this.stripMovePrefix(raw) : raw;
 
   return (
-    <div className="ot-coach">
+    <div className="ot-coach" style={{ position: "relative" }}>
       <div className="ot-coach-head">
         <div className="ot-coach-left">
           <div className="ot-coach-title">
-            <span className="ot-mode-pill">
+            <button className="ot-mode-pill ot-pill-btn" onClick={() => this.toggleMobileHeaderMenu("mode")} title="Mode" aria-label="Mode">
               {mode === "learn" ? (
                 <>
                   <span role="img" aria-label="learn">📘</span> Learn
@@ -1457,9 +1790,9 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
                   <span role="img" aria-label="drill">🔥</span> Drill
                 </>
               )}
-            </span>
-            <span className="ot-open-pill">{this.state.openingKey}</span>
-            <span className="ot-line-pill">{line.name}</span>
+            </button>
+            <button className="ot-open-pill ot-pill-btn" onClick={() => this.toggleMobileHeaderMenu("opening")} title="Opening" aria-label="Opening">{(() => { const s = OPENING_SETS[this.state.openingKey]; return (s && (s.name || s.title || s.label)) || this.state.openingKey; })()} ▾</button>
+            <button className="ot-line-pill ot-pill-btn" onClick={() => this.toggleMobileHeaderMenu("line")} title="Line" aria-label="Line">{line.name} ▾</button>
           </div>
         </div>
 
@@ -1484,7 +1817,104 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
               Undo
             </button>
           ) : null}
+        
+      {!this.state.isMobile && this.state.mobileHeaderMenu ? (
+        <div
+          className="ot-desktop-pill-menu"
+          ref={(el) => (this._desktopMenuEl = el)}
+          onClick={(e) => e.stopPropagation()}
+          style={{ position: "absolute", top: 44, right: 12, width: 280, maxHeight: 360, overflowY: "auto", padding: 10, borderRadius: 14, background: "rgba(10, 10, 12, 0.96)", border: "1px solid rgba(255,255,255,0.12)", boxShadow: "0 16px 40px rgba(0,0,0,0.45)", zIndex: 9999 }}
+        >
+          {this.state.mobileHeaderMenu === "mode" ? (
+            <>
+              <div className="ot-mobile-menu-title">Mode</div>
+              <div className="ot-mode-list">
+                <button className="ot-mode-item" onClick={() => { this.setGameMode("learn"); this.closeMobileHeaderMenu(); }}>
+                  <span><span role="img" aria-label="learn">📘</span> Learn</span>
+                  <span />
+                </button>
+
+                <button
+                  className={"ot-mode-item" + (!this.props.user || !this.props.isMember ? " locked" : "")}
+                  onClick={() => { this.setGameMode("practice"); this.closeMobileHeaderMenu(); }}
+                >
+                  <span><span role="img" aria-label="practice">🎯</span> Practice</span>
+                  <span>{!this.props.user || !this.props.isMember ? "Member" : ""}</span>
+                </button>
+
+                <button
+                  className={"ot-mode-item" + (!this.props.user || !this.props.isMember ? " locked" : "")}
+                  onClick={() => { this.setGameMode("drill"); this.closeMobileHeaderMenu(); }}
+                >
+                  <span><span role="img" aria-label="drill">🔥</span> Drill</span>
+                  <span>{!this.props.user || !this.props.isMember ? "Member" : ""}</span>
+                </button>
+              </div>
+            </>
+          ) : this.state.mobileHeaderMenu === "opening" ? (
+            <>
+              <div className="ot-mobile-menu-title">Opening</div>
+              <select
+                className="ot-select"
+                value={this.state.openingKey}
+                onChange={(e) => {
+                  this.setOpeningKey(e);
+                  this.closeMobileHeaderMenu();
+                }}
+              >
+                {Object.keys(OPENING_SETS).map((k) => {
+                  const s = OPENING_SETS[k];
+                  const label = (s && (s.name || s.title || s.label)) || k;
+                  return (
+                    <option key={k} value={k}>
+                      {label}
+                    </option>
+                  );
+                })}
+              </select>
+            </>
+          ) : (
+            <>
+              <div className="ot-mobile-menu-title">Line</div>
+              <select
+                className="ot-line-select ot-line-select-compact"
+                value={this.state.linePicker}
+                onChange={(e) => {
+                  this.setLinePicker(e);
+                  this.closeMobileHeaderMenu();
+                }}
+              >
+                <option value="random">Random line</option>
+                <option value="__divider__" disabled>
+                  ─────────
+                </option>
+
+                {(() => {
+                  const grouped = groupLines(this.getLines());
+                  return grouped.cats.map((cat) => {
+                    const arr = grouped.map[cat] || [];
+                    return (
+                      <optgroup key={cat} label={cat}>
+                        {arr.map((l) => {
+                          const s = getLineStats(this.state.progress, this.state.openingKey, l.id);
+                          const symbol = isCompleted(s) ? "✓" : s.timesSeen > 0 ? "•" : "○";
+                          return (
+                            <option key={l.id} value={l.id}>
+                              {symbol} {l.name}
+                            </option>
+                          );
+                        })}
+                      </optgroup>
+                    );
+                  });
+                })()}
+              </select>
+            </>
+          )}
         </div>
+      ) : null}
+
+</div>
       </div>
 
       <div className="ot-bubble">
@@ -1540,6 +1970,8 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
         modePanelVisible: true,
         userHasPlayedThisLine: false,
         helpUsed: false,
+        learnRewardPending: false,
+        learnNextReady: false,
         drillStreak: mode === "drill" ? 0 : this.state.drillStreak,
         drillRunDead: false,
         mistakeUnlocked: false,
@@ -1770,7 +2202,6 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
 render() {
     const line = this.getLine();
     if (!line) return null;
-    const lines = this.getLines();
     const nextExpected = line.moves[this.state.stepIndex] || null;
 
     const viewIndex = this.getViewIndex();
@@ -1778,6 +2209,8 @@ render() {
     const boardFen = this.state.viewing ? this.state.viewFen : this.state.fen;
     const canViewBack = viewIndex > 0;
     const canViewForward = viewIndex < this.state.stepIndex;
+
+    const canUndo = !!(this.state.lastMistake || this.state.wrongAttempt);
 
     const playerColor = this.getPlayerColor();
 
@@ -1838,7 +2271,7 @@ render() {
     }
 
     return (
-      <div className="ot-container">
+      <div className={"ot-container" + (this.state.isMobile ? " ot-mobile" : "")}>
         <OpeningTrainerConfetti active={this.state.confettiActive} />
         <OpeningTrainerCustomModal
           open={this.state.customModalOpen}
@@ -1894,7 +2327,311 @@ render() {
           </div>
         ) : null}
 
-        <TopNav title="Chess Opening Drills" />
+
+        {this.state.isMobile ? (
+          <style id="ot-mobile-root-style">
+            {`
+              .ot-container.ot-mobile {
+
+                width: 100vw;
+                overflow-x: hidden;
+                box-sizing: border-box;                height: 100dvh;
+                min-height: 100dvh;
+                padding: 0;
+                margin: 0;
+                display: flex;
+                flex-direction: column;
+              }
+
+              .ot-container.ot-mobile .ot-top-line {
+                display: none;
+              }
+
+              .ot-container.ot-mobile .ot-controls {
+                display: none;
+              }
+
+              .ot-container.ot-mobile .ot-main {
+
+                min-height: 0;                flex: 1;
+                display: flex;
+                flex-direction: column;
+                padding: 0;
+                margin: 0;
+              }
+
+              
+              .ot-container.ot-mobile .ot-mobile-root {
+                width: var(--ot-mobile-board-w, 100%);
+                max-width: 100%;
+                margin-left: auto;
+                margin-right: auto;
+                box-sizing: border-box;
+                display: flex;
+                flex-direction: column;
+                align-items: stretch;
+              }
+
+.ot-container.ot-mobile .ot-mobile-coach {
+                padding: 8px 10px 6px 10px;
+                max-height: 190px;
+                overflow: auto;
+              }
+
+              .ot-container.ot-mobile .ot-mobile-board-wrap {
+
+                min-height: 0;
+                flex: 0 0 auto;
+                display: flex;
+                align-items: flex-start;
+                justify-content: flex-start;
+                padding: 0;
+                width: 100%;
+              }
+
+              .ot-container.ot-mobile .ot-board {
+                width: 100%;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                padding: 0;
+                margin: 0;
+                              overflow: visible;
+}
+
+              .ot-container.ot-mobile .ot-board-head {
+                display: none;
+              }
+
+              .ot-container.ot-mobile .ot-side {
+                display: none;
+              }
+
+              .ot-container.ot-mobile .ot-mobile-dock {
+                height: 56px;
+                padding: 0 0 calc(8px + env(safe-area-inset-bottom)) 0;
+                display: flex;
+                align-items: center;
+                justify-content: flex-start;
+                gap: 8px;
+                overflow-x: auto;
+                border-top: 1px solid rgba(255,255,255,0.08);
+                background: rgba(10, 10, 12, 0.85);
+                -webkit-backdrop-filter: blur(10px);
+                backdrop-filter: blur(10px);
+              }
+
+              .ot-container.ot-mobile .ot-mobile-dock button,
+              .ot-container.ot-mobile .ot-mobile-dock select {
+                flex: 0 0 auto;
+                height: 38px;
+                padding: 0 10px;
+                border-radius: 10px;
+                font-size: 14px;
+              }
+
+              .ot-container.ot-mobile .ot-mobile-dock .ot-mobile-icon {
+                width: 40px;
+                padding: 0;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+              }
+
+              
+
+              .ot-container.ot-mobile .ot-mobile-header {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding: 10px 10px 8px 10px;
+              }
+
+
+              .ot-container.ot-mobile .ot-mobile-header-area {
+                padding: 10px 0 0 0;
+                width: 100%;
+                box-sizing: border-box;
+              }
+
+              .ot-container.ot-mobile .ot-mobile-stage {
+                flex: 0 0 auto;
+                min-height: 0;
+                display: flex;
+                flex-direction: column;
+                align-items: stretch;
+                justify-content: flex-start;
+                gap: 8px;
+                padding: 0;
+              }
+
+              .ot-container.ot-mobile .ot-mobile-back {
+
+                width: 40px;
+                height: 40px;
+                border-radius: 12px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 18px;
+              }
+
+              .ot-container.ot-mobile .ot-mobile-topbar {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding: 8px 0 6px 0;
+              }
+
+              .ot-container.ot-mobile .ot-mobile-progress-inline {
+                flex: 1;
+                min-width: 0;
+              }
+
+              .ot-container.ot-mobile .ot-mobile-progress-inline .ot-progress-bar {
+                height: 10px;
+                border-radius: 999px;
+              }
+
+              .ot-container.ot-mobile .ot-mobile-pillrow {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 0 0 8px 0;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+              }
+
+              .ot-container.ot-mobile .ot-mobile-coach {
+                padding: 0;
+              }
+
+              .ot-container.ot-mobile .ot-mobile-coach-scroll {
+                padding: 0 0 6px 0;
+                height: clamp(72px, 14vh, 110px);
+                overflow-y: auto;
+                overflow-x: hidden;
+                scrollbar-gutter: stable;
+                box-sizing: border-box;
+                width: 100%;
+              }
+
+              .ot-container.ot-mobile .ot-mobile-header-mid {
+                flex: 1;
+                min-width: 0;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                overflow: hidden;
+              }
+
+              .ot-container.ot-mobile .ot-mobile-pill-btn {
+                max-width: 44vw;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                height: 34px;
+                padding: 0 8px;
+                border-radius: 10px;
+                font-size: 14px;
+                border: 1px solid rgba(255,255,255,0.14);
+                background: rgba(255,255,255,0.04);
+                box-shadow: none;
+                color: rgba(255,255,255,0.95);
+              }
+
+              .ot-container.ot-mobile .ot-mobile-pill-btn.active {
+                border-color: rgba(255,255,255,0.22);
+                background: rgba(255,255,255,0.08);
+              }
+
+              .ot-container.ot-mobile .ot-mobile-mini-count {
+                flex: 0 0 auto;
+                font-size: 13px;
+                opacity: 0.85;
+              }
+
+              .ot-container.ot-mobile .ot-mobile-progress {
+                padding: 0 10px 6px 10px;
+              }
+
+              .ot-container.ot-mobile .ot-mobile-menu {
+                position: fixed;
+                left: 10px;
+                right: 10px;
+                top: 58px;
+                z-index: 9999;
+                border-radius: 14px;
+                padding: 10px;
+                background: rgba(10, 10, 12, 0.96);
+                border: 1px solid rgba(255,255,255,0.12);
+                box-shadow: 0 16px 40px rgba(0,0,0,0.45);
+              }
+
+              .ot-container.ot-mobile .ot-mobile-menu-title {
+                font-weight: 800;
+                margin-bottom: 8px;
+              }
+
+              .ot-container.ot-mobile .ot-mobile-menu button,
+              .ot-container.ot-mobile .ot-mobile-menu select {
+                width: 100%;
+              }
+
+              .ot-container.ot-mobile .ot-mobile-menu .ot-mode-list {
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+              }
+
+              .ot-container.ot-mobile .ot-mobile-menu .ot-mode-item {
+                height: 42px;
+                border-radius: 12px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 0 12px;
+              }
+
+              .ot-container.ot-mobile .ot-mobile-menu .ot-mode-item.locked {
+                opacity: 0.55;
+              }
+
+              .ot-container.ot-mobile .ot-coach-text {
+                font-size: 15px;
+                line-height: 1.25;
+              }
+              .ot-container.ot-mobile .ot-bubble,
+              .ot-container.ot-mobile .ot-bubble-row {
+                width: 100%;
+                box-sizing: border-box;
+              }
+
+              .ot-container.ot-mobile .ot-coach-text {
+                min-width: 0;
+                overflow-wrap: anywhere;
+              }
+
+              .ot-container.ot-mobile .ot-bubble,
+              .ot-container.ot-mobile .ot-bubble-row {
+                background: #ececf1;
+                color: #111111;
+                border: 1px solid rgba(0,0,0,0.08);
+              }
+
+              .ot-container.ot-mobile .ot-coach-text {
+                color: #000000;
+              }
+
+              .ot-container.ot-mobile .ot-bubble-icon {
+                color: rgba(0,0,0,0.75);
+              }
+
+            `}
+          </style>
+        ) : null}
+
+        {this.state.isMobile ? null : <TopNav title="Chess Opening Drills" />}
 {/* Per-line progress (moved to top) */}
         <div className="ot-top-line">
           <div className="ot-top-line-row">
@@ -1908,39 +2645,386 @@ render() {
           </div>
         </div>
 
-        <div className="ot-controls">
-          <span className="ot-label ot-label-plain">Mode:</span>
+                <div className="ot-main">
+          {this.state.isMobile ? (
+            <div className="ot-mobile-root" style={{ "--ot-mobile-board-w": (this.state.mobileBoardSize ? `${this.state.mobileBoardSize}px` : "100%") }}>
+              
+              <div className="ot-mobile-header-area">
 
-          <select className="ot-select" value={this.state.openingKey} onChange={this.setOpeningKey}>
-            <option value="london">London</option>
-            <option value="sicilian">Sicilian Defense</option>
-<option value="ruy">Ruy Lopez</option>
-<option value="friedliver">Fried Liver Attack</option>
-                <option value="stafford">Stafford Gambit</option>
-            <option value="carokann">Caro-Kann Defense</option>
-            <option value="qga">Queen’s Gambit Accepted</option>
-            <option value="qgd">Queen’s Gambit Declined</option>
-          
-            <option value="italian">Italian Game</option>
-            <option value="kingsindian">King's Indian Defense</option>
-            <option value="french">French Defense</option>
-            <option value="englund">Englund Gambit</option>
-<option value="english">English Opening</option>
-<option value="scotchgame">Scotch Game</option>
-</select>
+                <div className="ot-mobile-pillrow" ref={this._mobilePillsRef}>
+                  <button
+                    className={"ot-mobile-pill-btn" + (this.state.mobileHeaderMenu === "mode" ? " active" : "")}
+                    onClick={() => this.toggleMobileHeaderMenu("mode")}
+                    title="Mode"
+                    aria-label="Mode"
+                  >
+                    {(() => {
+                      const mode = this.state.gameMode || "learn";
+                      return mode === "learn" ? (
+                        <>
+                          <span role="img" aria-label="learn">📘</span> Learn
+                        </>
+                      ) : mode === "practice" ? (
+                        <>
+                          <span role="img" aria-label="practice">🎯</span> Practice
+                        </>
+                      ) : (
+                        <>
+                          <span role="img" aria-label="drill">🔥</span> Drill
+                        </>
+                      );
+                    })()}{" "}
+                    ▾
+                  </button>
 
-          <button className="ot-button" onClick={this.startLine}>
-            Restart current line
-          </button>
+                  <button
+                    className={"ot-mobile-pill-btn" + (this.state.mobileHeaderMenu === "opening" ? " active" : "")}
+                    onClick={() => this.toggleMobileHeaderMenu("opening")}
+                    title="Opening"
+                    aria-label="Opening"
+                  >
+                    {(() => {
+                      const s = OPENING_SETS[this.state.openingKey];
+                      return (s && (s.name || s.title || s.label)) || this.state.openingKey;
+                    })()}{" "}
+                    ▾
+                  </button>
 
-          <button className="ot-button" onClick={this.nextLine}>
-            Next
-          </button>
+                  <button
+                    className={"ot-mobile-pill-btn" + (this.state.mobileHeaderMenu === "line" ? " active" : "")}
+                    onClick={() => this.toggleMobileHeaderMenu("line")}
+                    title="Line"
+                    aria-label="Line"
+                  >
+                    {(line && line.name) || "Line"} ▾
+                  </button>
+                </div>
 
-          <span className="ot-pill">{this.state.mistakeUnlocked ? "Explanations unlocked" : "Explanations locked"}</span>
-        </div>
+                <div className="ot-mobile-topbar" ref={this._mobileTopbarRef}>
+                  <button className="ot-icon-btn ot-mobile-back" onClick={this.goHome} title="Back" aria-label="Back">
+                    ←
+                  </button>
 
-        <div className="ot-main">
+                  <div className="ot-mobile-progress-inline" aria-label="Progress">
+                    <div className="ot-progress-bar ot-progress-bar-top">
+                      <div className="ot-progress-fill" style={{ width: yourProgressPct + "%" }} />
+                    </div>
+                  </div>
+
+                  <div className="ot-mobile-mini-count">
+                    {doneYourMoves}/{totalYourMoves}
+                  </div>
+                </div>
+
+                {this.state.mobileHeaderMenu ? (
+                  <>
+                    <div
+                      onClick={this.closeMobileHeaderMenu}
+                      style={{ position: "fixed", inset: 0, zIndex: 9998 }}
+                    />
+                    <div className="ot-mobile-menu" onClick={(e) => e.stopPropagation()}>
+                      {this.state.mobileHeaderMenu === "mode" ? (
+                        <>
+                          <div className="ot-mobile-menu-title">Mode</div>
+                          <div className="ot-mode-list">
+                            <button className="ot-mode-item" onClick={() => { this.setGameMode("learn"); this.closeMobileHeaderMenu(); }}>
+                              <span><span role="img" aria-label="learn">📘</span> Learn</span>
+                              <span />
+                            </button>
+
+                            <button
+                              className={"ot-mode-item" + (!this.props.user || !this.props.isMember ? " locked" : "")}
+                              onClick={() => { this.setGameMode("practice"); this.closeMobileHeaderMenu(); }}
+                            >
+                              <span><span role="img" aria-label="practice">🎯</span> Practice</span>
+                              <span>{!this.props.user || !this.props.isMember ? "Member" : ""}</span>
+                            </button>
+
+                            <button
+                              className={"ot-mode-item" + (!this.props.user || !this.props.isMember ? " locked" : "")}
+                              onClick={() => { this.setGameMode("drill"); this.closeMobileHeaderMenu(); }}
+                            >
+                              <span><span role="img" aria-label="drill">🔥</span> Drill</span>
+                              <span>{!this.props.user || !this.props.isMember ? "Member" : ""}</span>
+                            </button>
+                          </div>
+                        </>
+                      ) : this.state.mobileHeaderMenu === "opening" ? (
+                        <>
+                          <div className="ot-mobile-menu-title">Opening</div>
+                          <select
+                            className="ot-select"
+                            value={this.state.openingKey}
+                            onChange={(e) => {
+                              this.setOpeningKey(e);
+                              this.closeMobileHeaderMenu();
+                            }}
+                          >
+                            {Object.keys(OPENING_SETS).map((k) => {
+                              const s = OPENING_SETS[k];
+                              const label = (s && (s.name || s.title || s.label)) || k;
+                              return (
+                                <option key={k} value={k}>
+                                  {label}
+                                </option>
+                              );
+                            })}
+                          </select>
+                        </>
+                      ) : (
+                        <>
+                          <div className="ot-mobile-menu-title">Line</div>
+                          <select
+                            className="ot-line-select ot-line-select-compact"
+                            value={this.state.linePicker}
+                            onChange={(e) => {
+                              this.setLinePicker(e);
+                              this.closeMobileHeaderMenu();
+                            }}
+                          >
+                            <option value="random">Random line</option>
+                            <option value="__divider__" disabled>
+                              ─────────
+                            </option>
+
+                            {(() => {
+                              const grouped = groupLines(this.getLines());
+                              return grouped.cats.map((cat) => {
+                                const arr = grouped.map[cat] || [];
+                                return (
+                                  <optgroup key={cat} label={cat}>
+                                    {arr.map((l) => {
+                                      const s = getLineStats(this.state.progress, this.state.openingKey, l.id);
+                                      const symbol = isCompleted(s) ? "✓" : s.timesSeen > 0 ? "•" : "○";
+                                      return (
+                                        <option key={l.id} value={l.id}>
+                                          {symbol} {l.name}
+                                        </option>
+                                      );
+                                    })}
+                                  </optgroup>
+                                );
+                              });
+                            })()}
+                          </select>
+                        </>
+                      )}
+                    </div>
+                  </>
+                ) : null}
+
+                
+              </div>
+
+
+              <div className="ot-mobile-stage">
+                <div className="ot-mobile-coach-scroll" ref={this._mobileCoachRef}>{this.renderCoachBubble(line)}</div>
+
+              <div className="ot-mobile-board-wrap">
+                <div className="ot-board">
+                  <Chessboard
+                    width={this.state.mobileBoardSize || undefined}
+                    position={boardFen}
+                    onDrop={this.onDrop}
+                    allowDrag={this.allowDrag}
+                    orientation={playerColor === "b" ? "black" : "white"}
+                    showNotation={true}
+                    squareStyles={squareStyles}
+                    onSquareClick={this.onSquareClick}
+                    onSquareRightClick={this.onSquareRightClick}
+                    {...BOARD_THEMES[this.state.settings.boardTheme || DEFAULT_THEME]}
+                  />
+                </div>
+              </div>
+
+              </div>
+
+              <div className="ot-mobile-dock" ref={this._mobileDockRef}>
+                <button
+                  className="ot-gear ot-mobile-icon"
+                  onClick={this.toggleSettingsOpen}
+                  title="Settings"
+                  aria-label="Settings"
+                >
+                  <span role="img" aria-label="settings">⚙</span>
+                </button>
+
+                {canUndo ? (
+                  <button className="ot-mini-btn" onClick={this.undoMistake} title="Undo mistake">
+                    Undo
+                  </button>
+                ) : null}
+
+                {this.state.gameMode === "drill" ? null : (
+                  <button
+                    className={
+                      "ot-button ot-button-small ot-button-dock ot-hint-btn" +
+                      (this.state.showHint ? " ot-hint-btn-on" : "")
+                    }
+                    onClick={this.state.solveArmed ? this.playMoveForMe : this.onHint}
+                    disabled={!nextExpected || this.state.completed || this.state.viewing}
+                    title={
+                      !nextExpected
+                        ? "Line complete"
+                        : this.state.solveArmed
+                        ? "Play the move (breaks clean completion)"
+                        : "Highlight the piece to move"
+                    }
+                  >
+                    {this.state.solveArmed ? "Solve" : "Hint"}
+                  </button>
+                )}
+
+                <button
+                  className="ot-button ot-button-small ot-button-dock"
+                  onClick={this.retryLine}
+                  title="Retry"
+                >
+                  Retry
+                </button>
+
+                {this.state.gameMode === "learn" && this.state.learnNextReady ? (
+                <button
+                  className="ot-button ot-button-small ot-button-dock"
+                  onClick={this.nextLine}
+                  title="Pick the next line"
+                >
+                  Next
+                </button>
+              ) : null}
+
+         <button
+                  className="ot-icon-btn ot-mobile-icon"
+                  onClick={this.viewBack}
+                  disabled={!canViewBack}
+                  title="Back"
+                  aria-label="Back"
+                >
+                  ‹
+                </button>
+
+                <button
+                  className="ot-icon-btn ot-mobile-icon"
+                  onClick={this.viewForward}
+                  disabled={!canViewForward}
+                  title="Forward"
+                  aria-label="Forward"
+                >
+                  ›
+                </button>
+              </div>
+
+              {this.state.lineMenuOpen ? (
+                <div
+                  className="ot-line-popover"
+                  onClick={(e) => e.stopPropagation()}
+                  ref={(el) => (this._linePickerAnchorEl = el)}
+                  style={{ position: "fixed", left: 10, right: 10, bottom: 64, zIndex: 9998 }}
+                >
+                  <div className="ot-line-popover-title">Line select</div>
+                  <button className="ot-mini-btn ot-add-rep-btn" onClick={this.openCustomModal} title="Paste a custom rep">
+                    + Add rep
+                  </button>
+
+                  <select
+                    className="ot-line-select ot-line-select-compact"
+                    value={this.state.linePicker}
+                    onChange={(e) => {
+                      this.setLinePicker(e);
+                      this.setState({ lineMenuOpen: false });
+                    }}
+                  >
+                    <option value="random">Random line</option>
+                    <option value="__divider__" disabled>
+                      ─────────
+                    </option>
+
+                    {(() => {
+                      const grouped = groupLines(this.getLines());
+                      return grouped.cats.map((cat) => {
+                        const arr = grouped.map[cat] || [];
+                        return (
+                          <optgroup key={cat} label={cat}>
+                            {arr.map((l) => {
+                              const s = getLineStats(this.state.progress, this.state.openingKey, l.id);
+                              const symbol = isCompleted(s) ? "✓" : s.timesSeen > 0 ? "•" : "○";
+                              return (
+                                <option key={l.id} value={l.id}>
+                                  {symbol} {l.name}
+                                </option>
+                              );
+                            })}
+                          </optgroup>
+                        );
+                      });
+                    })()}
+                  </select>
+                </div>
+              ) : null}
+
+              {this.state.settingsOpen ? (
+                <div
+                  className="ot-settings-menu"
+                  onClick={(e) => e.stopPropagation()}
+                  ref={(el) => (this._settingsAnchorEl = el)}
+                  style={{ position: "fixed", left: 10, right: 10, bottom: 64, zIndex: 9999 }}
+                >
+                  <div className="ot-settings-title">Settings</div>
+
+                  <label className="ot-settings-row">
+                    <input
+                      type="checkbox"
+                      checked={!!(this.state.settings && this.state.settings.showConfetti)}
+                      onChange={(e) => this.setSetting("showConfetti", !!e.target.checked)}
+                    />
+                    <span>Show Confetti</span>
+                  </label>
+
+                  <label className="ot-settings-row">
+                    <input
+                      type="checkbox"
+                      checked={!!(this.state.settings && this.state.settings.playSounds)}
+                      onChange={(e) => this.setSetting("playSounds", !!e.target.checked)}
+                    />
+                    <span>Play Sounds</span>
+                  </label>
+
+                  <div className="ot-settings-title" style={{ marginTop: "12px" }}>Board Theme</div>
+
+                  <label className="ot-settings-row">
+                    <input
+                      type="radio"
+                      name="boardThemeMobile"
+                      checked={this.state.settings.boardTheme === "chesscom"}
+                      onChange={() => this.setSetting("boardTheme", "chesscom")}
+                    />
+                    <span>Chess.com</span>
+                  </label>
+
+                  <label className="ot-settings-row">
+                    <input
+                      type="radio"
+                      name="boardThemeMobile"
+                      checked={this.state.settings.boardTheme === "lichess"}
+                      onChange={() => this.setSetting("boardTheme", "lichess")}
+                    />
+                    <span>Lichess</span>
+                  </label>
+
+                  <label className="ot-settings-row">
+                    <input
+                      type="radio"
+                      name="boardThemeMobile"
+                      checked={this.state.settings.boardTheme === "darkblue"}
+                      onChange={() => this.setSetting("boardTheme", "darkblue")}
+                    />
+                    <span>Dark Blue</span>
+                  </label>
+                </div>
+              ) : null}
+            </div>
+          ) : (
+            <>
           <div className="ot-board">
 
             <div className="ot-board-head">
@@ -1984,67 +3068,7 @@ render() {
               {this.renderModePanel()}
 
               <div className="ot-dock">
-                <div className="ot-dock-left">
-                  <div
-                    className="ot-line-picker"
-                    ref={(el) => {
-                      this._linePickerAnchorEl = el;
-                    }}
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <button
-                      className="ot-icon-btn-tight"
-                      onClick={this.toggleLineMenuOpen}
-                      title="Choose line"
-                      aria-label="Choose line"
-                    >
-                      ☰
-                    </button>
-
-                    {this.state.lineMenuOpen ? (
-                      <div className="ot-line-popover" onClick={(e) => e.stopPropagation()}>
-                        <div className="ot-line-popover-title">Line select</div>
-                        <button className="ot-mini-btn ot-add-rep-btn" onClick={this.openCustomModal} title="Paste a custom rep">
-                          + Add rep
-                        </button>
-
-                        <select
-                          className="ot-line-select ot-line-select-compact"
-                          value={this.state.linePicker}
-                          onChange={(e) => {
-                            this.setLinePicker(e);
-                            this.setState({ lineMenuOpen: false });
-                          }}
-                        >
-                          <option value="random">Random line</option>
-                          <option value="__divider__" disabled>
-                            ─────────
-                          </option>
-
-                          {(() => {
-                            const grouped = groupLines(lines);
-                            return grouped.cats.map((cat) => {
-                              const arr = grouped.map[cat] || [];
-                              return (
-                                <optgroup key={cat} label={cat}>
-                                  {arr.map((l) => {
-                                    const s = getLineStats(this.state.progress, this.state.openingKey, l.id);
-                                    const symbol = isCompleted(s) ? "✓" : s.timesSeen > 0 ? "•" : "○";
-                                    return (
-                                      <option key={l.id} value={l.id}>
-                                        {symbol} {l.name}
-                                      </option>
-                                    );
-                                  })}
-                                </optgroup>
-                              );
-                            });
-                          })()}
-                        </select>
-                      </div>
-                    ) : null}
-                  </div>
-
+                <div className="ot-dock-left" style={{ position: "relative" }}>
                   <div
                     className="ot-panel-header-actions"
                     ref={(el) => {
@@ -2053,11 +3077,11 @@ render() {
                     onClick={(e) => e.stopPropagation()}
                   >
                     <button className="ot-gear" onClick={this.toggleSettingsOpen} title="Settings" aria-label="Settings">
-                      ⚙
+                      <span role="img" aria-label="settings">⚙</span>
                     </button>
 
                     {this.state.settingsOpen ? (
-                      <div className="ot-settings-menu" onClick={(e) => e.stopPropagation()}>
+                      <div className="ot-settings-menu" onClick={(e) => e.stopPropagation()} style={{ position: "absolute", left: 0, bottom: 48, zIndex: 9999, maxWidth: 320 }}>
                         <div className="ot-settings-title">Settings</div>
 
                         <label className="ot-settings-row">
@@ -2112,6 +3136,12 @@ render() {
                       </div>
                     ) : null}
                   </div>
+
+                  {canUndo ? (
+                    <button className="ot-mini-btn" onClick={this.undoMistake} title="Undo mistake">
+                      Undo
+                    </button>
+                  ) : null}
                 </div>
 
                 <div className="ot-dock-center">
@@ -2119,18 +3149,30 @@ render() {
                     Retry
                   </button>
 
-                  <button
-                    className="ot-button ot-button-small ot-button-dock"
-                    onClick={this.nextLine}
-                    disabled={this.state.gameMode === "drill" && this.state.linePicker !== "random"}
-                    title={
-                      this.state.gameMode === "drill" && this.state.linePicker !== "random"
-                        ? "Switch to Random line to use this"
-                        : "Pick the next line"
-                    }
-                  >
-                    Next
-                  </button>
+                  {this.state.gameMode === "learn" ? (
+                    this.state.learnNextReady ? (
+                      <button
+                        className="ot-button ot-button-small ot-button-dock"
+                        onClick={this.nextLine}
+                        title="Pick the next line"
+                      >
+                        Next
+                      </button>
+                    ) : null
+                  ) : (
+                    <button
+                      className="ot-button ot-button-small ot-button-dock"
+                      onClick={this.nextLine}
+                      disabled={this.state.gameMode === "drill" && this.state.linePicker !== "random"}
+                      title={
+                        this.state.gameMode === "drill" && this.state.linePicker !== "random"
+                          ? "Switch to Random line to use this"
+                          : "Pick the next line"
+                      }
+                    >
+                      Next
+                    </button>
+                  )}
                   {this.state.gameMode === "drill" ? null : (
 
                   <button
@@ -2179,6 +3221,9 @@ render() {
               </div>
             </div>
           </div>
+            </>
+          )}
+
         </div>
       </div>
     );
