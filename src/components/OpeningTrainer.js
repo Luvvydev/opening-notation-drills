@@ -433,11 +433,19 @@ componentWillUnmount() {
   onWindowClick = (e) => {
     if (!this.state.settingsOpen && !this.state.lineMenuOpen && !this.state.mobileHeaderMenu) return;
 
-    const t = e && e.target;
+    let t = e && e.target;
+
+    // On some mobile browsers the target can be a Text node, which breaks closest().
+    if (t && t.nodeType === 3) t = t.parentElement;
 
     // Clicking pill buttons should not auto-close (otherwise open then instantly close).
     try {
-      if (t && t.closest && t.closest(".ot-pill-btn")) return;
+      if (t && t.closest && (t.closest(".ot-pill-btn") || t.closest(".ot-mobile-pill-btn"))) return;
+    } catch (_) {}
+
+    // Clicking inside the mobile header menu should not auto-close it.
+    try {
+      if (t && t.closest && t.closest(".ot-mobile-menu")) return;
     } catch (_) {}
 
     if (this._settingsAnchorEl && t && this._settingsAnchorEl.contains(t)) return;
