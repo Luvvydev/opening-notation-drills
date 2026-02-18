@@ -1,7 +1,7 @@
 {
   "name": "opening-notation-drills",
   "version": "0.1.0",
-  "homepage": "https://luvvydev.github.io/opening-notation-drills",
+  "homepage": ".",
   "private": true,
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^1.2.30",
