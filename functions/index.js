@@ -12,6 +12,10 @@ const DISCORD_CLIENT_SECRET = defineSecret("DISCORD_CLIENT_SECRET");
 const DISCORD_BOT_TOKEN = defineSecret("DISCORD_BOT_TOKEN");
 const DISCORD_STATE_SECRET = defineSecret("DISCORD_STATE_SECRET");
 
+// Canonical Discord OAuth redirect (always use production domain)
+const CANONICAL_DISCORD_REDIRECT_URI = "https://chessdrills.net/#/discord";
+
+
 // Params (set at deploy time)
 const STRIPE_PRICE_MONTHLY = defineString("STRIPE_PRICE_MONTHLY");
 const STRIPE_PRICE_LIFETIME = defineString("STRIPE_PRICE_LIFETIME");
@@ -308,7 +312,7 @@ exports.getDiscordOAuthUrl = functions
     const uid = requireAuth(context);
     const { clientId } = getDiscordConfig();
 
-    const redirectUri = validateRedirectUri(data && data.redirectUri ? data.redirectUri : `${getBaseUrl()}/#/discord`);
+    const redirectUri = CANONICAL_DISCORD_REDIRECT_URI;
     const nonce = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
     const ts = Date.now();
     const payload = `${uid}.${ts}.${nonce}`;
@@ -335,7 +339,7 @@ exports.discordOAuthCallback = functions
 
     const code = data && data.code;
     const state = data && data.state;
-    const redirectUri = validateRedirectUri(data && data.redirectUri ? data.redirectUri : `${getBaseUrl()}/#/discord`);
+    const redirectUri = CANONICAL_DISCORD_REDIRECT_URI;
 
     if (!code || typeof code !== "string") {
       throw new functions.https.HttpsError("invalid-argument", "Missing code.");
