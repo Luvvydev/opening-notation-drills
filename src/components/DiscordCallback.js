@@ -133,7 +133,7 @@ const oauth = parseOAuthParams(window.location.href);
           {status === "missing_params" && "Missing Discord authorization data. Click Link Discord again from the menu."}
           {status === "working" && "Working... linking your Discord account."}
           {status === "success" && "Linked. Applying roles. Sending you back..."}
-          {status === "error" && "Discord linking Proceed Back to Trainer."}
+          {status === "error" && "Discord linking:"}
         </p>
 
         {status === "error" && (
