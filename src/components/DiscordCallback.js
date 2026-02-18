@@ -1,167 +1,182 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
-import TopNav from "./TopNav";
+import React, { useEffect, useRef, useState } from "react";
 
-import { httpsCallable } from "firebase/functions";
-import { functions } from "../firebase";
+import { useHistory } from "react-router-dom";
+import { getFunctions, httpsCallable } from "firebase/functions";
 import { useAuth } from "../auth/AuthProvider";
 
-const CANONICAL_REDIRECT = "https://chessdrills.net/#/discord";
-const DISCORD_INVITE_URL = "https://discord.gg/BtCHkuDqJq";
+/**
+ * Discord OAuth callback handler.
+ *
+ * Fixes:
+ * - Avoid infinite loops by guarding effect execution.
+ * - Wait for Firebase auth to finish initializing before showing "sign in required".
+ * - Parse code/state from either ?query or hash query.
+ * - Force canonical domain once (chessdrills.net).
+ * - Use fixed redirectUri to match Discord portal and backend validation.
+ */
 
-function useAllQueryParams() {
-  const loc = useLocation();
+const CANONICAL_ORIGIN = "https://chessdrills.net";
+const CANONICAL_REDIRECT_URI = `${CANONICAL_ORIGIN}/#/discord`;
 
-  return useMemo(() => {
-    // Discord typically appends ?code=...&state=... to the redirect URI.
-    // With HashRouter, those params can end up either in location.search or after the hash.
-    const params = new URLSearchParams(loc.search || "");
+function parseOAuthParams(href) {
+  try {
+    const u = new URL(href);
 
-    if (!params.get("code") && !params.get("error") && window.location.hash) {
-      const hash = window.location.hash;
-      const qIndex = hash.indexOf("?");
-      if (qIndex !== -1) {
-        const hashQuery = hash.slice(qIndex + 1);
-        const hashParams = new URLSearchParams(hashQuery);
-        for (const [k, v] of hashParams.entries()) {
-          if (!params.has(k)) params.set(k, v);
-        }
-      }
+    // Standard: https://.../?code=...&state=...#/discord
+    const codeQ = u.searchParams.get("code");
+    const stateQ = u.searchParams.get("state");
+    if (codeQ && stateQ) return { code: codeQ, state: stateQ };
+
+    // Hash router variant: #/discord?code=...&state=...
+    const hash = u.hash || "";
+    const qIdx = hash.indexOf("?");
+    if (qIdx >= 0) {
+      const qs = hash.slice(qIdx + 1);
+      const sp = new URLSearchParams(qs);
+      const codeH = sp.get("code");
+      const stateH = sp.get("state");
+      if (codeH && stateH) return { code: codeH, state: stateH };
     }
 
-    return params;
-  }, [loc.search]);
+    return { code: null, state: null };
+  } catch {
+    return { code: null, state: null };
+  }
 }
 
 export default function DiscordCallback() {
-  const { user, authLoading } = useAuth();
-  const q = useAllQueryParams();
 
-  const [status, setStatus] = useState("Working...");
-  const [detail, setDetail] = useState("");
-  const [done, setDone] = useState(false);
+  const history = useHistory();
+  const { user, authLoading } = useAuth();
+
+  const [status, setStatus] = useState("idle"); // idle | waiting_auth | missing_params | working | success | error
+  const [error, setError] = useState("");
+
+  // Guards against strict-mode double effect + rerenders
+  const ranRef = useRef(false);
+
+const oauth = parseOAuthParams(window.location.href);
+
+  // Canonical domain bounce (one-time)
+  useEffect(() => {
+    if (window.location.origin !== CANONICAL_ORIGIN) {
+      const target = `${CANONICAL_ORIGIN}${window.location.pathname}${window.location.search}${window.location.hash}`;
+      window.location.replace(target);
+    }
+  }, []);
 
   useEffect(() => {
-    // If a user lands on github pages or localhost for any reason, immediately bounce to the real domain.
-    // Preserve the full URL so we don't lose the code/state params.
-    try {
-      const href = window.location.href || "";
-      const isCanonical = href.startsWith("https://chessdrills.net/");
-      if (!isCanonical) {
-        const rest = href.replace(/^[^#]+/, "https://chessdrills.net");
-        window.location.replace(rest);
-        return;
-      }
-    } catch (_) {}
+    if (ranRef.current) return;
 
-    const run = async () => {
-      const err = q.get("error");
-      const errDesc = q.get("error_description");
-      const code = q.get("code");
-      const state = q.get("state");
+    // Let the bounce happen first
+    if (window.location.origin !== CANONICAL_ORIGIN) return;
 
-      if (err) {
-        setStatus("Discord linking cancelled");
-        setDetail(errDesc || err);
-        setDone(true);
-        return;
-      }
+    // Wait for auth initialization
+    if (authLoading) {
+      setStatus("waiting_auth");
+      return;
+    }
 
-      // Wait until Firebase auth resolves.
-      if (authLoading) {
-        setStatus("Checking sign-in...");
-        setDetail("");
-        return;
-      }
+    if (!user) {
+      setStatus("waiting_auth");
+      return;
+    }
 
-      if (!user) {
-        setStatus("Sign in required");
-        setDetail("Please sign in, then click Link Discord again.");
-        setDone(true);
-        return;
-      }
+    const { code, state } = oauth;
+    if (!code || !state) {
+      setStatus("missing_params");
+      return;
+    }
 
-      if (!code) {
-        setStatus("No code found");
-        setDetail("If you just wanted the invite link, use Open Discord below. Otherwise go back and click Link Discord again.");
-        setDone(true);
-        return;
-      }
+    ranRef.current = true;
+    setStatus("working");
+    setError("");
 
+    const fn = httpsCallable(getFunctions(), "discordOAuthCallback");
+
+    (async () => {
       try {
-        setStatus("Linking Discord...");
-        setDetail("Finishing authorization and syncing roles.");
+        const res = await fn({ code, state, redirectUri: CANONICAL_REDIRECT_URI });
+        const data = res?.data || {};
 
-        // Exchange code for token, store Discord user id, and ensure they are in the guild.
-        const finish = httpsCallable(functions, "discordOAuthCallback");
-        await finish({ code, state, redirectUri: CANONICAL_REDIRECT });
+        if (data?.ok) {
+          setStatus("success");
+          setTimeout(() => history.replace("/openings"), 900);
+          return;
+        }
 
-        // Apply roles based on current Firestore membership status.
-        const sync = httpsCallable(functions, "syncDiscordRoles");
-        await sync({});
-
-        setStatus("Discord linked");
-        setDetail("You’re linked. If your roles don’t update within a few seconds, re-open Discord or re-link.");
-        setDone(true);
+        setStatus("error");
+        setError(data?.error || "Discord linking failed.");
       } catch (e) {
-        const msg = (e && (e.message || e.toString())) || "Unknown error";
-        setStatus("Discord linking failed");
-        setDetail(msg);
-        setDone(true);
+        const msg =
+          e?.message ||
+          e?.details ||
+          (typeof e === "string" ? e : "") ||
+          "Discord linking failed.";
+        setStatus("error");
+        setError(msg);
       }
-    };
+    })();
+  }, [authLoading, user, oauth, history]);
 
-    run();
-  }, [authLoading, user, q]);
-
-  const cardStyle = {
-    maxWidth: 720,
-    margin: "0 auto",
-    padding: "24px 18px",
-  };
-
-  const innerStyle = {
-    background: "rgba(255,255,255,0.04)",
-    border: "1px solid rgba(255,255,255,0.10)",
-    borderRadius: 18,
-    padding: 20,
-    textAlign: "left",
-  };
+  const openDiscord = () => window.open("https://discord.com/app", "_blank", "noopener,noreferrer");
+  const backToTrainer = () => history.push("/openings");
+  const signIn = () => history.push("/login", { from: "/discord", reason: "discord_link" });
 
   return (
-    <>
-      <TopNav title="Discord" hideHero={false} active="" />
+    <div style={{ minHeight: "70vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+      <div
+        style={{
+          maxWidth: 560,
+          width: "100%",
+          padding: 18,
+          borderRadius: 14,
+          border: "1px solid rgba(255,255,255,0.08)",
+          background: "rgba(0,0,0,0.35)",
+        }}
+      >
+        <h2 style={{ margin: 0, fontSize: 22 }}>Discord</h2>
+        <p style={{ marginTop: 10, opacity: 0.85 }}>
+          {status === "idle" && "Preparing Discord link..."}
+          {status === "waiting_auth" && "Working... confirming your login session."}
+          {status === "missing_params" && "Missing Discord authorization data. Click Link Discord again from the menu."}
+          {status === "working" && "Working... linking your Discord account."}
+          {status === "success" && "Linked. Applying roles. Sending you back..."}
+          {status === "error" && "Failed to link Discord."}
+        </p>
 
-      <div className="page about-page" style={cardStyle}>
-        <div style={innerStyle}>
-          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
-            <div style={{ fontSize: 18, fontWeight: 900 }}>{status}</div>
-            {!done && <div style={{ opacity: 0.65, fontSize: 12 }}>working</div>}
-          </div>
+        {status === "error" && (
+          <pre
+            style={{
+              whiteSpace: "pre-wrap",
+              color: "#ffb4b4",
+              background: "rgba(255,255,255,0.04)",
+              padding: 10,
+              borderRadius: 10,
+            }}
+          >
+            {error}
+          </pre>
+        )}
 
-          {detail ? <div style={{ marginTop: 8, opacity: 0.82, lineHeight: 1.4 }}>{detail}</div> : null}
+        <div style={{ display: "flex", gap: 10, marginTop: 14, flexWrap: "wrap" }}>
+          {status === "waiting_auth" && !authLoading && !user && (
+            <button className="btn" onClick={signIn} type="button">
+              Sign in
+            </button>
+          )}
+          <button className="btn" onClick={openDiscord} type="button">
+            Open Discord
+          </button>
+          <button className="btn" onClick={backToTrainer} type="button">
+            Back to Trainer
+          </button>
+        </div>
 
-          <div style={{ marginTop: 16, display: "flex", gap: 10, flexWrap: "wrap" }}>
-            <a className="topnav-button" href={DISCORD_INVITE_URL} target="_blank" rel="noopener noreferrer">
-              Open Discord
-            </a>
-
-            {!user && !authLoading ? (
-              <Link className="topnav-button" to="/login">
-                Sign in
-              </Link>
-            ) : null}
-
-            <Link className="topnav-button" to="/openings">
-              Back to Trainer
-            </Link>
-          </div>
-
-          <div style={{ marginTop: 14, opacity: 0.6, fontSize: 12 }}>
-            Tip: if you have multiple site tabs open, close old ones. OAuth params can land on the wrong tab.
-          </div>
+        <div style={{ marginTop: 10, opacity: 0.6, fontSize: 12 }}>
+          If you keep landing on GitHub Pages, start from chessdrills.net.
         </div>
       </div>
-    </>
+    </div>
   );
 }
