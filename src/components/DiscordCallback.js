@@ -4,16 +4,7 @@ import { useHistory } from "react-router-dom";
 import { getFunctions, httpsCallable } from "firebase/functions";
 import { useAuth } from "../auth/AuthProvider";
 
-/**
- * Discord OAuth callback handler.
- *
- * Fixes:
- * - Avoid infinite loops by guarding effect execution.
- * - Wait for Firebase auth to finish initializing before showing "sign in required".
- * - Parse code/state from either ?query or hash query.
- * - Force canonical domain once (chessdrills.net).
- * - Use fixed redirectUri to match Discord portal and backend validation.
- */
+
 
 const CANONICAL_ORIGIN = "https://chessdrills.net";
 const CANONICAL_REDIRECT_URI = `${CANONICAL_ORIGIN}/#/discord`;
@@ -106,13 +97,13 @@ const oauth = parseOAuthParams(window.location.href);
         }
 
         setStatus("error");
-        setError(data?.error || "Discord linking failed.");
+        setError(data?.error || "Proceed Back to Trainer");
       } catch (e) {
         const msg =
           e?.message ||
           e?.details ||
           (typeof e === "string" ? e : "") ||
-          "Discord linking failed.";
+          "Discord linking Proceed Back to Trainer.";
         setStatus("error");
         setError(msg);
       }
@@ -142,7 +133,7 @@ const oauth = parseOAuthParams(window.location.href);
           {status === "missing_params" && "Missing Discord authorization data. Click Link Discord again from the menu."}
           {status === "working" && "Working... linking your Discord account."}
           {status === "success" && "Linked. Applying roles. Sending you back..."}
-          {status === "error" && "Failed to link Discord."}
+          {status === "error" && "Discord linking Proceed Back to Trainer."}
         </p>
 
         {status === "error" && (
@@ -174,7 +165,7 @@ const oauth = parseOAuthParams(window.location.href);
         </div>
 
         <div style={{ marginTop: 10, opacity: 0.6, fontSize: 12 }}>
-          If you keep landing on GitHub Pages, start from chessdrills.net.
+          
         </div>
       </div>
     </div>
