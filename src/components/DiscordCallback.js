@@ -103,7 +103,7 @@ const oauth = parseOAuthParams(window.location.href);
           e?.message ||
           e?.details ||
           (typeof e === "string" ? e : "") ||
-          "Discord linking Proceed Back to Trainer.";
+          "Discord linking!";
         setStatus("error");
         setError(msg);
       }
