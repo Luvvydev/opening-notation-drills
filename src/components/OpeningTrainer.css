@@ -277,8 +277,6 @@
 
 .ot-settings-menu {
   position: absolute;
-  right: 0;
-  top: 42px;
   min-width: 220px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: #0b0d12;
@@ -1317,4 +1315,42 @@
 
 .ot-gate-btn.secondary {
   background: rgba(0, 0, 0, 0.18);
+}
+
+
+/* Desktop header dropdown (Mode, Opening, Line) */
+.ot-desktop-pill-menu .ot-mobile-menu-title {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.8;
+  margin: 2px 4px 10px;
+}
+
+.ot-desktop-pill-menu button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.02);
+  color: rgba(255, 255, 255, 0.95);
+  cursor: pointer;
+}
+
+.ot-desktop-pill-menu button:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.ot-desktop-pill-menu button.locked {
+  opacity: 0.55;
+}
+
+.ot-desktop-pill-menu button span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }

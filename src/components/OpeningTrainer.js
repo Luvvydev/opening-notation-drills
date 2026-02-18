@@ -3089,7 +3089,7 @@ render() {
                     </button>
 
                     {this.state.settingsOpen ? (
-                      <div className="ot-settings-menu" onClick={(e) => e.stopPropagation()} style={{ position: "absolute", left: 0, bottom: 48, zIndex: 9999, maxWidth: 320 }}>
+                      <div className="ot-settings-menu" onClick={(e) => e.stopPropagation()} style={{ position: "absolute", left: 0, bottom: "calc(100% + 10px)", zIndex: 9999, maxWidth: 320 }}>
                         <div className="ot-settings-title">Settings</div>
 
                         <label className="ot-settings-row">
