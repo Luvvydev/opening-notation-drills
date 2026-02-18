@@ -77,9 +77,9 @@ export default function About(props) {
             <div className="about-section-title">Membership perks</div>
 
             <ul className="about-bullets">
-              <li><strong>Practice Mode:</strong> Master key positions and critical lines. Then repeat them until your openings are flawless.</li>
-              <li><strong>Drill Mode:</strong> Build bulletproof consistency. Test your tactical vision and pattern recognition and scoring that pushes you to beat your personal best.</li>
-              <li><strong>Leaderboards:</strong> Measure your progress on a global scale. Compete, climb the ranks, and see how you stack up against players worldwide.</li>
+              <li><strong>Practice Mode:</strong> Built to strengthen long term memory so your moves hold up under real game pressure.</li>
+              <li><strong>Drill Mode:</strong> Test how many lines you can complete consecutively without mistakes. Improve your accuracy and track your progress on the leaderboards!</li>
+              <li><strong>Leaderboards:</strong> Daily, weekly, and all time leaderboards. Climb the ranks and earn your bragging rights!</li>
             </ul>
 
             <p className="about-muted">
@@ -97,7 +97,7 @@ export default function About(props) {
                   <div className="about-tier-price">Any amount</div>
                 </div>
                 <div className="about-tier-desc">
-                  Helps keep the site alive. Does not unlock gated modes.
+                  Helps keep the site alive, Thank you!
                 </div>
 
                 <button
@@ -115,7 +115,7 @@ export default function About(props) {
                   <div className="about-tier-price">Monthly</div>
                 </div>
                 <div className="about-tier-desc">
-                  Unlock Practice, Drill, Leaderboards, and member badge.
+                  Unlock Practice, Drill, Leaderboards
                 </div>
 
                 <button
@@ -134,7 +134,7 @@ export default function About(props) {
                   <div className="about-tier-price">Lifetime</div>
                 </div>
                 <div className="about-tier-desc">
-                  Unlock Practice, Drill, Leaderboards, and lifetime badge.
+                  Unlock Practice, Drill, Leaderboards
                 </div>
 
                 <button

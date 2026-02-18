@@ -1,10 +1,15 @@
 // TopNav.js
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { httpsCallable } from "firebase/functions";
+import { functions } from "../firebase";
 import './TopNav.css';
 import { getStreakState } from '../utils/streak';
 import { useAuth } from "../auth/AuthProvider";
 import logo from "../assets/chessdrillslogo.png";
+
+const DISCORD_INVITE_URL = "https://discord.gg/BtCHkuDqJq";
+const CHESSDRILLS_BASE_URL = "https://chessdrills.net";
 
 const wittySubtitles = [
   "Because guessing on move six is not a plan",
@@ -88,6 +93,38 @@ function TopNav(props) {
     setMenuOpen((v) => !v);
   };
 
+const onJoinDiscord = () => {
+  try {
+    window.open(DISCORD_INVITE_URL, "_blank", "noopener,noreferrer");
+  } catch (e) {
+    window.location.href = DISCORD_INVITE_URL;
+  }
+};
+
+const onLinkDiscord = async () => {
+  if (!user) return;
+  try {
+    setMenuOpen(false);
+
+    // Backend should return a Discord OAuth URL that redirects back to #/discord.
+    const redirectUri = CHESSDRILLS_BASE_URL + "/#/discord";
+    const fn = httpsCallable(functions, "getDiscordOAuthUrl");
+    const res = await fn({ redirectUri });
+    const url = res?.data?.url;
+
+    if (typeof url === "string" && url.startsWith("http")) {
+      window.location.href = url;
+      return;
+    }
+
+    // Safe fallback: at least send them to the server so they can see an error message there.
+    window.location.href = redirectUri;
+  } catch (e) {
+    // Do not hard crash nav if functions are not deployed yet.
+    alert("Discord linking is not available yet.");
+  }
+};
+
   const onSignOut = async () => {
     try {
       setMenuOpen(false);
@@ -168,10 +205,29 @@ function TopNav(props) {
                         onClick={() => setMenuOpen(false)}
                       >
                         Opening Trainer
-                      </Link>
+                      
+</Link>
 
-                      <Link
-                        to={profileHref}
+<button
+  type="button"
+  className="topnav-menu-item"
+  role="menuitem"
+  onClick={onJoinDiscord}
+>
+  Join Discord
+</button>
+
+<button
+  type="button"
+  className="topnav-menu-item"
+  role="menuitem"
+  onClick={onLinkDiscord}
+>
+  Link Discord
+</button>
+
+<Link
+  to={profileHref}
                         className="topnav-menu-item"
                         role="menuitem"
                         onClick={() => setMenuOpen(false)}
