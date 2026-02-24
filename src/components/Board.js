@@ -8,6 +8,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { BOARD_THEMES, DEFAULT_THEME } from '../theme/boardThemes';
 import './Board.css';
 
+const ALPHA_PIECES = "https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/img/chesspieces/alpha/{piece}.png";
+
 function stripPieceProps(theme) {
   if (!theme || typeof theme !== "object") return {};
   const out = {};
@@ -342,6 +344,7 @@ class Board extends Component {
           calcWidth={effectiveCalcWidth}
           onSquareClick={this.onSquareClick}
           onSquareRightClick={this.onSquareRightClick}
+          pieceTheme={this.props.pieceTheme === "alpha" ? ALPHA_PIECES : undefined}
           {...stripPieceProps(BOARD_THEMES[this.props.boardTheme || DEFAULT_THEME])}
           />
         <div 

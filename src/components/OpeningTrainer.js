@@ -4,7 +4,7 @@ import * as Chess from "chess.js";
 import { OPENING_SETS as CATALOG_OPENING_SETS } from "../openings/openingCatalog";
 import { useAuth } from "../auth/AuthProvider";
 import TopNav from "./TopNav";
-import { BOARD_THEMES, DEFAULT_THEME } from "../theme/boardThemes";
+import { BOARD_THEMES, DEFAULT_THEME, PIECE_THEMES } from "../theme/boardThemes";
 import "./OpeningTrainer.css";
 import { getStreakState, markLineCompletedTodayDetailed } from "../utils/streak";
 import { getActivityDays, markActivityToday, touchActivityToday } from "../utils/activityDays";
@@ -779,6 +779,12 @@ saveCustomModal = () => {
     next[key] = value;
     saveSettings(next);
     this.setState({ settings: next });
+  };
+
+  getPieceThemeUrl = () => {
+    const k = (this.state.settings && this.state.settings.pieceTheme) ? String(this.state.settings.pieceTheme) : "default";
+    const url = PIECE_THEMES && Object.prototype.hasOwnProperty.call(PIECE_THEMES, k) ? PIECE_THEMES[k] : null;
+    return url || undefined;
   };
 
   _sfxLastAt = {};
@@ -2961,6 +2967,7 @@ render() {
                     squareStyles={squareStyles}
                     onSquareClick={this.onSquareClick}
                     onSquareRightClick={this.onSquareRightClick}
+                    pieceTheme={this.getPieceThemeUrl()}
                     {...BOARD_THEMES[this.state.settings.boardTheme || DEFAULT_THEME]}
                   />
                 </div>
@@ -3185,6 +3192,7 @@ render() {
   squareStyles={squareStyles}
   onSquareClick={this.onSquareClick}
   onSquareRightClick={this.onSquareRightClick}
+  pieceTheme={this.getPieceThemeUrl()}
   {...BOARD_THEMES[this.state.settings.boardTheme || DEFAULT_THEME]}
 />
           </div>

@@ -1,17 +1,34 @@
 // Profile.js
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import TopNav from "./TopNav";
 import { useAuth } from "../auth/AuthProvider";
 import { db, serverTimestamp, functions } from "../firebase";
 import { httpsCallable } from "firebase/functions";
 import { doc, onSnapshot, runTransaction, setDoc } from "firebase/firestore";
 import Chessboard from "chessboardjsx";
-import { BOARD_THEMES, DEFAULT_THEME } from "../theme/boardThemes";
+import { BOARD_THEMES, DEFAULT_THEME, PIECE_THEMES } from "../theme/boardThemes";
 import "./ActivityHeatmap.css";
 import "./Profile.css";
 import { getActivityDays } from "../utils/activityDays";
 
 const LS_SETTINGS_KEY = "notation_trainer_opening_settings_v1";
+const SECRET_UNLOCK_KEY = "chessdrills.secret_easteregg_v1";
+
+const KONAMI_KEYS = ["ArrowUp", "ArrowUp", "ArrowDown", "ArrowDown", "ArrowLeft", "ArrowRight", "ArrowLeft", "ArrowRight", "b", "a"];
+
+function loadSecretUnlocked() {
+  try {
+    return window.localStorage.getItem(SECRET_UNLOCK_KEY) === "1";
+  } catch (_) {
+    return false;
+  }
+}
+
+function saveSecretUnlocked(v) {
+  try {
+    window.localStorage.setItem(SECRET_UNLOCK_KEY, v ? "1" : "0");
+  } catch (_) {}
+}
 
 function safeJsonParse(text, fallback) {
   try {
@@ -25,7 +42,8 @@ function loadLocalSettings() {
   const defaults = {
     showConfetti: true,
     playSounds: true,
-    boardTheme: DEFAULT_THEME
+    boardTheme: DEFAULT_THEME,
+    pieceTheme: "default"
   };
 
   try {
@@ -35,7 +53,8 @@ function loadLocalSettings() {
     return {
       showConfetti: parsed.showConfetti !== false,
       playSounds: parsed.playSounds !== false,
-      boardTheme: parsed.boardTheme || DEFAULT_THEME
+      boardTheme: parsed.boardTheme || DEFAULT_THEME,
+      pieceTheme: parsed.pieceTheme || "default"
     };
   } catch (_) {
     return defaults;
@@ -168,8 +187,12 @@ export default function Profile() {
   const [editingUsername, setEditingUsername] = useState(false);
   const [editingDisplayName, setEditingDisplayName] = useState(false);
   const [boardTheme, setBoardTheme] = useState(DEFAULT_THEME);
+  const [pieceTheme, setPieceTheme] = useState("default");
+  const [secretUnlocked, setSecretUnlocked] = useState(false);
   const [previewWidth, setPreviewWidth] = useState(320);
   const boardPreviewRef = useRef(null);
+  const konamiRef = useRef({ idx: 0 });
+  const longPressTimerRef = useRef(null);
   const membershipPlan = (userData && userData.membershipPlan) || (userDoc && userDoc.membershipPlan) || null;
 
   useEffect(() => {
@@ -214,6 +237,73 @@ export default function Profile() {
     // Load theme from localStorage on first mount
     const s = loadLocalSettings();
     setBoardTheme(s.boardTheme || DEFAULT_THEME);
+    setPieceTheme(s.pieceTheme || "default");
+    setSecretUnlocked(loadSecretUnlocked());
+  }, []);
+
+    const unlockSecret = useCallback(() => {
+    if (loadSecretUnlocked()) {
+      setSecretUnlocked(true);
+      return;
+    }
+
+    saveSecretUnlocked(true);
+    setSecretUnlocked(true);
+
+    // Immediate payoff.
+    const next = saveLocalSettings({ boardTheme: "purpleblack", pieceTheme: "alpha" });
+    setBoardTheme(next.boardTheme || DEFAULT_THEME);
+    setPieceTheme(next.pieceTheme || "default");
+
+    if (!user) return;
+    try {
+      const ref = doc(db, "users", user.uid);
+      runTransaction(db, async (tx) => {
+        tx.set(
+          ref,
+          { settings: { boardTheme: "purpleblack", pieceTheme: "alpha" }, updatedAt: serverTimestamp() },
+          { merge: true }
+        );
+      });
+    } catch (_) {
+      // ignore
+    }
+  
+  }, [user]);
+
+useEffect(() => {
+    const onKeyDown = (e) => {
+      if (!e) return;
+      const t = e.target;
+      const tag = t && t.tagName;
+      const editable = t && t.isContentEditable;
+      if (editable || tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+
+      const key = e.key === "B" ? "b" : e.key === "A" ? "a" : e.key;
+      const st = konamiRef.current || { idx: 0 };
+
+      if (key === KONAMI_KEYS[st.idx]) {
+        st.idx += 1;
+      } else {
+        st.idx = key === KONAMI_KEYS[0] ? 1 : 0;
+      }
+
+      if (st.idx >= KONAMI_KEYS.length) {
+        st.idx = 0;
+        unlockSecret();
+      }
+
+      konamiRef.current = st;
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [unlockSecret]);
+
+  useEffect(() => {
+    return () => {
+      try { cancelLongPress(); } catch (_) {}
+    };
   }, []);
 
   useEffect(() => {
@@ -256,6 +346,12 @@ export default function Profile() {
           setBoardTheme((cur) => (cur === remoteTheme ? cur : remoteTheme));
           saveLocalSettings({ boardTheme: remoteTheme });
         }
+
+        const remotePieceTheme = data && data.settings && data.settings.pieceTheme;
+        if (remotePieceTheme) {
+          setPieceTheme((cur) => (cur === remotePieceTheme ? cur : remotePieceTheme));
+          saveLocalSettings({ pieceTheme: remotePieceTheme });
+        }
       },
       () => {
         // ignore
@@ -278,6 +374,50 @@ export default function Profile() {
       displayNameInputRef.current.focus();
     }
   }, [editingDisplayName]);
+
+  
+
+  function normalizeSecretInput(s) {
+    return String(s || "")
+      .toLowerCase()
+      .replace(/\s+/g, "")
+      .replace(/[^a-z0-9]/g, "");
+  }
+
+  function matchesSecret(s) {
+    const x = normalizeSecretInput(s);
+    if (!x) return false;
+
+    // "Konami" string formats.
+    if (x === "uuddlrlrba") return true;
+    if (x === "upupdowndownleftrightleftrightba") return true;
+    if (x === "upupdowndownleftrightleftrightbastart") return true;
+
+    // Allow letters only typed with no arrows.
+    if (x === "konami") return true;
+
+    return false;
+  }
+
+  function promptForSecret() {
+    const v = window.prompt("Enter secret code");
+    if (!v) return;
+    if (matchesSecret(v)) unlockSecret();
+  }
+
+  function beginLongPress() {
+    if (longPressTimerRef.current) return;
+    longPressTimerRef.current = setTimeout(() => {
+      longPressTimerRef.current = null;
+      promptForSecret();
+    }, 650);
+  }
+
+  function cancelLongPress() {
+    if (!longPressTimerRef.current) return;
+    clearTimeout(longPressTimerRef.current);
+    longPressTimerRef.current = null;
+  }
 
   const saveProfile = async () => {
     setProfileError("");
@@ -362,6 +502,25 @@ const onChangeBoardTheme = async (nextTheme) => {
       tx.set(
         ref,
         { settings: { boardTheme: nextTheme }, updatedAt: serverTimestamp() },
+        { merge: true }
+      );
+    });
+  } catch (_) {
+    // ignore
+  }
+};
+
+const onChangePieceTheme = async (nextPieceTheme) => {
+  const next = saveLocalSettings({ pieceTheme: nextPieceTheme });
+  setPieceTheme(next.pieceTheme || "default");
+
+  if (!user) return;
+  try {
+    const ref = doc(db, "users", user.uid);
+    await runTransaction(db, async (tx) => {
+      tx.set(
+        ref,
+        { settings: { pieceTheme: nextPieceTheme }, updatedAt: serverTimestamp() },
         { merge: true }
       );
     });
@@ -553,7 +712,17 @@ const onChangeBoardTheme = async (nextTheme) => {
           <div className="profile-divider" />
 
           <div className="profile-section">
-            <div className="profile-section-title">Board Appearance</div>
+            <div
+              className="profile-section-title"
+              onMouseDown={beginLongPress}
+              onMouseUp={cancelLongPress}
+              onMouseLeave={cancelLongPress}
+              onTouchStart={beginLongPress}
+              onTouchEnd={cancelLongPress}
+              onTouchCancel={cancelLongPress}
+            >
+              Board Appearance
+            </div>
 
             <div className="profile-setting-row">
               <div className="profile-setting-label">Board Color</div>
@@ -565,14 +734,30 @@ const onChangeBoardTheme = async (nextTheme) => {
                 <option value="chesscom">Chess.com</option>
                 <option value="lichess">Lichess</option>
                 <option value="darkblue">Dark Blue</option>
+                {secretUnlocked ? <option value="purpleblack">Princess</option> : null}
               </select>
             </div>
+
+            {secretUnlocked ? (
+              <div className="profile-setting-row">
+                <div className="profile-setting-label">Piece Set</div>
+                <select
+                  className="profile-select"
+                  value={pieceTheme || "default"}
+                  onChange={(e) => onChangePieceTheme(e.target.value)}
+                >
+                  <option value="default">Default</option>
+                  <option value="alpha">High Contrast</option>
+                </select>
+              </div>
+            ) : null}
 
             <div className="profile-board-preview" ref={boardPreviewRef}>
               <Chessboard
                 width={previewWidth}
                 position="start"
                 draggable={false}
+                pieceTheme={(PIECE_THEMES && PIECE_THEMES[pieceTheme || "default"]) || undefined}
                 {...BOARD_THEMES[boardTheme || DEFAULT_THEME]}
               />
             </div>

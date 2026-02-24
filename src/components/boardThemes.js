@@ -10,18 +10,17 @@ export const BOARD_THEMES = {
   darkblue: {
     lightSquareStyle: { backgroundColor: "#aad3df" },
     darkSquareStyle: { backgroundColor: "#3a6ea5" }
-  }
-  ,purpleblack: {
-    lightSquareStyle: { backgroundColor: "#B7B1FF" },
-    darkSquareStyle: { backgroundColor: "#3A2C6E" }
+  },
+  purpleblack: {
+    lightSquareStyle: { backgroundColor: "#7E83F7" },
+    darkSquareStyle: { backgroundColor: "#000000" }
   }
 };
 
 export const DEFAULT_THEME = "chesscom";
 
+// chessboardjsx uses chessboard.js piece themes. These URLs must contain {piece} placeholder.
 export const PIECE_THEMES = {
   default: null,
-  wikipedia: "https://unpkg.com/chessboardjsx@1.3.0/dist/img/chesspieces/wikipedia/{piece}.png",
-  alpha: "https://unpkg.com/chessboardjsx@1.3.0/dist/img/chesspieces/alpha/{piece}.png",
-  highcontrast: "https://unpkg.com/chessboardjsx@1.3.0/dist/img/chesspieces/alpha/{piece}.png"
+  alpha: "https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/img/chesspieces/alpha/{piece}.png"
 };
