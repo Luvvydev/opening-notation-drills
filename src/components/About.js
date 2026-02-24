@@ -8,11 +8,11 @@ import { httpsCallable } from "firebase/functions";
 import { functions } from "../firebase";
 import { useAuth } from "../auth/AuthProvider";
 
-const COFFEE_URL = "https://buymeacoffee.com/luvvydev";
 
 export default function About(props) {
   const { user } = useAuth();
-  const [busyTier, setBusyTier] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState("yearly");
 
   const fromState = props && props.location && props.location.state ? props.location.state : null;
   const reason = fromState && fromState.reason ? String(fromState.reason) : "";
@@ -27,7 +27,7 @@ export default function About(props) {
     } catch (_) {}
   };
 
-  const startCheckout = async (tier) => {
+  const startTrialCheckout = async () => {
     if (!user) {
       try {
         const from = window.location.hash || "#/about";
@@ -36,20 +36,23 @@ export default function About(props) {
       return;
     }
 
-    setBusyTier(tier);
+    setBusy(true);
     try {
       const fn = httpsCallable(functions, "createCheckoutSession");
-      const res = await fn({ tier });
+      const res = await fn({ tier: "member", plan: selectedPlan });
       const url = res && res.data && res.data.url ? String(res.data.url) : "";
       if (url) go(url);
     } catch (e) {
-      // Fail closed: don't unlock anything client-side.
-      // Surface a minimal message so users aren't stuck.
       // eslint-disable-next-line no-alert
       alert("Checkout failed. Please try again in a moment.");
     } finally {
-      setBusyTier("");
+      setBusy(false);
     }
+  };
+
+  const selectPlan = (plan) => {
+    if (plan !== "monthly" && plan !== "yearly") return;
+    setSelectedPlan(plan);
   };
 
   return (
@@ -60,93 +63,84 @@ export default function About(props) {
 
       <div className="about-wrap">
         <div className="about-card">
-          <h2 className="about-title">Upgrade your drills</h2>
-
-          <p className="about-lead">
-       
-          </p>
+          <div className="about-hero">
+            <div className="about-hero-badge">7 day free trial</div>
+            <h2 className="about-title">ChessDrills Premium</h2>
+            <p className="about-lead">Then $39/year (Only $3.25/month) or $5.99/month.</p>
+          </div>
 
           {showLockedNote ? (
             <div className="about-note">
-              <div className="about-note-title">That feature is members only.</div>
-              <div className="about-note-sub">Upgrade to unlock it and keep your progress synced.</div>
+              <div className="about-note-title">That feature is Premium only.</div>
+              <div className="about-note-sub">Start the free trial to unlock it.</div>
             </div>
           ) : null}
 
           <div className="about-section">
-            <div className="about-section-title">Membership perks</div>
-
-            <ul className="about-bullets">
-              <li><strong>Practice Mode:</strong> Built to strengthen long term memory so your moves hold up under real game pressure.</li>
-              <li><strong>Drill Mode:</strong> Test how many lines you can complete consecutively without mistakes. Improve your accuracy and track your progress on the leaderboards!</li>
-              <li><strong>Leaderboards:</strong> Daily, weekly, and all time leaderboards. Climb the ranks and earn your bragging rights!</li>
-            </ul>
-
-            <p className="about-muted">
-           
-            </p>
-          </div>
-
-          <div className="about-section">
-            <div className="about-section-title">Choose a tier</div>
+            <div className="about-section-title">Choose a plan</div>
 
             <div className="about-tiers">
-              <div className="about-tier">
+              <button
+                type="button"
+                className={"about-tier " + (selectedPlan === "yearly" ? "selected" : "")}
+                onClick={() => selectPlan("yearly")}
+              >
                 <div className="about-tier-top">
-                  <div className="about-tier-name">Supporter</div>
-                  <div className="about-tier-price">Any amount</div>
+                  <div className="about-tier-name">
+                    Yearly
+                    <span className="about-tier-tag">Best value</span>
+                  </div>
+                  <div className="about-tier-price">$39 / year</div>
                 </div>
                 <div className="about-tier-desc">
-                  Helps keep the site alive, Thank you!
+                  Only $3.25/month.
                 </div>
+                <div className="about-tier-check" aria-hidden="true">
+                  <span className="about-tier-check-dot" />
+                </div>
+              </button>
 
-                <button
-                  className="about-tier-btn secondary"
-                  type="button"
-                  onClick={() => go(COFFEE_URL)}
-                >
-                  <span role="img" aria-label="coffee">☕</span> Tip jar
-                </button>
-              </div>
-
-              <div className="about-tier featured">
+              <button
+                type="button"
+                className={"about-tier " + (selectedPlan === "monthly" ? "selected" : "")}
+                onClick={() => selectPlan("monthly")}
+              >
                 <div className="about-tier-top">
-                  <div className="about-tier-name">1$</div>
-                  <div className="about-tier-price">Monthly</div>
+                  <div className="about-tier-name">Monthly</div>
+                  <div className="about-tier-price">$5.99 / month</div>
                 </div>
                 <div className="about-tier-desc">
-                  Unlock Practice, Drill, Leaderboards
+                  More flexible. Cancel anytime.
                 </div>
-
-                <button
-                  className="about-tier-btn"
-                  type="button"
-                  onClick={() => startCheckout("member")}
-                  disabled={busyTier !== "" && busyTier !== "member"}
-                >
-                  {busyTier === "member" ? "Opening checkout..." : "Upgrade monthly"}
-                </button>
-              </div>
-
-              <div className="about-tier">
-                <div className="about-tier-top">
-                  <div className="about-tier-name">5$</div>
-                  <div className="about-tier-price">Lifetime</div>
+                <div className="about-tier-check" aria-hidden="true">
+                  <span className="about-tier-check-dot" />
                 </div>
-                <div className="about-tier-desc">
-                  Unlock Practice, Drill, Leaderboards
-                </div>
-
-                <button
-                  className="about-tier-btn"
-                  type="button"
-                  onClick={() => startCheckout("lifetime")}
-                  disabled={busyTier !== "" && busyTier !== "lifetime"}
-                >
-                  {busyTier === "lifetime" ? "Opening checkout..." : "Upgrade lifetime"}
-                </button>
-              </div>
+              </button>
             </div>
+
+            <button
+              className="about-tier-btn"
+              type="button"
+              onClick={startTrialCheckout}
+              disabled={busy}
+              style={{ marginTop: 12, width: "100%" }}
+            >
+              {busy ? "Opening checkout..." : "Start Free Trial"}
+            </button>
+
+            <div className="about-muted" style={{ marginTop: 10 }}>
+              Cancel anytime before day 7
+            </div>
+          </div>
+        <div className="about-section">
+          <div className="about-section-title">What you get</div>
+
+            <ul className="about-bullets">
+              <li><strong>Learn mode:</strong> Build clean move accuracy before adding speed or pressure</li>
+              <li><strong>Practice mode:</strong> Built to strengthen long term memory so your moves hold up in real games</li>
+              <li><strong>Drill mode:</strong> Push for consecutive perfect runs</li>
+              <li><strong>Leaderboards:</strong> Daily, weekly, and all time leaderboards</li>
+            </ul>
           </div>
 
           <div className="about-section">
@@ -156,10 +150,9 @@ export default function About(props) {
               <li>Upgrade via Stripe</li>
               <li>Your account is marked as Member automatically and features unlock</li>
             </ol>
-
-            <p className="about-muted">
-            </p>
           </div>
+
+
         </div>
       </div>
     </div>

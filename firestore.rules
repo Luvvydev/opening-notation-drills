@@ -19,12 +19,12 @@ service cloud.firestore {
         "stripeSubscriptionId",
         "stripePaymentIntentId",
         "membershipUpdatedAt",
-        "membershipSource"
+        "membershipSource",
+        "membershipPlan"
       ];
     }
 
     function isClientAttemptingToWriteMembershipFields() {
-      // On create, resource does not exist. On update, resource exists.
       return request.resource.data.keys().hasAny([
         "membershipActive",
         "membershipTier",
@@ -32,7 +32,8 @@ service cloud.firestore {
         "stripeSubscriptionId",
         "stripePaymentIntentId",
         "membershipUpdatedAt",
-        "membershipSource"
+        "membershipSource",
+        "membershipPlan"
       ])
       && (
         !exists(/databases/$(database)/documents/users/$(request.auth.uid)) ||
@@ -43,7 +44,8 @@ service cloud.firestore {
           "stripeSubscriptionId",
           "stripePaymentIntentId",
           "membershipUpdatedAt",
-          "membershipSource"
+          "membershipSource",
+          "membershipPlan"
         ])
       );
     }
@@ -70,7 +72,8 @@ service cloud.firestore {
           "stripeSubscriptionId",
           "stripePaymentIntentId",
           "membershipUpdatedAt",
-          "membershipSource"
+          "membershipSource",
+          "membershipPlan"
         ]);
 
       // Client can update non-membership fields only.

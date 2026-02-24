@@ -91,6 +91,7 @@ const signOut = () => firebaseSignOut(auth);
   const membershipActive = !!(userDoc && userDoc.membershipActive);
   const isMember = membershipActive && (membershipTier === "member" || membershipTier === "lifetime");
 
+
   const value = useMemo(() => {
     return {
       user,

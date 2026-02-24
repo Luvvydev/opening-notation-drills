@@ -153,7 +153,9 @@ function buildHeatmap(daysMap, weeks) {
 }
 
 export default function Profile() {
-  const { user, membershipTier, membershipActive } = useAuth();
+  const { user, membershipTier, membershipActive, userDoc } = useAuth();
+
+ 
 
   const [displayName, setDisplayName] = useState("");
   const [username, setUsername] = useState("");
@@ -168,6 +170,7 @@ export default function Profile() {
   const [boardTheme, setBoardTheme] = useState(DEFAULT_THEME);
   const [previewWidth, setPreviewWidth] = useState(320);
   const boardPreviewRef = useRef(null);
+  const membershipPlan = (userData && userData.membershipPlan) || (userDoc && userDoc.membershipPlan) || null;
 
   useEffect(() => {
     const el = boardPreviewRef.current;
@@ -446,7 +449,7 @@ const onChangeBoardTheme = async (nextTheme) => {
             <div>
               <div className="profile-label">Membership Status</div>
               <div className="profile-value">
-                {membershipActive ? (membershipTier === "lifetime" ? "Lifetime" : "Member") : "Free"}
+                {membershipTier === "lifetime" ? "Lifetime Member" : (membershipActive ? (membershipPlan === "yearly" ? "Member (Yearly)" : "Member (Monthly)") : "Free")}
               </div>
             </div>
           </div>
@@ -577,24 +580,16 @@ const onChangeBoardTheme = async (nextTheme) => {
             <div className="profile-membership-tools">
               <div className="profile-membership-title">Membership</div>
 
-              {!membershipActive ? (
+              {
+              membershipTier === "lifetime" ? (
                 <div className="profile-membership-row">
-                  <div className="profile-membership-text">You are on the Free tier.</div>
-                  <button
-                    type="button"
-                    className="profile-membership-btn"
-                    onClick={() => { try { window.location.href = "#/about"; } catch (_) {} }}
-                  >
-                    Upgrade
-                  </button>
+                  <div className="profile-membership-text">Lifetime Member</div>
                 </div>
-              ) : membershipTier === "lifetime" ? (
+              ) : membershipActive ? (
                 <div className="profile-membership-row">
-                  <div className="profile-membership-text">Lifetime membership has no subscription to cancel.</div>
-                </div>
-              ) : (
-                <div className="profile-membership-row">
-                  <div className="profile-membership-text">Manage or cancel your subscription via Stripe.</div>
+                  <div className="profile-membership-text">
+                    {membershipPlan === "yearly" ? "Yearly subscription" : "Monthly subscription"}
+                  </div>
                   <button
                     type="button"
                     className="profile-membership-btn"
@@ -604,7 +599,19 @@ const onChangeBoardTheme = async (nextTheme) => {
                     {billingBusy ? "Opening..." : "Manage subscription"}
                   </button>
                 </div>
-              )}
+              ) : (
+                <div className="profile-membership-row">
+                  <div className="profile-membership-text">Start your 7 day free trial.</div>
+                  <button
+                    type="button"
+                    className="profile-membership-btn"
+                    onClick={() => { try { window.location.href = "#/about"; } catch (_) {} }}
+                  >
+                    Start Free Trial
+                  </button>
+                </div>
+              )
+            }
 
               {billingError ? <div className="profile-membership-error">{billingError}</div> : null}
             </div>

@@ -21,6 +21,43 @@ import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 
 const OPENING_SETS = CATALOG_OPENING_SETS;
 
+// ---- Logged-out free drills limiter ----
+const FREE_DRILLS_KEY = "chessdrills_free_drills_v1";
+
+function loadFreeDrillsMap() {
+  try {
+    const raw = window.localStorage.getItem(FREE_DRILLS_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch (_) {
+    return {};
+  }
+}
+
+function saveFreeDrillsMap(map) {
+  try {
+    window.localStorage.setItem(FREE_DRILLS_KEY, JSON.stringify(map || {}));
+  } catch (_) {}
+}
+
+function getFreeDrillsCount(openingKey) {
+  const key = String(openingKey || "");
+  const map = loadFreeDrillsMap();
+  const n = map && typeof map[key] === "number" ? map[key] : 0;
+  return Math.max(0, n);
+}
+
+function incFreeDrillsCount(openingKey) {
+  const key = String(openingKey || "");
+  const map = loadFreeDrillsMap();
+  const cur = map && typeof map[key] === "number" ? map[key] : 0;
+  const next = Math.max(0, cur) + 1;
+  map[key] = next;
+  saveFreeDrillsMap(map);
+  return next;
+}
+
 
 // ---- Learn shuffle bag (prevents repeating same few lines) ----
 const _learnBagKey = (openingKey) => `chessdrills.learn_bag.v1.${String(openingKey || "")}`;
@@ -319,12 +356,61 @@ this._countedSeenForRun = false;
     return true;
   };
 
+  enforceLearnGate = () => {
+    if (this.props.authLoading) return false;
+
+    const mode = this.state.gameMode || "learn";
+    const hasPaidAccess = !!(this.props.user && this.props.membershipActive === true);
+
+    // Practice + Drill are premium only.
+    if (mode === "practice" || mode === "drill") {
+      if (hasPaidAccess) return false;
+
+      if (this.props && this.props.history && this.props.history.replace) {
+        const pathname = this.props && this.props.location ? this.props.location.pathname : "/openings";
+        const search = this.props && this.props.location ? this.props.location.search : "";
+        const from = `${pathname}${search}`;
+
+        // Force them to About to start the Stripe trial.
+        this.props.history.replace({
+          pathname: "/about",
+          state: { from, reason: "membership_required" }
+        });
+      }
+      return true;
+    }
+
+    // Learn is free up to 3 completed drills per opening for non-members.
+    if (mode === "learn" && !hasPaidAccess) {
+      const openingKey = this.state.openingKey;
+      const used = getFreeDrillsCount(openingKey);
+
+      if (used >= 3) {
+        if (this.props && this.props.history && this.props.history.replace) {
+          const pathname = this.props && this.props.location ? this.props.location.pathname : "/openings";
+          const search = this.props && this.props.location ? this.props.location.search : "";
+          const from = `${pathname}${search}`;
+
+          this.props.history.replace({
+            pathname: "/about",
+            state: { from, reason: "trial_required" }
+          });
+        }
+        return true;
+      }
+    }
+
+    return false;
+  };
+
+
   componentDidMount() {
     window.addEventListener("mousedown", this.onWindowClick);
     window.addEventListener("keydown", this.onKeyDown);
     window.addEventListener("resize", this._onResizeMobileLayout);
     this._onResizeMobileLayout();
     if (this.maybeRedirectForLockedOpening(this.state.openingKey)) return;
+    if (this.enforceLearnGate()) return;
     this._backfillActivityFromStreak();
     this.resetLine(false);
   
@@ -338,6 +424,14 @@ this._countedSeenForRun = false;
   componentDidUpdate(prevProps, prevState) {
     if (prevProps.authLoading && !this.props.authLoading) {
       this.maybeRedirectForLockedOpening(this.state.openingKey);
+    }
+
+    if (!this.props.authLoading) {
+      if (this.enforceLearnGate()) return;
+    }
+
+    if (prevState.gameMode !== this.state.gameMode) {
+      if (this.enforceLearnGate()) return;
     }
 
     if (prevState.openingKey !== this.state.openingKey) {
@@ -1401,7 +1495,28 @@ onCompletedLine = () => {
   const mode = this.state.gameMode || "learn";
 
   const wasClean = !this.state.mistakeUnlocked && !this.state.helpUsed;
+
   this.bumpCompletedForMode(wasClean);
+
+  const hasPaidAccess = !!(this.props.user && this.props.membershipActive === true);
+
+  if (!hasPaidAccess && mode === "learn") {
+    const nextCount = incFreeDrillsCount(this.state.openingKey);
+    if (nextCount >= 3) {
+      try {
+        if (this.props && this.props.history && this.props.history.replace) {
+          const pathname = this.props && this.props.location ? this.props.location.pathname : "/openings";
+          const search = this.props && this.props.location ? this.props.location.search : "";
+          const from = `${pathname}${search}`;
+
+          this.props.history.replace({
+            pathname: "/about",
+            state: { from, reason: "trial_required" }
+          });
+        }
+      } catch (_) {}
+    }
+  }
 
   if (mode === "practice" && !wasClean) {
     // Practice still advances, but unclean completions will be prioritized again soon.
@@ -1934,27 +2049,13 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
     </div>
   );
 };
-
-
   setGameMode = (nextMode) => {
     const mode = nextMode || "learn";
 
-    if ((mode === "practice" || mode === "drill") && !this.props.user) {
-      const pathname = this.props && this.props.location ? this.props.location.pathname : "/openings";
-      const search = this.props && this.props.location ? this.props.location.search : "";
-      const from = `${pathname}${search}`;
+    const hasPaidAccess = !!(this.props.user && this.props.membershipActive === true);
 
-      if (this.props && this.props.history && this.props.history.replace) {
-        this.props.history.replace({
-          pathname: "/signup",
-          state: { from, reason: "membership_requires_account" }
-        });
-      }
-      return;
-    }
-
-    if ((mode === "practice" || mode === "drill") && !this.props.isMember) {
-      // Don't silently no-op. Explain and offer the upgrade path.
+    // Practice and Drill are always premium (Stripe trial counts as premium).
+    if ((mode === "practice" || mode === "drill") && !hasPaidAccess) {
       if (this.props && this.props.history && this.props.history.replace) {
         const pathname = this.props && this.props.location ? this.props.location.pathname : "/openings";
         const search = this.props && this.props.location ? this.props.location.search : "";
@@ -1968,6 +2069,26 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
         this.openMemberGate(mode);
       }
       return;
+    }
+
+    // Free users (logged out or free account) get up to 3 completed Learn drills per opening.
+    if (mode === "learn" && !hasPaidAccess) {
+      const openingKey = this.state.openingKey;
+      const used = getFreeDrillsCount(openingKey);
+
+      if (used >= 3) {
+        if (this.props && this.props.history && this.props.history.replace) {
+          const pathname = this.props && this.props.location ? this.props.location.pathname : "/openings";
+          const search = this.props && this.props.location ? this.props.location.search : "";
+          const from = `${pathname}${search}`;
+
+          this.props.history.replace({
+            pathname: "/about",
+            state: { from, reason: "trial_required" }
+          });
+        }
+        return;
+      }
     }
 
     if (mode === this.state.gameMode) return;
@@ -2118,7 +2239,7 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
     return (
       <div className="ot-mode-panel">
         <button
-          className={"ot-mode-card ot-mode-card-big" + (mode === "learn" ? " active" : "")}
+          className={"ot-mode-card ot-mode-card-big" + (mode === "learn" ? " active" : "") + ((!this.props.user || (!this.props.isMember && !false)) ? " locked" : "")}
           onClick={() => this.setGameMode("learn")}
           type="button"
         >
@@ -3239,7 +3360,7 @@ render() {
 }
 
 function OpeningTrainerWithAuth(props) {
-  const { user, authLoading, isMember, membershipTier } = useAuth();
+  const { user, authLoading, isMember, membershipTier, membershipActive } = useAuth();
   return (
     <OpeningTrainer
       {...props}
@@ -3247,6 +3368,7 @@ function OpeningTrainerWithAuth(props) {
       authLoading={authLoading}
       isMember={!!isMember}
       membershipTier={membershipTier}
+      membershipActive={membershipActive}
     />
   );
 }

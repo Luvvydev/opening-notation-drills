@@ -35,14 +35,44 @@ function TopNav(props) {
   const [subtitle, setSubtitle] = useState('');
   const [streak, setStreak] = useState(() => getStreakState());
 
-  const { user, signOut, isMember, membershipTier } = useAuth();
+  const { user, signOut, isMember } = useAuth();
 
   const [menuOpen, setMenuOpen] = useState(false);
+  const [ctaLabel, setCtaLabel] = useState('Start for free');
   const menuWrapRef = useRef(null);
 
   useEffect(() => {
     setSubtitle(wittySubtitles[Math.floor(Math.random() * wittySubtitles.length)]);
   }, []);
+
+  useEffect(() => {
+    // A/B test label copy for the CTA
+    if (isMember) return;
+
+    const isLoggedIn = !!user;
+    const key = isLoggedIn
+      ? 'chessdrills.cta.startfree.freeuser.v1'
+      : 'chessdrills.cta.startfree.loggedout.v1';
+
+    const variants = isLoggedIn
+      ? { A: 'Upgrade', B: 'Go Premium' }
+      : { A: 'Start for free', B: 'Create free account' };
+
+    let v = 'A';
+    try {
+      const stored = window.localStorage.getItem(key);
+      if (stored === 'A' || stored === 'B') {
+        v = stored;
+      } else {
+        v = Math.random() < 0.5 ? 'A' : 'B';
+        window.localStorage.setItem(key, v);
+      }
+    } catch (_) {
+      // ignore
+    }
+
+    setCtaLabel(variants[v] || variants.A);
+  }, [user, isMember]);
 
   useEffect(() => {
     const refresh = () => setStreak(getStreakState());
@@ -144,7 +174,21 @@ const onLinkDiscord = async () => {
 
           <div className="topnav-actions">
             <div className="topnav-right" ref={menuWrapRef}>
-              <div className="topnav-streak" title={streak.best ? `Best: ${streak.best}` : ""}>
+              {(!user || !isMember) && (
+        <Link
+          to={
+            user
+              ? { pathname: "/about", state: { from: "topnav", reason: "upgrade_cta" } }
+              : { pathname: "/signup", state: { from: "topnav", reason: "start_free" } }
+          }
+          className="topnav-button topnav-startfree topnav-startfree-pulse"
+          onClick={() => setMenuOpen(false)}
+        >
+          {ctaLabel}
+        </Link>
+      )}
+
+      <div className="topnav-streak" title={streak.best ? `Best: ${streak.best}` : ""}>
                 <span className="topnav-streak-text">
                   <span role="img" aria-label="streak">🔥</span> {streak.current || 0}
                 </span>
@@ -154,17 +198,13 @@ const onLinkDiscord = async () => {
                 <div
                   className={
                     "topnav-member-pill " +
-                    (isMember ? (membershipTier === "lifetime" ? "lifetime" : "member") : "free")
+                    (isMember ? "member" : "free")
                   }
                   title={
-                    isMember
-                      ? membershipTier === "lifetime"
-                        ? "Lifetime"
-                        : "Member"
-                      : "Free"
+                    isMember ? "Member" : "Free"
                   }
                 >
-                  {isMember ? (membershipTier === "lifetime" ? "💎" : "⭐") : "🆓"}
+                  {isMember ? "⭐" : "🆓"}
                 </div>
               ) : null}
 

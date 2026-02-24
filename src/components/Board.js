@@ -161,7 +161,6 @@ class Board extends Component {
 
   // For initMove colors
   updateSquareStyling = () => {
-    console.log(this.state);
     let squareStyles = {};
     squareStyles[this.state.initMoveData.from] = {backgroundColor: 'rgba(0, 255, 0, 0.3)'};
     squareStyles[this.state.initMoveData.to] = {backgroundColor: 'rgba(0, 255, 0, 0.3)'};
