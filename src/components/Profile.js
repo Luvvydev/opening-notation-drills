@@ -5,6 +5,7 @@ import { useAuth } from "../auth/AuthProvider";
 import { db, serverTimestamp, functions } from "../firebase";
 import { httpsCallable } from "firebase/functions";
 import { doc, onSnapshot, runTransaction, setDoc } from "firebase/firestore";
+import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 import Chessboard from "chessboardjsx";
 import { BOARD_THEMES, DEFAULT_THEME, PIECE_THEMES } from "../theme/boardThemes";
 import "./ActivityHeatmap.css";
@@ -14,6 +15,23 @@ import { getActivityDays } from "../utils/activityDays";
 const LS_SETTINGS_KEY = "notation_trainer_opening_settings_v1";
 const SECRET_UNLOCK_KEY = "chessdrills.secret_easteregg_v1";
 const AVATAR_KEY = "chessdrills.avatar_v1";
+const MAX_AVATAR_UPLOAD_BYTES = 2 * 1024 * 1024; // 2MB upload cap for avatars
+const storage = getStorage();
+
+function _avatarExt(file) {
+  try {
+    const name = file && file.name ? String(file.name) : "";
+    const i = name.lastIndexOf(".");
+    if (i === -1) return "";
+    const ext = name.slice(i + 1).toLowerCase().replace(/[^a-z0-9]/g, "");
+    if (!ext) return "";
+    if (ext.length > 8) return "";
+    return ext;
+  } catch (_) {
+    return "";
+  }
+}
+
 
 const KONAMI_KEYS = ["ArrowUp", "ArrowUp", "ArrowDown", "ArrowDown", "ArrowLeft", "ArrowRight", "ArrowLeft", "ArrowRight", "b", "a"];
 
@@ -208,6 +226,7 @@ export default function Profile() {
   const [pieceTheme, setPieceTheme] = useState("default");
   const [secretUnlocked, setSecretUnlocked] = useState(false);
   const [avatarDataUrl, setAvatarDataUrl] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState("");
   const [previewWidth, setPreviewWidth] = useState(320);
   const boardPreviewRef = useRef(null);
   const konamiRef = useRef({ idx: 0 });
@@ -321,7 +340,7 @@ export default function Profile() {
   }, [activityTick]);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) return false;
 
     const ref = doc(db, "users", user.uid);
 
@@ -338,6 +357,13 @@ export default function Profile() {
         if (remoteTheme) {
           setBoardTheme((cur) => (cur === remoteTheme ? cur : remoteTheme));
           saveLocalSettings({ boardTheme: remoteTheme });
+        }
+
+        const remoteAvatarUrl = data && data.avatarUrl ? String(data.avatarUrl) : "";
+        if (remoteAvatarUrl) {
+          setAvatarUrl((cur) => (cur === remoteAvatarUrl ? cur : remoteAvatarUrl));
+          // If we don't have a local preview, show the remote URL as the preview too.
+          setAvatarDataUrl((cur) => (cur ? cur : remoteAvatarUrl));
         }
 
         const remoteAvatar = data && data.avatar && data.avatar.dataUrl ? String(data.avatar.dataUrl) : "";
@@ -395,7 +421,7 @@ export default function Profile() {
 
     syncPublicProfile({ settings: { boardTheme: "purpleblack", pieceTheme: "alpha" } });
 
-    if (!user) return;
+    if (!user) return false;
     try {
       const ref = doc(db, "users", user.uid);
       runTransaction(db, async (tx) => {
@@ -463,6 +489,15 @@ const resizeImageToDataUrl = useCallback((file, maxSize) => {
     try {
       if (!file) return resolve("");
 
+      // If GIF, do NOT resize or convert
+      if (file.type === "image/gif") {
+        const reader = new FileReader();
+        reader.onerror = () => reject(new Error("read_failed"));
+        reader.onload = () => resolve(String(reader.result || ""));
+        reader.readAsDataURL(file);
+        return;
+      }
+
       const reader = new FileReader();
       reader.onerror = () => reject(new Error("read_failed"));
       reader.onload = () => {
@@ -487,7 +522,6 @@ const resizeImageToDataUrl = useCallback((file, maxSize) => {
             if (!ctx) return resolve("");
             ctx.drawImage(img, 0, 0, w, h);
 
-            // JPEG keeps size down. 0.86 usually looks fine for avatars.
             const dataUrl = canvas.toDataURL("image/jpeg", 0.86);
             resolve(dataUrl);
           } catch (e) {
@@ -506,30 +540,62 @@ const resizeImageToDataUrl = useCallback((file, maxSize) => {
 async function onAvatarFileChange(e) {
   const f = e && e.target && e.target.files && e.target.files[0] ? e.target.files[0] : null;
   if (!f) return;
+
+  setProfileError("");
+
+  if (f.size && f.size > MAX_AVATAR_UPLOAD_BYTES) {
+    setProfileError("Avatar too large. Keep it under 2MB.");
+    try { if (avatarInputRef.current) avatarInputRef.current.value = ""; } catch (_) {}
+    return;
+  }
+
+  // Local preview: keep GIF animation by reading directly; non-GIF gets resized to keep localStorage small.
+  let previewDataUrl = "";
   try {
-    const dataUrl = await resizeImageToDataUrl(f, 256);
-    if (!dataUrl) return;
+    previewDataUrl = await resizeImageToDataUrl(f, 256);
+  } catch (_) {
+    previewDataUrl = "";
+  }
 
-    saveAvatar(dataUrl);
-    setAvatarDataUrl(dataUrl);
+  if (previewDataUrl) {
+    setAvatarDataUrl(previewDataUrl);
+    try {
+      window.localStorage.setItem(AVATAR_KEY, previewDataUrl);
+    } catch (_) {}
+  }
 
-    await syncPublicProfile({ avatar: { dataUrl } });
+  // Upload original file bytes to Storage so public profile can display GIFs.
+  if (!user) return false;
 
-    // Best effort cloud sync. If it fails (rules/size), local still works.
-    if (user) {
-      try {
-        const ref = doc(db, "users", user.uid);
-        await runTransaction(db, async (tx) => {
-          tx.set(ref, { avatar: { dataUrl, updatedAt: serverTimestamp() }, updatedAt: serverTimestamp() }, { merge: true });
-        });
-      } catch (_) {}
+  try {
+    const ext = _avatarExt(f);
+    const fileName = ext ? `avatar.${ext}` : "avatar";
+    const path = `avatars/${user.uid}/${fileName}`;
+    const sref = storageRef(storage, path);
+
+    await uploadBytes(sref, f, {
+      contentType: f.type || undefined,
+      cacheControl: "public, max-age=86400"
+    });
+
+    const url = await getDownloadURL(sref);
+    const cacheBusted = `${url}${url.includes("?") ? "&" : "?"}v=${Date.now()}`;
+
+    setAvatarUrl(cacheBusted);
+
+    // Save to private user doc (if you already write avatar elsewhere, this is still safe as merge)
+    try {
+      await setDoc(doc(db, "users", user.uid), { avatarUrl: cacheBusted, updatedAt: serverTimestamp() }, { merge: true });
+    } catch (_) {}
+
+    // Save to public profile
+    const ok = await syncPublicProfile({ avatarUrl: cacheBusted });
+    if (!ok) {
+      setProfileError("Could not sync avatar URL to public profile.");
+      try { console.warn("publicProfiles write failed (avatarUrl)"); } catch (_) {}
     }
   } catch (_) {
-    // ignore
-  } finally {
-    try {
-      if (avatarInputRef.current) avatarInputRef.current.value = "";
-    } catch (_) {}
+    setProfileError("Avatar upload failed. Try a smaller file or re-login.");
   }
 }
 
@@ -550,9 +616,15 @@ function onAvatarClick() {
 
 
 async function syncPublicProfile(patch) {
-  if (!user) return;
-  const un = normalizeUsername(username);
-  if (!un) return;
+  if (!user) return false;
+
+  // IMPORTANT:
+  // Use the username that is actually owned/claimed (users/{uid}.username or auth userDoc),
+  // NOT the unsaved input field value while editing. Otherwise publicProfiles writes fail
+  // usernameOwner() because /usernames/{username} doesn't exist yet.
+  const claimed = normalizeUsername((userData && userData.username) || (userDoc && userDoc.username) || "");
+  const un = claimed || normalizeUsername(username || "");
+  if (!un) return false;
 
   const publicRef = doc(db, "publicProfiles", un);
 
@@ -567,8 +639,13 @@ async function syncPublicProfile(patch) {
 
   try {
     await setDoc(publicRef, merged, { merge: true });
-  } catch (_) {
-    // ignore
+    return true;
+  } catch (e) {
+    try {
+      const msg = e && e.code ? String(e.code) : (e && e.message ? String(e.message) : "");
+      console.warn("publicProfiles write failed", { username: un, msg });
+    } catch (_) {}
+    return false;
   }
 }
 
@@ -577,7 +654,7 @@ async function syncPublicProfile(patch) {
     const dn = displayName.trim();
     const un = normalizeUsername(username);
 
-    if (!user) return;
+    if (!user) return false;
 
     if (!dn) {
       setProfileError("Display name is required.");
@@ -628,7 +705,7 @@ async function syncPublicProfile(patch) {
             uid: user.uid,
             username: un,
             displayName: dn,
-            avatar: { dataUrl: avatarDataUrl || "" },
+            avatarUrl: avatarUrl || (userData && userData.avatarUrl ? String(userData.avatarUrl) : "") || "",
             activityDays:
               userData && userData.activityDays && typeof userData.activityDays === "object"
                 ? userData.activityDays
@@ -645,6 +722,7 @@ async function syncPublicProfile(patch) {
           { merge: true }
         );
       } catch (_) {
+        try { console.warn("publicProfiles write failed (saveProfile)"); } catch (_) {}
         // ignore (public profile rules might be stricter than private profile rules)
       }
 
@@ -662,7 +740,7 @@ const onChangeBoardTheme = async (nextTheme) => {
 
   await syncPublicProfile({ settings: { boardTheme: nextTheme, pieceTheme } });
 
-  if (!user) return;
+  if (!user) return false;
   try {
     const ref = doc(db, "users", user.uid);
     await runTransaction(db, async (tx) => {
@@ -683,7 +761,7 @@ const onChangePieceTheme = async (nextPieceTheme) => {
 
   await syncPublicProfile({ settings: { boardTheme, pieceTheme: nextPieceTheme } });
 
-  if (!user) return;
+  if (!user) return false;
   try {
     const ref = doc(db, "users", user.uid);
     await runTransaction(db, async (tx) => {
@@ -702,7 +780,7 @@ const onChangePieceTheme = async (nextPieceTheme) => {
 
   const openBillingPortal = async () => {
     setBillingError("");
-    if (!user) return;
+    if (!user) return false;
 
     // Lifetime purchases have no subscription to cancel.
     if (!membershipActive || membershipTier !== "member") {
@@ -888,7 +966,17 @@ const onChangePieceTheme = async (nextPieceTheme) => {
               const any = columns.some((col) => col.cells.some((c) => c.level > 0));
 
               return (
-                <div className="activity-scroll" ref={heatmapScrollRef}>
+                <div className="activity-with-dow">
+                  <div className="profile-dow-col" aria-hidden="true">
+                    <div className="profile-dow-cell"></div>
+                    <div className="profile-dow-cell">Mon</div>
+                    <div className="profile-dow-cell"></div>
+                    <div className="profile-dow-cell">Wed</div>
+                    <div className="profile-dow-cell"></div>
+                    <div className="profile-dow-cell">Fri</div>
+                    <div className="profile-dow-cell"></div>
+                  </div>
+                  <div className="activity-scroll" ref={heatmapScrollRef}>
                   <div className="activity-inner">
                   <div className="activity-months" style={{ width: widthPx }}>
   {monthLabels.map((m) => (
@@ -902,21 +990,42 @@ const onChangePieceTheme = async (nextPieceTheme) => {
   ))}
 </div>
 
-                  <div className="activity-grid" role="img" aria-label="Activity heatmap">
-                    {columns.map((col, w) => (
-                      <div className="activity-week" key={w}>
-                        {col.cells.map((c) => (
-                          <div
-                            key={c.ymd}
-                            className={`activity-cell level-${c.level}${c.isFuture ? " is-future" : ""}`}
-                            title={c.isFuture ? "" : `${c.ymd}  ${c.count} activity`}
-                          />
-                        ))}
-                      </div>
-                    ))}
-                  </div>
+                  <div style={{ display: "flex", alignItems: "flex-start" }}>
+  <div
+    className="activity-dow"
+    style={{
+      width: 28,
+      marginRight: 8,
+      paddingTop: 18,
+      fontSize: 12,
+      opacity: 0.65,
+      lineHeight: "20px"
+    }}
+  >
+    <div style={{ height: 20 }} />
+    <div>Mon</div>
+    <div style={{ height: 20 }} />
+    <div>Wed</div>
+    <div style={{ height: 20 }} />
+    <div>Fri</div>
+  </div>
 
-                  {!any && (
+  <div className="activity-grid" role="img" aria-label="Activity heatmap">
+    {columns.map((col, w) => (
+      <div className="activity-week" key={w}>
+        {col.cells.map((c) => (
+          <div
+            key={c.ymd}
+            className={`activity-cell level-${c.level}${c.isFuture ? " is-future" : ""}`}
+            title={c.isFuture ? "" : `${c.ymd}  ${c.count} activity`}
+          />
+        ))}
+      </div>
+    ))}
+  </div>
+</div>
+
+{!any && (
                     <div className="activity-empty">Keep drilling to start building your history.</div>
                   )}
 
@@ -925,6 +1034,7 @@ const onChangePieceTheme = async (nextPieceTheme) => {
                   </div>
                   </div>
                 </div>
+              </div>
               );
             })()}
           </div>

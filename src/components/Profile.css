@@ -244,3 +244,39 @@
   font-size: 13px;
   color: rgba(255, 180, 180, 0.95);
 }
+
+/* Force dark selects on Windows (options default to white otherwise) */
+.profile-select {
+  background-color: rgba(0, 0, 0, 0.35);
+  color: rgba(233, 237, 242, 0.95);
+}
+
+.profile-select option {
+  background-color: rgba(10, 10, 14, 1);
+  color: rgba(233, 237, 242, 0.95);
+}
+
+/* Heatmap weekday labels (GitHub style) */
+.activity-with-dow {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.profile-dow-col {
+  width: 26px;
+  padding-top: 22px; /* aligns with month label row */
+  flex: 0 0 26px;
+}
+
+.profile-dow-cell {
+  height: 16px;
+  line-height: 16px;
+  margin-bottom: 4px;
+  font-size: 12px;
+  opacity: 0.65;
+}
+
+.profile-dow-cell:last-child {
+  margin-bottom: 0;
+}

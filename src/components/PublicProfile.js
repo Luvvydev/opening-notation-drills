@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import TopNav from "./TopNav";
 import Chessboard from "chessboardjsx";
@@ -110,9 +110,6 @@ function normalizeUsername(raw) {
 }
 
 function getMembershipStatus(profileData) {
-  // Inference:
-  // - Public profile should not leak paid status unless you explicitly want that.
-  // - If you do want it, store a safe public field (e.g. profileData.publicBadge = "Member").
   if (profileData && typeof profileData.publicBadge === "string" && profileData.publicBadge.trim()) {
     return profileData.publicBadge.trim();
   }
@@ -126,21 +123,39 @@ export default function PublicProfile() {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const heatmapScrollRef = useRef(null);
+
   useEffect(() => {
     if (!un) return;
 
+    let cancelled = false;
+
     (async () => {
-      const snap = await getDoc(doc(db, "publicProfiles", un));
-      setProfile(snap.exists() ? snap.data() : null);
-      setLoading(false);
+      try {
+        const snap = await getDoc(doc(db, "publicProfiles", un));
+        if (cancelled) return;
+        setProfile(snap.exists() ? snap.data() : null);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
     })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [un]);
+
+  // Auto scroll activity heatmap to the most recent days
+  useEffect(() => {
+    const el = heatmapScrollRef.current;
+    if (!el) return;
+    el.scrollLeft = el.scrollWidth;
+  }, [profile]);
 
   const membershipStatus = useMemo(() => getMembershipStatus(profile), [profile]);
 
   return (
     <>
-      {/* Hide hero here so the public profile layout doesn't get shoved around by the big banner */}
       <TopNav title="Chess Opening Drills" hideHero />
 
       <style>{`
@@ -247,13 +262,21 @@ export default function PublicProfile() {
           <div className="pp-card">
             <div className="pp-title">Profile</div>
 
-            {profile && profile.avatar && profile.avatar.dataUrl ? (
-              <img
-                className="pp-avatar"
-                src={profile.avatar.dataUrl}
-                alt="Avatar"
-              />
-            ) : null}
+            {(() => {
+              const base =
+                (profile && profile.avatarUrl ? String(profile.avatarUrl) : "") ||
+                (profile && profile.avatar && profile.avatar.dataUrl ? String(profile.avatar.dataUrl) : "") ||
+                "";
+              if (!base) return null;
+
+              let src = base;
+              if (profile && profile.avatarUrl && profile.updatedAt && profile.updatedAt.seconds) {
+                const v = String(profile.updatedAt.seconds);
+                src = `${base}${base.includes("?") ? "&" : "?"}v=${v}`;
+              }
+
+              return <img className="pp-avatar" src={src} alt="Avatar" />;
+            })()}
 
             <div className="pp-toprow">
               <div>
@@ -274,24 +297,24 @@ export default function PublicProfile() {
 
             <div className="pp-hr" />
 
-<div className="pp-section-title">Board</div>
+            <div className="pp-section-title">Board</div>
             <div className="pp-box pp-board-box">
               <div className="pp-board-wrap">
                 <Chessboard
-    width={320}
-    position="start"
-    draggable={false}
-    pieceTheme={
-      profile && profile.settings && profile.settings.pieceTheme
-        ? (PIECE_THEMES && PIECE_THEMES[profile.settings.pieceTheme]) || undefined
-        : undefined
-    }
-    {...BOARD_THEMES[(profile && profile.settings && profile.settings.boardTheme) || DEFAULT_THEME]}
-  />
+                  width={320}
+                  position="start"
+                  draggable={false}
+                  pieceTheme={
+                    profile && profile.settings && profile.settings.pieceTheme
+                      ? (PIECE_THEMES && PIECE_THEMES[profile.settings.pieceTheme]) || undefined
+                      : undefined
+                  }
+                  {...BOARD_THEMES[(profile && profile.settings && profile.settings.boardTheme) || DEFAULT_THEME]}
+                />
               </div>
             </div>
 
-<div className="pp-hr" />
+            <div className="pp-hr" />
 
             <div className="pp-section-title">Activity</div>
             <div className="pp-box">
@@ -321,33 +344,54 @@ export default function PublicProfile() {
                 }
 
                 return (
-                  <div className="activity-scroll">
+                  <div className="activity-scroll" ref={heatmapScrollRef}>
                     <div className="activity-inner">
-                    <div className="activity-months" style={{ width: widthPx }}>
-                      {monthLabels.map((m) => (
-                        <div
-                          key={m.weekIndex + ":" + m.label}
-                          className="activity-month"
-                          style={{ left: m.leftPx }}
-                        >
-                          {m.label}
-                        </div>
-                      ))}
-                    </div>
+                      <div className="activity-months" style={{ width: widthPx }}>
+                        {monthLabels.map((m) => (
+                          <div
+                            key={m.weekIndex + ":" + m.label}
+                            className="activity-month"
+                            style={{ left: m.leftPx }}
+                          >
+                            {m.label}
+                          </div>
+                        ))}
+                      </div>
 
-                    <div className="activity-grid" role="img" aria-label="Activity heatmap">
-                      {columns.map((col, w) => (
-                        <div className="activity-week" key={w}>
-                          {col.cells.map((c) => (
-                            <div
-                              key={c.ymd}
-                              className={`activity-cell level-${c.level}${c.isFuture ? " is-future" : ""}`}
-                              title={c.isFuture ? "" : `${c.ymd}  ${c.count} activity`}
-                            />
+                      <div style={{ display: "flex", alignItems: "flex-start" }}>
+                        <div
+                          style={{
+                            width: 28,
+                            marginRight: 8,
+                            paddingTop: 18,
+                            fontSize: 12,
+                            opacity: 0.65,
+                            lineHeight: "20px"
+                          }}
+                          aria-hidden="true"
+                        >
+                          <div style={{ height: 20 }} />
+                          <div>Mon</div>
+                          <div style={{ height: 20 }} />
+                          <div>Wed</div>
+                          <div style={{ height: 20 }} />
+                          <div>Fri</div>
+                        </div>
+
+                        <div className="activity-grid" role="img" aria-label="Activity heatmap">
+                          {columns.map((col, w) => (
+                            <div className="activity-week" key={w}>
+                              {col.cells.map((c) => (
+                                <div
+                                  key={c.ymd}
+                                  className={`activity-cell level-${c.level}${c.isFuture ? " is-future" : ""}`}
+                                  title={c.isFuture ? "" : `${c.ymd}  ${c.count} activity`}
+                                />
+                              ))}
+                            </div>
                           ))}
                         </div>
-                      ))}
-                    </div>
+                      </div>
                     </div>
                   </div>
                 );

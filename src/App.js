@@ -50,9 +50,13 @@ class App extends React.Component {
 
             <Route path='/login' component={Login} />
             <Route path='/signup' component={Signup} />
-            <ProtectedRoute path='/profile' component={Profile} />
 
+            {/* Public profiles (keep both routes) */}
+            <Route path='/profile/u/:username' component={PublicProfile} />
             <Route path='/u/:username' component={PublicProfile} />
+
+            {/* Private profile must be exact so it doesn't swallow /profile/u/:username */}
+            <ProtectedRoute exact path='/profile' component={Profile} />
           </AuthProvider>
         </HashRouter>
       </div>
