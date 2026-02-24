@@ -213,3 +213,16 @@
     text-align: center;
   }
 }
+
+
+/* clickable player names */
+.lb-userlink {
+  color: inherit;
+  text-decoration: none;
+  font-weight: 900;
+}
+
+.lb-userlink:hover {
+  text-decoration: underline;
+}
+

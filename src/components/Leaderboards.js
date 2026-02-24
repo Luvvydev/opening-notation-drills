@@ -14,7 +14,15 @@ function safeName(d) {
   return "Anonymous";
 }
 
+function normalizeUsername(raw) {
+  return String(raw || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9_]/g, "");
+}
+
 function getCollectionName(period) {
+
   if (period === "day") return "leaderboards_drill_daily";
   if (period === "week") return "leaderboards_drill_weekly";
   if (period === "month") return "leaderboards_drill_monthly";
@@ -49,7 +57,8 @@ export default function Leaderboards() {
           const data = docSnap.data() || {};
                     out.push({
             uid: docSnap.id,
-                        name: safeName(data),
+            username: data && data.username ? String(data.username).trim() : "",
+            name: safeName(data),
             score: Number(data && data.score) || 0
           });
         });
@@ -157,7 +166,18 @@ export default function Leaderboards() {
             <td>
               <span className="lb-rank-pill">#{i + 1}</span>
             </td>
-            <td>{isMe ? r.name + " (you)" : r.name}</td>
+            <td>
+          {(() => {
+            const label = isMe ? r.name + " (you)" : r.name;
+            const un = normalizeUsername(r.username);
+            if (!un) return label;
+            return (
+              <a className="lb-userlink" href={`#/u/${un}`} title={`View @${un}`}>
+                {label}
+              </a>
+            );
+          })()}
+        </td>
             <td style={{ textAlign: "right", fontWeight: 800 }}>{r.score}</td>
           </tr>
         );

@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import TopNav from "./TopNav";
+import Chessboard from "chessboardjsx";
+import { BOARD_THEMES, DEFAULT_THEME, PIECE_THEMES } from "../theme/boardThemes";
 import "./ActivityHeatmap.css";
 import { db } from "../firebase";
 import { doc, getDoc } from "firebase/firestore";
@@ -165,6 +167,17 @@ export default function PublicProfile() {
           margin: 6px 0 18px;
         }
 
+        .pp-avatar {
+          width: 92px;
+          height: 92px;
+          border-radius: 999px;
+          object-fit: cover;
+          display: block;
+          margin: 0 auto 14px;
+          border: 1px solid rgba(255,255,255,0.14);
+          box-shadow: 0 12px 30px rgba(0,0,0,0.45);
+        }
+
         .pp-toprow {
           display: grid;
           grid-template-columns: 1fr 1fr 1fr;
@@ -203,6 +216,16 @@ export default function PublicProfile() {
           padding: 14px;
         }
 
+        .pp-board-box {
+          max-width: 360px;
+          margin: 0 auto;
+          text-align: center;
+        }
+
+        .pp-board-wrap {
+          display: inline-block;
+        }
+
         @media (max-width: 820px) {
           .pp-toprow {
             grid-template-columns: 1fr;
@@ -224,6 +247,14 @@ export default function PublicProfile() {
           <div className="pp-card">
             <div className="pp-title">Profile</div>
 
+            {profile && profile.avatar && profile.avatar.dataUrl ? (
+              <img
+                className="pp-avatar"
+                src={profile.avatar.dataUrl}
+                alt="Avatar"
+              />
+            ) : null}
+
             <div className="pp-toprow">
               <div>
                 <div className="pp-label">Username</div>
@@ -242,6 +273,25 @@ export default function PublicProfile() {
             </div>
 
             <div className="pp-hr" />
+
+<div className="pp-section-title">Board</div>
+            <div className="pp-box pp-board-box">
+              <div className="pp-board-wrap">
+                <Chessboard
+    width={320}
+    position="start"
+    draggable={false}
+    pieceTheme={
+      profile && profile.settings && profile.settings.pieceTheme
+        ? (PIECE_THEMES && PIECE_THEMES[profile.settings.pieceTheme]) || undefined
+        : undefined
+    }
+    {...BOARD_THEMES[(profile && profile.settings && profile.settings.boardTheme) || DEFAULT_THEME]}
+  />
+              </div>
+            </div>
+
+<div className="pp-hr" />
 
             <div className="pp-section-title">Activity</div>
             <div className="pp-box">

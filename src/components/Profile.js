@@ -389,7 +389,11 @@ export default function Profile() {
     // Immediate payoff.
     const next = saveLocalSettings({ boardTheme: "purpleblack", pieceTheme: "alpha" });
     setBoardTheme(next.boardTheme || DEFAULT_THEME);
+
     setPieceTheme(next.pieceTheme || "default");
+
+
+    syncPublicProfile({ settings: { boardTheme: "purpleblack", pieceTheme: "alpha" } });
 
     if (!user) return;
     try {
@@ -509,6 +513,8 @@ async function onAvatarFileChange(e) {
     saveAvatar(dataUrl);
     setAvatarDataUrl(dataUrl);
 
+    await syncPublicProfile({ avatar: { dataUrl } });
+
     // Best effort cloud sync. If it fails (rules/size), local still works.
     if (user) {
       try {
@@ -540,6 +546,30 @@ function onAvatarClick() {
     return;
   }
   openAvatarPicker();
+}
+
+
+async function syncPublicProfile(patch) {
+  if (!user) return;
+  const un = normalizeUsername(username);
+  if (!un) return;
+
+  const publicRef = doc(db, "publicProfiles", un);
+
+  const base = {
+    uid: user.uid,
+    username: un,
+    displayName: (displayName || "").trim() || "Player",
+    updatedAt: serverTimestamp()
+  };
+
+  const merged = { ...base, ...(patch || {}) };
+
+  try {
+    await setDoc(publicRef, merged, { merge: true });
+  } catch (_) {
+    // ignore
+  }
 }
 
   const saveProfile = async () => {
@@ -598,6 +628,18 @@ function onAvatarClick() {
             uid: user.uid,
             username: un,
             displayName: dn,
+            avatar: { dataUrl: avatarDataUrl || "" },
+            activityDays:
+              userData && userData.activityDays && typeof userData.activityDays === "object"
+                ? userData.activityDays
+                : {},
+            settings: { boardTheme: boardTheme || DEFAULT_THEME, pieceTheme: pieceTheme || "default" },
+            publicBadge:
+              membershipTier === "lifetime"
+                ? "Lifetime Member"
+                : membershipActive
+                ? "Member"
+                : "",
             updatedAt: serverTimestamp()
           },
           { merge: true }
@@ -618,6 +660,8 @@ const onChangeBoardTheme = async (nextTheme) => {
   const next = saveLocalSettings({ boardTheme: nextTheme });
   setBoardTheme(next.boardTheme || DEFAULT_THEME);
 
+  await syncPublicProfile({ settings: { boardTheme: nextTheme, pieceTheme } });
+
   if (!user) return;
   try {
     const ref = doc(db, "users", user.uid);
@@ -636,6 +680,8 @@ const onChangeBoardTheme = async (nextTheme) => {
 const onChangePieceTheme = async (nextPieceTheme) => {
   const next = saveLocalSettings({ pieceTheme: nextPieceTheme });
   setPieceTheme(next.pieceTheme || "default");
+
+  await syncPublicProfile({ settings: { boardTheme, pieceTheme: nextPieceTheme } });
 
   if (!user) return;
   try {
