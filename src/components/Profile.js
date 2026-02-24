@@ -1,5 +1,5 @@
 // Profile.js
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import TopNav from "./TopNav";
 import { useAuth } from "../auth/AuthProvider";
 import { db, serverTimestamp, functions } from "../firebase";
@@ -13,6 +13,7 @@ import { getActivityDays } from "../utils/activityDays";
 
 const LS_SETTINGS_KEY = "notation_trainer_opening_settings_v1";
 const SECRET_UNLOCK_KEY = "chessdrills.secret_easteregg_v1";
+const AVATAR_KEY = "chessdrills.avatar_v1";
 
 const KONAMI_KEYS = ["ArrowUp", "ArrowUp", "ArrowDown", "ArrowDown", "ArrowLeft", "ArrowRight", "ArrowLeft", "ArrowRight", "b", "a"];
 
@@ -27,6 +28,23 @@ function loadSecretUnlocked() {
 function saveSecretUnlocked(v) {
   try {
     window.localStorage.setItem(SECRET_UNLOCK_KEY, v ? "1" : "0");
+  } catch (_) {}
+
+}
+
+function loadAvatar() {
+  try {
+    const raw = window.localStorage.getItem(AVATAR_KEY);
+    return raw ? String(raw) : "";
+  } catch (_) {
+    return "";
+  }
+}
+
+function saveAvatar(dataUrl) {
+  try {
+    if (!dataUrl) window.localStorage.removeItem(AVATAR_KEY);
+    else window.localStorage.setItem(AVATAR_KEY, String(dataUrl));
   } catch (_) {}
 }
 
@@ -189,10 +207,14 @@ export default function Profile() {
   const [boardTheme, setBoardTheme] = useState(DEFAULT_THEME);
   const [pieceTheme, setPieceTheme] = useState("default");
   const [secretUnlocked, setSecretUnlocked] = useState(false);
+  const [avatarDataUrl, setAvatarDataUrl] = useState("");
   const [previewWidth, setPreviewWidth] = useState(320);
   const boardPreviewRef = useRef(null);
   const konamiRef = useRef({ idx: 0 });
   const longPressTimerRef = useRef(null);
+  const longPressFiredRef = useRef(false);
+  const avatarInputRef = useRef(null);
+  const unlockSecretRef = useRef(null);
   const membershipPlan = (userData && userData.membershipPlan) || (userDoc && userDoc.membershipPlan) || null;
 
   useEffect(() => {
@@ -239,39 +261,10 @@ export default function Profile() {
     setBoardTheme(s.boardTheme || DEFAULT_THEME);
     setPieceTheme(s.pieceTheme || "default");
     setSecretUnlocked(loadSecretUnlocked());
+    setAvatarDataUrl(loadAvatar());
   }, []);
 
-    const unlockSecret = useCallback(() => {
-    if (loadSecretUnlocked()) {
-      setSecretUnlocked(true);
-      return;
-    }
-
-    saveSecretUnlocked(true);
-    setSecretUnlocked(true);
-
-    // Immediate payoff.
-    const next = saveLocalSettings({ boardTheme: "purpleblack", pieceTheme: "alpha" });
-    setBoardTheme(next.boardTheme || DEFAULT_THEME);
-    setPieceTheme(next.pieceTheme || "default");
-
-    if (!user) return;
-    try {
-      const ref = doc(db, "users", user.uid);
-      runTransaction(db, async (tx) => {
-        tx.set(
-          ref,
-          { settings: { boardTheme: "purpleblack", pieceTheme: "alpha" }, updatedAt: serverTimestamp() },
-          { merge: true }
-        );
-      });
-    } catch (_) {
-      // ignore
-    }
-  
-  }, [user]);
-
-useEffect(() => {
+  useEffect(() => {
     const onKeyDown = (e) => {
       if (!e) return;
       const t = e.target;
@@ -290,7 +283,7 @@ useEffect(() => {
 
       if (st.idx >= KONAMI_KEYS.length) {
         st.idx = 0;
-        unlockSecret();
+        if (unlockSecretRef.current) unlockSecretRef.current();
       }
 
       konamiRef.current = st;
@@ -298,7 +291,7 @@ useEffect(() => {
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [unlockSecret]);
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -347,6 +340,15 @@ useEffect(() => {
           saveLocalSettings({ boardTheme: remoteTheme });
         }
 
+        const remoteAvatar = data && data.avatar && data.avatar.dataUrl ? String(data.avatar.dataUrl) : "";
+        if (remoteAvatar) {
+          setAvatarDataUrl((cur) => {
+            if (cur) return cur;
+            saveAvatar(remoteAvatar);
+            return remoteAvatar;
+          });
+        }
+
         const remotePieceTheme = data && data.settings && data.settings.pieceTheme;
         if (remotePieceTheme) {
           setPieceTheme((cur) => (cur === remotePieceTheme ? cur : remotePieceTheme));
@@ -375,7 +377,34 @@ useEffect(() => {
     }
   }, [editingDisplayName]);
 
-  
+  function unlockSecret() {
+    if (loadSecretUnlocked()) {
+      setSecretUnlocked(true);
+      return;
+    }
+
+    saveSecretUnlocked(true);
+    setSecretUnlocked(true);
+
+    // Immediate payoff.
+    const next = saveLocalSettings({ boardTheme: "purpleblack", pieceTheme: "alpha" });
+    setBoardTheme(next.boardTheme || DEFAULT_THEME);
+    setPieceTheme(next.pieceTheme || "default");
+
+    if (!user) return;
+    try {
+      const ref = doc(db, "users", user.uid);
+      runTransaction(db, async (tx) => {
+        tx.set(
+          ref,
+          { settings: { boardTheme: "purpleblack", pieceTheme: "alpha" }, updatedAt: serverTimestamp() },
+          { merge: true }
+        );
+      });
+    } catch (_) {
+      // ignore
+    }
+  }
 
   function normalizeSecretInput(s) {
     return String(s || "")
@@ -383,6 +412,10 @@ useEffect(() => {
       .replace(/\s+/g, "")
       .replace(/[^a-z0-9]/g, "");
   }
+
+  useEffect(() => {
+    unlockSecretRef.current = unlockSecret;
+  });
 
   function matchesSecret(s) {
     const x = normalizeSecretInput(s);
@@ -409,6 +442,7 @@ useEffect(() => {
     if (longPressTimerRef.current) return;
     longPressTimerRef.current = setTimeout(() => {
       longPressTimerRef.current = null;
+      longPressFiredRef.current = true;
       promptForSecret();
     }, 650);
   }
@@ -418,6 +452,95 @@ useEffect(() => {
     clearTimeout(longPressTimerRef.current);
     longPressTimerRef.current = null;
   }
+
+
+const resizeImageToDataUrl = useCallback((file, maxSize) => {
+  return new Promise((resolve, reject) => {
+    try {
+      if (!file) return resolve("");
+
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error("read_failed"));
+      reader.onload = () => {
+        const img = new Image();
+        img.onerror = () => reject(new Error("image_failed"));
+        img.onload = () => {
+          try {
+            const w0 = img.width || 0;
+            const h0 = img.height || 0;
+            if (!w0 || !h0) return resolve("");
+
+            const s = Math.max(w0, h0);
+            const scale = s > maxSize ? (maxSize / s) : 1;
+            const w = Math.max(1, Math.round(w0 * scale));
+            const h = Math.max(1, Math.round(h0 * scale));
+
+            const canvas = document.createElement("canvas");
+            canvas.width = w;
+            canvas.height = h;
+
+            const ctx = canvas.getContext("2d");
+            if (!ctx) return resolve("");
+            ctx.drawImage(img, 0, 0, w, h);
+
+            // JPEG keeps size down. 0.86 usually looks fine for avatars.
+            const dataUrl = canvas.toDataURL("image/jpeg", 0.86);
+            resolve(dataUrl);
+          } catch (e) {
+            reject(e);
+          }
+        };
+        img.src = String(reader.result || "");
+      };
+      reader.readAsDataURL(file);
+    } catch (e) {
+      reject(e);
+    }
+  });
+}, []);
+
+async function onAvatarFileChange(e) {
+  const f = e && e.target && e.target.files && e.target.files[0] ? e.target.files[0] : null;
+  if (!f) return;
+  try {
+    const dataUrl = await resizeImageToDataUrl(f, 256);
+    if (!dataUrl) return;
+
+    saveAvatar(dataUrl);
+    setAvatarDataUrl(dataUrl);
+
+    // Best effort cloud sync. If it fails (rules/size), local still works.
+    if (user) {
+      try {
+        const ref = doc(db, "users", user.uid);
+        await runTransaction(db, async (tx) => {
+          tx.set(ref, { avatar: { dataUrl, updatedAt: serverTimestamp() }, updatedAt: serverTimestamp() }, { merge: true });
+        });
+      } catch (_) {}
+    }
+  } catch (_) {
+    // ignore
+  } finally {
+    try {
+      if (avatarInputRef.current) avatarInputRef.current.value = "";
+    } catch (_) {}
+  }
+}
+
+function openAvatarPicker() {
+  try {
+    if (avatarInputRef.current) avatarInputRef.current.click();
+  } catch (_) {}
+}
+
+function onAvatarClick() {
+  // Prevent click firing after long press prompt.
+  if (longPressFiredRef.current) {
+    longPressFiredRef.current = false;
+    return;
+  }
+  openAvatarPicker();
+}
 
   const saveProfile = async () => {
     setProfileError("");
@@ -566,6 +689,57 @@ const onChangePieceTheme = async (nextPieceTheme) => {
       <div className="profile-wrap">
         <div className="profile-card">
           <h1 style={{ textAlign: "center" }}>Profile</h1>
+
+
+
+<input
+  ref={avatarInputRef}
+  type="file"
+  accept="image/*"
+  onChange={onAvatarFileChange}
+  style={{ display: "none" }}
+/>
+
+          <div
+            onMouseDown={beginLongPress}
+            onMouseUp={cancelLongPress}
+            onMouseLeave={cancelLongPress}
+            onTouchStart={beginLongPress}
+            onTouchEnd={cancelLongPress}
+            onTouchCancel={cancelLongPress}
+            onClick={onAvatarClick}
+            style={{
+              width: 72,
+              height: 72,
+              borderRadius: 999,
+              margin: "10px auto 16px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 28,
+              fontWeight: 800,
+              background: "radial-gradient(circle at 30% 30%, rgba(183,177,255,0.95), rgba(58,44,110,0.95))",
+              border: "1px solid rgba(255,255,255,0.14)",
+              boxShadow: "0 10px 26px rgba(0,0,0,0.35)",
+              userSelect: "none",
+              WebkitUserSelect: "none",
+              touchAction: "manipulation",
+              cursor: "pointer"
+            }}
+            title="avatar"
+            aria-label="avatar"
+            role="button"
+          >
+{avatarDataUrl ? (
+              <img
+                src={avatarDataUrl}
+                alt="Avatar"
+                style={{ width: "100%", height: "100%", borderRadius: 999, objectFit: "cover" }}
+              />
+            ) : (
+              (displayName || username || "?").trim().slice(0, 1).toUpperCase()
+            )}
+          </div>
 
           <div className="profile-toprow">
             <div>
