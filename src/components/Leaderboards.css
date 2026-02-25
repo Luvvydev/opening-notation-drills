@@ -226,3 +226,135 @@
   text-decoration: underline;
 }
 
+
+
+/* tier + movement */
+.lb-tier {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 10px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.1px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(233, 237, 242, 0.92);
+  white-space: nowrap;
+}
+
+.lb-delta {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 8px;
+  padding: 3px 7px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 900;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(233, 237, 242, 0.9);
+}
+
+.lb-delta.up {
+  background: rgba(0, 255, 180, 0.10);
+  border-color: rgba(0, 255, 180, 0.18);
+}
+
+.lb-delta.down {
+  background: rgba(255, 90, 90, 0.10);
+  border-color: rgba(255, 90, 90, 0.18);
+}
+
+.lb-since {
+  margin-left: 8px;
+  color: rgba(233, 237, 242, 0.62);
+  font-weight: 800;
+  font-size: 12px;
+}
+
+/* rivals window */
+.lb-rivals {
+  padding: 14px 16px 10px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.lb-rivals-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.lb-rivals-title {
+  font-weight: 900;
+  font-size: 14px;
+}
+
+.lb-rivals-sub {
+  color: rgba(233, 237, 242, 0.66);
+  font-weight: 800;
+  font-size: 12px;
+}
+
+.lb-rivals-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.lb-rival-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.lb-rival-row.me {
+  background: rgba(255, 213, 74, 0.08);
+  border-color: rgba(255, 213, 74, 0.18);
+}
+
+.lb-rival-rank {
+  width: 120px;
+  display: flex;
+  align-items: center;
+}
+
+.lb-rival-name {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 900;
+}
+
+.lb-rival-score {
+  width: 70px;
+  text-align: right;
+  font-weight: 900;
+}
+
+.lb-rivals-note {
+  margin-top: 10px;
+  color: rgba(233, 237, 242, 0.58);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+@media (max-width: 520px) {
+  .lb-rival-rank {
+    width: 105px;
+  }
+
+  .lb-tier {
+    display: none;
+  }
+}

@@ -17,6 +17,7 @@ import OpeningTrainerCustomModal from "./openingTrainer/OpeningTrainerCustomModa
 import OpeningTrainerConfetti from "./openingTrainer/OpeningTrainerConfetti";
 import { db } from "../firebase";
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
+import { dayKeyFromDate, isoWeekKeyFromDate, monthKeyFromDate } from "../utils/periodKeys";
 
 
 const OPENING_SETS = CATALOG_OPENING_SETS;
@@ -2312,22 +2313,45 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
 
       this._lbUserCache = { uid: u.uid, username };
 
-      const pack = (score) => ({
+      const packBase = (score) => ({
         uid: u.uid,
         username: username,
         score: Number(score) || 0,
         updatedAt: serverTimestamp()
       });
 
+      const now = new Date();
+      const dayKey = dayKeyFromDate(now);
+      const weekKey = isoWeekKeyFromDate(now);
+      const monthKey = monthKeyFromDate(now);
+
       const writes = [];
 
       // All Time
-      writes.push(setDoc(doc(db, "leaderboards_drill_alltime", u.uid), pack(stats.bestAllTime), { merge: true }));
+      writes.push(setDoc(doc(db, "leaderboards_drill_alltime", u.uid), packBase(stats.bestAllTime), { merge: true }));
 
-      // Daily, Weekly, Monthly
-      writes.push(setDoc(doc(db, "leaderboards_drill_daily", u.uid), pack(stats.bestDay), { merge: true }));
-      writes.push(setDoc(doc(db, "leaderboards_drill_weekly", u.uid), pack(stats.bestWeek), { merge: true }));
-      writes.push(setDoc(doc(db, "leaderboards_drill_monthly", u.uid), pack(stats.bestMonth), { merge: true }));
+      // Daily, Weekly, Monthly (scoped keys so boards actually reset)
+      writes.push(
+        setDoc(
+          doc(db, "leaderboards_drill_daily", u.uid),
+          { ...packBase(stats.bestDay), dayKey },
+          { merge: true }
+        )
+      );
+      writes.push(
+        setDoc(
+          doc(db, "leaderboards_drill_weekly", u.uid),
+          { ...packBase(stats.bestWeek), weekKey },
+          { merge: true }
+        )
+      );
+      writes.push(
+        setDoc(
+          doc(db, "leaderboards_drill_monthly", u.uid),
+          { ...packBase(stats.bestMonth), monthKey },
+          { merge: true }
+        )
+      );
 
       await Promise.all(writes);
     } catch (_) {
