@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import GithubCorner from 'react-github-corner';
 import TopNav from './TopNav';
 import './About.css';
 import '../App.css';
@@ -57,7 +56,7 @@ export default function About(props) {
 
   return (
     <div className="about-page">
-      <GithubCorner href="https://github.com/Luvvydev" />
+   
 
       <TopNav active="about" title="Chess Opening Drills" />
 

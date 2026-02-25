@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import TopNav from "./TopNav";
 import Chessboard from "chessboardjsx";
@@ -37,9 +37,9 @@ function activityLevel(count) {
   return 4;
 }
 
-function buildHeatmap(daysMap, weeks, endDate = new Date()) {
-  const CELL = 16;
-  const GAP = 4;
+function buildHeatmap(daysMap, weeks, endDate = new Date(), cell = 16, gap = 4) {
+  const CELL = Number(cell) || 16;
+  const GAP = Number(gap) || 4;
 
   const today = new Date(endDate);
   today.setHours(0, 0, 0, 0);
@@ -125,6 +125,82 @@ export default function PublicProfile() {
 
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const heatmapScrollRef = useRef(null);
+  const boardWrapRef = useRef(null);
+  const [boardWidth, setBoardWidth] = useState(320);
+  const [isMobile, setIsMobile] = useState(false);
+
+
+  useEffect(() => {
+    const mq = window.matchMedia ? window.matchMedia("(max-width: 520px)") : null;
+
+    const apply = () => {
+      if (mq) setIsMobile(!!mq.matches);
+      else setIsMobile((window.innerWidth || 0) <= 520);
+    };
+
+    apply();
+
+    if (!mq) {
+      window.addEventListener("resize", apply);
+      return () => window.removeEventListener("resize", apply);
+    }
+
+    const onChange = () => apply();
+    try {
+      if (mq.addEventListener) mq.addEventListener("change", onChange);
+      else mq.addListener(onChange);
+    } catch (_) {}
+
+    return () => {
+      try {
+        if (mq.removeEventListener) mq.removeEventListener("change", onChange);
+        else mq.removeListener(onChange);
+      } catch (_) {}
+    };
+  }, []);
+
+  useEffect(() => {
+    const el = heatmapScrollRef.current;
+    if (!el) return;
+
+    // Auto scroll visitors to the most recent day.
+    requestAnimationFrame(() => {
+      try {
+        el.scrollLeft = el.scrollWidth;
+      } catch (_) {}
+    });
+  }, [profile, isMobile]);
+
+
+  useEffect(() => {
+    const el = boardWrapRef.current;
+    if (!el) return;
+
+    const clamp = (n) => Math.max(240, Math.min(360, Math.floor(n)));
+
+    const apply = () => {
+      const w = el.getBoundingClientRect().width || 0;
+      if (w > 0) setBoardWidth(clamp(w));
+    };
+
+    apply();
+
+    let ro;
+    if (typeof ResizeObserver !== "undefined") {
+      ro = new ResizeObserver(() => apply());
+      try {
+        ro.observe(el);
+      } catch (_) {}
+    } else {
+      window.addEventListener("resize", apply);
+    }
+
+    return () => {
+      if (ro) ro.disconnect();
+      else window.removeEventListener("resize", apply);
+    };
+  }, []);
 
   useEffect(() => {
     if (!un) return;
@@ -145,6 +221,7 @@ export default function PublicProfile() {
 
       <style>{`
         .pp-wrap {
+          overflow-x: hidden;
           max-width: 1080px;
           margin: 0 auto;
           padding: 24px 16px 48px;
@@ -158,6 +235,7 @@ export default function PublicProfile() {
           border: 1px solid rgba(255,255,255,0.12);
           box-shadow: 0 14px 40px rgba(0,0,0,0.45);
           padding: 26px 26px 22px;
+          color: rgba(255,255,255,0.92);
         }
 
         .pp-title {
@@ -189,17 +267,19 @@ export default function PublicProfile() {
           font-size: 13px;
           opacity: 0.65;
           margin-bottom: 6px;
+          color: rgba(255,255,255,0.70);
         }
 
         .pp-value {
           font-size: 16px;
           font-weight: 800;
+          color: rgba(255,255,255,0.95);
         }
 
         .pp-hr {
           height: 1px;
           background: rgba(255,255,255,0.10);
-          margin: 18px 0;
+          margin: 16px 0;
         }
 
         .pp-section-title {
@@ -223,12 +303,71 @@ export default function PublicProfile() {
         }
 
         .pp-board-wrap {
-          display: inline-block;
+          display: block;
+          width: 100%;
+          max-width: 360px;
+          margin: 0 auto;
+        }
+
+        .pp-board-wrap > div {
+          margin: 0 auto;
         }
 
         @media (max-width: 820px) {
           .pp-toprow {
             grid-template-columns: 1fr;
+          }
+
+        }
+
+        @media (max-width: 480px) {
+          .pp-wrap {
+            padding: 12px 10px 34px;
+          }
+
+          .pp-card {
+            padding: 16px 12px 14px;
+            border-radius: 14px;
+          }
+
+          .pp-title {
+            font-size: 28px;
+            margin: 2px 0 10px;
+          }
+
+          .pp-avatar {
+            width: 76px;
+            height: 76px;
+            margin: 0 auto 10px;
+          }
+
+          .pp-toprow {
+            gap: 10px;
+          }
+
+          .pp-toprow > div {
+            text-align: center;
+          }
+
+          .pp-label {
+            font-size: 12px;
+            margin-bottom: 4px;
+          }
+
+          .pp-value {
+            font-size: 15px;
+          }
+
+          .pp-hr {
+            margin: 10px 0;
+          }
+
+          .pp-section-title {
+            margin-bottom: 8px;
+          }
+
+          .pp-box {
+            padding: 10px;
           }
         }
       `}</style>
@@ -276,9 +415,9 @@ export default function PublicProfile() {
 
 <div className="pp-section-title">Board</div>
             <div className="pp-box pp-board-box">
-              <div className="pp-board-wrap">
+              <div className="pp-board-wrap" ref={boardWrapRef}>
                 <Chessboard
-    width={320}
+    width={boardWidth}
     position="start"
     draggable={false}
     pieceTheme={
@@ -313,41 +452,57 @@ export default function PublicProfile() {
                     ? profile.activityDays
                     : {};
 
-                const { columns, monthLabels, widthPx } = buildHeatmap(days, 53, new Date());
+                const CELL = isMobile ? 12 : 16;
+                const GAP = isMobile ? 3 : 4;
+
+                const { columns, monthLabels, widthPx } = buildHeatmap(days, 53, new Date(), CELL, GAP);
                 const any = columns.some((col) => col.cells.some((c) => c.level > 0));
+                const dowLabels = ["", "Mon", "", "Wed", "", "Fri", ""]; // GitHub-style labels
 
                 if (!any) {
                   return <div className="activity-empty">No public activity yet.</div>;
                 }
 
                 return (
-                  <div className="activity-scroll">
+                  <div className="activity-scroll" ref={heatmapScrollRef}>
                     <div className="activity-inner">
-                    <div className="activity-months" style={{ width: widthPx }}>
-                      {monthLabels.map((m) => (
-                        <div
-                          key={m.weekIndex + ":" + m.label}
-                          className="activity-month"
-                          style={{ left: m.leftPx }}
-                        >
-                          {m.label}
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="activity-grid" role="img" aria-label="Activity heatmap">
-                      {columns.map((col, w) => (
-                        <div className="activity-week" key={w}>
-                          {col.cells.map((c) => (
-                            <div
-                              key={c.ymd}
-                              className={`activity-cell level-${c.level}${c.isFuture ? " is-future" : ""}`}
-                              title={c.isFuture ? "" : `${c.ymd}  ${c.count} activity`}
-                            />
+                      <div className="activity-heatmap-wrap">
+                        <div className="activity-dow" aria-hidden="true">
+                          {dowLabels.map((lab, idx) => (
+                            <div key={idx} className="activity-dow-label">
+                              {lab}
+                            </div>
                           ))}
                         </div>
-                      ))}
-                    </div>
+
+                        <div>
+                          <div className="activity-months" style={{ width: widthPx }}>
+                            {monthLabels.map((m) => (
+                              <div
+                                key={m.weekIndex + ":" + m.label}
+                                className="activity-month"
+                                style={{ left: m.leftPx }}
+                              >
+                                {m.label}
+                              </div>
+                            ))}
+                          </div>
+
+                          <div className="activity-grid" role="img" aria-label="Activity heatmap">
+                            {columns.map((col, w) => (
+                              <div className="activity-week" key={w}>
+                                {col.cells.map((c) => (
+                                  <div
+                                    key={c.ymd}
+                                    className={`activity-cell level-${c.level}${c.isFuture ? " is-future" : ""}`}
+                                    title={c.isFuture ? "" : `${c.ymd}  ${c.count} activity`}
+                                  />
+                                ))}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 );

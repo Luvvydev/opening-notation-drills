@@ -886,35 +886,46 @@ const onChangePieceTheme = async (nextPieceTheme) => {
 
               const { columns, monthLabels, widthPx } = buildHeatmap(merged, 53);
               const any = columns.some((col) => col.cells.some((c) => c.level > 0));
+              const dowLabels = ["", "Mon", "", "Wed", "", "Fri", ""]; // GitHub-style labels
 
               return (
                 <div className="activity-scroll" ref={heatmapScrollRef}>
                   <div className="activity-inner">
-                  <div className="activity-months" style={{ width: widthPx }}>
-  {monthLabels.map((m) => (
-    <div
-      key={m.weekIndex + ":" + m.label}
-      className="activity-month"
-      style={{ left: m.leftPx }}
-    >
-      {m.label}
-    </div>
-  ))}
-</div>
-
-                  <div className="activity-grid" role="img" aria-label="Activity heatmap">
-                    {columns.map((col, w) => (
-                      <div className="activity-week" key={w}>
-                        {col.cells.map((c) => (
-                          <div
-                            key={c.ymd}
-                            className={`activity-cell level-${c.level}${c.isFuture ? " is-future" : ""}`}
-                            title={c.isFuture ? "" : `${c.ymd}  ${c.count} activity`}
-                          />
+                    <div className="activity-heatmap-wrap">
+                      <div className="activity-dow" aria-hidden="true">
+                        {dowLabels.map((lab, idx) => (
+                          <div key={idx} className="activity-dow-label">
+                            {lab}
+                          </div>
                         ))}
                       </div>
-                    ))}
-                  </div>
+
+                      <div>
+                        <div className="activity-months" style={{ width: widthPx }}>
+                          {monthLabels.map((m) => (
+                            <div
+                              key={m.weekIndex + ":" + m.label}
+                              className="activity-month"
+                              style={{ left: m.leftPx }}
+                            >
+                              {m.label}
+                            </div>
+                          ))}
+                        </div>
+
+                        <div className="activity-grid" role="img" aria-label="Activity heatmap">
+                          {columns.map((col, w) => (
+                            <div className="activity-week" key={w}>
+                              {col.cells.map((c) => (
+                                <div
+                                  key={c.ymd}
+                                  className={`activity-cell level-${c.level}${c.isFuture ? " is-future" : ""}`}
+                                  title={c.isFuture ? "" : `${c.ymd}  ${c.count} activity`}
+                                />
+                              ))}
+                            </div>
+                          ))}
+                        </div>
 
                   {!any && (
                     <div className="activity-empty">Keep drilling to start building your history.</div>
@@ -923,6 +934,8 @@ const onChangePieceTheme = async (nextPieceTheme) => {
                   <div className="activity-note">
                     Each square represents a day. Lighter colors indicate more activity.
                   </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               );
