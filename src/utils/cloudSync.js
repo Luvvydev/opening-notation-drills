@@ -1,4 +1,4 @@
-import { getFirestore, doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { getStreakState } from "./streak";
 
 const STORAGE_KEY = "notation_trainer_opening_progress_v2";
@@ -53,6 +53,114 @@ async function writeUserPatch(uid, patch) {
   await setDoc(ref, { ...patch, updatedAt: serverTimestamp() }, { merge: true });
 }
 
+let lastPublicProfileWriteAt = 0;
+let pendingPublicProfileTimer = null;
+
+function normalizeUsername(raw) {
+  return String(raw || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9_]/g, "");
+}
+
+function asObj(v) {
+  return v && typeof v === "object" ? v : {};
+}
+
+function computePublicStats() {
+  const progress = loadProgress();
+  const linesByOpening = asObj(progress.lines);
+  const openingsByKey = asObj(progress.openings);
+
+  let openingsTrained = 0;
+  Object.keys(openingsByKey).forEach((k) => {
+    const o = asObj(openingsByKey[k]);
+    const totalCompleted = Number(o.totalCompleted) || 0;
+    if (totalCompleted > 0) openingsTrained += 1;
+  });
+
+  let linesLearned = 0;
+  let totalCompletions = 0;
+  let cleanRuns = 0;
+
+  Object.keys(linesByOpening).forEach((openingKey) => {
+    const bucket = asObj(linesByOpening[openingKey]);
+    Object.keys(bucket).forEach((lineId) => {
+      const st = asObj(bucket[lineId]);
+      const tc = Number(st.timesCompleted) || 0;
+      const cl = Number(st.timesClean) || 0;
+      if (tc > 0) linesLearned += 1;
+      totalCompletions += tc;
+      cleanRuns += cl;
+    });
+  });
+
+  const streak = getStreakState();
+  const streakBest = Number(streak.best) || 0;
+  const streakCurrent = Number(streak.current) || 0;
+
+  return {
+    openingsTrained,
+    linesLearned,
+    totalCompletions,
+    cleanRuns,
+    streakBest,
+    streakCurrent
+  };
+}
+
+async function writePublicProfile(uid) {
+  const db = getFirestore();
+  const userRef = doc(db, "users", uid);
+  const snap = await getDoc(userRef);
+  if (!snap.exists()) return;
+
+  const data = snap.data() || {};
+  const username = normalizeUsername(data.username || "");
+  if (!username) return;
+
+  const displayName = String(data.displayName || "").trim() || "Player";
+
+  const publicRef = doc(db, "publicProfiles", username);
+
+  const activityDays = loadActivityDays();
+  const publicStats = computePublicStats();
+
+  await setDoc(
+    publicRef,
+    {
+      uid,
+      username,
+      displayName,
+      activityDays,
+      publicStats,
+      updatedAt: serverTimestamp()
+    },
+    { merge: true }
+  );
+}
+
+function schedulePublicProfileWrite(uid) {
+  if (!uid) return;
+
+  const now = Date.now();
+  const delta = now - lastPublicProfileWriteAt;
+
+  const run = () => {
+    lastPublicProfileWriteAt = Date.now();
+    writePublicProfile(uid).catch(() => {});
+  };
+
+  if (delta > 8000) {
+    run();
+    return;
+  }
+
+  if (pendingPublicProfileTimer) clearTimeout(pendingPublicProfileTimer);
+  pendingPublicProfileTimer = setTimeout(run, 1200);
+}
+
+
 export function installCloudSync(getCurrentUser) {
   if (!getCurrentUser) return () => {};
 
@@ -79,31 +187,46 @@ export function installCloudSync(getCurrentUser) {
   const onStreak = () => {
     const u = getCurrentUser();
     if (!u) return;
-    schedule(() => writeUserPatch(u.uid, { dailyStreak: getStreakState() }).catch(() => {}));
+    schedule(() => {
+      writeUserPatch(u.uid, { dailyStreak: getStreakState() }).catch(() => {});
+      schedulePublicProfileWrite(u.uid);
+    });
   };
 
   const onProgress = () => {
     const u = getCurrentUser();
     if (!u) return;
-    schedule(() => writeUserPatch(u.uid, { progress: loadProgress() }).catch(() => {}));
+    schedule(() => {
+      writeUserPatch(u.uid, { progress: loadProgress() }).catch(() => {});
+      schedulePublicProfileWrite(u.uid);
+    });
   };
 
   const onLearnProgress = () => {
     const u = getCurrentUser();
     if (!u) return;
-    schedule(() => writeUserPatch(u.uid, { learnProgress: loadLearnProgress() }).catch(() => {}));
+    schedule(() => {
+      writeUserPatch(u.uid, { learnProgress: loadLearnProgress() }).catch(() => {});
+      schedulePublicProfileWrite(u.uid);
+    });
   };
 
   const onCustom = () => {
     const u = getCurrentUser();
     if (!u) return;
-    schedule(() => writeUserPatch(u.uid, { customReps: loadCustomReps() }).catch(() => {}));
+    schedule(() => {
+      writeUserPatch(u.uid, { customReps: loadCustomReps() }).catch(() => {});
+      schedulePublicProfileWrite(u.uid);
+    });
   };
 
   const onActivity = () => {
     const u = getCurrentUser();
     if (!u) return;
-    schedule(() => writeUserPatch(u.uid, { activityDays: loadActivityDays() }).catch(() => {}));
+    schedule(() => {
+      writeUserPatch(u.uid, { activityDays: loadActivityDays() }).catch(() => {});
+      schedulePublicProfileWrite(u.uid);
+    });
   };
 
   window.addEventListener("streak:updated", onStreak);

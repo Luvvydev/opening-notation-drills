@@ -5,7 +5,8 @@ import Chessboard from "chessboardjsx";
 import { BOARD_THEMES, DEFAULT_THEME, PIECE_THEMES } from "../theme/boardThemes";
 import "./ActivityHeatmap.css";
 import { db } from "../firebase";
-import { doc, getDoc } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, limit, orderBy, query } from "firebase/firestore";
+import { leaderboardScopeKey } from "../utils/periodKeys";
 
 function ymdFromDate(dt) {
   const y = dt.getFullYear();
@@ -118,6 +119,34 @@ function getMembershipStatus(profileData) {
   }
   return "";
 }
+function tierForScore(score) {
+  const s = Number(score) || 0;
+  if (s >= 40) return { key: "memory_machine", label: "Memory Machine" };
+  if (s >= 20) return { key: "repertoire_architect", label: "Repertoire Architect" };
+  if (s >= 10) return { key: "theorist", label: "Theorist" };
+  if (s >= 5) return { key: "bookworm", label: "Bookworm" };
+  if (s >= 1) return { key: "novice", label: "Novice" };
+  return { key: "unranked", label: "Unranked" };
+}
+
+function latestActiveDay(activityDays) {
+  const days = activityDays && typeof activityDays === "object" ? activityDays : {};
+  const keys = Object.keys(days).filter((k) => (Number(days[k]) || 0) > 0);
+  if (!keys.length) return "";
+  keys.sort();
+  return keys[keys.length - 1];
+}
+
+function formatYmdShort(ymd) {
+  if (!ymd || typeof ymd !== "string") return "";
+  const parts = ymd.split("-");
+  if (parts.length !== 3) return ymd;
+  const y = parts[0];
+  const m = parts[1];
+  const d = parts[2];
+  return `${m}/${d}/${String(y).slice(2)}`;
+}
+
 
 export default function PublicProfile() {
   const { username } = useParams();
@@ -129,6 +158,9 @@ export default function PublicProfile() {
   const boardWrapRef = useRef(null);
   const [boardWidth, setBoardWidth] = useState(320);
   const [isMobile, setIsMobile] = useState(false);
+const [lbLoading, setLbLoading] = useState(false);
+const [lbWeek, setLbWeek] = useState({ rank: null, score: 0 });
+const [lbAll, setLbAll] = useState({ rank: null, score: 0 });
 
 
   useEffect(() => {
@@ -212,7 +244,90 @@ export default function PublicProfile() {
     })();
   }, [un]);
 
+useEffect(() => {
+  if (!profile || !profile.uid) return;
+
+  let alive = true;
+
+  async function loadRanks() {
+    setLbLoading(true);
+    try {
+      const weekScope = leaderboardScopeKey("week");
+      const weeklySnap = await getDocs(query(collection(db, "leaderboards_drill_weekly"), orderBy("score", "desc"), limit(200)));
+      if (!alive) return;
+
+      const weeklyRows = [];
+      weeklySnap.forEach((d) => {
+        const data = d.data() || {};
+        weeklyRows.push({
+          uid: d.id,
+          score: Number(data.score) || 0,
+          weekKey: data.weekKey ? String(data.weekKey) : ""
+        });
+      });
+
+      const weeklyScoped = weeklyRows.filter((r) => r.score > 0 && r.weekKey === weekScope);
+      const weekIdx = weeklyScoped.findIndex((r) => r.uid === profile.uid);
+      const weekRank = weekIdx >= 0 ? weekIdx + 1 : null;
+      const weekScore = weekIdx >= 0 ? weeklyScoped[weekIdx].score : 0;
+
+      const allSnap = await getDocs(query(collection(db, "leaderboards_drill_alltime"), orderBy("score", "desc"), limit(200)));
+      if (!alive) return;
+
+      const allRows = [];
+      allSnap.forEach((d) => {
+        const data = d.data() || {};
+        allRows.push({
+          uid: d.id,
+          score: Number(data.score) || 0
+        });
+      });
+
+      const allScoped = allRows.filter((r) => r.score > 0);
+      const allIdx = allScoped.findIndex((r) => r.uid === profile.uid);
+      const allRank = allIdx >= 0 ? allIdx + 1 : null;
+      const allScore = allIdx >= 0 ? allScoped[allIdx].score : 0;
+
+      setLbWeek({ rank: weekRank, score: weekScore });
+      setLbAll({ rank: allRank, score: allScore });
+    } catch (_) {
+      if (!alive) return;
+      setLbWeek({ rank: null, score: 0 });
+      setLbAll({ rank: null, score: 0 });
+    } finally {
+      if (alive) setLbLoading(false);
+    }
+  }
+
+  loadRanks();
+
+  return () => {
+    alive = false;
+  };
+}, [profile]);
+
   const membershipStatus = useMemo(() => getMembershipStatus(profile), [profile]);
+const publicStats = useMemo(() => {
+  const ps = profile && profile.publicStats && typeof profile.publicStats === "object" ? profile.publicStats : {};
+  return {
+    openingsTrained: Number(ps.openingsTrained) || 0,
+    linesLearned: Number(ps.linesLearned) || 0,
+    totalCompletions: Number(ps.totalCompletions) || 0,
+    cleanRuns: Number(ps.cleanRuns) || 0,
+    streakBest: Number(ps.streakBest) || 0,
+    streakCurrent: Number(ps.streakCurrent) || 0
+  };
+}, [profile]);
+
+const tier = useMemo(() => {
+  const score = (lbAll && lbAll.score) || (lbWeek && lbWeek.score) || 0;
+  return tierForScore(score);
+}, [lbAll, lbWeek]);
+
+const lastActive = useMemo(() => {
+  const ymd = latestActiveDay(profile && profile.activityDays);
+  return ymd ? formatYmdShort(ymd) : "";
+}, [profile]);
 
   return (
     <>
@@ -224,76 +339,196 @@ export default function PublicProfile() {
           overflow-x: hidden;
           max-width: 1080px;
           margin: 0 auto;
-          padding: 24px 16px 48px;
+          padding: 22px 16px 48px;
         }
 
         .pp-card {
-          max-width: 900px;
+          max-width: 920px;
           margin: 0 auto;
           border-radius: 16px;
-          background: rgba(20, 20, 25, 0.65);
-          border: 1px solid rgba(255,255,255,0.12);
-          box-shadow: 0 14px 40px rgba(0,0,0,0.45);
-          padding: 26px 26px 22px;
+          background: radial-gradient(1200px 600px at 50% -20%, rgba(255,255,255,0.08), rgba(0,0,0,0)) , rgba(20, 20, 25, 0.62);
+          border: 1px solid rgba(255,255,255,0.10);
+          box-shadow: 0 16px 52px rgba(0,0,0,0.52);
+          padding: 22px 22px 18px;
           color: rgba(255,255,255,0.92);
         }
 
-        .pp-title {
+        .pp-head {
           text-align: center;
-          font-size: 36px;
-          font-weight: 900;
-          margin: 6px 0 18px;
+          margin-bottom: 14px;
         }
 
         .pp-avatar {
-          width: 92px;
-          height: 92px;
+          width: 78px;
+          height: 78px;
           border-radius: 999px;
           object-fit: cover;
           display: block;
-          margin: 0 auto 14px;
+          margin: 0 auto 10px;
           border: 1px solid rgba(255,255,255,0.14);
-          box-shadow: 0 12px 30px rgba(0,0,0,0.45);
+          box-shadow: 0 10px 26px rgba(0,0,0,0.45);
         }
 
-        .pp-toprow {
+        .pp-name {
+          font-size: 28px;
+          font-weight: 900;
+          letter-spacing: -0.2px;
+          margin: 0;
+        }
+
+        .pp-handle {
+          margin-top: 6px;
+          font-size: 13px;
+          font-weight: 800;
+          opacity: 0.72;
+        }
+
+        .pp-badges {
+          display: inline-flex;
+          justify-content: center;
+          gap: 8px;
+          flex-wrap: wrap;
+          margin-top: 10px;
+        }
+
+        .pp-pill {
+          display: inline-flex;
+          align-items: center;
+          padding: 5px 9px;
+          border-radius: 999px;
+          font-size: 11px;
+          font-weight: 900;
+          letter-spacing: 0.1px;
+          background: rgba(255,255,255,0.06);
+          border: 1px solid rgba(255,255,255,0.10);
+          color: rgba(255,255,255,0.92);
+          white-space: nowrap;
+        }
+
+        .pp-pill.subtle {
+          opacity: 0.82;
+        }
+
+        .pp-meta {
           display: grid;
-          grid-template-columns: 1fr 1fr 1fr;
-          gap: 18px;
+          grid-template-columns: 1fr 1fr;
+          gap: 10px 16px;
           align-items: start;
+          margin-top: 14px;
+        }
+
+        .pp-meta-item {
+          border-radius: 12px;
+          border: 1px solid rgba(255,255,255,0.08);
+          background: rgba(0,0,0,0.18);
+          padding: 10px 12px;
         }
 
         .pp-label {
-          font-size: 13px;
-          opacity: 0.65;
+          font-size: 12px;
+          font-weight: 800;
+          opacity: 0.62;
           margin-bottom: 6px;
-          color: rgba(255,255,255,0.70);
         }
 
         .pp-value {
-          font-size: 16px;
-          font-weight: 800;
+          font-size: 14px;
+          font-weight: 900;
           color: rgba(255,255,255,0.95);
         }
 
         .pp-hr {
           height: 1px;
-          background: rgba(255,255,255,0.10);
-          margin: 16px 0;
+          background: rgba(255,255,255,0.08);
+          margin: 16px 0 14px;
         }
 
         .pp-section-title {
+          font-size: 12px;
+          font-weight: 900;
+          opacity: 0.72;
+          margin: 0 0 10px 0;
+          letter-spacing: 0.25px;
+          text-transform: uppercase;
+        }
+
+        .pp-panels {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 12px;
+          margin-bottom: 14px;
+        }
+
+        .pp-panel {
+          border-radius: 14px;
+          border: 1px solid rgba(255,255,255,0.10);
+          background: rgba(0,0,0,0.20);
+          padding: 12px;
+        }
+
+        .pp-panel-head {
+          display: flex;
+          align-items: baseline;
+          justify-content: space-between;
+          gap: 10px;
+          margin-bottom: 10px;
+        }
+
+        .pp-panel-title {
+          font-size: 12px;
+          font-weight: 900;
+          opacity: 0.82;
+          letter-spacing: 0.25px;
+          text-transform: uppercase;
+        }
+
+        .pp-panel-sub {
+          font-size: 12px;
+          font-weight: 800;
+          opacity: 0.62;
+        }
+
+        .pp-rowlist {
+          display: grid;
+          gap: 8px;
+        }
+
+        .pp-row {
+          display: flex;
+          align-items: baseline;
+          justify-content: space-between;
+          gap: 12px;
+          padding: 8px 10px;
+          border-radius: 12px;
+          background: rgba(255,255,255,0.03);
+          border: 1px solid rgba(255,255,255,0.07);
+        }
+
+        .pp-row-k {
+          font-size: 12px;
+          font-weight: 800;
+          opacity: 0.70;
+        }
+
+        .pp-row-v {
           font-size: 14px;
           font-weight: 900;
-          opacity: 0.75;
-          margin-bottom: 12px;
+          color: rgba(255,255,255,0.95);
+          white-space: nowrap;
+        }
+
+        .pp-note {
+          margin-top: 10px;
+          font-size: 12px;
+          font-weight: 700;
+          opacity: 0.60;
         }
 
         .pp-box {
           border-radius: 14px;
           border: 1px solid rgba(255,255,255,0.10);
-          background: rgba(0,0,0,0.25);
-          padding: 14px;
+          background: rgba(0,0,0,0.20);
+          padding: 12px;
         }
 
         .pp-board-box {
@@ -314,15 +549,14 @@ export default function PublicProfile() {
         }
 
         @media (max-width: 820px) {
-          .pp-toprow {
+          .pp-panels {
             grid-template-columns: 1fr;
           }
-
         }
 
-        @media (max-width: 480px) {
+        @media (max-width: 520px) {
           .pp-wrap {
-            padding: 12px 10px 34px;
+            padding: 14px 10px 34px;
           }
 
           .pp-card {
@@ -330,46 +564,20 @@ export default function PublicProfile() {
             border-radius: 14px;
           }
 
-          .pp-title {
-            font-size: 28px;
-            margin: 2px 0 10px;
-          }
-
           .pp-avatar {
-            width: 76px;
-            height: 76px;
-            margin: 0 auto 10px;
+            width: 68px;
+            height: 68px;
           }
 
-          .pp-toprow {
-            gap: 10px;
+          .pp-name {
+            font-size: 24px;
           }
 
-          .pp-toprow > div {
-            text-align: center;
-          }
-
-          .pp-label {
-            font-size: 12px;
-            margin-bottom: 4px;
-          }
-
-          .pp-value {
-            font-size: 15px;
-          }
-
-          .pp-hr {
-            margin: 10px 0;
-          }
-
-          .pp-section-title {
-            margin-bottom: 8px;
-          }
-
-          .pp-box {
-            padding: 10px;
+          .pp-meta {
+            grid-template-columns: 1fr;
           }
         }
+
       `}</style>
 
       <div className="pp-wrap">
@@ -384,36 +592,141 @@ export default function PublicProfile() {
 
         {profile && (
           <div className="pp-card">
-            <div className="pp-title">Profile</div>
+            
+            <div className="pp-head">
+              {profile && profile.avatar && profile.avatar.dataUrl ? (
+                <img className="pp-avatar" src={profile.avatar.dataUrl} alt="Avatar" />
+              ) : null}
 
-            {profile && profile.avatar && profile.avatar.dataUrl ? (
-              <img
-                className="pp-avatar"
-                src={profile.avatar.dataUrl}
-                alt="Avatar"
-              />
-            ) : null}
+              <h1 className="pp-name">{profile.displayName || "Player"}</h1>
+              <div className="pp-handle">{profile.username ? `@${profile.username}` : `@${un}`}</div>
 
-            <div className="pp-toprow">
-              <div>
-                <div className="pp-label">Username</div>
-                <div className="pp-value">{profile.username ? `@${profile.username}` : `@${un}`}</div>
+              <div className="pp-badges">
+                <span className="pp-pill">{tier.label}</span>
+                {lastActive ? <span className="pp-pill subtle">Last active {lastActive}</span> : null}
               </div>
 
-              <div>
-                <div className="pp-label">Display name</div>
-                <div className="pp-value">{profile.displayName || "Player"}</div>
-              </div>
+              <div className="pp-meta">
+                <div className="pp-meta-item">
+                  <div className="pp-label">Username</div>
+                  <div className="pp-value">{profile.username ? `@${profile.username}` : `@${un}`}</div>
+                </div>
 
-              <div>
-                <div className="pp-label">Status</div>
-                <div className="pp-value">{membershipStatus}</div>
+                <div className="pp-meta-item">
+                  <div className="pp-label">Status</div>
+                  <div className="pp-value">{membershipStatus || "Player"}</div>
+                </div>
               </div>
             </div>
 
             <div className="pp-hr" />
 
-<div className="pp-section-title">Board</div>
+            <div className="pp-section-title">Highlights</div>
+
+            {(() => {
+              const hasDrill =
+                (publicStats.streakBest || 0) > 0 ||
+                (publicStats.streakCurrent || 0) > 0 ||
+                (publicStats.linesLearned || 0) > 0;
+
+              const hasTraining =
+                (publicStats.openingsTrained || 0) > 0 ||
+                (publicStats.totalCompletions || 0) > 0 ||
+                (publicStats.cleanRuns || 0) > 0;
+
+              const hasLeaderboards =
+                (lbWeek && (lbWeek.rank || lbWeek.score)) ||
+                (lbAll && (lbAll.rank || lbAll.score));
+
+              if (!hasDrill && !hasTraining && !hasLeaderboards) {
+                return <div className="pp-note">No public stats yet. Stats appear after the player trains.</div>;
+              }
+
+              return (
+                <div className="pp-panels">
+                  <div className="pp-panel">
+                    <div className="pp-panel-head">
+                      <div className="pp-panel-title">Drill strength</div>
+                      <div className="pp-panel-sub">{tier.label}</div>
+                    </div>
+
+                    <div className="pp-rowlist">
+                      <div className="pp-row">
+                        <div className="pp-row-k">Best streak</div>
+                        <div className="pp-row-v">{publicStats.streakBest || 0}</div>
+                      </div>
+
+                      <div className="pp-row">
+                        <div className="pp-row-k">Current streak</div>
+                        <div className="pp-row-v">{publicStats.streakCurrent || 0}</div>
+                      </div>
+
+                      <div className="pp-row">
+                        <div className="pp-row-k">Lines learned</div>
+                        <div className="pp-row-v">{publicStats.linesLearned || 0}</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {hasLeaderboards ? (
+                    <div className="pp-panel">
+                      <div className="pp-panel-head">
+                        <div className="pp-panel-title">Leaderboards</div>
+                        {lbLoading ? <div className="pp-panel-sub">Loading</div> : <div className="pp-panel-sub">Drill</div>}
+                      </div>
+
+                      <div className="pp-rowlist">
+                        <div className="pp-row">
+                          <div className="pp-row-k">Weekly</div>
+                          <div className="pp-row-v">
+                            {lbWeek && lbWeek.rank ? `#${lbWeek.rank}` : "Unranked"}{lbWeek && lbWeek.score ? ` (${lbWeek.score})` : ""}
+                          </div>
+                        </div>
+
+                        <div className="pp-row">
+                          <div className="pp-row-k">All time</div>
+                          <div className="pp-row-v">
+                            {lbAll && lbAll.rank ? `#${lbAll.rank}` : "Unranked"}{lbAll && lbAll.score ? ` (${lbAll.score})` : ""}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="pp-note">Ranks show if the player is in the top 200.</div>
+                    </div>
+                  ) : null}
+
+                  {hasTraining ? (
+                    <div className="pp-panel">
+                      <div className="pp-panel-head">
+                        <div className="pp-panel-title">Training</div>
+                        <div className="pp-panel-sub">Totals</div>
+                      </div>
+
+                      <div className="pp-rowlist">
+                        <div className="pp-row">
+                          <div className="pp-row-k">Openings trained</div>
+                          <div className="pp-row-v">{publicStats.openingsTrained || 0}</div>
+                        </div>
+
+                        <div className="pp-row">
+                          <div className="pp-row-k">Completions</div>
+                          <div className="pp-row-v">{publicStats.totalCompletions || 0}</div>
+                        </div>
+
+                        <div className="pp-row">
+                          <div className="pp-row-k">Clean runs</div>
+                          <div className="pp-row-v">{publicStats.cleanRuns || 0}</div>
+                        </div>
+                      </div>
+
+                      <div className="pp-note">Updates when the player trains.</div>
+                    </div>
+                  ) : null}
+                </div>
+              );
+            })()}
+
+            <div className="pp-section-title">Board</div>
             <div className="pp-box pp-board-box">
               <div className="pp-board-wrap" ref={boardWrapRef}>
                 <Chessboard
