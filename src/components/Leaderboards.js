@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import TopNav from "./TopNav";
 import "./Leaderboards.css";
 import { db } from "../firebase";
-import { collection, getDocs, limit, orderBy, query } from "firebase/firestore";
+import { collection, limit, query, onSnapshot } from "firebase/firestore";
 import { useAuth } from "../auth/AuthProvider";
 import { leaderboardScopeKey } from "../utils/periodKeys";
 
@@ -22,16 +22,24 @@ function normalizeUsername(raw) {
     .replace(/[^a-z0-9_]/g, "");
 }
 
-function getCollectionName(period) {
+function normalizeDayKey(raw) {
+  const s = String(raw || "");
+  const m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if (!m) return s;
+  return `${m[1]}-${String(m[2]).padStart(2, "0")}-${String(m[3]).padStart(2, "0")}`;
+}
 
-  if (period === "day") return "leaderboards_drill_daily";
-  if (period === "week") return "leaderboards_drill_weekly";
-  if (period === "month") return "leaderboards_drill_monthly";
-  return "leaderboards_drill_alltime";
+function normalizeWeekKey(raw) {
+  const s = String(raw || "");
+  const m = s.match(/^(\d{4})-W(\d{1,2})$/);
+  if (!m) return s;
+  return `${m[1]}-W${String(m[2]).padStart(2, "0")}`;
 }
 
 
-
+function getCollectionName(period) {
+  return "leaderboards_drill_alltime";
+}
 function tierForScore(score) {
   const s = Number(score) || 0;
   if (s >= 40) return { key: "memory_machine", label: "Memory Machine" };
@@ -84,69 +92,83 @@ export default function Leaderboards() {
   const collectionName = useMemo(() => getCollectionName(period), [period]);
 
   useEffect(() => {
-    let alive = true;
+  if (!user || !isMember) {
+    setRows([]);
+    setLoading(false);
+    return () => {};
+  }
 
-    async function load() {
-      if (!user || !isMember) {
-        setRows([]);
-        setLoading(false);
-        return;
-      }
-      setLoading(true);
-      try {
-                const q = query(collection(db, collectionName), orderBy("score", "desc"), limit(200));
-        const snap = await getDocs(q);
-        if (!alive) return;
-        const out = [];
-        snap.forEach((docSnap) => {
-          const data = docSnap.data() || {};
-                    out.push({
-            uid: docSnap.id,
-            username: data && data.username ? String(data.username).trim() : "",
-            name: safeName(data),
-            score: Number(data && data.score) || 0,
-            dayKey: data && data.dayKey ? String(data.dayKey) : "",
-            weekKey: data && data.weekKey ? String(data.weekKey) : "",
-            monthKey: data && data.monthKey ? String(data.monthKey) : ""
-          });
+  setLoading(true);
+
+  const scopeKey = leaderboardScopeKey(period === "all" ? "all" : period);
+
+  // Live updates so new scores show up immediately.
+  const q = query(collection(db, collectionName), limit(500));
+  const unsub = onSnapshot(
+    q,
+    (snap) => {
+      const out = [];
+      snap.forEach((docSnap) => {
+        const data = docSnap.data() || {};
+        out.push({
+          uid: docSnap.id,
+          username: data && data.username ? String(data.username).trim() : "",
+          name: safeName(data),
+          score: Number(data && data.score) || 0,
+          dayKey: data && data.dayKey ? String(data.dayKey) : "",
+          weekKey: data && data.weekKey ? String(data.weekKey) : "",
+          monthKey: data && data.monthKey ? String(data.monthKey) : "",
+          dayScore: Number(data && data.dayScore) || 0,
+          weekScore: Number(data && data.weekScore) || 0,
+          monthScore: Number(data && data.monthScore) || 0
         });
+      });
 
-        const scopeKey = leaderboardScopeKey(period === "all" ? "all" : period);
-        const snapKey = snapshotStorageKey(collectionName, scopeKey);
-        const prevRanks = loadRankSnapshot(snapKey);
+      const snapKey = snapshotStorageKey(collectionName, scopeKey);
+      const prevRanks = loadRankSnapshot(snapKey);
 
-        let scoped = out.filter((r) => r.score > 0);
+      const pointsFor = (r) => {
+        if (period === "day") {
+          if (normalizeDayKey(r.dayKey) !== scopeKey) return 0;
+          return Number(r.dayScore) || Number(r.score) || 0;
+        }
+        if (period === "week") {
+          if (normalizeWeekKey(r.weekKey) !== scopeKey) return 0;
+          return Number(r.weekScore) || Number(r.score) || 0;
+        }
+        if (period === "month") {
+          if (r.monthKey !== scopeKey) return 0;
+          return Number(r.monthScore) || Number(r.score) || 0;
+        }
+        return Number(r.score) || 0;
+      };
 
-        // Filter by scope key locally to avoid requiring a Firestore composite index.
-        if (period === "day") scoped = scoped.filter((r) => r.dayKey === scopeKey);
-        if (period === "week") scoped = scoped.filter((r) => r.weekKey === scopeKey);
-        if (period === "month") scoped = scoped.filter((r) => r.monthKey === scopeKey);
+      let scoped = out.filter((r) => pointsFor(r) > 0);
+      scoped.sort((a, b) => pointsFor(b) - pointsFor(a));
 
-        // Attach rank, tier, and movement since last visit.
-        const ranksNow = {};
-        const enriched = scoped.map((r, i) => {
-          const rank = i + 1;
-          ranksNow[r.uid] = rank;
-          const delta = formatDelta(prevRanks[r.uid], rank);
-          const tier = tierForScore(r.score);
-          return { ...r, rank, delta, tier };
-        });
+      const ranksNow = {};
+      const enriched = scoped.map((r, i) => {
+        const rank = i + 1;
+        ranksNow[r.uid] = rank;
+        const delta = formatDelta(prevRanks[r.uid], rank);
+        const points = pointsFor(r);
+        const tier = tierForScore(points);
+        return { ...r, rank, delta, tier, points };
+      });
 
-        saveRankSnapshot(snapKey, ranksNow);
-        setRows(enriched);
-      } catch (_) {
-        if (alive) setRows([]);
-      } finally {
-        if (alive) setLoading(false);
-      }
+      saveRankSnapshot(snapKey, ranksNow);
+      setRows(enriched);
+      setLoading(false);
+    },
+    () => {
+      setRows([]);
+      setLoading(false);
     }
+  );
 
-    load();
-    return () => {
-      alive = false;
-    };
-  }, [collectionName, period, user, isMember]);
-  const meRank = useMemo(() => {
+  return () => unsub();
+}, [collectionName, period, user, isMember]);
+const meRank = useMemo(() => {
     if (!user) return null;
     const r = rows.find((x) => x.uid === user.uid);
     return r && r.rank ? r.rank : null;
@@ -155,7 +177,7 @@ export default function Leaderboards() {
   const meScore = useMemo(() => {
     if (!user) return null;
     const r = rows.find((x) => x.uid === user.uid);
-    return r ? r.score : null;
+    return r ? r.points : null;
   }, [rows, user]);
 
   const rivals = useMemo(() => {
@@ -271,7 +293,7 @@ export default function Leaderboards() {
                             {r.tier ? r.tier.label : "Unranked"}
                           </span>
                         </div>
-                        <div className="lb-rival-score">{r.score}</div>
+                        <div className="lb-rival-score">{r.points}</div>
                       </div>
                     );
                   })
@@ -325,7 +347,7 @@ export default function Leaderboards() {
                 {r.tier ? r.tier.label : "Unranked"}
               </span>
             </td>
-            <td style={{ textAlign: "right", fontWeight: 800 }}>{r.score}</td>
+            <td style={{ textAlign: "right", fontWeight: 800 }}>{r.points}</td>
           </tr>
         );
       })}
