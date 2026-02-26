@@ -1,3 +1,10 @@
+/* eslint-disable import/first */
+
+if (typeof window !== "undefined") {
+  window.process = window.process || {};
+  window.process.env = window.process.env || {};
+}
+
 import React from 'react';
 import ReactDOM from 'react-dom';
 import App from './App';
@@ -12,3 +19,5 @@ ReactDOM.render(
 // unregister() to register() below. Note this comes with some pitfalls.
 // Learn more about service workers: https://bit.ly/CRA-PWA
 serviceWorker.unregister();
+
+

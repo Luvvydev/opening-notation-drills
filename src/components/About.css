@@ -225,7 +225,7 @@
 
 .about-tier {
   appearance: none;
-  padding: 16px 16px;
+  padding: 16px 44px 16px 16px; /* reserve space for the top-right selector */
   border-radius: 16px;
   background: rgba(20, 24, 33, 0.55);
   border: 1px solid rgba(255, 255, 255, 0.10);
