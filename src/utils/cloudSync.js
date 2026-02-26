@@ -109,6 +109,26 @@ function computePublicStats() {
   };
 }
 
+async function writeMemberStats(uid) {
+  const db = getFirestore();
+  const statsRef = doc(db, "users", uid, "memberStats", "summary");
+  const stats = computePublicStats();
+
+  await setDoc(
+    statsRef,
+    {
+      openingsTrained: Number(stats.openingsTrained) || 0,
+      linesLearned: Number(stats.linesLearned) || 0,
+      totalCompletions: Number(stats.totalCompletions) || 0,
+      cleanRuns: Number(stats.cleanRuns) || 0,
+      streakBest: Number(stats.streakBest) || 0,
+      streakCurrent: Number(stats.streakCurrent) || 0,
+      updatedAt: serverTimestamp()
+    },
+    { merge: true }
+  );
+}
+
 async function writePublicProfile(uid) {
   const db = getFirestore();
   const userRef = doc(db, "users", uid);
@@ -124,7 +144,6 @@ async function writePublicProfile(uid) {
   const publicRef = doc(db, "publicProfiles", username);
 
   const activityDays = loadActivityDays();
-  const publicStats = computePublicStats();
 
   await setDoc(
     publicRef,
@@ -133,7 +152,6 @@ async function writePublicProfile(uid) {
       username,
       displayName,
       activityDays,
-      publicStats,
       updatedAt: serverTimestamp()
     },
     { merge: true }
@@ -149,6 +167,7 @@ function schedulePublicProfileWrite(uid) {
   const run = () => {
     lastPublicProfileWriteAt = Date.now();
     writePublicProfile(uid).catch(() => {});
+    writeMemberStats(uid).catch(() => {});
   };
 
   if (delta > 8000) {

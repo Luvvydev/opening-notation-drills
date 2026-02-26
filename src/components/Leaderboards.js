@@ -206,14 +206,7 @@ const meRank = useMemo(() => {
           <div className="lb-h1">
             <span aria-hidden="true">🏆</span> Leaderboards
           </div>
-
           <div className="lb-tabs">
-            <button className={"lb-tab" + (period === "day" ? " active" : "")} onClick={() => setPeriod("day")}>
-              Daily
-            </button>
-            <button className={"lb-tab" + (period === "week" ? " active" : "")} onClick={() => setPeriod("week")}>
-              Weekly
-            </button>
             <button className={"lb-tab" + (period === "all" ? " active" : "")} onClick={() => setPeriod("all")}>
               All Time
             </button>

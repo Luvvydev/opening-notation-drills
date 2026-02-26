@@ -147,6 +147,26 @@ function formatYmdShort(ymd) {
   return `${m}/${d}/${String(y).slice(2)}`;
 }
 
+function getPath(obj, path) {
+  if (!obj || typeof obj !== "object") return undefined;
+  const parts = String(path || "").split(".");
+  let cur = obj;
+  for (const p of parts) {
+    if (!cur || typeof cur !== "object" || !(p in cur)) return undefined;
+    cur = cur[p];
+  }
+  return cur;
+}
+
+function pickNumber(obj, paths) {
+  for (const p of paths) {
+    const v = getPath(obj, p);
+    const n = Number(v);
+    if (Number.isFinite(n) && n > 0) return n;
+    if (Number.isFinite(n) && n === 0 && v === 0) return 0;
+  }
+  return null;
+}
 
 export default function PublicProfile() {
   const { username } = useParams();
@@ -158,10 +178,10 @@ export default function PublicProfile() {
   const boardWrapRef = useRef(null);
   const [boardWidth, setBoardWidth] = useState(320);
   const [isMobile, setIsMobile] = useState(false);
-const [lbLoading, setLbLoading] = useState(false);
-const [lbWeek, setLbWeek] = useState({ rank: null, score: 0 });
-const [lbAll, setLbAll] = useState({ rank: null, score: 0 });
-
+  const [lbLoading, setLbLoading] = useState(false);
+  const [lbWeek, setLbWeek] = useState({ rank: null, score: 0 });
+  const [lbAll, setLbAll] = useState({ rank: null, score: 0 });
+  const [liveStats, setLiveStats] = useState(null);
 
   useEffect(() => {
     const mq = window.matchMedia ? window.matchMedia("(max-width: 520px)") : null;
@@ -204,7 +224,6 @@ const [lbAll, setLbAll] = useState({ rank: null, score: 0 });
     });
   }, [profile, isMobile]);
 
-
   useEffect(() => {
     const el = boardWrapRef.current;
     if (!el) return;
@@ -244,90 +263,144 @@ const [lbAll, setLbAll] = useState({ rank: null, score: 0 });
     })();
   }, [un]);
 
-useEffect(() => {
+  useEffect(() => {
+    if (!profile || !profile.uid) return;
+
+    let alive = true;
+
+    async function loadRanks() {
+      setLbLoading(true);
+      try {
+        const weekScope = leaderboardScopeKey("week");
+        const weeklySnap = await getDocs(
+          query(collection(db, "leaderboards_drill_weekly"), orderBy("score", "desc"), limit(200))
+        );
+        if (!alive) return;
+
+        const weeklyRows = [];
+        weeklySnap.forEach((d) => {
+          const data = d.data() || {};
+          weeklyRows.push({
+            uid: d.id,
+            score: Number(data.score) || 0,
+            weekKey: data.weekKey ? String(data.weekKey) : ""
+          });
+        });
+
+        const weeklyScoped = weeklyRows.filter((r) => r.score > 0 && r.weekKey === weekScope);
+        const weekIdx = weeklyScoped.findIndex((r) => r.uid === profile.uid);
+        const weekRank = weekIdx >= 0 ? weekIdx + 1 : null;
+        const weekScore = weekIdx >= 0 ? weeklyScoped[weekIdx].score : 0;
+
+        const allSnap = await getDocs(
+          query(collection(db, "leaderboards_drill_alltime"), orderBy("score", "desc"), limit(200))
+        );
+        if (!alive) return;
+
+        const allRows = [];
+        allSnap.forEach((d) => {
+          const data = d.data() || {};
+          allRows.push({
+            uid: d.id,
+            score: Number(data.score) || 0
+          });
+        });
+
+        const allScoped = allRows.filter((r) => r.score > 0);
+        const allIdx = allScoped.findIndex((r) => r.uid === profile.uid);
+        const allRank = allIdx >= 0 ? allIdx + 1 : null;
+        const allScore = allIdx >= 0 ? allScoped[allIdx].score : 0;
+
+        setLbWeek({ rank: weekRank, score: weekScore });
+        setLbAll({ rank: allRank, score: allScore });
+      } catch (_) {
+        if (!alive) return;
+        setLbWeek({ rank: null, score: 0 });
+        setLbAll({ rank: null, score: 0 });
+      } finally {
+        if (alive) setLbLoading(false);
+      }
+    }
+
+    loadRanks();
+
+    return () => {
+      alive = false;
+    };
+  }, [profile]);
+
+  useEffect(() => {
   if (!profile || !profile.uid) return;
 
   let alive = true;
 
-  async function loadRanks() {
-    setLbLoading(true);
+  async function loadLiveStats() {
     try {
-      const weekScope = leaderboardScopeKey("week");
-      const weeklySnap = await getDocs(query(collection(db, "leaderboards_drill_weekly"), orderBy("score", "desc"), limit(200)));
+      // Member-only stats are stored under users/{uid}/memberStats/summary
+      const statsSnap = await getDoc(doc(db, "users", profile.uid, "memberStats", "summary"));
       if (!alive) return;
 
-      const weeklyRows = [];
-      weeklySnap.forEach((d) => {
-        const data = d.data() || {};
-        weeklyRows.push({
-          uid: d.id,
-          score: Number(data.score) || 0,
-          weekKey: data.weekKey ? String(data.weekKey) : ""
-        });
-      });
+      if (!statsSnap.exists()) {
+        setLiveStats(null);
+        return;
+      }
 
-      const weeklyScoped = weeklyRows.filter((r) => r.score > 0 && r.weekKey === weekScope);
-      const weekIdx = weeklyScoped.findIndex((r) => r.uid === profile.uid);
-      const weekRank = weekIdx >= 0 ? weekIdx + 1 : null;
-      const weekScore = weekIdx >= 0 ? weeklyScoped[weekIdx].score : 0;
+      const data = statsSnap.data() || {};
 
-      const allSnap = await getDocs(query(collection(db, "leaderboards_drill_alltime"), orderBy("score", "desc"), limit(200)));
-      if (!alive) return;
+      const next = {
+        openingsTrained: pickNumber(data, ["openingsTrained"]) ?? 0,
+        linesLearned: pickNumber(data, ["linesLearned"]) ?? 0,
+        totalCompletions: pickNumber(data, ["totalCompletions"]) ?? 0,
+        cleanRuns: pickNumber(data, ["cleanRuns"]) ?? 0,
+        streakBest: pickNumber(data, ["streakBest"]) ?? 0,
+        streakCurrent: pickNumber(data, ["streakCurrent"]) ?? 0
+      };
 
-      const allRows = [];
-      allSnap.forEach((d) => {
-        const data = d.data() || {};
-        allRows.push({
-          uid: d.id,
-          score: Number(data.score) || 0
-        });
-      });
-
-      const allScoped = allRows.filter((r) => r.score > 0);
-      const allIdx = allScoped.findIndex((r) => r.uid === profile.uid);
-      const allRank = allIdx >= 0 ? allIdx + 1 : null;
-      const allScore = allIdx >= 0 ? allScoped[allIdx].score : 0;
-
-      setLbWeek({ rank: weekRank, score: weekScore });
-      setLbAll({ rank: allRank, score: allScore });
+      setLiveStats(next);
     } catch (_) {
       if (!alive) return;
-      setLbWeek({ rank: null, score: 0 });
-      setLbAll({ rank: null, score: 0 });
-    } finally {
-      if (alive) setLbLoading(false);
+      setLiveStats(null);
     }
   }
 
-  loadRanks();
+  loadLiveStats();
 
   return () => {
     alive = false;
   };
 }, [profile]);
 
+
   const membershipStatus = useMemo(() => getMembershipStatus(profile), [profile]);
-const publicStats = useMemo(() => {
-  const ps = profile && profile.publicStats && typeof profile.publicStats === "object" ? profile.publicStats : {};
-  return {
-    openingsTrained: Number(ps.openingsTrained) || 0,
-    linesLearned: Number(ps.linesLearned) || 0,
-    totalCompletions: Number(ps.totalCompletions) || 0,
-    cleanRuns: Number(ps.cleanRuns) || 0,
-    streakBest: Number(ps.streakBest) || 0,
-    streakCurrent: Number(ps.streakCurrent) || 0
-  };
-}, [profile]);
+  const publicStats = useMemo(() => {
+    const ps = profile && profile.publicStats && typeof profile.publicStats === "object" ? profile.publicStats : {};
+    return {
+      openingsTrained: Number(ps.openingsTrained) || 0,
+      linesLearned: Number(ps.linesLearned) || 0,
+      totalCompletions: Number(ps.totalCompletions) || 0,
+      cleanRuns: Number(ps.cleanRuns) || 0,
+      streakBest: Number(ps.streakBest) || 0,
+      streakCurrent: Number(ps.streakCurrent) || 0
+    };
+  }, [profile]);
 
-const tier = useMemo(() => {
-  const score = (lbAll && lbAll.score) || (lbWeek && lbWeek.score) || 0;
-  return tierForScore(score);
-}, [lbAll, lbWeek]);
+  const shownStats = useMemo(() => {
+    const ls = liveStats && typeof liveStats === "object" ? liveStats : {};
+    return {
+      ...publicStats,
+      ...ls
+    };
+  }, [publicStats, liveStats]);
 
-const lastActive = useMemo(() => {
-  const ymd = latestActiveDay(profile && profile.activityDays);
-  return ymd ? formatYmdShort(ymd) : "";
-}, [profile]);
+  const tier = useMemo(() => {
+    const score = (lbAll && lbAll.score) || (lbWeek && lbWeek.score) || 0;
+    return tierForScore(score);
+  }, [lbAll, lbWeek]);
+
+  const lastActive = useMemo(() => {
+    const ymd = latestActiveDay(profile && profile.activityDays);
+    return ymd ? formatYmdShort(ymd) : "";
+  }, [profile]);
 
   return (
     <>
@@ -592,7 +665,6 @@ const lastActive = useMemo(() => {
 
         {profile && (
           <div className="pp-card">
-            
             <div className="pp-head">
               {profile && profile.avatar && profile.avatar.dataUrl ? (
                 <img className="pp-avatar" src={profile.avatar.dataUrl} alt="Avatar" />
@@ -625,14 +697,14 @@ const lastActive = useMemo(() => {
 
             {(() => {
               const hasDrill =
-                (publicStats.streakBest || 0) > 0 ||
-                (publicStats.streakCurrent || 0) > 0 ||
-                (publicStats.linesLearned || 0) > 0;
+                (shownStats.streakBest || 0) > 0 ||
+                (shownStats.streakCurrent || 0) > 0 ||
+                (shownStats.linesLearned || 0) > 0;
 
               const hasTraining =
-                (publicStats.openingsTrained || 0) > 0 ||
-                (publicStats.totalCompletions || 0) > 0 ||
-                (publicStats.cleanRuns || 0) > 0;
+                (shownStats.openingsTrained || 0) > 0 ||
+                (shownStats.totalCompletions || 0) > 0 ||
+                (shownStats.cleanRuns || 0) > 0;
 
               const hasLeaderboards =
                 (lbWeek && (lbWeek.rank || lbWeek.score)) ||
@@ -653,17 +725,17 @@ const lastActive = useMemo(() => {
                     <div className="pp-rowlist">
                       <div className="pp-row">
                         <div className="pp-row-k">Best streak</div>
-                        <div className="pp-row-v">{publicStats.streakBest || 0}</div>
+                        <div className="pp-row-v">{shownStats.streakBest || 0}</div>
                       </div>
 
                       <div className="pp-row">
                         <div className="pp-row-k">Current streak</div>
-                        <div className="pp-row-v">{publicStats.streakCurrent || 0}</div>
+                        <div className="pp-row-v">{shownStats.streakCurrent || 0}</div>
                       </div>
 
                       <div className="pp-row">
                         <div className="pp-row-k">Lines learned</div>
-                        <div className="pp-row-v">{publicStats.linesLearned || 0}</div>
+                        <div className="pp-row-v">{shownStats.linesLearned || 0}</div>
                       </div>
                     </div>
                   </div>
@@ -679,14 +751,16 @@ const lastActive = useMemo(() => {
                         <div className="pp-row">
                           <div className="pp-row-k">Weekly</div>
                           <div className="pp-row-v">
-                            {lbWeek && lbWeek.rank ? `#${lbWeek.rank}` : "Unranked"}{lbWeek && lbWeek.score ? ` (${lbWeek.score})` : ""}
+                            {lbWeek && lbWeek.rank ? `#${lbWeek.rank}` : "Unranked"}
+                            {lbWeek && lbWeek.score ? ` (${lbWeek.score})` : ""}
                           </div>
                         </div>
 
                         <div className="pp-row">
                           <div className="pp-row-k">All time</div>
                           <div className="pp-row-v">
-                            {lbAll && lbAll.rank ? `#${lbAll.rank}` : "Unranked"}{lbAll && lbAll.score ? ` (${lbAll.score})` : ""}
+                            {lbAll && lbAll.rank ? `#${lbAll.rank}` : "Unranked"}
+                            {lbAll && lbAll.score ? ` (${lbAll.score})` : ""}
                           </div>
                         </div>
                       </div>
@@ -705,17 +779,17 @@ const lastActive = useMemo(() => {
                       <div className="pp-rowlist">
                         <div className="pp-row">
                           <div className="pp-row-k">Openings trained</div>
-                          <div className="pp-row-v">{publicStats.openingsTrained || 0}</div>
+                          <div className="pp-row-v">{shownStats.openingsTrained || 0}</div>
                         </div>
 
                         <div className="pp-row">
                           <div className="pp-row-k">Completions</div>
-                          <div className="pp-row-v">{publicStats.totalCompletions || 0}</div>
+                          <div className="pp-row-v">{shownStats.totalCompletions || 0}</div>
                         </div>
 
                         <div className="pp-row">
                           <div className="pp-row-k">Clean runs</div>
-                          <div className="pp-row-v">{publicStats.cleanRuns || 0}</div>
+                          <div className="pp-row-v">{shownStats.cleanRuns || 0}</div>
                         </div>
                       </div>
 
@@ -730,20 +804,20 @@ const lastActive = useMemo(() => {
             <div className="pp-box pp-board-box">
               <div className="pp-board-wrap" ref={boardWrapRef}>
                 <Chessboard
-    width={boardWidth}
-    position="start"
-    draggable={false}
-    pieceTheme={
-      profile && profile.settings && profile.settings.pieceTheme
-        ? (PIECE_THEMES && PIECE_THEMES[profile.settings.pieceTheme]) || undefined
-        : undefined
-    }
-    {...BOARD_THEMES[(profile && profile.settings && profile.settings.boardTheme) || DEFAULT_THEME]}
-  />
+                  width={boardWidth}
+                  position="start"
+                  draggable={false}
+                  pieceTheme={
+                    profile && profile.settings && profile.settings.pieceTheme
+                      ? (PIECE_THEMES && PIECE_THEMES[profile.settings.pieceTheme]) || undefined
+                      : undefined
+                  }
+                  {...BOARD_THEMES[(profile && profile.settings && profile.settings.boardTheme) || DEFAULT_THEME]}
+                />
               </div>
             </div>
 
-<div className="pp-hr" />
+            <div className="pp-hr" />
 
             <div className="pp-section-title">Activity</div>
             <div className="pp-box">
