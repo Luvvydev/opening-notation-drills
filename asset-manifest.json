@@ -1,23 +1,23 @@
 {
   "files": {
-    "main.css": "./static/css/main.d4f5dd2b.chunk.css",
-    "main.js": "./static/js/main.e40b9314.chunk.js",
-    "main.js.map": "./static/js/main.e40b9314.chunk.js.map",
+    "main.css": "./static/css/main.384af01d.chunk.css",
+    "main.js": "./static/js/main.b54eb1a6.chunk.js",
+    "main.js.map": "./static/js/main.b54eb1a6.chunk.js.map",
     "runtime-main.js": "./static/js/runtime-main.d2f8e4d9.js",
     "runtime-main.js.map": "./static/js/runtime-main.d2f8e4d9.js.map",
     "static/js/2.61852a6e.chunk.js": "./static/js/2.61852a6e.chunk.js",
     "static/js/2.61852a6e.chunk.js.map": "./static/js/2.61852a6e.chunk.js.map",
     "index.html": "./index.html",
-    "precache-manifest.ff99e4f5892ebe84450bdc75af3cf7f2.js": "./precache-manifest.ff99e4f5892ebe84450bdc75af3cf7f2.js",
+    "precache-manifest.cc897aae55279895e55acc0ba0d27b89.js": "./precache-manifest.cc897aae55279895e55acc0ba0d27b89.js",
     "service-worker.js": "./service-worker.js",
-    "static/css/main.d4f5dd2b.chunk.css.map": "./static/css/main.d4f5dd2b.chunk.css.map",
+    "static/css/main.384af01d.chunk.css.map": "./static/css/main.384af01d.chunk.css.map",
     "static/js/2.61852a6e.chunk.js.LICENSE.txt": "./static/js/2.61852a6e.chunk.js.LICENSE.txt",
     "static/media/chessdrillslogo.png": "./static/media/chessdrillslogo.48a60fec.png"
   },
   "entrypoints": [
     "static/js/runtime-main.d2f8e4d9.js",
     "static/js/2.61852a6e.chunk.js",
-    "static/css/main.d4f5dd2b.chunk.css",
-    "static/js/main.e40b9314.chunk.js"
+    "static/css/main.384af01d.chunk.css",
+    "static/js/main.b54eb1a6.chunk.js"
   ]
 }
