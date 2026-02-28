@@ -335,6 +335,7 @@ class Board extends Component {
           time={this.state.time - this.state.timerCount} 
           display={this.props.timed ? 'block' : 'none'} />
         <Chessboard
+          key={`board-${this.props.boardTheme}-${this.props.pieceTheme}-${(this.props.orientation === 'random' ? this.state.orientation : this.props.orientation)}`}
           position={this.state.fen} 
           squareStyles={renderSquareStyles}
           onDrop={this.onDrop}
