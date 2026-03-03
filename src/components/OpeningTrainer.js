@@ -216,6 +216,7 @@ class OpeningTrainer extends Component {
       drillBestAllTime: (drillStats && drillStats.bestAllTime) || 0,
       drillRunDead: false,
       fen: "start",
+      boardRenderToken: 0,
       stepIndex: 0,
       mistakeUnlocked: false,
       lastMistake: null,
@@ -785,7 +786,11 @@ saveCustomModal = () => {
   getPieceThemeUrl = () => {
     const k = (this.state.settings && this.state.settings.pieceTheme) ? String(this.state.settings.pieceTheme) : "default";
     const url = PIECE_THEMES && Object.prototype.hasOwnProperty.call(PIECE_THEMES, k) ? PIECE_THEMES[k] : null;
-    return url || undefined;
+    if (!url) return undefined;
+    const v = this.state.boardRenderToken || 0;
+    // Cache-bust on remount to avoid stale piece images on some mobile browsers.
+    const sep = url.includes("?") ? "&" : "?";
+    return url + sep + "v=" + encodeURIComponent(String(v));
   };
 
   _sfxLastAt = {};
@@ -969,14 +974,15 @@ saveCustomModal = () => {
   resetLine = (keepUnlocked) => {
     this.game.reset();
     this.setState(
-      {
+      (prev) => ({
         fen: "start",
+        boardRenderToken: (prev.boardRenderToken || 0) + 1,
         stepIndex: 0,
       viewing: false,
       viewIndex: 0,
       viewFen: "start",
         completed: false,
-        mistakeUnlocked: keepUnlocked ? this.state.mistakeUnlocked : false,
+        mistakeUnlocked: keepUnlocked ? prev.mistakeUnlocked : false,
         lastMistake: null,
         wrongAttempt: null,
         showHint: false,
@@ -988,7 +994,7 @@ saveCustomModal = () => {
         helpUsed: false,
         learnRewardPending: false,
         learnNextReady: false
-      },
+      }),
       () => {
         this._countedSeenForRun = false;
         this.bumpSeenForMode();
@@ -2366,6 +2372,7 @@ render() {
     const viewIndex = this.getViewIndex();
     const coachExpected = line.moves[viewIndex] || null;
     const boardFen = this.state.viewing ? this.state.viewFen : this.state.fen;
+    const boardKey = `otboard-${this.state.boardRenderToken || 0}-${this.state.openingKey}-${this.state.lineId}`;
     const canViewBack = viewIndex > 0;
     const canViewForward = viewIndex < this.state.stepIndex;
 
@@ -2982,6 +2989,7 @@ render() {
               <div className="ot-mobile-board-wrap">
                 <div className="ot-board">
                   <Chessboard
+                    key={boardKey}
                     width={this.state.mobileBoardSize || undefined}
                     position={boardFen}
                     onDrop={this.onDrop}
@@ -3207,6 +3215,7 @@ render() {
 </select>
             </div>
 <Chessboard
+  key={boardKey}
   calcWidth={calcWidth}
   position={boardFen}
   onDrop={this.onDrop}

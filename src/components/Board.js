@@ -10,6 +10,8 @@ import './Board.css';
 
 const ALPHA_PIECES = "https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/img/chesspieces/alpha/{piece}.png";
 
+const DEFAULT_PIECES = "https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/img/chesspieces/wikipedia/{piece}.png";
+
 function stripPieceProps(theme) {
   if (!theme || typeof theme !== "object") return {};
   const out = {};
@@ -335,7 +337,6 @@ class Board extends Component {
           time={this.state.time - this.state.timerCount} 
           display={this.props.timed ? 'block' : 'none'} />
         <Chessboard
-          key={`board-${this.props.boardTheme}-${this.props.pieceTheme}-${(this.props.orientation === 'random' ? this.state.orientation : this.props.orientation)}`}
           position={this.state.fen} 
           squareStyles={renderSquareStyles}
           onDrop={this.onDrop}
@@ -345,7 +346,7 @@ class Board extends Component {
           calcWidth={effectiveCalcWidth}
           onSquareClick={this.onSquareClick}
           onSquareRightClick={this.onSquareRightClick}
-          pieceTheme={this.props.pieceTheme === "alpha" ? ALPHA_PIECES : undefined}
+          pieceTheme={this.props.pieceTheme === "alpha" ? ALPHA_PIECES : DEFAULT_PIECES}
           {...stripPieceProps(BOARD_THEMES[this.props.boardTheme || DEFAULT_THEME])}
           />
         <div 
