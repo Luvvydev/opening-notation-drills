@@ -8,7 +8,7 @@ import { BOARD_THEMES, DEFAULT_THEME, PIECE_THEMES } from "../theme/boardThemes"
 import "./OpeningTrainer.css";
 import { getStreakState, markLineCompletedTodayDetailed } from "../utils/streak";
 import { getActivityDays, markActivityToday, touchActivityToday } from "../utils/activityDays";
-import { calcWidth, X_SVG_DATA_URI, pickRandomLineId, splitMovesText, validateSanMoves, countMovesForSide, countDoneMovesForSide, groupLines } from "./openingTrainer/otUtils";
+import { X_SVG_DATA_URI, pickRandomLineId, splitMovesText, validateSanMoves, countMovesForSide, countDoneMovesForSide, groupLines } from "./openingTrainer/otUtils";
 import { getOrderedLineIds } from "../utils/lineIndex";
 import { pickNextPracticeLineId, pickNextLearnLineId } from "./openingTrainer/practicePicker";
 
@@ -18,6 +18,39 @@ import OpeningTrainerConfetti from "./openingTrainer/OpeningTrainerConfetti";
 import { db } from "../firebase";
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { dayKeyFromDate, isoWeekKeyFromDate, monthKeyFromDate } from "../utils/periodKeys";
+
+class BoardErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch() {
+    // swallow; parent can remount via key
+  }
+
+  handleReload = () => {
+    this.setState({ hasError: false });
+    if (this.props.onReset) this.props.onReset();
+  };
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="ot-board ot-board-error">
+          <div className="ot-board-error-title">Board crashed</div>
+          <button className="ot-button ot-button-small" onClick={this.handleReload}>Reload board</button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 
 
 const OPENING_SETS = CATALOG_OPENING_SETS;
@@ -183,6 +216,14 @@ class OpeningTrainer extends Component {
       // ignore
     }
 
+    const initialIsMobile = (() => {
+      try {
+        return typeof window !== "undefined" && window.innerWidth <= (this._mobileBreakpointPx || 560);
+      } catch (_) {
+        return false;
+      }
+    })();
+
     const firstLinesBuiltIn = OPENING_SETS[firstSetKey].lines;
     const customAll = loadCustomLines();
     const customForFirst = customAll.filter((l) => l && l.openingKey === firstSetKey);
@@ -216,6 +257,7 @@ class OpeningTrainer extends Component {
       drillBestAllTime: (drillStats && drillStats.bestAllTime) || 0,
       drillRunDead: false,
       fen: "start",
+      boardRenderToken: 0,
       stepIndex: 0,
       mistakeUnlocked: false,
       lastMistake: null,
@@ -247,13 +289,24 @@ class OpeningTrainer extends Component {
       lastMove: null, // { from, to }
       memberGateOpen: false,
       memberGateMode: "",
-      isMobile: false,
+      isMobile: initialIsMobile,
       mobileBoardSize: null,
+      boardSize: 500,
       mobileHeaderMenu: null,
       learnRewardPending: false,
       learnNextReady: false
     
     };
+    this._handleResize = () => {
+      const size = this.computeBoardSize();
+      // avoid setState storms during resize
+      if (size && size !== this.state.boardSize) {
+        this.setState({ boardSize: size });
+      }
+    };
+
+    // set an initial deterministic board size (prevents chessboardjsx internal null coord map)
+    this.state.boardSize = this.computeBoardSize();
     
     // Mobile layout measurement refs (used only when isMobile)
     this._mobileTopbarRef = React.createRef();
@@ -262,7 +315,7 @@ class OpeningTrainer extends Component {
     this._mobileDockRef = React.createRef();
 this._countedSeenForRun = false;
 
-    const base = process.env.PUBLIC_URL || "";
+    const base = (typeof process !== "undefined" && process.env && process.env.PUBLIC_URL) ? process.env.PUBLIC_URL : "";
     this.sfx = {
       capture: new Audio(base + "/sounds/capture.mp3"),
       illegal: new Audio(base + "/sounds/illegal.mp3"),
@@ -405,7 +458,25 @@ this._countedSeenForRun = false;
   };
 
 
+
+  computeBoardSize = () => {
+    try {
+      const vw = (window && window.innerWidth) ? window.innerWidth : 360;
+      const usable = Math.max(260, vw - 100);
+      if (vw < 550) return usable;
+      if (vw < 1800) return 500;
+      return 600;
+    } catch (_) {
+      return 500;
+    }
+  };
+
   componentDidMount() {
+    // keep chessboard width deterministic across renders
+    if (typeof window !== "undefined") {
+      window.addEventListener("resize", this._handleResize);
+    }
+
     window.addEventListener("mousedown", this.onWindowClick);
     window.addEventListener("keydown", this.onKeyDown);
     window.addEventListener("resize", this._onResizeMobileLayout);
@@ -456,6 +527,10 @@ this._countedSeenForRun = false;
   }
 
 componentWillUnmount() {
+    if (typeof window !== "undefined" && this._handleResize) {
+      window.removeEventListener("resize", this._handleResize);
+    }
+
     if (this._autoNextTimer) clearTimeout(this._autoNextTimer);
     if (this._confettiTimer) clearTimeout(this._confettiTimer);
     if (this._streakToastTimer) clearTimeout(this._streakToastTimer);
@@ -785,7 +860,11 @@ saveCustomModal = () => {
   getPieceThemeUrl = () => {
     const k = (this.state.settings && this.state.settings.pieceTheme) ? String(this.state.settings.pieceTheme) : "default";
     const url = PIECE_THEMES && Object.prototype.hasOwnProperty.call(PIECE_THEMES, k) ? PIECE_THEMES[k] : null;
-    return url || undefined;
+    if (!url) return undefined;
+    const v = this.state.boardRenderToken || 0;
+    // Cache-bust on remount to avoid stale piece images on some mobile browsers.
+    const sep = url.includes("?") ? "&" : "?";
+    return url + sep + "v=" + encodeURIComponent(String(v));
   };
 
   _sfxLastAt = {};
@@ -969,14 +1048,15 @@ saveCustomModal = () => {
   resetLine = (keepUnlocked) => {
     this.game.reset();
     this.setState(
-      {
+      (prev) => ({
         fen: "start",
+        boardRenderToken: (prev.boardRenderToken || 0) + 1,
         stepIndex: 0,
       viewing: false,
       viewIndex: 0,
       viewFen: "start",
         completed: false,
-        mistakeUnlocked: keepUnlocked ? this.state.mistakeUnlocked : false,
+        mistakeUnlocked: keepUnlocked ? prev.mistakeUnlocked : false,
         lastMistake: null,
         wrongAttempt: null,
         showHint: false,
@@ -988,7 +1068,7 @@ saveCustomModal = () => {
         helpUsed: false,
         learnRewardPending: false,
         learnNextReady: false
-      },
+      }),
       () => {
         this._countedSeenForRun = false;
         this.bumpSeenForMode();
@@ -2358,6 +2438,11 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
       // swallow
     }
   };
+
+  resetBoardRender = () => {
+    this.setState((s) => ({ boardRenderToken: (s.boardRenderToken || 0) + 1 }));
+  };
+
 render() {
     const line = this.getLine();
     if (!line) return null;
@@ -2981,19 +3066,21 @@ render() {
 
               <div className="ot-mobile-board-wrap">
                 <div className="ot-board">
+                  <BoardErrorBoundary onReset={this.resetBoardRender}>
                   <Chessboard
-                    width={this.state.mobileBoardSize || undefined}
-                    position={boardFen}
+                    width={this.state.isMobile && this.state.mobileBoardSize ? this.state.mobileBoardSize : this.state.boardSize}
+                    position={boardFen || "start"}
                     onDrop={this.onDrop}
                     allowDrag={this.allowDrag}
                     orientation={playerColor === "b" ? "black" : "white"}
                     showNotation={true}
-                    squareStyles={squareStyles}
+                    squareStyles={(this.state.isMobile && !this.state.mobileBoardSize) ? {} : squareStyles}
                     onSquareClick={this.onSquareClick}
                     onSquareRightClick={this.onSquareRightClick}
                     pieceTheme={this.getPieceThemeUrl()}
                     {...BOARD_THEMES[this.state.settings.boardTheme || DEFAULT_THEME]}
                   />
+                  </BoardErrorBoundary>
                 </div>
               </div>
 
@@ -3204,23 +3291,23 @@ render() {
             <option value="englund">Englund Gambit</option>
 <option value="english">English Opening</option>
 <option value="scotchgame">Scotch Game</option>
-<option value="vienna">Vienna Gambit</option>
-<option value="viennaCounter">Vienna Gambit Counter</option>
 </select>
             </div>
+<BoardErrorBoundary onReset={this.resetBoardRender}>
 <Chessboard
-  calcWidth={calcWidth}
-  position={boardFen}
+  width={this.state.isMobile && this.state.mobileBoardSize ? this.state.mobileBoardSize : this.state.boardSize}
+  position={boardFen || "start"}
   onDrop={this.onDrop}
   allowDrag={this.allowDrag}
   orientation={playerColor === "b" ? "black" : "white"}
   showNotation={true}
-  squareStyles={squareStyles}
+  squareStyles={(this.state.isMobile && !this.state.mobileBoardSize) ? {} : squareStyles}
   onSquareClick={this.onSquareClick}
   onSquareRightClick={this.onSquareRightClick}
   pieceTheme={this.getPieceThemeUrl()}
   {...BOARD_THEMES[this.state.settings.boardTheme || DEFAULT_THEME]}
 />
+</BoardErrorBoundary>
           </div>
 
           
