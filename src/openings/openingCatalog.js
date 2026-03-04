@@ -12,6 +12,8 @@ import { frenchDefenseLines } from "./frenchDefenseLines";
 import { englundGambitLines } from "./englundGambitLines";
 import { englishOpeningLines } from "./englishOpeningLines";
 import { scotchGameLines } from "./scotchGameLines";
+import { viennaGambitLines } from "./viennaGambitLines";
+import { viennaGambitCounterLines } from "./viennaGambitCounterLines";
 
 export const OPENING_CATALOG = [
   {
@@ -189,7 +191,7 @@ export const OPENING_CATALOG = [
     description: "A flexible 1.c4 opening for White that can transpose into many structures.",
     lines: englishOpeningLines,
     accent: "cyan",
-    badge: "New",
+    badge: null,
     access: "signup",
     earlyAccessUntil: null,
     position: "start",
@@ -203,13 +205,42 @@ export const OPENING_CATALOG = [
       "The Scotch Game is an 1.e4 opening that feels like a cheat code. It is simple to learn, crushes new players, but it scales extremely well and remains a serious weapon at every level.",
     lines: scotchGameLines,
     accent: "amber",
-    badge: "New",
+    badge: null,
     access: "signup",
     earlyAccessUntil: null,
     position: "start",
     orientation: "white",
     playerColor: "w"
   }
+,
+{
+  key: "vienna",
+  title: "Vienna Gambit",
+  description:
+    "An aggressive 1.e4 opening built around f4 to sacrifice a pawn and attack fast. High initiative, sharp tactics, and lots of traps.",
+  lines: viennaGambitLines,
+  accent: "gold",
+  badge: "New",
+  access: "signup",
+  earlyAccessUntil: null,
+  position: "start",
+  orientation: "white",
+  playerColor: "w"
+},
+{
+  key: "viennaCounter",
+  title: "Vienna Gambit Counter",
+  description:
+    "Black responses vs the Vienna Gambit. Learn the critical ...d5 counterstrike and common tactical punish lines.",
+  lines: viennaGambitCounterLines,
+  accent: "slate",
+  badge: "New",
+  access: "signup",
+  earlyAccessUntil: null,
+  position: "start",
+  orientation: "black",
+  playerColor: "b"
+}
 ];
 
 export const OPENING_SETS = OPENING_CATALOG.reduce((acc, o) => {

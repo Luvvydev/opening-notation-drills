@@ -114,6 +114,24 @@ class Board extends Component {
       }
     }
     game.reset();
+    // Guard: require enough moves to pick an init + next move
+    if (!history || history.length < 3) {
+      game.reset();
+      this.setState({
+        fen: 'start',
+        history: [],
+        initMove: '',
+        nextMove: '',
+        initMoveData: {},
+        nextMoveData: {},
+        squareStyles: {},
+        answer: '',
+        orientation: orientation,
+        lastMove: null
+      });
+      return;
+    }
+
 
     // Initial half move must be the opposite color of orientation. Initial move cannot be last half move
     let randomMoveIndex = (orientation === 'white') ? 
@@ -121,12 +139,37 @@ class Board extends Component {
       Math.floor(Math.random() *  Math.floor((history.length - 2) / 2)) * 2;
     
     // Do not use castles as move
-    if (history[randomMoveIndex+1] === 'O-O' || history[randomMoveIndex+1] === 'O-O-O') {
-        randomMoveIndex = (randomMoveIndex - 2) % history.length;
+    // Do not use castles as the "next move" (avoid negative/invalid indices)
+    let safety = 0;
+    while (safety < 20 && (history[randomMoveIndex + 1] === 'O-O' || history[randomMoveIndex + 1] === 'O-O-O')) {
+      // re-roll within valid range
+      randomMoveIndex = (orientation === 'white') ?
+        Math.floor(Math.random() * Math.max(1, Math.floor((history.length - 3) / 2))) * 2 + 1 :
+        Math.floor(Math.random() * Math.max(1, Math.floor((history.length - 2) / 2))) * 2;
+      safety += 1;
     }
 
     const initMove = history[randomMoveIndex];
     const nextMove = history[randomMoveIndex+1];
+
+    // Guard: ensure we have a valid init + next move pair
+    if (!initMove || !nextMove) {
+      game.reset();
+      this.setState({
+        fen: 'start',
+        history: [],
+        initMove: '',
+        nextMove: '',
+        initMoveData: {},
+        nextMoveData: {},
+        squareStyles: {},
+        answer: '',
+        orientation: orientation,
+        lastMove: null
+      });
+      return;
+    }
+
 
     // Save lastFullMove for defining the nextMoveColor state (ensures color and nextMove render at the same time)
     let i;
@@ -156,15 +199,32 @@ class Board extends Component {
   }
 
   // For initMove animation
+  // For initMove animation
   makeInitMove = () => {
-    const initMoveData =  game.move(this.state.initMove);
+    const initMoveData = game.move(this.state.initMove);
     const nextMoveData = game.move(this.state.nextMove);
+
+    // Guard: invalid moves can return null, which will crash downstream styling/board rendering
+    if (!initMoveData || !nextMoveData) {
+      game.reset();
+      this.setState({
+        fen: 'start',
+        initMoveData: {},
+        nextMoveData: {},
+        squareStyles: {},
+        lastMove: null
+      });
+      return;
+    }
+
     game.undo();
     this.setState({ fen: game.fen(), initMoveData: initMoveData, nextMoveData: nextMoveData });
   }
 
   // For initMove colors
   updateSquareStyling = () => {
+    // Guard: move data may be empty if we bailed out
+    if (!this.state.initMoveData || !this.state.initMoveData.from || !this.state.initMoveData.to) return;
     let squareStyles = {};
     squareStyles[this.state.initMoveData.from] = {backgroundColor: 'rgba(0, 255, 0, 0.3)'};
     squareStyles[this.state.initMoveData.to] = {backgroundColor: 'rgba(0, 255, 0, 0.3)'};
