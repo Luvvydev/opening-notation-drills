@@ -15,6 +15,9 @@ import { scotchGameLines } from "./scotchGameLines";
 import { viennaGambitLines } from "./viennaGambitLines";
 import { viennaGambitCounterLines } from "./viennaGambitCounterLines";
 import { viennaGameLines } from "./viennaGameLines";
+import { kingsGambitLines } from "./kingsGambitLines";
+import { danishGambitLines } from "./danishGambitLines";
+import { petrovDefenseLines } from "./petrovDefenseLines";
 
 export const OPENING_CATALOG = [
   {
@@ -232,7 +235,7 @@ export const OPENING_CATALOG = [
   key: "viennaCounter",
   title: "Vienna Gambit Counter",
   description:
-    "Black responses vs the Vienna Gambit. Learn the critical ...d5 counterstrike and common tactical punish lines.",
+    "Black responses vs the Vienna Gambit. Learn the critical d5 counterstrike and common tactical punish lines.",
   lines: viennaGambitCounterLines,
   accent: "slate",
   badge: "New",
@@ -256,6 +259,50 @@ export const OPENING_CATALOG = [
   orientation: "white",
   playerColor: "w"
 }
+,
+{
+  key: "kingsGambit",
+  title: "King's Gambit",
+  description:
+    "A sharp 1.e4 opening where White offers the f pawn to open lines and attack immediately. You will learn the core ideas, the common defensive setups, and the tactics that punish slow play.",
+  lines: kingsGambitLines,
+  accent: "rose",
+  badge: "New",
+  access: "signup",
+  earlyAccessUntil: null,
+  position: "start",
+  orientation: "white",
+  playerColor: "w"
+},
+{
+  key: "danishGambit",
+  title: "Danish Gambit",
+  description:
+    "A fast 1.e4 gambit built around sacrificing pawns to rip open the center and unleash the bishops. This course focuses on development with tempo, f7 pressure, and clean conversion once the attack lands.",
+  lines: danishGambitLines,
+  accent: "amber",
+  badge: "New",
+  access: "signup",
+  earlyAccessUntil: null,
+  position: "start",
+  orientation: "white",
+  playerColor: "w"
+},
+{
+  key: "petrovDefense",
+  title: "Petrov Defense",
+  description:
+    "A reliable response to 1.e4 where Black meets attack with counterattack. You will learn the main tactical branches after Nxe5 and the simple plans that keep your king safe while you punish early queen moves.",
+  lines: petrovDefenseLines,
+  accent: "slate",
+  badge: "New",
+  access: "signup",
+  earlyAccessUntil: null,
+  position: "start",
+  orientation: "black",
+  playerColor: "b"
+}
+
 ];
 
 export const OPENING_SETS = OPENING_CATALOG.reduce((acc, o) => {
