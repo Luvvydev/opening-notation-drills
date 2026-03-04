@@ -14,6 +14,7 @@ import { englishOpeningLines } from "./englishOpeningLines";
 import { scotchGameLines } from "./scotchGameLines";
 import { viennaGambitLines } from "./viennaGambitLines";
 import { viennaGambitCounterLines } from "./viennaGambitCounterLines";
+import { viennaGameLines } from "./viennaGameLines";
 
 export const OPENING_CATALOG = [
   {
@@ -240,6 +241,20 @@ export const OPENING_CATALOG = [
   position: "start",
   orientation: "black",
   playerColor: "b"
+},
+{
+  key: "viennaGame",
+  title: "Vienna Game",
+  description:
+    "Enjoy the Vienna Gambit but not sure what to do when Black avoids the usual knight move? This course shows how to apply Qg4 pressure and punish inaccurate play.",
+  lines: viennaGameLines,
+  accent: "gold",
+  badge: "New",
+  access: "signup",
+  earlyAccessUntil: null,
+  position: "start",
+  orientation: "white",
+  playerColor: "w"
 }
 ];
 
