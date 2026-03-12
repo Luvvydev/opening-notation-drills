@@ -3297,6 +3297,9 @@ render() {
 <option value="kingsGambit">King's Gambit</option>
 <option value="danishGambit">Danish Gambit</option>
 <option value="petrovDefense">Petrov Defense</option>
+<option value="rousseauGambit">Rousseau Gambit</option>
+<option value="bishopsOpening">Bishop's Opening</option>
+
 </select>
             </div>
 <BoardErrorBoundary onReset={this.resetBoardRender}>
