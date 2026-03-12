@@ -4,7 +4,8 @@ import { Link } from 'react-router-dom';
 import { httpsCallable } from "firebase/functions";
 import { functions } from "../firebase";
 import './TopNav.css';
-import { getStreakState } from '../utils/streak';
+import { getStreakState, ymdLocal } from '../utils/streak';
+import { getActivityDays } from '../utils/activityDays';
 import { useAuth } from "../auth/AuthProvider";
 import logo from "../assets/chessdrillslogo.png";
 
@@ -28,25 +29,48 @@ const wittySubtitles = [
   "Drills now, blunders later",
 ];
 
+const WEEKDAY_LABELS = ["S", "M", "T", "W", "T", "F", "S"];
+
+function buildCurrentWeek(activityDays) {
+  const today = new Date();
+  const start = new Date(today);
+  start.setHours(0, 0, 0, 0);
+  start.setDate(today.getDate() - today.getDay());
+
+  return Array.from({ length: 7 }, (_, index) => {
+    const date = new Date(start);
+    date.setDate(start.getDate() + index);
+    const key = ymdLocal(date);
+    return {
+      key,
+      label: WEEKDAY_LABELS[index],
+      isToday: key === ymdLocal(),
+      done: (Number(activityDays[key]) || 0) > 0,
+    };
+  });
+}
+
 function TopNav(props) {
   const title = props.title || 'Chess Opening Drills';
   const hideHero = props.hideHero !== false;
 
   const [subtitle, setSubtitle] = useState('');
   const [streak, setStreak] = useState(() => getStreakState());
+  const [activityDays, setActivityDays] = useState(() => getActivityDays());
+  const [streakOpen, setStreakOpen] = useState(false);
 
   const { user, signOut, isMember } = useAuth();
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [ctaLabel, setCtaLabel] = useState('Start for free');
   const menuWrapRef = useRef(null);
+  const streakWrapRef = useRef(null);
 
   useEffect(() => {
     setSubtitle(wittySubtitles[Math.floor(Math.random() * wittySubtitles.length)]);
   }, []);
 
   useEffect(() => {
-    // A/B test label copy for the CTA
     if (isMember) return;
 
     const isLoggedIn = !!user;
@@ -67,17 +91,19 @@ function TopNav(props) {
         v = Math.random() < 0.5 ? 'A' : 'B';
         window.localStorage.setItem(key, v);
       }
-    } catch (_) {
-      // ignore
-    }
+    } catch (_) {}
 
     setCtaLabel(variants[v] || variants.A);
   }, [user, isMember]);
 
   useEffect(() => {
-    const refresh = () => setStreak(getStreakState());
+    const refresh = () => {
+      setStreak(getStreakState());
+      setActivityDays(getActivityDays());
+    };
 
     window.addEventListener("streak:updated", refresh);
+    window.addEventListener("activity:updated", refresh);
 
     const onVis = () => {
       if (document.visibilityState === "visible") refresh();
@@ -88,23 +114,29 @@ function TopNav(props) {
 
     return () => {
       window.removeEventListener("streak:updated", refresh);
+      window.removeEventListener("activity:updated", refresh);
       document.removeEventListener("visibilitychange", onVis);
       clearInterval(t);
     };
   }, []);
 
   useEffect(() => {
-    if (!menuOpen) return;
+    if (!menuOpen && !streakOpen) return;
 
     const onDocMouseDown = (e) => {
-      if (!menuWrapRef.current) return;
-      if (!menuWrapRef.current.contains(e.target)) {
+      if (menuWrapRef.current && !menuWrapRef.current.contains(e.target)) {
         setMenuOpen(false);
+      }
+      if (streakWrapRef.current && !streakWrapRef.current.contains(e.target)) {
+        setStreakOpen(false);
       }
     };
 
     const onKeyDown = (e) => {
-      if (e.key === "Escape") setMenuOpen(false);
+      if (e.key === "Escape") {
+        setMenuOpen(false);
+        setStreakOpen(false);
+      }
     };
 
     document.addEventListener("mousedown", onDocMouseDown);
@@ -114,55 +146,61 @@ function TopNav(props) {
       document.removeEventListener("mousedown", onDocMouseDown);
       document.removeEventListener("keydown", onKeyDown);
     };
-  }, [menuOpen]);
+  }, [menuOpen, streakOpen]);
 
   const profileHref = user ? "/profile" : "/signup";
 
   const onToggleMenu = () => {
     if (!user) return;
+    setStreakOpen(false);
     setMenuOpen((v) => !v);
   };
 
-const onJoinDiscord = () => {
-  try {
-    window.open(DISCORD_INVITE_URL, "_blank", "noopener,noreferrer");
-  } catch (e) {
-    window.location.href = DISCORD_INVITE_URL;
-  }
-};
-
-const onLinkDiscord = async () => {
-  if (!user) return;
-  try {
+  const onToggleStreak = () => {
     setMenuOpen(false);
+    setStreakOpen((v) => !v);
+  };
 
-    // Backend should return a Discord OAuth URL that redirects back to #/discord.
-    const redirectUri = CHESSDRILLS_BASE_URL + "/#/discord";
-    const fn = httpsCallable(functions, "getDiscordOAuthUrl");
-    const res = await fn({ redirectUri });
-    const url = res?.data?.url;
-
-    if (typeof url === "string" && url.startsWith("http")) {
-      window.location.href = url;
-      return;
+  const onJoinDiscord = () => {
+    try {
+      window.open(DISCORD_INVITE_URL, "_blank", "noopener,noreferrer");
+    } catch (e) {
+      window.location.href = DISCORD_INVITE_URL;
     }
+  };
 
-    // Safe fallback: at least send them to the server so they can see an error message there.
-    window.location.href = redirectUri;
-  } catch (e) {
-    // Do not hard crash nav if functions are not deployed yet.
-    alert("Discord linking is not available yet.");
-  }
-};
+  const onLinkDiscord = async () => {
+    if (!user) return;
+    try {
+      setMenuOpen(false);
+      const redirectUri = CHESSDRILLS_BASE_URL + "/#/discord";
+      const fn = httpsCallable(functions, "getDiscordOAuthUrl");
+      const res = await fn({ redirectUri });
+      const url = res && res.data ? res.data.url : null;
+
+      if (typeof url === "string" && url.startsWith("http")) {
+        window.location.href = url;
+        return;
+      }
+
+      window.location.href = redirectUri;
+    } catch (e) {
+      alert("Discord linking is not available yet.");
+    }
+  };
 
   const onSignOut = async () => {
     try {
       setMenuOpen(false);
       await signOut();
-    } catch (e) {
-      // silent
-    }
+    } catch (e) {}
   };
+
+  const weekDays = buildCurrentWeek(activityDays);
+  const streakTitle = `${streak.current || 0} ${(streak.current || 0) === 1 ? 'day' : 'days'} streak`;
+  const streakSubtitle = streak.completedToday
+    ? "You've done your line for today!"
+    : 'Complete a line today to keep it going.';
 
   return (
     <>
@@ -173,25 +211,70 @@ const onLinkDiscord = async () => {
           </Link>
 
           <div className="topnav-actions">
-            <div className="topnav-right" ref={menuWrapRef}>
+            <div className="topnav-right">
               {(!user || !isMember) && (
-        <Link
-          to={
-            user
-              ? { pathname: "/about", state: { from: "topnav", reason: "upgrade_cta" } }
-              : { pathname: "/signup", state: { from: "topnav", reason: "start_free" } }
-          }
-          className="topnav-button topnav-startfree topnav-startfree-pulse"
-          onClick={() => setMenuOpen(false)}
-        >
-          {ctaLabel}
-        </Link>
-      )}
+                <Link
+                  to={
+                    user
+                      ? { pathname: "/about", state: { from: "topnav", reason: "upgrade_cta" } }
+                      : { pathname: "/signup", state: { from: "topnav", reason: "start_free" } }
+                  }
+                  className="topnav-button topnav-startfree topnav-startfree-pulse"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  {ctaLabel}
+                </Link>
+              )}
 
-      <div className="topnav-streak" title={streak.best ? `Best: ${streak.best}` : ""}>
-                <span className="topnav-streak-text">
-                  <span role="img" aria-label="streak">🔥</span> {streak.current || 0}
-                </span>
+              <div className="topnav-streak-wrap" ref={streakWrapRef}>
+                <button
+                  type="button"
+                  className="topnav-streak"
+                  title={streak.best ? `Best: ${streak.best}` : "Open streak"}
+                  onClick={onToggleStreak}
+                  aria-haspopup="dialog"
+                  aria-expanded={streakOpen ? 'true' : 'false'}
+                >
+                  <span className="topnav-streak-text">
+                    <span className="topnav-streak-flame" role="img" aria-label="streak">🔥</span>
+                    <span>{streak.current || 0}</span>
+                  </span>
+                </button>
+
+                {streakOpen ? (
+                  <div className="topnav-streak-popover" role="dialog" aria-label="Streak calendar">
+                    <div className="topnav-streak-card-head">
+                      <div>
+                        <div className="topnav-streak-card-title">{streakTitle}</div>
+                        <div className="topnav-streak-card-subtitle">{streakSubtitle}</div>
+                      </div>
+                      <div className="topnav-streak-card-flame" aria-hidden="true">🔥</div>
+                    </div>
+
+                    <div className="topnav-streak-weekdays">
+                      {weekDays.map((day) => (
+                        <div key={day.key} className="topnav-streak-weekday-label">{day.label}</div>
+                      ))}
+                    </div>
+
+                    <div className="topnav-streak-weekgrid">
+                      {weekDays.map((day) => (
+                        <div
+                          key={day.key + '-cell'}
+                          className={
+                            'topnav-streak-day' +
+                            (day.done ? ' is-done' : '') +
+                            (day.isToday ? ' is-today' : '')
+                          }
+                          title={day.key}
+                          aria-label={`${day.key}${day.done ? ' completed' : ' not completed'}`}
+                        >
+                          {day.done ? '✓' : ''}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
               </div>
 
               {user ? (
@@ -214,95 +297,96 @@ const onLinkDiscord = async () => {
                 </div>
               </Link>
 
-              {user ? (
-                <>
-                  <button
-                    type="button"
-                    className="topnav-profile topnav-profile-btn"
-                    onClick={onToggleMenu}
-                    aria-haspopup="menu"
-                    aria-expanded={menuOpen ? "true" : "false"}
-                    title="Profile"
-                  >
-                    <span className="topnav-profile-icon" aria-hidden="true">👤</span>
-                  </button>
+              <div ref={menuWrapRef}>
+                {user ? (
+                  <>
+                    <button
+                      type="button"
+                      className="topnav-profile topnav-profile-btn"
+                      onClick={onToggleMenu}
+                      aria-haspopup="menu"
+                      aria-expanded={menuOpen ? "true" : "false"}
+                      title="Profile"
+                    >
+                      <span className="topnav-profile-icon" aria-hidden="true">👤</span>
+                    </button>
 
-                  {menuOpen ? (
-                    <div className="topnav-menu" role="menu">
-                      <Link
-                        to="/practice"
-                        className="topnav-menu-item"
-                        role="menuitem"
-                        onClick={() => setMenuOpen(false)}
-                      >
-                        Notation Trainer
-                      </Link>
+                    {menuOpen ? (
+                      <div className="topnav-menu" role="menu">
+                        <Link
+                          to="/practice"
+                          className="topnav-menu-item"
+                          role="menuitem"
+                          onClick={() => setMenuOpen(false)}
+                        >
+                          Notation Trainer
+                        </Link>
 
-                      <Link
-                        to="/openings"
-                        className="topnav-menu-item"
-                        role="menuitem"
-                        onClick={() => setMenuOpen(false)}
-                      >
-                        Opening Trainer
-                      
-</Link>
+                        <Link
+                          to="/openings"
+                          className="topnav-menu-item"
+                          role="menuitem"
+                          onClick={() => setMenuOpen(false)}
+                        >
+                          Opening Trainer
+                        </Link>
 
-<button
-  type="button"
-  className="topnav-menu-item"
-  role="menuitem"
-  onClick={onJoinDiscord}
->
-  Join Discord
-</button>
+                        <button
+                          type="button"
+                          className="topnav-menu-item"
+                          role="menuitem"
+                          onClick={onJoinDiscord}
+                        >
+                          Join Discord
+                        </button>
 
-<button
-  type="button"
-  className="topnav-menu-item"
-  role="menuitem"
-  onClick={onLinkDiscord}
->
-  Link Discord
-</button>
+                        <button
+                          type="button"
+                          className="topnav-menu-item"
+                          role="menuitem"
+                          onClick={onLinkDiscord}
+                        >
+                          Link Discord
+                        </button>
 
-<Link
-  to={profileHref}
-                        className="topnav-menu-item"
-                        role="menuitem"
-                        onClick={() => setMenuOpen(false)}
-                      >
-                        My Profile
-                      </Link>
+                        <Link
+                          to={profileHref}
+                          className="topnav-menu-item"
+                          role="menuitem"
+                          onClick={() => setMenuOpen(false)}
+                        >
+                          My Profile
+                        </Link>
 
-                      <button
-                        type="button"
-                        className="topnav-menu-item topnav-menu-danger"
-                        role="menuitem"
-                        onClick={onSignOut}
-                      >
-                        Log out
-                      </button>
+                        <button
+                          type="button"
+                          className="topnav-menu-item topnav-menu-danger"
+                          role="menuitem"
+                          onClick={onSignOut}
+                        >
+                          Log out
+                        </button>
+                      </div>
+                    ) : null}
+                  </>
+                ) : (
+                  <Link to={profileHref} className="topnav-profile-link" title="Sign up">
+                    <div className="topnav-profile">
+                      <span className="topnav-profile-icon" aria-hidden="true">👤</span>
                     </div>
-                  ) : null}
-                </>
-              ) : (
-                <Link to={profileHref} className="topnav-profile-link" title="Sign up">
-                  <div className="topnav-profile">
-                    <span className="topnav-profile-icon" aria-hidden="true">👤</span>
-                  </div>
-                </Link>
-              )}
+                  </Link>
+                )}
+              </div>
 
-<Link
-  to="/about"
-  title="About"
-  className="topnav-icon-link"
->
-  <div className={`topnav-profile ${props.active === 'about' ? 'active' : ''}`}>
-    <span className="topnav-profile-icon" aria-hidden="true">ⓘ</span>
-  </div>
-</Link>
+              <Link
+                to="/about"
+                title="About"
+                className="topnav-icon-link"
+              >
+                <div className={`topnav-profile ${props.active === 'about' ? 'active' : ''}`}>
+                  <span className="topnav-profile-icon" aria-hidden="true">ⓘ</span>
+                </div>
+              </Link>
             </div>
 
             {props.showSpeedDrill ? (

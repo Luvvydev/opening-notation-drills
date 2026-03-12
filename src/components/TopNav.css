@@ -545,3 +545,144 @@
   }
 }
 
+
+.topnav-streak-wrap {
+  position: relative;
+}
+
+.topnav-streak {
+  width: 40px;
+  min-width: 40px;
+  height: 40px;
+  padding: 0;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease, transform 120ms ease;
+}
+
+.topnav-streak:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: transparent;
+}
+
+.topnav-streak:active {
+  transform: translateY(1px);
+}
+
+.topnav-streak-flame {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.topnav-streak-text {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  font-size: 16px;
+  color: #f3f5f7;
+}
+
+.topnav-streak-text span:last-child {
+  display: none;
+}
+
+.topnav-streak-popover {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 290px;
+  padding: 16px;
+  border-radius: 14px;
+  background: #11141a;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+  z-index: 31000;
+}
+
+.topnav-streak-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.topnav-streak-card-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1.15;
+}
+
+.topnav-streak-card-subtitle {
+  margin-top: 6px;
+  font-size: 14px;
+  line-height: 1.35;
+  color: rgba(255, 255, 255, 0.74);
+  max-width: 150px;
+}
+
+.topnav-streak-card-flame {
+  width: 66px;
+  height: 66px;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+  background: rgba(255, 177, 48, 0.18);
+  border: 1px solid rgba(255, 177, 48, 0.32);
+  flex: 0 0 66px;
+}
+
+.topnav-streak-weekdays,
+.topnav-streak-weekgrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+}
+
+.topnav-streak-weekdays {
+  margin-bottom: 8px;
+}
+
+.topnav-streak-weekday-label {
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.86);
+}
+
+.topnav-streak-day {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(126, 132, 148, 0.38);
+  color: transparent;
+  font-size: 16px;
+  font-weight: 900;
+  border: 1px solid transparent;
+}
+
+.topnav-streak-day.is-done {
+  background: #f2a52b;
+  color: #141418;
+}
+
+.topnav-streak-day.is-today {
+  border-color: rgba(255, 255, 255, 0.24);
+}
+
+@media (max-width: 520px) {
+  .topnav-streak-popover {
+    right: -12px;
+    width: min(290px, calc(100vw - 28px));
+  }
+}
