@@ -686,3 +686,63 @@
     width: min(290px, calc(100vw - 28px));
   }
 }
+
+
+@media (max-width: 520px) {
+  .topnav-actions {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .topnav-right {
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+    row-gap: 10px;
+  }
+
+  .topnav-streak-wrap {
+    position: static;
+  }
+
+  .topnav-streak-popover {
+    position: fixed;
+    top: calc(env(safe-area-inset-top) + 160px);
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    width: min(340px, calc(100vw - 24px));
+    max-width: calc(100vw - 24px);
+    padding: 14px;
+  }
+
+  .topnav-streak-card-head {
+    align-items: center;
+  }
+
+  .topnav-streak-card-subtitle {
+    max-width: none;
+    padding-right: 8px;
+  }
+
+  .topnav-streak-card-flame {
+    width: 58px;
+    height: 58px;
+    flex: 0 0 58px;
+    border-radius: 16px;
+    font-size: 34px;
+  }
+
+  .topnav-streak-weekdays,
+  .topnav-streak-weekgrid {
+    gap: 6px;
+  }
+
+  .topnav-streak-weekday-label {
+    font-size: 12px;
+  }
+
+  .topnav-streak-day {
+    font-size: 15px;
+  }
+}
