@@ -1,4 +1,6 @@
-export const danishGambitLines = [
+import { withOpeningFeedback } from "./feedback";
+
+export const danishGambitLines = withOpeningFeedback([
   {
     category: "Danish Gambit",
     id: "danishGambit-01-2e86f944",
@@ -737,4 +739,4 @@ export const danishGambitLines = [
     
     ]
   }
-];
+]);

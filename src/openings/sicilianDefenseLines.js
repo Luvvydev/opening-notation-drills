@@ -1,3 +1,5 @@
+import { withOpeningFeedback } from "./feedback";
+
 // src/openings/sicilianDefenseLines.js
 
 // SEO / page intro text for Sicilian Defense drills
@@ -15,7 +17,7 @@ their openings to survive beyond the first few moves in real games.
 `;
 
 
-export const sicilianDefenseLines = [
+export const sicilianDefenseLines = withOpeningFeedback([
   // Categories: Open Sicilian, Anti-Sicilian, Closed Sicilian, Grand Prix, Moscow/Rossolimo
 
   {
@@ -1367,4 +1369,4 @@ export const sicilianDefenseLines = [
     ]
   },
 
-];
+]);

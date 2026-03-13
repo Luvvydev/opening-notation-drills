@@ -1,4 +1,6 @@
-export const petrovDefenseLines = [
+import { withOpeningFeedback } from "./feedback";
+
+export const petrovDefenseLines = withOpeningFeedback([
   {
     category: "Petrov Defense",
     id: "petrovDefense-01-895113e8",
@@ -1339,4 +1341,4 @@ export const petrovDefenseLines = [
     
     ]
   }
-];
+]);

@@ -1,3 +1,5 @@
+import { withOpeningFeedback } from "./feedback";
+
 // src/openings/ruyLopezLines.js
 
 // SEO / page intro text for Ruy Lopez drills
@@ -11,7 +13,7 @@ Each line is a concrete sequence you can practice until the moves feel automatic
 `;
 
 
-export const ruyLopezLines = [
+export const ruyLopezLines = withOpeningFeedback([
   // Categories: Morphy Defense, Berlin Defense, Steinitz Defense, Classical (3...Bc5), Schliemann, Tactical sidelines
 
   {
@@ -1811,4 +1813,4 @@ export const ruyLopezLines = [
     "Recapture with development, hit c6 and e5 indirectly, and keep white's center under control."
   ]
 }
-];
+]);

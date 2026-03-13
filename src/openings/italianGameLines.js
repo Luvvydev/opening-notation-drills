@@ -1,4 +1,6 @@
-export const italianGameLines = [
+import { withOpeningFeedback } from "./feedback";
+
+export const italianGameLines = withOpeningFeedback([
   {
     "category": "Italian Game",
     "id": "italian-01",
@@ -794,4 +796,4 @@ export const italianGameLines = [
       "White develops the rook, bringing the last piece into the attack."
     ]
   }
-];
+]);

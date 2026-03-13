@@ -1,4 +1,6 @@
-export const kingsIndianDefenseLines = [
+import { withOpeningFeedback } from "./feedback";
+
+export const kingsIndianDefenseLines = withOpeningFeedback([
   {
     "category": "King's Indian Defense",
     "id": "kings-indian-01",
@@ -1144,4 +1146,4 @@ export const kingsIndianDefenseLines = [
       "Black's rook captures the knight."
     ]
   }
-];
+]);

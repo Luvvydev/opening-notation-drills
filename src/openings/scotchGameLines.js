@@ -1,4 +1,6 @@
-export const scotchGameLines = [
+import { withOpeningFeedback } from "./feedback";
+
+export const scotchGameLines = withOpeningFeedback([
   {
     "category": "Scotch Game",
     "id": "scotch-01",
@@ -947,4 +949,4 @@ export const scotchGameLines = [
       "After the final move - It's over. We're winning a rook and probably a few other pieces too."
     ]
   }
-];
+]);

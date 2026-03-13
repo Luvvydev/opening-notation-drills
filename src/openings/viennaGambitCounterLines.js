@@ -1,6 +1,8 @@
+import { withOpeningFeedback } from "./feedback";
+
 // src/openings/viennaGambitCounterLines.js
 
-export const viennaGambitCounterLines = [
+export const viennaGambitCounterLines = withOpeningFeedback([
   
   {
     category: "Vienna Gambit Counter",
@@ -124,4 +126,4 @@ export const viennaGambitCounterLines = [
     explanations: ["Take the center and keep lines open so your pieces can jump out fast.", "Black matches your central claim and keeps everything flexible.", " support e4 and keep the f-pawn free for f4 without blocking Nf3.", "Black develops while hitting e4, forcing you to show how you will defend the center.", "You still play f4 to chase initiative, but note Black can answer with ...d5 to hit your center immediately.", "Key counter: ...d5 hits e4 and f4 at once and tries to blunt your initiative by opening the center on Black's terms.", "Capture with purpose: either win material back, remove a defender, or open a file for attack.", "Black captures to simplify or to remove your attacking pieces.", "Capture with purpose: either win material back, remove a defender, or open a file for attack.", "Black centralizes the queen after trades and tries to simplify while holding the extra pawn or initiative.", "Capture with purpose: either win material back, remove a defender, or open a file for attack.", "Black develops and adds pressure on e5 and d4, aiming to meet your center with pieces, not just pawns.", "Develop and prepare to castle. In gambits, king safety matters because open lines cut both ways.", "Black develops the bishop to g4 to contest the center and meet your threats.", "Develop the bishop to e2 so it can influence the center and join the attack.", "Black captures to simplify or to remove your attacking pieces.", "Capture with purpose: either win material back, remove a defender, or open a file for attack.", "Black captures to simplify or to remove your attacking pieces.", "Open the center while you are ahead in development. This is how gambits convert time into attack.", "Black stabilizes with the queen, defending key points and trying to prevent tactical forks on c7."]
   }
 
-];
+]);

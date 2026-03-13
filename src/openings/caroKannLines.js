@@ -1,3 +1,5 @@
+import { withOpeningFeedback } from "./feedback";
+
 // src/openings/caroKannLines.js
 
 // SEO / page intro text for Caro-Kann drills
@@ -14,7 +16,7 @@ Each line includes move-by-move explanations that state the concrete purpose:
 what is being attacked or defended, what pawn break is being prepared, and what concession is being forced.
 `;
 
-export const caroKannLines = [
+export const caroKannLines = withOpeningFeedback([
   {
     category: "Advance Variation",
     id: "caro-kann-line-01-e4-c6-d4-d5-e5-c5-dxc5-nc6",
@@ -239,4 +241,4 @@ export const caroKannLines = [
     moves: ["e4", "c6", "d4", "d5", "e5", "c5", "dxc5", "Nc6", "Bb5", "e6", "Be3", "Ne7", "c3", "Nf5", "Bd4", "Bd7"],
     explanations: ["Claim space and open lines for the king bishop and queen.", "Prepare ...d5 while keeping the light-squared bishop free.", "Build a strong center and support e4.", "Challenge the center immediately. The Caro-Kann is about pressure, not mirroring.", "Advance and gain space, but accept that the pawn can become a target.", "Hit White's center from the side. This is a main Caro-Kann break vs the Advance.", "Grab the pawn, but give Black development tempo and a clear target to win back.", "Develop and pressure d4 and e5. Also supports ...d4 or ...e5 ideas in some lines.", "Develop with pressure and often provoke concessions like ...Bd7 or ...Qa5.", "Support ...d5 or ...c5 structure, open the dark bishop, and prepare king safety.", "Develop and often fight Qb6/Qa5 pressure by covering key squares.", "Black improves piece placement or pawn structure. The point is to support the current plan without conceding tempo.", "Support d4 and prepare to recapture with a pawn, keeping central control.", "Jump to an active square to hit d4/e3/g3 and pressure key pawns.", "White improves piece placement or pawn structure. The point is to support the current plan without conceding tempo.", "Challenge the bishop and complete development while defending key squares."],
   },
-];
+]);

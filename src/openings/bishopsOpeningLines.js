@@ -1,4 +1,6 @@
-export const bishopsOpeningLines = [
+import { withOpeningFeedback } from "./feedback";
+
+export const bishopsOpeningLines = withOpeningFeedback([
   {
     category: "Urusov Gambit",
     id: "bishops-opening-center-fork-recovery",
@@ -483,4 +485,4 @@ export const bishopsOpeningLines = [
       "Take on e6 with check and keep the attack going with a winning material plus initiative balance."
     ]
   }
-];
+]);

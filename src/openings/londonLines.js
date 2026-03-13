@@ -1,3 +1,5 @@
+import { withOpeningFeedback } from "./feedback";
+
 // src/openings/londonLines.js
 
 // SEO / page intro text for London System drills
@@ -14,7 +16,7 @@ If your London games fall apart because you forget the move order, these drills 
 meant to lock the structure into memory rather than teach abstract strategy.
 `;
 
-export const londonLines = [
+export const londonLines = withOpeningFeedback([
   // Categories: Classic London, Early ...c5 Systems, Anti-Bishop Ideas, Jobava, Aggressive Plans
 
   {
@@ -1280,4 +1282,4 @@ export const londonLines = [
       "Support d4 and open pieces, completing the basic London setup."
     ]
   }
-];
+]);

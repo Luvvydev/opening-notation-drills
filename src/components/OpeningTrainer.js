@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import Chessboard from "chessboardjsx";
 import * as Chess from "chess.js";
 import { OPENING_SETS as CATALOG_OPENING_SETS } from "../openings/openingCatalog";
+import { buildMoveFeedback } from "../openings/feedback";
 import { useAuth } from "../auth/AuthProvider";
 import TopNav from "./TopNav";
 import { BOARD_THEMES, DEFAULT_THEME, PIECE_THEMES } from "../theme/boardThemes";
@@ -261,6 +262,8 @@ class OpeningTrainer extends Component {
       stepIndex: 0,
       mistakeUnlocked: false,
       lastMistake: null,
+      lastMoveFeedback: null,
+      feedbackExpanded: false,
       completed: false,
       confettiActive: false,
       wrongAttempt: null,
@@ -825,6 +828,7 @@ saveCustomModal = () => {
         viewIndex: nextStep,
         viewFen: this.game.fen(),
         lastMistake: null,
+        lastMoveFeedback: null,
         wrongAttempt: null,
         showHint: false,
         solveArmed: false,
@@ -1040,6 +1044,8 @@ saveCustomModal = () => {
       fen: this.game.fen(),
       wrongAttempt: null,
       lastMistake: null,
+      lastMoveFeedback: null,
+      feedbackExpanded: false,
       completed: false,
       showHint: false
     });
@@ -1058,6 +1064,7 @@ saveCustomModal = () => {
         completed: false,
         mistakeUnlocked: keepUnlocked ? prev.mistakeUnlocked : false,
         lastMistake: null,
+        lastMoveFeedback: null,
         wrongAttempt: null,
         showHint: false,
         lastMove: null,
@@ -1089,6 +1096,7 @@ saveCustomModal = () => {
         linePicker: "random",
         mistakeUnlocked: false,
         lastMistake: null,
+        lastMoveFeedback: null,
         completed: false,
         wrongAttempt: null,
         showHint: false,
@@ -1173,6 +1181,7 @@ nextLine = () => {
         prevPracticeLineId: this.state.lineId,
         mistakeUnlocked: false,
         lastMistake: null,
+        lastMoveFeedback: null,
         completed: false,
         wrongAttempt: null,
         showHint: false,
@@ -1241,6 +1250,7 @@ nextLine = () => {
         learnRecentLineIds: [this.state.lineId].concat(recent).filter(Boolean).map(String).slice(0, 6),
         mistakeUnlocked: false,
         lastMistake: null,
+        lastMoveFeedback: null,
         completed: false,
         wrongAttempt: null,
         showHint: false,
@@ -1309,6 +1319,7 @@ if (!nextId) nextId = nextLines[0] ? nextLines[0].id : "";
         learnRecentLineIds: [],
         mistakeUnlocked: false,
         lastMistake: null,
+        lastMoveFeedback: null,
         completed: false,
         wrongAttempt: null,
         showHint: false,
@@ -1356,6 +1367,7 @@ if (!nextId) nextId = nextLines[0] ? nextLines[0].id : "";
         learnRecentLineIds: [],
         mistakeUnlocked: false,
         lastMistake: null,
+        lastMoveFeedback: null,
         completed: false,
         wrongAttempt: null,
         showHint: false,
@@ -1752,6 +1764,14 @@ onCompletedLine = () => {
       this.bumpMistakeForMode();
       this.game.undo();
 
+      const wrongFeedback = this.resolveMoveFeedback({
+        line,
+        index: this.state.stepIndex,
+        expectedSan: expected,
+        playedSan: playedSAN,
+        isCorrect: false
+      });
+
       if (mode === "drill") {
         this.setState({
           fen: this.game.fen(),
@@ -1762,8 +1782,10 @@ onCompletedLine = () => {
           lastMistake: {
             expected: expected,
             played: playedSAN,
-            explanation: ""
+            explanation: wrongFeedback.text
           },
+          lastMoveFeedback: wrongFeedback,
+          feedbackExpanded: false,
           wrongAttempt: {
             from: sourceSquare,
             to: targetSquare
@@ -1779,8 +1801,6 @@ onCompletedLine = () => {
         return;
       }
 
-      const explanation = line.explanations[this.state.stepIndex] || "";
-
       this.setState({
         fen: this.game.fen(),
         completed: false,
@@ -1791,8 +1811,10 @@ onCompletedLine = () => {
         lastMistake: {
           expected: expected,
           played: playedSAN,
-          explanation: explanation
+          explanation: wrongFeedback.text
         },
+        lastMoveFeedback: wrongFeedback,
+        feedbackExpanded: false,
         wrongAttempt: {
           from: sourceSquare,
           to: targetSquare
@@ -1812,11 +1834,21 @@ onCompletedLine = () => {
 
     const nextStep = this.state.stepIndex + 1;
 
+    const correctFeedback = this.resolveMoveFeedback({
+      line,
+      index: this.state.stepIndex,
+      expectedSan: expected,
+      playedSan: playedSAN,
+      isCorrect: true
+    });
+
     this.setState(
       {
         fen: this.game.fen(),
         stepIndex: nextStep,
         lastMistake: null,
+        lastMoveFeedback: correctFeedback,
+        feedbackExpanded: false,
         wrongAttempt: null,
         showHint: false,
         solveArmed: false,
@@ -1937,6 +1969,120 @@ sanitizeExplanation = (text, expectedSan) => {
   return s;
 };
 
+
+getFeedbackEntry = (line, index) => {
+  if (!line || index == null || index < 0) return null;
+
+  if (Array.isArray(line.feedback) && line.feedback[index]) {
+    return line.feedback[index];
+  }
+
+  const correct = Array.isArray(line.correctFeedback) ? line.correctFeedback[index] : "";
+  const wrong = Array.isArray(line.wrongFeedback) ? line.wrongFeedback[index] : "";
+  const tags = Array.isArray(line.feedbackTags) ? line.feedbackTags[index] : [];
+
+  if (!correct && !wrong) return null;
+  return { correct, wrong, tags: Array.isArray(tags) ? tags : [] };
+};
+
+resolveMoveFeedback = ({ line, index, expectedSan, playedSan, isCorrect }) => {
+  const entry = this.getFeedbackEntry(line, index) || {};
+  const explanation = this.sanitizeExplanation((line && line.explanations && line.explanations[index]) || "", expectedSan);
+
+  const normalizedEntry = {
+    ...entry,
+    why: entry.why || explanation || entry.correct || "",
+    correct: entry.correct || explanation || "This move follows the main idea of the position.",
+    wrong: entry.wrong || "The position had a stronger continuation.",
+    wrongYourMove: entry.wrongYourMove || "Your move looked playable, but it missed the priority of the position.",
+    wrongMissed: entry.wrongMissed || explanation || "The stronger move kept the main idea of the position.",
+    severity: entry.severity || "Inaccuracy"
+  };
+
+  return buildMoveFeedback(normalizedEntry, {
+    expectedSan,
+    playedSan,
+    isCorrect
+  });
+};
+
+toggleFeedbackExpanded = () => {
+  this.setState((prev) => ({ feedbackExpanded: !prev.feedbackExpanded }));
+};
+
+renderMoveFeedbackCard = () => {
+  const feedback = this.state.lastMoveFeedback;
+  if (!feedback || !feedback.text) return null;
+
+  const isWrong = feedback.kind === "wrong";
+  const expanded = !!this.state.feedbackExpanded;
+
+  return (
+    <div className={`ot-move-feedback ${isWrong ? "is-wrong" : "is-correct"}`}>
+      <div className="ot-move-feedback-head">
+        <div className="ot-move-feedback-head-left">
+          <div className="ot-move-feedback-title-row">
+            <div className="ot-move-feedback-title">{feedback.title}</div>
+            {isWrong && feedback.severity ? (
+              <span className="ot-move-feedback-severity">{feedback.severity}</span>
+            ) : null}
+          </div>
+          {!isWrong ? (
+            <div className="ot-move-feedback-correct-copy">
+              <div className="ot-move-feedback-text">{feedback.text}</div>
+            </div>
+          ) : null}
+        </div>
+        {isWrong && feedback.played && feedback.expected ? (
+          <div className="ot-move-feedback-san">
+            <span className="ot-move-feedback-san-played">Played {feedback.played}</span>
+            <span className="ot-move-feedback-san-best">Best {feedback.expected}</span>
+          </div>
+        ) : null}
+      </div>
+
+      {isWrong ? (
+        <div className="ot-move-feedback-sections">
+          <div className="ot-move-feedback-section">
+            <div className="ot-move-feedback-label">Your move</div>
+            <div className="ot-move-feedback-text">{feedback.yourMove || feedback.text}</div>
+          </div>
+          <div className="ot-move-feedback-section">
+            <div className="ot-move-feedback-label">What it missed</div>
+            <div className="ot-move-feedback-text">{feedback.missed || feedback.text}</div>
+          </div>
+        </div>
+      ) : null}
+
+      {expanded && feedback.why ? (
+        <div className="ot-move-feedback-why">
+          <div className="ot-move-feedback-label">Why</div>
+          <div className="ot-move-feedback-text">{feedback.why}</div>
+        </div>
+      ) : null}
+
+      <div className="ot-move-feedback-footer">
+        {Array.isArray(feedback.tags) && feedback.tags.length ? (
+          <div className="ot-move-feedback-tags">
+            {feedback.tags.map((tag) => (
+              <span key={tag} className="ot-move-feedback-tag">{tag}</span>
+            ))}
+          </div>
+        ) : <div />}
+
+        {feedback.why ? (
+          <button
+            type="button"
+            className="ot-move-feedback-why-toggle"
+            onClick={this.toggleFeedbackExpanded}
+          >
+            {expanded ? "Hide why" : "Why?"}
+          </button>
+        ) : null}
+      </div>
+    </div>
+  );
+};
 
 renderCoachBubble = (line) => {
   if (!line) return null;
@@ -2133,6 +2279,7 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
           <div className="ot-coach-text">{text}</div>
         </div>
       </div>
+      {this.renderMoveFeedbackCard()}
     </div>
   );
 };
@@ -2192,6 +2339,7 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
         drillRunDead: false,
         mistakeUnlocked: false,
         lastMistake: null,
+        lastMoveFeedback: null,
         wrongAttempt: null,
         showHint: false,
         solveArmed: false,

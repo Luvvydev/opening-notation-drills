@@ -1,3 +1,5 @@
+import { withOpeningFeedback } from "./feedback";
+
 // src/openings/staffordGambitLines.js
 
 export const staffordGambitSEOText = `
@@ -9,7 +11,7 @@ These drills focus on common Stafford themes: rapid piece activity, forcing chec
 `;
 
 
-export const staffordGambitLines = [
+export const staffordGambitLines = withOpeningFeedback([
   {
     category: "Main traps",
     id: "stafford-quick-mate-bg4",
@@ -503,4 +505,4 @@ export const staffordGambitLines = [
       "Continue with a check to keep initiative."
     ]
   }
-];
+]);

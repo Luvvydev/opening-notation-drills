@@ -1,3 +1,5 @@
+import { withOpeningFeedback } from "./feedback";
+
 // src/openings/friedLiverAttackLines.js
 
 // SEO / page intro text for Fried Liver Attack drills
@@ -11,7 +13,7 @@ These drills focus on forcing lines, checks, and common tactical motifs like kin
 Use this page to practice the exact move orders and understand why each move is played.
 `;
 
-export const friedLiverAttackLines = [
+export const friedLiverAttackLines = withOpeningFeedback([
   // Categories: Main line, Ke6 king-walk, Declined lines, Traxler, Two Knights sidelines
   {
     category: "Fried Liver Attack",
@@ -480,4 +482,4 @@ export const friedLiverAttackLines = [
     ]
   },
 
-];
+]);

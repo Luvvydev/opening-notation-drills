@@ -1,6 +1,8 @@
+import { withOpeningFeedback } from "./feedback";
+
 // src/openings/rousseauGambitLines.js
 
-export const rousseauGambitLines = [
+export const rousseauGambitLines = withOpeningFeedback([
   
   {
     category: "Rousseau Gambit",
@@ -242,4 +244,4 @@ export const rousseauGambitLines = [
     explanations: ["Take space in the center and open lines for your queen and bishop.", "Mirror the center and claim space, keeping options for quick development.", "Develop and hit e5, while keeping your king side pieces ready to castle.", "Develop with tempo, defend e5, and control d4 and b4.", "Target f7 and play the Italian setup, aiming for fast development and pressure.", "challenge White’s center immediately. You may give a pawn to open lines and generate initiative, but you also weaken your king side.", "Strike at the center to challenge space and open lines for your pieces.", "Capture to remove a defender and open a file or diagonal. Taking on d4 changes the pawn structure and can create tactical targets.", "Mirror the center and claim space, keeping options for quick development.", "Strike at the center to challenge space and open lines for your pieces.", "Capture to remove a defender and open a file or diagonal. Taking on d6 changes the pawn structure and can create tactical targets.", "Capture with the queen to win material or remove a key defender. The capture on d6 also opens lines and can expose the king.", "Castle to secure the king and connect rooks, trading a little flexibility for safety.", "Develop the knight to improve piece activity and fight for central squares. From f6 it supports key squares and helps coordinate your pieces.", "Activate a rook onto a more useful file, often after some lines have opened. e1 improves coordination for the middlegame. The check forces the opponent to respond, which can help you keep the initiative.", "Develop the bishop to a more active diagonal, aiming at central squares and potential king side targets. On e7 it can pressure weak points and support tactics."]
   }
 
-];
+]);

@@ -1,6 +1,8 @@
+import { withOpeningFeedback } from "./feedback";
+
 // src/openings/viennaGambitLines.js
 
-export const viennaGambitLines = [
+export const viennaGambitLines = withOpeningFeedback([
   
   {
     category: "Vienna Gambit",
@@ -108,4 +110,4 @@ export const viennaGambitLines = [
     explanations: ["Take the center and keep lines open so your pieces can jump out fast.", "Black matches your central claim and keeps everything flexible.", "support e4 and keep the f-pawn free for f4 without blocking Nf3.", "Black develops while hitting e4, forcing you to show how you will defend the center.", "Vienna Gambit: offer a pawn to gain time, open files, and attack before Black is settled.", "Black grabs the pawn. Your job is to get quick development and targets, not to win the pawn back slowly.", "Space grab with tempo: kick the f6 knight and try to make Black waste a move while you open the center.", "The knight retreats. That loss of time is the compensation you are playing for.", "Develop and prepare to castle. In gambits, king safety matters because open lines cut both ways.", "Black plays solid: supports e5 and prepares ...dxe5 or ...Be7 while keeping the king safe.", "Open the center while you are ahead in development. This is how gambits convert time into attack.", "Black trades in the center to reduce your space and open lines before your attack is ready.", "Queen supports e4 and eyes e5. In Vienna lines, Qe2 often helps you regain the pawn while staying active.", "Black develops calmly and aims to castle, trying to survive the opening phase without concessions.", "Take back in the center with tempo. You want material back, but still keep pieces active and threats alive.", "Black develops while hitting e4, forcing you to show how you will defend the center.", "Capture with purpose: either win material back, remove a defender, or open a file for attack."]
   }
 
-];
+]);

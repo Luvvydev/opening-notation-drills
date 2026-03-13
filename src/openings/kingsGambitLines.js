@@ -1,4 +1,6 @@
-export const kingsGambitLines = [
+import { withOpeningFeedback } from "./feedback";
+
+export const kingsGambitLines = withOpeningFeedback([
   {
     category: "King's Gambit",
     id: "kingsGambit-01-899b8126",
@@ -1015,4 +1017,4 @@ export const kingsGambitLines = [
     
     ]
   }
-];
+]);

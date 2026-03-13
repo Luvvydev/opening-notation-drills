@@ -1,4 +1,6 @@
-export const frenchDefenseLines = [
+import { withOpeningFeedback } from "./feedback";
+
+export const frenchDefenseLines = withOpeningFeedback([
   {
     "category": "French Defense",
     "id": "french-01",
@@ -571,4 +573,4 @@ export const frenchDefenseLines = [
       "Black castles, bringing king to safety."
     ]
   }
-];
+]);

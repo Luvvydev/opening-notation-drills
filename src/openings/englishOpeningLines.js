@@ -1,4 +1,6 @@
-export const englishOpeningLines = [
+import { withOpeningFeedback } from "./feedback";
+
+export const englishOpeningLines = withOpeningFeedback([
   {
     "category": "English Opening",
     "id": "english-01",
@@ -525,4 +527,4 @@ export const englishOpeningLines = [
       "After the final move - Well done! We'll plant our bishop on b2 next, and then play the game from there."
     ]
   }
-];
+]);

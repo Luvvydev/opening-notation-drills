@@ -1,4 +1,6 @@
-export const englundGambitLines = [
+import { withOpeningFeedback } from "./feedback";
+
+export const englundGambitLines = withOpeningFeedback([
   {
     "category": "Englund Gambit",
     "id": "englund-01",
@@ -338,4 +340,4 @@ export const englundGambitLines = [
       "Black immediately captures the bishop, winning a piece for a pawn with a strong initiative."
     ]
   }
-];
+]);

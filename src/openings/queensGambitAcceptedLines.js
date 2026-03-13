@@ -1,4 +1,6 @@
-export const queensGambitAcceptedLines = [
+import { withOpeningFeedback } from "./feedback";
+
+export const queensGambitAcceptedLines = withOpeningFeedback([
   {
     "category": "Queen's Gambit Accepted",
     "id": "queens-gambit-accepted-01",
@@ -679,4 +681,4 @@ export const queensGambitAcceptedLines = [
       "White recaptures with knight, maintaining central control and piece activity."
     ]
   }
-];
+]);

@@ -1354,3 +1354,176 @@
   align-items: center;
   gap: 8px;
 }
+
+
+.ot-move-feedback {
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.ot-move-feedback.is-correct {
+  border-color: rgba(88, 214, 141, 0.28);
+  background: rgba(88, 214, 141, 0.08);
+}
+
+.ot-move-feedback.is-wrong {
+  border-color: rgba(255, 107, 107, 0.28);
+  background: rgba(255, 107, 107, 0.08);
+}
+
+.ot-move-feedback-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.ot-move-feedback-head-left {
+  min-width: 0;
+  flex: 1;
+}
+
+.ot-move-feedback-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ot-move-feedback-title {
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.2px;
+  text-transform: uppercase;
+}
+
+.ot-move-feedback-severity {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: 10px;
+  font-weight: 900;
+  color: #ffd0d0;
+  text-transform: uppercase;
+  letter-spacing: 0.2px;
+}
+
+.ot-move-feedback-san {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.ot-move-feedback-san-played,
+.ot-move-feedback-san-best {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.ot-move-feedback-san-played {
+  color: #ffd7d7;
+}
+
+.ot-move-feedback-san-best {
+  color: #fff4b8;
+  border-color: rgba(255, 230, 140, 0.32);
+  background: rgba(255, 230, 140, 0.08);
+}
+
+.ot-move-feedback-sections {
+  margin-top: 10px;
+  display: grid;
+  gap: 10px;
+}
+
+.ot-move-feedback-section,
+.ot-move-feedback-why {
+  padding: 10px 10px 9px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ot-move-feedback-label {
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.25px;
+  text-transform: uppercase;
+  color: rgba(233, 237, 242, 0.72);
+}
+
+.ot-move-feedback-text {
+  margin-top: 6px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #edf3fb;
+}
+.ot-move-feedback-correct-copy {
+  margin-top: 6px;
+}
+
+.ot-move-feedback-subtext {
+  margin-top: 7px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: rgba(237, 243, 251, 0.82);
+}
+
+
+.ot-move-feedback-footer {
+  margin-top: 10px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.ot-move-feedback-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ot-move-feedback-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 9px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.18);
+  font-size: 11px;
+  font-weight: 800;
+  color: #e9edf2;
+}
+
+.ot-move-feedback-why-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  color: #e9edf2;
+  font-size: 11px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.ot-move-feedback-why-toggle:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.18);
+}

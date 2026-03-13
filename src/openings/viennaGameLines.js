@@ -1,4 +1,6 @@
-export const viennaGameLines = [
+import { withOpeningFeedback } from "./feedback";
+
+export const viennaGameLines = withOpeningFeedback([
   {
     category: "Vienna Game",
     id: "vienna-game-01-b5d29959",
@@ -953,4 +955,4 @@ export const viennaGameLines = [
       "Play O-O-O with a concrete purpose: create a threat, improve a piece, or stop your opponent's idea."
     ]
   }
-];
+]);
