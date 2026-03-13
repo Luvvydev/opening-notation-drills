@@ -1,8 +1,8 @@
 # ChessDrills
 
-A competitive chess opening training platform built around **recall, repetition, and measurable progress.**
+ChessDrills is a chess opening training web application built around move recall, repeated practice, account based progress tracking, and public competitive surfaces.
 
-Live:
+Live URLs:
 - https://chessdrills.net
 - https://luvvydev.github.io/opening-notation-drills/#/
 
@@ -13,41 +13,39 @@ Repository:
 
 ## Overview
 
-ChessDrills is a structured opening training system focused on **active recall instead of passive memorization.**
+ChessDrills trains opening lines through repeated move entry inside an interactive board UI.
 
-Users train real opening lines, track improvement over time, and compare results against other players through leaderboards and public profiles.
+The project currently includes:
+- curated opening courses
+- learn, practice, and drill style training flows
+- Firebase authentication
+- Firestore synced progress
+- Stripe membership handling
+- public profiles
+- leaderboards
+- streak and activity tracking
+- board and piece customization
 
-The system is designed around:
-
-- Immediate feedback
-- Repetition-based learning
-- Progress tracking
-- Competitive motivation
-- Clean mobile + desktop UI
-
+Users work through openings by entering moves from memory. Progress is persisted to accounts and reused across profile, leaderboard, and training surfaces.
 
 ---
 
-## Core Training System
+## Core Trainer
 
-### Opening Trainer
+The main trainer is centered around structured opening lines stored as JavaScript data.
 
-The Opening Trainer is the core of ChessDrills.
+Current trainer behavior includes:
+- SAN move validation through chess.js
+- randomized line selection
+- automatic opponent replies when a line continues
+- move checking during user input
+- prevention of illegal moves
+- line explanations attached to training data
+- retry handling after mistakes
+- progress updates tied to completion
+- repeated cycling through lines during training sessions
 
-Features:
-
-- Randomized curated lines
-- SAN move validation using chess.js
-- Automatic opponent replies
-- Illegal move prevention
-- Instant feedback
-- Explanation unlock on mistakes
-- Confetti reward on completion
-- Automatic random line continuation
-- Infinite training loop
-
-Training never "ends". Lines rotate continuously to reinforce recall.
-
+The trainer is used across multiple opening courses and multiple account states.
 
 ---
 
@@ -55,347 +53,324 @@ Training never "ends". Lines rotate continuously to reinforce recall.
 
 ### Learn Mode
 
-Available to free accounts.
+Learn Mode is the baseline guided training flow.
 
-Designed for structured improvement.
-
-Features:
-
-- Tracks learned lines
-- Progress stored in Firestore
-- Explanation support
-- Guided progression
-- Confetti completion feedback
-
-Learn mode measures actual line mastery.
-
+Current Learn Mode behavior includes:
+- progress tracking by opening
+- saved line completion state
+- explanation support during line study
+- account synced persistence
+- structured repetition through repeated usage
 
 ### Practice Mode
 
-Member-only feature.
+Practice Mode is intended for faster repetition and less guided review.
 
-Designed for repetition and consistency.
-
-Features:
-
-- Continuous random lines
-- No progression gating
-- Fast recall training
-- High volume repetition
-
+Current Practice Mode behavior includes:
+- continuous training flow
+- repeated line exposure
+- lower interruption during move entry
+- member gating
 
 ### Drill Mode
 
-Member-only feature.
+Drill Mode is intended for scored performance sessions.
 
-Designed for competitive scoring.
-
-Features:
-
-- Score tracking
-- High score records
-- Session performance measurement
-- Leaderboard integration
-
+Current Drill Mode behavior includes:
+- score tracking
+- personal best tracking
+- leaderboard integration
+- session oriented repetition
+- member gating
 
 ---
 
-## Openings
+## Opening Library
 
-Openings are stored as structured JavaScript data.
-
-Each line focuses on a single idea.
-
-Current openings include:
-
-- London System
-- Sicilian Defense
-- Ruy Lopez
-- Italian Game
-- Caro-Kann
-- Fried Liver Attack
-- Stafford Gambit
-- Queen’s Gambit Accepted
-- Queen’s Gambit Declined
-- King's Indian Defense
-- French Defense
-- English Opening
-- Scotch Game
-- Englund Gambit
-
-Opening data lives in:
+Opening data is stored in:
 
     src/openings/
 
-Lines are plain JavaScript objects with moves and explanations.
+Each opening file contains move sequences and explanation data in a trainer friendly structure.
 
+Current opening coverage includes:
+- London System
+- Sicilian Defense
+- Ruy Lopez
+- Fried Liver Attack
+- Stafford Gambit
+- Caro-Kann
+- Queen's Gambit Accepted
+- Queen's Gambit Declined
+- Italian Game
+- King's Indian Defense
+- French Defense
+- Englund Gambit
+- English Opening
+- Scotch Game
+- Vienna Gambit
+- Vienna Gambit Counter
+- Bishop's Opening
+- Rousseau Gambit
+- Petrov Defense
+- Danish Gambit
 
----
-
-## Leaderboards
-
-Competitive leaderboards track Drill Mode performance.
-
-Leaderboards support:
-
-- Daily rankings
-- Weekly rankings
-- All-time rankings
-
-Features:
-
-- Rival windows near player rank
-- Rank movement indicators
-- Tier badges
-- Clickable usernames
-- Public profile linking
-
-Leaderboard data is stored in Firestore.
-
-
----
-
-## Public Profiles
-
-Each user has a public profile.
-
-Accessible via:
-
-    /#/profile/u/<username>
-
-Profiles display:
-
-- Avatar
-- Tier badge
-- Drill strength statistics
-- Leaderboard snapshot
-- Training totals
-- Lines learned
-- Activity heatmap
-
-Profiles are optimized for both desktop and mobile.
-
+The opening catalog is used for homepage presentation, access rules, descriptions, and course metadata.
 
 ---
 
-## Activity Tracking
+## Accounts and Authentication
 
-User training activity is tracked automatically.
+ChessDrills uses Firebase Authentication.
 
-Features:
+Current account related behavior includes:
+- email and password signup
+- email and password login
+- persistent sessions
+- account based progress syncing
+- gating tied to account and membership state
 
-- Daily activity tracking
-- GitHub-style heatmap
-- Auto-scroll to current date
-- Streak tracking
-- Training totals
+Anonymous visitors can browse the site and view public facing pages.
 
-Activity is synced through Firestore.
-
-
----
-
-## Accounts
-
-### Authentication
-
-Firebase Authentication:
-
-- Email + Password login
-- Persistent sessions
-- User profile storage
-
-
-### Account Types
-
-Anonymous:
-
-- Browse Home
-- Limited access
-- No progress saved
-
-Free Account:
-
-- Learn Mode
-- New openings
-- Progress tracking
-- Public profile
-
-Member:
-
-- Practice Mode
-- Drill Mode
-- Leaderboards
-- Competitive tracking
-
-
-Access is enforced in:
-
-- UI components
-- Protected routes
-- Firestore rules
-
+Signed in users can save:
+- opening progress
+- streak data
+- training totals
+- settings
+- profile data
+- activity history
 
 ---
 
 ## Membership System
 
-Membership upgrades are handled through Stripe.
+Membership handling is connected to Stripe and backend verified account state.
 
-Architecture:
-
-- Stripe Checkout sessions
+Current architecture includes:
+- Stripe Checkout
+- Stripe billing portal support
 - Firebase Cloud Functions
-- Stripe webhooks update Firestore
-- Frontend reads Firestore state
+- Stripe webhooks
+- Firestore membership fields consumed by the frontend
 
-Membership fields:
-
+Relevant membership fields include:
 - membershipActive
 - membershipTier
 - membershipUpdatedAt
 
-Frontend never sets membership status directly.
-
+Monthly, yearly, and lifetime related handling exist in the broader project direction and implementation history. Frontend gating reads backend state from Firestore.
 
 ---
 
-## Profiles
+## Leaderboards
 
-Private Profile page includes:
+Leaderboards are tied to training performance and public identity features.
 
-- Settings
-- Avatar upload
-- Board theme selection
-- Piece theme selection
-- Training stats
-- Streak tracking
-- Membership management
-- Billing portal access
+Current leaderboard related behavior includes:
+- daily scope
+- weekly scope
+- all time scope
+- rank movement indicators
+- rival windows near the user's position
+- tier badges
+- clickable usernames
+- links to public profiles
 
+Leaderboard data is stored in Firestore and surfaced through dedicated UI components.
 
-Avatar storage:
+---
 
-    Firebase Storage
+## Public Profiles
 
-Public read, owner write.
+Users can have public profiles that expose training related information.
 
+Public profile route pattern:
+
+    /#/profile/u/<username>
+
+Current public profile content includes:
+- avatar
+- username
+- tier badge
+- drill related statistics
+- leaderboard snapshot
+- training totals
+- lines learned
+- activity heatmap
+
+The public profile layout has been revised toward a more compact presentation and supports mobile and desktop use.
+
+---
+
+## Private Profile and User Settings
+
+The private profile area includes user specific settings and account management surfaces.
+
+Current private profile related behavior includes:
+- avatar upload
+- board theme selection
+- piece theme selection
+- settings persistence
+- training stat display
+- streak display
+- membership management links
+
+Avatar files are stored through Firebase Storage.
+
+---
+
+## Activity Tracking
+
+Activity is tracked over time and reused in profile level summaries.
+
+Current activity related behavior includes:
+- daily activity recording
+- streak tracking
+- training totals
+- GitHub style heatmap rendering
+- synced progress history
+
+Implementation note:
+heatmap sizing depends on matching values across component constants and CSS rules. PublicProfile.js and ActivityHeatmap.css need coordinated changes when cell or gap values are adjusted.
 
 ---
 
 ## Data Sync
 
-User data is synchronized between local storage and Firestore.
+User data is synchronized between local state and cloud state.
 
-Key systems:
+Important utility files include:
 
     src/utils/cloudSync.js
     src/utils/accountSync.js
 
-Synced data includes:
+Synced categories include:
+- learn progress
+- drill scores
+- settings
+- streak data
+- activity history
+- opening progress
+- some custom training state where applicable
 
-- Learn progress
-- Drill scores
-- Settings
-- Streaks
-- Activity history
-
-
----
-
-## Tech Stack
-
-Frontend:
-
-- React (Create React App)
-- react-router-dom
-- chess.js
-- chessboardjsx
-
-Backend:
-
-- Firebase Authentication
-- Firestore
-- Firebase Storage
-- Firebase Cloud Functions
-
-Payments:
-
-- Stripe Checkout
-- Stripe Webhooks
-
-Hosting:
-
-- GitHub Pages
-- Custom domain
+This logic supports reuse of progress across sessions and devices.
 
 ---
 
-## Project Structure
+## UI Structure
 
-Key folders:
+Important components include:
 
     src/components/
+        Home.js
+        TopNav.js
         OpeningTrainer.js
         Practice.js
         Leaderboards.js
         Profile.js
         PublicProfile.js
 
+Supporting project areas include:
+
     src/openings/
-        Opening line data
+        opening data and catalog definitions
 
     src/utils/
-        Sync and stats logic
+        sync, storage, scoring, and progress logic
 
     src/theme/
-        Board theme definitions
+        board theme definitions
 
     src/auth/
-        AuthProvider
-        ProtectedRoute
+        auth and route protection logic
+
+Opening availability and some gating rules are driven through catalog level data.
+
+---
+
+## Current Product Shape
+
+The current project state includes:
+- homepage course discovery
+- structured opening training
+- Firebase auth and Firestore persistence
+- member gated training modes
+- public profiles
+- leaderboard identity surfaces
+- streak and heatmap tracking
+- theme and piece customization
+- GitHub Pages deployment
+- custom domain routing
+
+The broader product direction remains tied to repeated recall, visible progress, and user retention through ongoing training use.
+
+---
+
+## Tech Stack
+
+Frontend:
+- React using Create React App
+- react-router-dom
+- chess.js
+- chessboardjsx
+- Firebase client SDK v9
+
+Backend and platform services:
+- Firebase Authentication
+- Firestore
+- Firebase Storage
+- Firebase Cloud Functions
+
+Payments:
+- Stripe Checkout
+- Stripe webhooks
+- Stripe billing portal
+
+Hosting:
+- GitHub Pages
+- custom domain configuration
 
 ---
 
 ## Local Development
 
-Node versions matter.
+This project uses Node version switching in local workflows.
 
-Frontend:
+Typical frontend workflow:
 
     nvm use 16
     npm start
 
-Production Build:
+Production build:
 
     npm run build
 
+Deployment and Firebase CLI work may use a newer Node version depending on the local setup.
 
-Firebase:
+An example deployment workflow used in this project:
 
     nvm use 22
     firebase deploy
 
+GitHub Pages publishing is done through the project deploy script:
+
+    npm run deploy
 
 The repository includes:
 
-    .nvmrc -> Node 16
+    .nvmrc
 
 ---
 
-## Design Goals
+## Deployment
 
-ChessDrills is designed around:
+Primary live site:
+- https://chessdrills.net
 
-- Active recall over passive reading
-- Repetition over browsing
-- Measurable progress
-- Competitive motivation
-- Mobile-first usability
+GitHub Pages deployment:
+- https://luvvydev.github.io/opening-notation-drills/#/
 
-Most chess training tools focus on content.
-
-ChessDrills focuses on **performance.**
+The project is deployed through GitHub Pages and connected to a custom domain.
 
 ---
 
