@@ -13,6 +13,7 @@ const OPENINGS = OPENING_CATALOG;
 
 const _previewFenCache = new Map();
 const PREVIEW_PLIES = 6;
+const HERO_AUTOPLAY_MS = 9000;
 
 function _tokenizePgnLike(text) {
   if (!text) return [];
@@ -234,6 +235,7 @@ perOpening,
       boardTheme: settings.boardTheme || DEFAULT_THEME,
       viewportW: typeof window !== "undefined" ? window.innerWidth : 1200,
       heroBoardW: null,
+      heroSlideIndex: 0,
       filtersOpen: false,
       filters: {
         color: { white: false, black: false },
@@ -246,18 +248,56 @@ perOpening,
     if (typeof window === "undefined") return;
     window.addEventListener("resize", this.handleResize);
     this.updateHeroBoardWidth();
+    this.startHeroAutoplay();
     setTimeout(this.updateHeroBoardWidth, 0);
   }
 
   componentWillUnmount() {
     if (typeof window === "undefined") return;
     window.removeEventListener("resize", this.handleResize);
+    this.stopHeroAutoplay();
   }
 
   handleResize = () => {
     this.setState({ viewportW: window.innerWidth });
     this.updateHeroBoardWidth();
   };
+
+  startHeroAutoplay = () => {
+    this.stopHeroAutoplay();
+    this.heroAutoplay = window.setInterval(() => {
+      this.setState((s) => ({
+        heroSlideIndex: (s.heroSlideIndex + 1) % 4
+      }));
+    }, HERO_AUTOPLAY_MS);
+  };
+
+  stopHeroAutoplay = () => {
+    if (this.heroAutoplay) {
+      window.clearInterval(this.heroAutoplay);
+      this.heroAutoplay = null;
+    }
+  };
+
+  nextHeroSlide = () => {
+    this.setState((s) => ({
+      heroSlideIndex: (s.heroSlideIndex + 1) % 4
+    }));
+    this.startHeroAutoplay();
+  };
+
+  prevHeroSlide = () => {
+    this.setState((s) => ({
+      heroSlideIndex: (s.heroSlideIndex + 3) % 4
+    }));
+    this.startHeroAutoplay();
+  };
+
+  setHeroSlide = (index) => {
+    this.setState({ heroSlideIndex: index });
+    this.startHeroAutoplay();
+  };
+
 
   updateHeroBoardWidth = () => {
     const el = this.heroFrameRef && this.heroFrameRef.current;
@@ -338,19 +378,28 @@ startFirstAvailable = () => {
   this.goToOpening((best || openings[0]).key);
 };
 
-renderHeroBoard = () => {
+renderHeroBoard = (slide) => {
   const theme = BOARD_THEMES[this.state.boardTheme] || BOARD_THEMES[DEFAULT_THEME];
 
   const boardW =
     this.state.heroBoardW != null ? this.state.heroBoardW : this.getHeroBoardWidth();
+
+  const stats = (slide && slide.stats) || [
+    { value: this.state.totalLines, label: "total lines" },
+    { value: this.state.totalCompleted, label: "lines learned" },
+    { value: OPENINGS.length, label: "openings" }
+  ];
+
+  const position = (slide && slide.position) || "start";
+  const orientation = (slide && slide.orientation) || "white";
 
   return (
     <div className="home-hero-board-frame" ref={this.heroFrameRef}>
       <div className="home-hero-board-inner">
         <Chessboard
           draggable={false}
-          position="start"
-          orientation="white"
+          position={position}
+          orientation={orientation}
           showNotation={false}
           width={boardW}
           {...theme}
@@ -358,21 +407,91 @@ renderHeroBoard = () => {
       </div>
 
       <div className="home-hero-stats">
-        <div className="home-hero-stat">
-          <div className="home-hero-stat-value">{this.state.totalLines}</div>
-          <div className="home-hero-stat-label">total lines</div>
-        </div>
+        {stats.map((stat) => (
+          <div className="home-hero-stat" key={stat.label}>
+            <div className="home-hero-stat-value">{stat.value}</div>
+            <div className="home-hero-stat-label">{stat.label}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
 
-        <div className="home-hero-stat">
-          <div className="home-hero-stat-value">{this.state.totalCompleted}</div>
-          <div className="home-hero-stat-label">lines learned</div>
-        </div>
+renderHeroCarousel = (slides) => {
+  const safeSlides = slides && slides.length ? slides : [];
+  const activeIndex = safeSlides.length
+    ? Math.min(this.state.heroSlideIndex, safeSlides.length - 1)
+    : 0;
+  const activeSlide = safeSlides[activeIndex] || null;
 
-        <div className="home-hero-stat">
-          <div className="home-hero-stat-value">{OPENINGS.length}</div>
-          <div className="home-hero-stat-label">openings</div>
+  if (!activeSlide) {
+    return null;
+  }
+
+  return (
+    <div className="home-hero-v2-inner">
+      <div className="home-hero-v2-left">
+        {activeSlide.kicker ? (
+          <div className="home-hero-v2-kicker">{activeSlide.kicker}</div>
+        ) : null}
+
+        <div className="home-hero-v2-title">{activeSlide.title}</div>
+        <div className="home-hero-v2-sub">{activeSlide.subtitle}</div>
+
+        <button
+          type="button"
+          className="home-hero-v2-cta"
+          onClick={activeSlide.onClick}
+        >
+          {activeSlide.cta}
+        </button>
+
+        {activeSlide.pills && activeSlide.pills.length ? (
+          <div className="home-hero-v2-pillrow">
+            {activeSlide.pills.map((pill) => (
+              <div className="home-hero-v2-pill" key={pill}>
+                {pill}
+              </div>
+            ))}
+          </div>
+        ) : null}
+
+        <div className="home-hero-carousel-controls">
+          <button
+            type="button"
+            className="home-hero-carousel-arrow"
+            onClick={this.prevHeroSlide}
+            aria-label="Previous hero slide"
+          >
+            ‹
+          </button>
+
+          <div className="home-hero-carousel-dots" aria-label="Hero slides">
+            {safeSlides.map((slide, index) => (
+              <button
+                key={slide.id}
+                type="button"
+                className={`home-hero-carousel-dot ${index === activeIndex ? "is-active" : ""}`}
+                onClick={() => this.setHeroSlide(index)}
+                aria-label={`Go to slide ${index + 1}`}
+                aria-pressed={index === activeIndex}
+              />
+            ))}
+          </div>
+
+          <button
+            type="button"
+            className="home-hero-carousel-arrow"
+            onClick={this.nextHeroSlide}
+            aria-label="Next hero slide"
+          >
+            ›
+          </button>
         </div>
       </div>
+
+      <div className="home-hero-v2-right">{this.renderHeroBoard(activeSlide)}</div>
     </div>
   );
 };
@@ -549,37 +668,116 @@ renderHeroBoard = () => {
     ];
 
     const recommended = recommendedPool.slice(0, recommendedCount);
+
+    const resumeOpening = startedNotCompleted[0] || recentlyPlayed[0] || sorted[0];
+    const focusOpening = sorted.find((o) => !isCompletedOpening(o)) || sorted[0];
+    const exploreOpening = newOpenings[0] || fallbackCatalog[0] || sorted[0];
+
+    const getOpeningPct = (o) => {
+      const s = getStatsFor(o);
+      if (!s || !s.total) return 0;
+      return Math.round((s.completed / s.total) * 100);
+    };
+
+    const heroSlides = [
+      {
+        id: "overview",
+        kicker: "Build stronger recall",
+        title: "Ready to improve?",
+        subtitle: "Start building accurate move recall today.",
+        cta: "Start Drilling →",
+        onClick: this.startFirstAvailable,
+        pills: ["Learn", "Practice", "Drill"],
+        position: "start",
+        orientation: "white",
+        stats: [
+          { value: this.state.totalLines, label: "total lines" },
+          { value: this.state.totalCompleted, label: "lines learned" },
+          { value: OPENINGS.length, label: "openings" }
+        ]
+      },
+      {
+        id: "resume",
+        kicker: "Continue where you left off",
+        title: resumeOpening ? `Resume ${resumeOpening.title}` : "Resume your training",
+        subtitle: resumeOpening
+          ? "Pick up your most relevant opening and keep your recall clean."
+          : "Jump back into your latest work.",
+        cta: resumeOpening ? "Continue training →" : "Open trainer →",
+        onClick: () => this.goToOpening((resumeOpening && resumeOpening.key) || "london"),
+        pills: resumeOpening
+          ? [
+              `${getOpeningPct(resumeOpening)}% complete`,
+              `${getStatsFor(resumeOpening).completed}/${getStatsFor(resumeOpening).total} lines learned`
+            ]
+          : ["Recent work", "Resume"],
+        position: resumeOpening ? _getPreviewFenForOpening(resumeOpening) : "start",
+        orientation: (resumeOpening && resumeOpening.orientation) || "white",
+        stats: resumeOpening
+          ? [
+              { value: getOpeningPct(resumeOpening) + "%", label: "course progress" },
+              { value: getStatsFor(resumeOpening).completed, label: "lines learned" },
+              { value: getStatsFor(resumeOpening).total, label: "lines total" }
+            ]
+          : undefined
+      },
+      {
+        id: "focus",
+        kicker: "Focus next",
+        title: focusOpening ? `Sharpen ${focusOpening.title}` : "Sharpen your next opening",
+        subtitle: focusOpening
+          ? "Work the course with the most room to improve."
+          : "Push your next rep further.",
+        cta: focusOpening ? "Train this opening →" : "Train now →",
+        onClick: () => this.goToOpening((focusOpening && focusOpening.key) || "london"),
+        pills: focusOpening
+          ? [
+              `${getOpeningPct(focusOpening)}% complete`,
+              (focusOpening.orientation || "white") === "black" ? "Black repertoire" : "White repertoire"
+            ]
+          : ["Focus", "Training"],
+        position: focusOpening ? _getPreviewFenForOpening(focusOpening) : "start",
+        orientation: (focusOpening && focusOpening.orientation) || "white",
+        stats: focusOpening
+          ? [
+              { value: getOpeningPct(focusOpening) + "%", label: "course progress" },
+              { value: getStatsFor(focusOpening).total - getStatsFor(focusOpening).completed, label: "lines left" },
+              { value: focusOpening.title, label: "focus opening" }
+            ]
+          : undefined
+      },
+      {
+        id: "explore",
+        kicker: "Explore something new",
+        title: exploreOpening ? `Try ${exploreOpening.title}` : "Explore another opening",
+        subtitle: exploreOpening
+          ? "Rotate in a fresh course and build a wider repertoire."
+          : "Add something new to your rotation.",
+        cta: exploreOpening ? "Explore this opening →" : "Browse openings →",
+        onClick: () => this.goToOpening((exploreOpening && exploreOpening.key) || "london"),
+        pills: exploreOpening
+          ? [
+              exploreOpening.badge || "Available now",
+              `${getStatsFor(exploreOpening).total} lines`
+            ]
+          : ["Explore", "Openings"],
+        position: exploreOpening ? _getPreviewFenForOpening(exploreOpening) : "start",
+        orientation: (exploreOpening && exploreOpening.orientation) || "white",
+        stats: exploreOpening
+          ? [
+              { value: exploreOpening.badge || "Ready", label: "status" },
+              { value: getStatsFor(exploreOpening).total, label: "lines total" },
+              { value: (exploreOpening.orientation || "white") === "black" ? "Black" : "White", label: "repertoire side" }
+            ]
+          : undefined
+      }
+    ];
+
 return (
 <div className="home-page">
   <TopNav title="Chess Opening Drills"  hideHero />
 
-  <div className="home-hero-v2">
-    <div className="home-hero-v2-inner">
-      <div className="home-hero-v2-left">
-        
-        <div className="home-hero-v2-title">Ready to improve?</div>
-        <div className="home-hero-v2-sub">
-          Start building accurate move recall today!
-        </div>
-
-        <button
-          type="button"
-          className="home-hero-v2-cta"
-          onClick={this.startFirstAvailable}
-        >
-          Start Drilling →
-        </button>
-
-        <div className="home-hero-v2-pillrow">
-          <div className="home-hero-v2-pill">Learn</div>
-          <div className="home-hero-v2-pill">Practice</div>
-          <div className="home-hero-v2-pill">Drill</div>
-        </div>
-      </div>
-
-      <div className="home-hero-v2-right">{this.renderHeroBoard()}</div>
-    </div>
-  </div>
+  <div className="home-hero-v2">{this.renderHeroCarousel(heroSlides)}</div>
 
   <div className="home-courses">
 

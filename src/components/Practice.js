@@ -60,9 +60,9 @@ class Practice extends Component {
 
   render() {
     return (
-      <div class="page-dark">
+      <div className="page-dark">
         <TopNav active="about" title="Chess Notation Drills" />
-        <div class="page-body">
+        <div className="page-body">
           <Board
             callbackDisableSettings={this.callbackDisableSettings}
             orientation={this.state.orientation}
