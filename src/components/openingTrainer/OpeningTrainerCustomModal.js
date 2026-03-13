@@ -21,14 +21,24 @@ export default function OpeningTrainerCustomModal(props) {
         </label>
 
         <label className="ot-modal-label">
-          Moves (SAN, separated by spaces, commas, or new lines)
+          Moves or position
           <textarea
             className="ot-modal-textarea"
             value={props.movesText || ""}
             onChange={(e) => props.onChangeMovesText && props.onChangeMovesText(e.target.value)}
-            placeholder="d4 d5 Bf4 Nf6 e3 e6 Nd2 c5 c3 Nc6"
+            placeholder={`d4 d5 Bf4 Nf6 e3 e6 Nd2 c5 c3 Nc6
+
+[Event "Example"]
+1. e4 e5 2. Nf3 Nc6 3. Bb5 a6
+
+Or paste a FEN position`}
           />
         </label>
+
+        <div className="ot-modal-detected-row">
+          <span className="ot-modal-detected-label">Detected</span>
+          <span className="ot-modal-detected-value">{props.detectedFormatLabel || "Nothing yet"}</span>
+        </div>
 
         <div className="ot-modal-actions">
           <button className="ot-button ot-button-small" onClick={props.onCancel}>
@@ -40,7 +50,7 @@ export default function OpeningTrainerCustomModal(props) {
         </div>
 
         <div className="ot-modal-hint">
-          Tip: use standard SAN like Nf3, Bb5, O-O, exd5, Qxd8.
+          Paste SAN, a full PGN, or a FEN. SAN and PGN save as drills. FEN saves a review position.
         </div>
       </div>
     </div>

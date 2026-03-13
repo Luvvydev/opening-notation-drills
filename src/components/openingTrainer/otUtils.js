@@ -140,3 +140,231 @@ export function groupLines(lines) {
 
   return { cats, map: out };
 }
+
+
+function createChess() {
+  return new Chess();
+}
+
+function stripPgnHeaders(text) {
+  return String(text || '').replace(/^\s*\[[^\]]*\]\s*$/gm, ' ').trim();
+}
+
+function normalizeSanTokens(tokens) {
+  return (tokens || []).map((token) => String(token || '').trim()).filter(Boolean);
+}
+
+function decodeBase64Utf8(value) {
+  try {
+    return decodeURIComponent(escape(window.atob(value)));
+  } catch (_) {
+    return null;
+  }
+}
+
+function encodeBase64Utf8(value) {
+  try {
+    return window.btoa(unescape(encodeURIComponent(value)));
+  } catch (_) {
+    return null;
+  }
+}
+
+export function getLineStartFen(line) {
+  return line && line.startFen ? String(line.startFen) : 'start';
+}
+
+export function detectCustomInputFormat(text) {
+  const raw = String(text || '').trim();
+  if (!raw) return 'empty';
+
+  try {
+    const fenGame = createChess();
+    if (fenGame.load(raw)) return 'fen';
+  } catch (_) {}
+
+  if (/\[[A-Za-z0-9_]+\s+".*"\]/.test(raw) || /\d+\.(\.\.)?/.test(raw) || /1-0|0-1|1\/2-1\/2|\*/.test(raw)) {
+    return 'pgn';
+  }
+
+  return 'san';
+}
+
+export function parseMovesFromPgn(text) {
+  const raw = String(text || "").trim();
+  if (!raw) return { ok: false, error: "Paste PGN first." };
+
+  try {
+    const game = createChess();
+    const loader = typeof game.loadPgn === "function"
+      ? game.loadPgn.bind(game)
+      : (typeof game.load_pgn === "function" ? game.load_pgn.bind(game) : null);
+
+    if (loader) {
+      const loaded = loader(raw, { sloppy: true, newlineChar: /\r?\n/ });
+      if (!loaded) return { ok: false, error: "Could not parse PGN." };
+      return { ok: true, moves: normalizeSanTokens(game.history()) };
+    }
+  } catch (_) {}
+
+  const stripped = stripPgnHeaders(raw)
+    .replace(/\{[^}]*\}/g, " ")
+    .replace(/;[^\n\r]*/g, " ")
+    .replace(/\([^)]*\)/g, " ")
+    .replace(/\$\d+/g, " ")
+    .replace(/\d+\.(\.\.)?/g, " ")
+    .replace(/1-0|0-1|1\/2-1\/2|\*/g, " ");
+
+  const moves = splitMovesText(stripped);
+  if (!moves.length) return { ok: false, error: "Could not find moves in PGN." };
+  const v = validateSanMoves(moves);
+  if (!v.ok) return { ok: false, error: `Bad PGN move at #${(v.index || 0) + 1}: ${v.san || ""}` };
+  return { ok: true, moves };
+}
+
+export function parseCustomLineInput(text) {
+  const raw = String(text || "").trim();
+  const format = detectCustomInputFormat(raw);
+
+  if (format === "empty") {
+    return { ok: false, format, error: "Paste SAN, PGN, or FEN first." };
+  }
+
+  if (format === "fen") {
+    try {
+      const game = createChess();
+      if (!game.load(raw)) return { ok: false, format, error: "Invalid FEN." };
+      return { ok: true, format, moves: [], startFen: raw };
+    } catch (_) {
+      return { ok: false, format, error: "Invalid FEN." };
+    }
+  }
+
+  if (format === "pgn") {
+    const parsed = parseMovesFromPgn(raw);
+    if (!parsed.ok) return { ok: false, format, error: parsed.error };
+    return { ok: true, format, moves: parsed.moves, sourcePgn: raw };
+  }
+
+  const moves = splitMovesText(raw);
+  if (!moves.length) return { ok: false, format, error: "Paste SAN moves first." };
+  const v = validateSanMoves(moves);
+  if (!v.ok) {
+    return { ok: false, format, error: `Bad move at #${(v.index || 0) + 1}: ${v.san || ""}` };
+  }
+
+  return { ok: true, format, moves };
+}
+
+export function lineToSanText(line) {
+  return ((line && Array.isArray(line.moves)) ? line.moves : []).join(" ");
+}
+
+export function lineToPgn(line) {
+  try {
+    const game = createChess();
+    const startFen = getLineStartFen(line);
+    if (startFen && startFen !== "start") game.load(startFen);
+    const moves = (line && Array.isArray(line.moves)) ? line.moves : [];
+
+    for (let i = 0; i < moves.length; i += 1) {
+      const mv = game.move(moves[i], { sloppy: true });
+      if (!mv) return lineToSanText(line);
+    }
+
+    if (typeof game.pgn === "function") {
+      const pgn = game.pgn({ maxWidth: 0, newline: "\n" });
+      if (startFen && startFen !== "start") {
+        const prefix = `[SetUp "1"]\n[FEN "${startFen}"]`;
+        return pgn ? `${prefix}\n\n${pgn}` : prefix;
+
+      }
+      return pgn || lineToSanText(line);
+    }
+
+    return lineToSanText(line);
+  } catch (_) {
+    return lineToSanText(line);
+  }
+}
+
+export function sanitizeSharedCustomLine(rawLine, fallbackOpeningKey) {
+  if (!rawLine || typeof rawLine !== 'object') return null;
+  const openingKey = String(rawLine.openingKey || fallbackOpeningKey || 'london');
+  const name = String(rawLine.name || 'Shared rep').trim() || 'Shared rep';
+  const description = String(rawLine.description || '').trim();
+  const moves = Array.isArray(rawLine.moves) ? normalizeSanTokens(rawLine.moves) : [];
+  const startFen = rawLine.startFen ? String(rawLine.startFen).trim() : '';
+  const sourceType = rawLine.sourceType ? String(rawLine.sourceType) : (startFen ? 'fen' : (moves.length ? 'san' : 'unknown'));
+
+  if (startFen) {
+    try {
+      const game = createChess();
+      if (!game.load(startFen)) return null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  if (moves.length) {
+    try {
+      const game = createChess();
+      if (startFen) game.load(startFen);
+      for (let i = 0; i < moves.length; i += 1) {
+        const mv = game.move(moves[i], { sloppy: true });
+        if (!mv) return null;
+      }
+    } catch (_) {
+      return null;
+    }
+  } else if (!startFen) {
+    return null;
+  }
+
+  const idSeed = String(rawLine.id || name || 'shared');
+  const safeSeed = idSeed.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'shared';
+
+  return {
+    id: rawLine.id && String(rawLine.id).startsWith('custom-') ? String(rawLine.id) : `shared-${safeSeed}`,
+    openingKey,
+    category: 'My Reps',
+    name,
+    description,
+    moves,
+    explanations: Array.isArray(rawLine.explanations) && rawLine.explanations.length === moves.length ? rawLine.explanations : moves.map(() => ''),
+    startFen: startFen || undefined,
+    sourceType,
+    sourcePgn: rawLine.sourcePgn ? String(rawLine.sourcePgn) : undefined,
+    shared: true
+  };
+}
+
+export function encodeSharedCustomLine(line, openingKey) {
+  const safeLine = sanitizeSharedCustomLine(line, openingKey);
+  if (!safeLine) return null;
+  const payload = {
+    openingKey: safeLine.openingKey,
+    id: safeLine.id,
+    name: safeLine.name,
+    description: safeLine.description,
+    moves: safeLine.moves,
+    explanations: safeLine.explanations,
+    startFen: safeLine.startFen,
+    sourceType: safeLine.sourceType,
+    sourcePgn: safeLine.sourcePgn
+  };
+  return encodeBase64Utf8(JSON.stringify(payload));
+}
+
+export function decodeSharedCustomLine(encoded, fallbackOpeningKey) {
+  const raw = String(encoded || '').trim();
+  if (!raw) return null;
+  try {
+    const decoded = decodeBase64Utf8(raw);
+    if (!decoded) return null;
+    const parsed = JSON.parse(decoded);
+    return sanitizeSharedCustomLine(parsed, fallbackOpeningKey);
+  } catch (_) {
+    return null;
+  }
+}

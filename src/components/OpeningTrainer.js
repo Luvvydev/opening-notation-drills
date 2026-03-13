@@ -9,11 +9,11 @@ import { BOARD_THEMES, DEFAULT_THEME, PIECE_THEMES } from "../theme/boardThemes"
 import "./OpeningTrainer.css";
 import { getStreakState, markLineCompletedTodayDetailed } from "../utils/streak";
 import { getActivityDays, markActivityToday, touchActivityToday } from "../utils/activityDays";
-import { X_SVG_DATA_URI, pickRandomLineId, splitMovesText, validateSanMoves, countMovesForSide, countDoneMovesForSide, groupLines } from "./openingTrainer/otUtils";
+import { X_SVG_DATA_URI, pickRandomLineId, countMovesForSide, countDoneMovesForSide, groupLines, detectCustomInputFormat, parseCustomLineInput, lineToSanText, lineToPgn, encodeSharedCustomLine, decodeSharedCustomLine, getLineStartFen } from "./openingTrainer/otUtils";
 import { getOrderedLineIds } from "../utils/lineIndex";
 import { pickNextPracticeLineId, pickNextLearnLineId } from "./openingTrainer/practicePicker";
 
-import { loadProgress, saveProgress, loadLearnProgress, saveLearnProgress, loadSettings, saveSettings, loadCustomLines, saveCustomLines, makeCustomId, ensureOpening, getLineStats, isCompleted, ensureLearnOpening, getLearnLineStats } from "./openingTrainer/otStorage";
+import { loadProgress, saveProgress, loadLearnProgress, saveLearnProgress, loadSettings, saveSettings, loadCustomLines, saveCustomLines, deleteCustomLineById, makeCustomId, ensureOpening, getLineStats, isCompleted, ensureLearnOpening, getLearnLineStats } from "./openingTrainer/otStorage";
 import OpeningTrainerCustomModal from "./openingTrainer/OpeningTrainerCustomModal";
 import OpeningTrainerConfetti from "./openingTrainer/OpeningTrainerConfetti";
 import { db } from "../firebase";
@@ -204,8 +204,8 @@ class OpeningTrainer extends Component {
 
     this._settingsAnchorEl = null;
     this._linePickerAnchorEl = null;
-
     let firstSetKey = "london";
+    let sharedCustomLine = null;
     try {
       const search = (props && props.location && props.location.search) || "";
       const params = new URLSearchParams(search);
@@ -213,6 +213,8 @@ class OpeningTrainer extends Component {
       this._openCustomOnMount = params.get("custom") === "1";
       const fromHome = params.get("opening");
       if (fromHome && OPENING_SETS[fromHome]) firstSetKey = fromHome;
+      sharedCustomLine = decodeSharedCustomLine(params.get("customRep"), firstSetKey);
+      if (sharedCustomLine && sharedCustomLine.openingKey && OPENING_SETS[sharedCustomLine.openingKey]) firstSetKey = sharedCustomLine.openingKey;
     } catch (_) {
       // ignore
     }
@@ -227,13 +229,15 @@ class OpeningTrainer extends Component {
 
     const firstLinesBuiltIn = OPENING_SETS[firstSetKey].lines;
     const customAll = loadCustomLines();
+    if (sharedCustomLine && !customAll.find((l) => l && l.id === sharedCustomLine.id)) customAll.push(sharedCustomLine);
     const customForFirst = customAll.filter((l) => l && l.openingKey === firstSetKey);
     const firstLines = firstLinesBuiltIn.concat(customForFirst);
-    const firstId = pickRandomLineId(firstLines, null) || (firstLines[0] ? firstLines[0].id : "");
+    const firstId = sharedCustomLine ? sharedCustomLine.id : (pickRandomLineId(firstLines, null) || (firstLines[0] ? firstLines[0].id : ""));
 
     this._autoNextTimer = null;
     this._confettiTimer = null;
     this._streakToastTimer = null;
+    this._shareStatusTimer = null;
 
     const progress = loadProgress();
     const learnProgress = loadLearnProgress();
@@ -278,8 +282,10 @@ class OpeningTrainer extends Component {
       customModalOpen: false,
       customName: "",
       customMovesText: "",
-      customError: ""
-    ,
+      customError: "",
+      customDetectedFormat: "empty",
+      shareStatus: "",
+      shareStatusError: false,
       viewing: false,
       viewIndex: 0,
       viewFen: "start",
@@ -537,6 +543,7 @@ componentWillUnmount() {
     if (this._autoNextTimer) clearTimeout(this._autoNextTimer);
     if (this._confettiTimer) clearTimeout(this._confettiTimer);
     if (this._streakToastTimer) clearTimeout(this._streakToastTimer);
+    if (this._shareStatusTimer) clearTimeout(this._shareStatusTimer);
     window.removeEventListener("mousedown", this.onWindowClick);
     window.removeEventListener("keydown", this.onKeyDown);
     window.removeEventListener("resize", this._onResizeMobileLayout);
@@ -677,43 +684,171 @@ openCustomModal = () => {
     customModalOpen: true,
     customName: "",
     customMovesText: "",
-    customError: ""
+    customError: "",
+    customDetectedFormat: "empty"
   });
 };
 
 closeCustomModal = () => {
-  this.setState({ customModalOpen: false, customError: "" });
+  this.setState({ customModalOpen: false, customError: "", customDetectedFormat: "empty" });
+};
+
+setCustomMovesText = (value) => {
+  this.setState({
+    customMovesText: value,
+    customDetectedFormat: detectCustomInputFormat(value),
+    customError: ""
+  });
+};
+
+setShareStatus = (message, isError) => {
+  if (this._shareStatusTimer) clearTimeout(this._shareStatusTimer);
+  this.setState({ shareStatus: message || "", shareStatusError: !!isError });
+  if (!message) return;
+  this._shareStatusTimer = setTimeout(() => {
+    this.setState({ shareStatus: "", shareStatusError: false });
+  }, 2400);
+};
+
+copyTextToClipboard = async (text, successMessage) => {
+  const value = String(text || "");
+  if (!value) {
+    this.setShareStatus("Nothing to copy.", true);
+    return;
+  }
+
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(value);
+    } else {
+      const area = document.createElement("textarea");
+      area.value = value;
+      area.setAttribute("readonly", "readonly");
+      area.style.position = "fixed";
+      area.style.opacity = "0";
+      document.body.appendChild(area);
+      area.focus();
+      area.select();
+      document.execCommand("copy");
+      document.body.removeChild(area);
+    }
+    this.setShareStatus(successMessage || "Copied.", false);
+  } catch (_) {
+    this.setShareStatus("Copy failed.", true);
+  }
+};
+
+getShareUrlForLine = (line) => {
+  if (!line) return "";
+  const encoded = encodeSharedCustomLine(line, this.state.openingKey);
+  if (!encoded) return "";
+  const origin = window.location.origin || "";
+  const path = `${process.env.PUBLIC_URL || ""}/#/openings`;
+  return `${origin}${path}?opening=${encodeURIComponent(this.state.openingKey)}&customRep=${encodeURIComponent(encoded)}`;
+};
+
+copySanText = () => {
+  this.copyTextToClipboard(lineToSanText(this.getLine()), "SAN copied.");
+};
+
+copyPgnText = () => {
+  this.copyTextToClipboard(lineToPgn(this.getLine()), "PGN copied.");
+};
+
+copyFenText = () => {
+  const fen = this.state.viewing ? this.state.viewFen : this.state.fen;
+  this.copyTextToClipboard(fen || "", "FEN copied.");
+};
+
+shareCurrentRep = async () => {
+  const line = this.getLine();
+  const shareUrl = this.getShareUrlForLine(line);
+  if (!shareUrl) {
+    this.setShareStatus("Share link unavailable.", true);
+    return;
+  }
+
+  try {
+    if (navigator.share) {
+      await navigator.share({
+        title: line.name || "ChessDrills rep",
+        text: line.name || "ChessDrills rep",
+        url: shareUrl
+      });
+      this.setShareStatus("Share ready.", false);
+      return;
+    }
+  } catch (_) {
+    // fall through
+  }
+
+  this.copyTextToClipboard(shareUrl, "Share link copied.");
+};
+
+isCurrentLineCustom = () => {
+  const lineId = String(this.state.lineId || "");
+  if (!lineId) return false;
+  return (this.state.customLines || []).some((line) => line && String(line.id || "") === lineId);
+};
+
+deleteCurrentCustomRep = () => {
+  const line = this.getLine();
+  if (!line || !this.isCurrentLineCustom()) return;
+
+  const lineName = String(line.name || "this custom rep");
+  const confirmed = window.confirm(`Delete "${lineName}"?`);
+  if (!confirmed) return;
+
+  const nextCustomLines = deleteCustomLineById(line.id);
+  const remainingForOpening = nextCustomLines.filter((entry) => entry && entry.openingKey === this.state.openingKey);
+  const builtInLines = ((this.getOpeningSet() || {}).lines || []).slice();
+  const nextLines = builtInLines.concat(remainingForOpening);
+  const fallbackLineId = pickRandomLineId(nextLines, line.id) || (nextLines[0] ? nextLines[0].id : "");
+  const nextPicker = fallbackLineId || "random";
+
+  this.setState({
+    customLines: nextCustomLines,
+    settingsOpen: false,
+    lineMenuOpen: false,
+    shareStatus: "",
+    shareStatusError: false,
+    lineId: fallbackLineId,
+    linePicker: nextPicker,
+    sessionLineId: null,
+    practiceForceRepeat: false,
+    learnForceRepeat: false,
+    prevPracticeLineId: null,
+    prevLearnLineId: null,
+    learnRecentLineIds: []
+  }, () => {
+    if (fallbackLineId) this.resetLine(false);
+  });
 };
 
 saveCustomModal = () => {
   const openingKey = this.state.openingKey;
   const nameRaw = String(this.state.customName || "").trim();
-  const moves = splitMovesText(this.state.customMovesText);
+  const parsed = parseCustomLineInput(this.state.customMovesText);
 
-  if (!moves.length) {
-    this.setState({ customError: "Paste moves in SAN format first." });
+  if (!parsed.ok) {
+    this.setState({ customError: parsed.error || "Could not parse that input." });
     return;
   }
 
-  const v = validateSanMoves(moves);
-  if (!v.ok) {
-    this.setState({
-      customError: `Bad move at #${(v.index || 0) + 1}: ${v.san || ""}`
-    });
-    return;
-  }
-
-  const name = nameRaw || `My rep (${moves.length} moves)`;
-
+  const name = nameRaw || (parsed.format === "fen" ? "My saved position" : `My rep (${parsed.moves.length} moves)`);
   const nextLine = {
     id: makeCustomId(),
     openingKey: openingKey,
     category: "My Reps",
     name: name,
     description: "",
-    moves: moves,
-    explanations: moves.map(() => "")
+    moves: parsed.moves,
+    explanations: parsed.moves.map(() => ""),
+    sourceType: parsed.format
   };
+
+  if (parsed.startFen) nextLine.startFen = parsed.startFen;
+  if (parsed.sourcePgn) nextLine.sourcePgn = parsed.sourcePgn;
 
   const existing = (this.state.customLines || []).slice();
   const next = existing.concat([nextLine]);
@@ -724,6 +859,7 @@ saveCustomModal = () => {
       customLines: next,
       customModalOpen: false,
       customError: "",
+      customDetectedFormat: "empty",
       linePicker: nextLine.id,
       lineId: nextLine.id,
       lineMenuOpen: false
@@ -985,6 +1121,15 @@ saveCustomModal = () => {
     if (!line) return "start";
 
     const g = new Chess();
+    const startFen = getLineStartFen(line);
+    if (startFen !== "start") {
+      try {
+        g.load(startFen);
+      } catch (_) {
+        return "start";
+      }
+    }
+
     const n = Math.max(0, Math.min(index || 0, line.moves.length));
 
     for (let i = 0; i < n; i += 1) {
@@ -1052,19 +1197,34 @@ saveCustomModal = () => {
   };
 
   resetLine = (keepUnlocked) => {
-    this.game.reset();
+    const line = this.getLine();
+    const startFen = getLineStartFen(line);
+
+    if (startFen !== "start") {
+      try {
+        this.game.load(startFen);
+      } catch (_) {
+        this.game.reset();
+      }
+    } else {
+      this.game.reset();
+    }
+
+    const currentFen = this.game.fen();
+
     this.setState(
       (prev) => ({
-        fen: "start",
+        fen: currentFen,
         boardRenderToken: (prev.boardRenderToken || 0) + 1,
         stepIndex: 0,
-      viewing: false,
-      viewIndex: 0,
-      viewFen: "start",
+        viewing: false,
+        viewIndex: 0,
+        viewFen: currentFen,
         completed: false,
         mistakeUnlocked: keepUnlocked ? prev.mistakeUnlocked : false,
         lastMistake: null,
         lastMoveFeedback: null,
+        feedbackExpanded: false,
         wrongAttempt: null,
         showHint: false,
         lastMove: null,
@@ -2665,16 +2825,17 @@ render() {
     return (
       <div className={"ot-container" + (this.state.isMobile ? " ot-mobile" : "")}>
         <OpeningTrainerConfetti active={this.state.confettiActive} />
-        <OpeningTrainerCustomModal
-          open={this.state.customModalOpen}
-          error={this.state.customError}
-          name={this.state.customName}
-          movesText={this.state.customMovesText}
-          onChangeName={(v) => this.setState({ customName: v })}
-          onChangeMovesText={(v) => this.setState({ customMovesText: v })}
-          onCancel={this.closeCustomModal}
-          onSave={this.saveCustomModal}
-        />
+<OpeningTrainerCustomModal
+  open={this.state.customModalOpen}
+  error={this.state.customError}
+  name={this.state.customName}
+  movesText={this.state.customMovesText}
+  onChangeName={(v) => this.setState({ customName: v })}
+  detectedFormatLabel={{ empty: "Nothing yet", san: "SAN moves", pgn: "PGN", fen: "FEN position" }[this.state.customDetectedFormat] || "Unknown"}
+  onChangeMovesText={this.setCustomMovesText}
+  onCancel={this.closeCustomModal}
+  onSave={this.saveCustomModal}
+/>
 
         {this.state.memberGateOpen ? (
           <div className="ot-gate-overlay" role="dialog" aria-modal="true">
@@ -3415,6 +3576,22 @@ render() {
                     />
                     <span>Dark Blue</span>
                   </label>
+
+                  <div className="ot-settings-title" style={{ marginTop: "12px" }}>Share and export</div>
+                  <div className="ot-settings-action-grid">
+                    <button className="ot-button ot-button-small ot-settings-action-btn" onClick={this.copySanText}>Copy SAN</button>
+                    <button className="ot-button ot-button-small ot-settings-action-btn" onClick={this.copyPgnText}>Copy PGN</button>
+                    <button className="ot-button ot-button-small ot-settings-action-btn" onClick={this.copyFenText}>Copy FEN</button>
+                    <button className="ot-button ot-button-small ot-settings-action-btn" onClick={this.shareCurrentRep}>Share rep</button>
+                  </div>
+                  {this.state.shareStatus ? <div className={"ot-settings-status" + (this.state.shareStatusError ? " error" : "")}>{this.state.shareStatus}</div> : null}
+
+                  {this.isCurrentLineCustom() ? (
+                    <>
+                      <div className="ot-settings-title" style={{ marginTop: "12px" }}>Custom rep</div>
+                      <button className="ot-button ot-button-small ot-settings-action-btn ot-settings-delete-btn" onClick={this.deleteCurrentCustomRep}>Delete custom rep</button>
+                    </>
+                  ) : null}
                 </div>
               ) : null}
             </div>
@@ -3540,6 +3717,22 @@ render() {
                           />
                           <span>Dark Blue</span>
                         </label>
+
+                        <div className="ot-settings-title" style={{ marginTop: "12px" }}>Share and export</div>
+                        <div className="ot-settings-action-grid">
+                          <button className="ot-button ot-button-small ot-settings-action-btn" onClick={this.copySanText}>Copy SAN</button>
+                          <button className="ot-button ot-button-small ot-settings-action-btn" onClick={this.copyPgnText}>Copy PGN</button>
+                          <button className="ot-button ot-button-small ot-settings-action-btn" onClick={this.copyFenText}>Copy FEN</button>
+                          <button className="ot-button ot-button-small ot-settings-action-btn" onClick={this.shareCurrentRep}>Share rep</button>
+                        </div>
+                        {this.state.shareStatus ? <div className={"ot-settings-status" + (this.state.shareStatusError ? " error" : "")}>{this.state.shareStatus}</div> : null}
+
+                        {this.isCurrentLineCustom() ? (
+                          <>
+                            <div className="ot-settings-title" style={{ marginTop: "12px" }}>Custom rep</div>
+                            <button className="ot-button ot-button-small ot-settings-action-btn ot-settings-delete-btn" onClick={this.deleteCurrentCustomRep}>Delete custom rep</button>
+                          </>
+                        ) : null}
                       </div>
                     ) : null}
                   </div>

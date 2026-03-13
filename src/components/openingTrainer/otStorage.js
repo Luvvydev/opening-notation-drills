@@ -22,10 +22,29 @@ export function saveCustomLines(lines) {
   } catch (_) {
     // ignore
   }
+
+  try {
+    window.dispatchEvent(new Event("customreps:updated"));
+  } catch (_) {
+    // ignore
+  }
 }
 
 export function makeCustomId() {
   return "custom-" + Date.now() + "-" + Math.floor(Math.random() * 1000000);
+}
+
+export function deleteCustomLineById(lineId) {
+  const id = String(lineId || "");
+  if (!id) return [];
+
+  const next = loadCustomLines().filter((line) => {
+    const currentId = String((line && line.id) || "");
+    return currentId !== id;
+  });
+
+  saveCustomLines(next);
+  return next;
 }
 
 export function loadProgress() {
@@ -123,7 +142,6 @@ export function getLineStats(progress, openingKey, lineId) {
   }
   return bucket[lineId];
 }
-
 
 export function loadLearnProgress() {
   try {

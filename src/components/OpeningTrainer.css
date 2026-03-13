@@ -278,6 +278,9 @@
 .ot-settings-menu {
   position: absolute;
   min-width: 220px;
+  max-width: min(320px, calc(100vw - 20px));
+  max-height: min(70vh, 560px);
+  overflow-y: auto;
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: #0b0d12;
   border-radius: 12px;
@@ -312,6 +315,39 @@
 
 .ot-settings-row input {
   transform: translateY(1px);
+}
+
+
+.ot-settings-action-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.ot-settings-action-btn {
+  width: 100%;
+  justify-content: center;
+}
+
+.ot-settings-status {
+  margin-top: 8px;
+  font-weight: 800;
+  font-size: 11px;
+  color: #c9d2dd;
+}
+
+.ot-settings-status.error {
+  color: #ff9b9b;
+}
+
+.ot-settings-delete-btn {
+  width: 100%;
+}
+
+@media (max-width: 560px) {
+  .ot-settings-action-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .ot-panel-kicker {
