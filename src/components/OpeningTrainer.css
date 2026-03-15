@@ -855,15 +855,17 @@
 
 .ot-coach-head {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 10px;
 }
 
 .ot-coach-left {
   display: inline-flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 10px;
+  min-width: 0;
+  flex: 1;
 }
 
 .ot-buddy {
@@ -1240,9 +1242,51 @@
 
 .ot-coach-title {
   display: flex;
+  align-items: center;
   gap: 8px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   justify-content: flex-start;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.ot-pill-btn {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.ot-line-pill {
+  max-width: 86px;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.ot-pill-label-ellipsis {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ot-pill-caret {
+  flex: 0 0 auto;
+}
+
+@media (min-width: 1101px) {
+  .ot-coach-title {
+    gap: 6px;
+  }
+
+  .ot-mode-pill,
+  .ot-line-pill {
+    padding: 4px 9px;
+    font-size: 11px;
+  }
+
+  .ot-line-pill {
+    max-width: 78px;
+  }
 }
 
 

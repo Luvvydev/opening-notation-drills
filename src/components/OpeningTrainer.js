@@ -2397,6 +2397,17 @@ renderMoveFeedbackCard = () => {
   );
 };
 
+getOpeningDisplayName = () => {
+  const s = OPENING_SETS[this.state.openingKey];
+  return (s && (s.name || s.title || s.label)) || this.state.openingKey;
+};
+
+truncateHeaderLabel = (value, max = 34) => {
+  const str = String(value || "").replace(/\s+/g, " ").trim();
+  if (!str) return "";
+  return str.length > max ? `${str.slice(0, max - 1).trim()}…` : str;
+};
+
 renderCoachBubble = (line) => {
   if (!line) return null;
 
@@ -2437,6 +2448,8 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
   const coachIndex = this.getViewIndex();
   const raw = unlocked ? (line.explanations[coachIndex] || "") : mode === "drill" ? "No help in Drill Mode" : "What's the best move?";
   const text = unlocked ? this.stripMovePrefix(raw) : raw;
+  const openingDisplayName = this.getOpeningDisplayName();
+  const lineMenuLabel = "Lines";
 
   return (
     <div className="ot-coach" style={{ position: "relative" }}>
@@ -2458,8 +2471,10 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
                 </>
               )}
             </button>
-            <button className="ot-open-pill ot-pill-btn" onClick={() => this.toggleMobileHeaderMenu("opening")} title="Opening" aria-label="Opening">{(() => { const s = OPENING_SETS[this.state.openingKey]; return (s && (s.name || s.title || s.label)) || this.state.openingKey; })()} ▾</button>
-            <button className="ot-line-pill ot-pill-btn" onClick={() => this.toggleMobileHeaderMenu("line")} title="Line" aria-label="Line">{line.name} ▾</button>
+            {this.state.isMobile ? (
+              <button className="ot-open-pill ot-pill-btn" onClick={() => this.toggleMobileHeaderMenu("opening")} title="Opening" aria-label="Opening">{openingDisplayName} ▾</button>
+            ) : null}
+            <button className="ot-line-pill ot-pill-btn" onClick={() => this.toggleMobileHeaderMenu("line")} title="Select line" aria-label="Line selector"><span className="ot-pill-label-ellipsis">{lineMenuLabel}</span> <span className="ot-pill-caret">▾</span></button>
           </div>
         </div>
 
@@ -3435,7 +3450,7 @@ render() {
                     title="Line"
                     aria-label="Line"
                   >
-                    {(line && line.name) || "Line"} ▾
+                    Lines ▾
                   </button>
                 </div>
 
