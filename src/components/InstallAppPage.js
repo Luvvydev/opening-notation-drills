@@ -110,16 +110,11 @@ export default function InstallAppPage({ history }) {
       <div className="install-wrap">
         <div className="install-card install-card-hero">
           <div className="install-badge">Home screen setup</div>
-          <h2 className="install-title">Add ChessDrills to your home screen</h2>
+          <h2 className="install-title">Add ChessDrills to home screen</h2>
           <p className="install-lead">
-            Save ChessDrills to your phone so getting back into a drill takes fewer taps.
           </p>
 
-          <div className="install-chip-row">
-            <div className="install-chip">Home screen icon</div>
-            <div className="install-chip">Quick open</div>
-            <div className="install-chip">iPhone and Android</div>
-          </div>
+      
         </div>
 
         <div className="install-card install-card-action">
