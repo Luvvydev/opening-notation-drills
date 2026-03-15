@@ -342,7 +342,7 @@ export const OPENING_CATALOG = [
   key: "vantKruijs",
   title: "Van't Kruijs Opening",
   description:
-    "A practical anti-system for Black against White's slow e3, c3, d4, and Qb3 setup. Take the center early, finish development, and punish their wasted tempo",
+    "An anti-system for Black against White's slow e3, c3, d4, and Qb3 setup. Take the center early, finish development, and punish their wasted tempo.",
   lines: vantKruijsOpeningLines,
   accent: "slate",
   badge: "New",
