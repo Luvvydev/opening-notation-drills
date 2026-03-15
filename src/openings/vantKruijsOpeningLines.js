@@ -1,4 +1,3 @@
-
 import { withOpeningFeedback } from "./feedback";
 
 export const vantKruijsOpeningLines = withOpeningFeedback([
@@ -183,8 +182,8 @@ export const vantKruijsOpeningLines = withOpeningFeedback([
     category: "Expansion",
     id: "vant-kruijs-08-e4-overreach",
     name: "Punishing e4 with central counterplay",
-    description: "If White overextends with e4, Black should not panic. Strike back in the center and use development to prove the setup was too slow.",
-    moves: ["e3", "d5", "c3", "Nf6", "d4", "c5", "Qb3", "Nc6", "Nf3", "e6", "Bd3", "Bd6", "O-O", "O-O", "Nbd2", "e5", "exd5", "Nxd5"],
+    description: "If White finally pushes e4 after building the slow system shell, Black should hit back immediately and use the queenside pawn tension to seize space.",
+    moves: ["e3", "d5", "c3", "Nf6", "d4", "c5", "Qb3", "Nc6", "Nf3", "e6", "Bd3", "Bd6", "O-O", "O-O", "Nbd2", "e5", "e4", "c4"],
     explanations: [
       "White begins with the same restrained setup.",
       "Black takes central space at once.",
@@ -202,8 +201,8 @@ export const vantKruijsOpeningLines = withOpeningFeedback([
       "Black castles too and completes the basic setup safely.",
       "White develops the last minor piece, but Black is now ready to challenge the center fully.",
       "Black breaks with ...e5, the key move in this structure.",
-      "White captures to reduce the tension.",
-      "Black recaptures toward the center with a knight and reaches active, harmonious play."
+      "White pushes e4 and finally grabs more space, but this also locks the structure and creates a target.",
+      "Black answers with ...c4, gaining queenside space, shutting down the bishop, and proving White expanded too late."
     ]
   },
   {
