@@ -2595,7 +2595,7 @@ renderPuzzleMode = () => {
     }
   })();
   const mobilePuzzleBoardMaxWidth = this.state.isMobile
-    ? Math.max(260, mobileViewportWidth - 64)
+    ? Math.max(260, mobileViewportWidth - 40)
     : 0;
   const boardWidth = this.state.isMobile
     ? Math.min(this.state.mobileBoardSize || this.state.boardSize, mobilePuzzleBoardMaxWidth || (this.state.mobileBoardSize || this.state.boardSize))
@@ -2605,7 +2605,6 @@ renderPuzzleMode = () => {
   const puzzleStatus = this.state.puzzleStatus || (this.state.puzzleSolved ? "Solved." : "Solve the puzzle.");
   const currentPuzzleNumber = hasPack ? this.state.puzzleIndex + 1 : 0;
   const packProgressPct = hasPack ? Math.max(0, Math.min(100, Math.round((currentPuzzleNumber / this.state.puzzlePackSize) * 100))) : 0;
-  const compactThemes = Array.isArray(this.state.puzzleThemes) ? this.state.puzzleThemes.slice(0, 4) : [];
   const squareStyles = {};
   const selected = this.state.puzzleSelectedSquare;
   if (selected) {
@@ -2625,9 +2624,181 @@ renderPuzzleMode = () => {
     }
   }
 
+  const puzzleBoard = (
+    <div className="ot-board">
+      <BoardErrorBoundary onReset={this.resetBoardRender}>
+        <Chessboard
+          width={boardWidth}
+          position={this.state.puzzleFen || "start"}
+          onDrop={this.onPuzzleDrop}
+          allowDrag={({ piece }) => {
+            const turn = this.state.puzzlePlayerColor || "w";
+            return !!piece && piece[0].toLowerCase() === turn;
+          }}
+          orientation={(this.state.puzzlePlayerColor || "w") === "b" ? "black" : "white"}
+          showNotation={true}
+          squareStyles={squareStyles}
+          onSquareClick={this.onPuzzleSquareClick}
+          onSquareRightClick={this.onSquareRightClick}
+          pieceTheme={this.getPieceThemeUrl()}
+          {...BOARD_THEMES[this.state.settings.boardTheme || DEFAULT_THEME]}
+        />
+      </BoardErrorBoundary>
+    </div>
+  );
+
+  const desktopModeBar = (
+    <div className="ot-mode-panel-puzzles ot-puzzle-modebar ot-puzzle-modebar-compact">
+      <button className={"ot-puzzle-modebtn" + (currentMode === "learn" ? " active" : "")} onClick={() => this.setGameMode("learn")} type="button">
+        <span className="ot-puzzle-modebtn-label">Learn</span>
+      </button>
+      <button className={"ot-puzzle-modebtn" + (currentMode === "practice" ? " active" : "") + (!this.props.isMember ? " locked" : "")} onClick={() => (this.props.isMember ? this.setGameMode("practice") : this.openMemberGate("practice"))} type="button">
+        <span className="ot-puzzle-modebtn-label">Practice</span>
+      </button>
+      <button className={"ot-puzzle-modebtn" + (currentMode === "drill" ? " active" : "") + (!this.props.isMember ? " locked" : "")} onClick={() => (this.props.isMember ? this.setGameMode("drill") : this.openMemberGate("drill"))} type="button">
+        <span className="ot-puzzle-modebtn-label">Drill</span>
+      </button>
+      <button className={"ot-puzzle-modebtn" + (currentMode === "puzzles" ? " active" : "")} onClick={() => this.setGameMode("puzzles")} type="button">
+        <span className="ot-puzzle-modebtn-label">Puzzles</span>
+      </button>
+    </div>
+  );
+
+  const mobileMenu = this.state.mobileHeaderMenu ? (
+    <div className="ot-mobile-menu ot-puzzle-mobile-menu" onClick={(e) => e.stopPropagation()}>
+      {this.state.mobileHeaderMenu === "mode" ? (
+        <>
+          <div className="ot-puzzle-mobile-menu-title">Mode</div>
+          <div className="ot-puzzle-mobile-menu-list">
+            <button className={"ot-puzzle-mobile-menu-item" + (currentMode === "learn" ? " active" : "")} type="button" onClick={() => { this.setGameMode("learn"); this.closeMobileHeaderMenu(); }}>
+              <span><span role="img" aria-label="learn">📘</span> Learn</span>
+            </button>
+            <button className={"ot-puzzle-mobile-menu-item" + (currentMode === "practice" ? " active" : "") + (!this.props.isMember ? " locked" : "")} type="button" onClick={() => { if (this.props.isMember) this.setGameMode("practice"); else this.openMemberGate("practice"); this.closeMobileHeaderMenu(); }}>
+              <span><span role="img" aria-label="practice">🎯</span> Practice</span>
+            </button>
+            <button className={"ot-puzzle-mobile-menu-item" + (currentMode === "drill" ? " active" : "") + (!this.props.isMember ? " locked" : "")} type="button" onClick={() => { if (this.props.isMember) this.setGameMode("drill"); else this.openMemberGate("drill"); this.closeMobileHeaderMenu(); }}>
+              <span><span role="img" aria-label="drill">🔥</span> Drill</span>
+            </button>
+            <button className={"ot-puzzle-mobile-menu-item" + (currentMode === "puzzles" ? " active" : "")} type="button" onClick={() => { this.setGameMode("puzzles"); this.closeMobileHeaderMenu(); }}>
+              <span><span role="img" aria-label="puzzles">🧩</span> Puzzles</span>
+            </button>
+            {hasPack ? (
+              <>
+                <button className="ot-puzzle-mobile-menu-item" type="button" onClick={() => { this.retryPuzzle(); this.closeMobileHeaderMenu(); }}>
+                  <span>Retry puzzle</span>
+                </button>
+                <button className="ot-puzzle-mobile-menu-item" type="button" onClick={() => { this.resetPuzzleProgress(); this.closeMobileHeaderMenu(); }} disabled={currentPuzzleNumber <= 1}>
+                  <span>Reset progress</span>
+                </button>
+              </>
+            ) : null}
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="ot-puzzle-mobile-menu-title">Opening</div>
+          <select
+            className="ot-select ot-puzzle-mobile-menu-select"
+            value={this.state.openingKey}
+            onChange={(e) => {
+              this.setOpeningKey(e);
+              this.closeMobileHeaderMenu();
+            }}
+          >
+            {Object.keys(OPENING_SETS).map((k) => {
+              const s = OPENING_SETS[k];
+              const label = (s && (s.name || s.title || s.label)) || k;
+              return <option key={k} value={k}>{label}</option>;
+            })}
+          </select>
+        </>
+      )}
+    </div>
+  ) : null;
+
+  if (this.state.isMobile) {
+    return (
+      <div className="ot-container ot-mobile ot-puzzle-mobile-root">
+        <div className="ot-puzzle-mobile-shell">
+          {mobileMenu}
+
+          <div className="ot-puzzle-mobile-topbar">
+            <div className="ot-puzzle-mobile-titleblock">
+              <div className="ot-puzzle-mobile-kicker"><span role="img" aria-label="puzzles">🧩</span> Puzzles</div>
+              <button className="ot-puzzle-mobile-openingbtn" type="button" onClick={() => this.toggleMobileHeaderMenu("opening")}>
+                {openingLabel}
+              </button>
+            </div>
+            <div className="ot-puzzle-mobile-count">
+              {hasPack ? `Puzzle ${currentPuzzleNumber} of ${this.state.puzzlePackSize}` : "No pack loaded"}
+            </div>
+          </div>
+
+          <div className="ot-puzzle-mobile-progress">
+            <div className="ot-progress-bar ot-progress-bar-top">
+              <div className="ot-progress-fill ot-progress-fill-puzzles" style={{ width: packProgressPct + "%" }} />
+            </div>
+          </div>
+
+          {hasPack ? (
+            <div className="ot-puzzle-mobile-statuswrap">
+              <div className={"ot-puzzle-status ot-puzzle-status-mobile" + (this.state.puzzleSolved ? " solved" : "")}>{puzzleStatus}</div>
+            </div>
+          ) : (
+            <div className="ot-puzzle-mobile-statuswrap">
+              <div className="ot-puzzle-empty-title">No local pack available.</div>
+              <div className="ot-puzzle-empty-copy">Generate the pack, then reload this page.</div>
+              {tags && tags.length ? (
+                <div className="ot-puzzle-tags ot-puzzle-tags-compact ot-puzzle-tags-mobile">
+                  {tags.slice(0, 3).map((tag) => <span key={tag} className="ot-puzzle-tag">{tag}</span>)}
+                </div>
+              ) : null}
+            </div>
+          )}
+
+          <div className="ot-puzzle-mobile-boardcard">
+            {puzzleBoard}
+          </div>
+
+          {hasPack ? (
+            <div className="ot-puzzle-mobile-dock">
+              <div className="ot-puzzle-mobile-dock-left">
+                <button
+                  className={"ot-icon-btn ot-mobile-icon ot-compact-icon-btn" + (this.state.puzzleHintArmed ? " ot-hint-btn-on" : "")}
+                  type="button"
+                  onClick={this.onPuzzleHintOrSolve}
+                  title={this.state.puzzleHintArmed ? "Solve" : "Hint"}
+                  aria-label={this.state.puzzleHintArmed ? "Solve" : "Hint"}
+                >
+                  <span aria-hidden="true">{this.state.puzzleHintArmed ? "✓" : "💡"}</span>
+                </button>
+                <button
+                  className="ot-icon-btn ot-mobile-icon ot-compact-icon-btn"
+                  type="button"
+                  onClick={this.retryPuzzle}
+                  title="Retry"
+                  aria-label="Retry"
+                >
+                  <span aria-hidden="true">↻</span>
+                </button>
+              </div>
+              <div className="ot-puzzle-mobile-dock-center">
+                <button className="ot-button ot-button-small ot-puzzle-mobile-dockbtn" type="button" onClick={() => this.toggleMobileHeaderMenu("mode")}>Mode</button>
+              </div>
+              <div className="ot-puzzle-mobile-dock-right">
+                <button className="ot-icon-btn" type="button" onClick={this.prevPuzzle} disabled={currentPuzzleNumber <= 1}>‹</button>
+                <button className="ot-icon-btn" type="button" onClick={this.nextPuzzle}>›</button>
+              </div>
+            </div>
+          ) : null}
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className={"ot-container" + (this.state.isMobile ? " ot-mobile" : "")}>
-      {this.state.isMobile ? null : <TopNav title="Chess Opening Drills" />}
+    <div className="ot-container">
+      <TopNav title="Chess Opening Drills" />
 
       <div className="ot-top-line ot-puzzle-topline">
         <div className="ot-progress-bar ot-progress-bar-top">
@@ -2645,15 +2816,6 @@ renderPuzzleMode = () => {
           </div>
 
           <div className="ot-puzzle-header-actions">
-            {this.state.isMobile ? (
-              <select className="ot-select ot-puzzle-select ot-puzzle-mode-select" value={currentMode} onChange={this.onPuzzleModeSelect}>
-                <option value="learn">Learn</option>
-                <option value="practice">Practice</option>
-                <option value="drill">Drill</option>
-                <option value="puzzles">Puzzles</option>
-              </select>
-            ) : null}
-
             <select className="ot-select ot-puzzle-select" value={this.state.openingKey} onChange={this.setOpeningKey}>
               {Object.keys(OPENING_SETS).map((k) => {
                 const s = OPENING_SETS[k];
@@ -2664,90 +2826,79 @@ renderPuzzleMode = () => {
           </div>
         </div>
 
-        {this.state.isMobile ? null : (
-          <div className="ot-mode-panel-puzzles ot-puzzle-modebar ot-puzzle-modebar-compact">
-            <button className={"ot-puzzle-modebtn" + (currentMode === "learn" ? " active" : "")} onClick={() => this.setGameMode("learn")} type="button">
-              <span className="ot-puzzle-modebtn-label">Learn</span>
-            </button>
-            <button className={"ot-puzzle-modebtn" + (currentMode === "practice" ? " active" : "") + (!this.props.isMember ? " locked" : "")} onClick={() => (this.props.isMember ? this.setGameMode("practice") : this.openMemberGate("practice"))} type="button">
-              <span className="ot-puzzle-modebtn-label">Practice</span>
-            </button>
-            <button className={"ot-puzzle-modebtn" + (currentMode === "drill" ? " active" : "") + (!this.props.isMember ? " locked" : "")} onClick={() => (this.props.isMember ? this.setGameMode("drill") : this.openMemberGate("drill"))} type="button">
-              <span className="ot-puzzle-modebtn-label">Drill</span>
-            </button>
-            <button className={"ot-puzzle-modebtn" + (currentMode === "puzzles" ? " active" : "")} onClick={() => this.setGameMode("puzzles")} type="button">
-              <span className="ot-puzzle-modebtn-label">Puzzles</span>
-            </button>
-          </div>
-        )}
+        {desktopModeBar}
 
         <div className="ot-puzzle-grid ot-puzzle-grid-compact">
           <div className="ot-puzzle-board-card ot-puzzle-board-card-compact">
-            <div className="ot-board">
-              <BoardErrorBoundary onReset={this.resetBoardRender}>
-                <Chessboard
-                  width={boardWidth}
-                  position={this.state.puzzleFen || "start"}
-                  onDrop={this.onPuzzleDrop}
-                  allowDrag={({ piece }) => {
-                    const turn = this.state.puzzlePlayerColor || "w";
-                    return !!piece && piece[0].toLowerCase() === turn;
-                  }}
-                  orientation={(this.state.puzzlePlayerColor || "w") === "b" ? "black" : "white"}
-                  showNotation={true}
-                  squareStyles={squareStyles}
-                  onSquareClick={this.onPuzzleSquareClick}
-                  onSquareRightClick={this.onSquareRightClick}
-                  pieceTheme={this.getPieceThemeUrl()}
-                  {...BOARD_THEMES[this.state.settings.boardTheme || DEFAULT_THEME]}
-                />
-              </BoardErrorBoundary>
-            </div>
+            {puzzleBoard}
           </div>
 
           <div className="ot-puzzle-side">
-            <div className="ot-puzzle-panel ot-puzzle-panel-compact">
+            <div className="ot-puzzle-panel ot-puzzle-panel-compact ot-puzzle-panel-minimal">
               {hasPack ? (
                 <>
-                  <div className="ot-puzzle-panel-kicker">Puzzles</div>
-                  <div className="ot-puzzle-status-wrap">
+                  <div className="ot-puzzle-panel-head ot-puzzle-panel-head-minimal">
+                    <div className="ot-puzzle-panel-title"><span role="img" aria-label="puzzles">🧩</span> Puzzles <span className="ot-puzzle-panel-inline-opening">{openingLabel}</span></div>
+                    <div className="ot-puzzle-panel-sub">#{currentPuzzleNumber}</div>
+                  </div>
+
+                  <div className="ot-puzzle-status-wrap ot-puzzle-status-wrap-minimal">
                     <div className={"ot-puzzle-status" + (this.state.puzzleSolved ? " solved" : "")}>{puzzleStatus}</div>
                   </div>
 
-                  <div className="ot-puzzle-stats ot-puzzle-stats-compact">
-                    <div className="ot-puzzle-stat"><span>Rating</span><strong>{this.state.puzzleRating || "-"}</strong></div>
-                    <div className="ot-puzzle-stat"><span>Mistakes</span><strong>{this.state.puzzleMistakes || 0}</strong></div>
-                    <div className="ot-puzzle-stat"><span>Progress</span><strong>{currentPuzzleNumber}/{this.state.puzzlePackSize}</strong></div>
-                  </div>
-
-                  {compactThemes.length ? (
-                    <div className="ot-puzzle-tags ot-puzzle-tags-compact">
-                      {compactThemes.map((tag) => <span key={tag} className="ot-puzzle-tag">{tag}</span>)}
+                  <div className="ot-puzzle-stat-duo">
+                    <div className="ot-puzzle-stat-card">
+                      <span>Rating</span>
+                      <strong>{this.state.puzzleRating || "-"}</strong>
                     </div>
-                  ) : null}
-
-                  <div className="ot-puzzle-actions ot-puzzle-actions-compact">
-                    <button className={"ot-button" + (this.state.puzzleHintArmed ? " ot-hint-btn-on" : "")} type="button" onClick={this.onPuzzleHintOrSolve}>
-                      {this.state.puzzleHintArmed ? "Solve" : "Hint"}
-                    </button>
-                    <button className="ot-button" type="button" onClick={this.retryPuzzle}>Retry</button>
-                    <button className="ot-button" type="button" onClick={this.nextPuzzle}>Next</button>
+                    <div className="ot-puzzle-stat-card">
+                      <span>Mistakes</span>
+                      <strong>{this.state.puzzleMistakes || 0}</strong>
+                    </div>
                   </div>
 
-                  <div className="ot-puzzle-subactions">
-                    <button className="ot-puzzle-linkbtn" type="button" onClick={this.prevPuzzle} disabled={currentPuzzleNumber <= 1}>Previous puzzle</button>
+                  <div className="ot-puzzle-panel-grow" />
+
+                  <div className="ot-puzzle-footer-minimal">
+                    <div className="ot-puzzle-footer-minimal-left">
+                      <button
+                        className={"ot-icon-btn ot-compact-icon-btn" + (this.state.puzzleHintArmed ? " ot-hint-btn-on" : "")}
+                        type="button"
+                        onClick={this.onPuzzleHintOrSolve}
+                        title={this.state.puzzleHintArmed ? "Solve" : "Hint"}
+                        aria-label={this.state.puzzleHintArmed ? "Solve" : "Hint"}
+                      >
+                        <span aria-hidden="true">{this.state.puzzleHintArmed ? "✓" : "💡"}</span>
+                      </button>
+                      <button
+                        className="ot-icon-btn ot-compact-icon-btn"
+                        type="button"
+                        onClick={this.retryPuzzle}
+                        title="Retry"
+                        aria-label="Retry"
+                      >
+                        <span aria-hidden="true">↻</span>
+                      </button>
+                    </div>
+                    <div className="ot-puzzle-footer-minimal-right">
+                      <button className="ot-icon-btn" type="button" onClick={this.prevPuzzle} disabled={currentPuzzleNumber <= 1}>‹</button>
+                      <button className="ot-icon-btn" type="button" onClick={this.nextPuzzle}>›</button>
+                    </div>
+                  </div>
+
+                  <div className="ot-puzzle-subactions ot-puzzle-subactions-minimal">
                     <button className="ot-puzzle-linkbtn" type="button" onClick={this.resetPuzzleProgress} disabled={currentPuzzleNumber <= 1}>Reset progress</button>
                   </div>
-
-                  <div className="ot-puzzle-footnote ot-puzzle-footnote-compact">Local opening pack · {this.state.puzzleSource || "Lichess"}</div>
                 </>
               ) : (
                 <>
-                  <div className="ot-puzzle-panel-kicker">Puzzles</div>
-                  <div className="ot-puzzle-empty-title">No local pack available for this opening.</div>
+                  <div className="ot-puzzle-panel-head ot-puzzle-panel-head-minimal">
+                    <div className="ot-puzzle-panel-title"><span role="img" aria-label="puzzles">🧩</span> Puzzles <span className="ot-puzzle-panel-inline-opening">{openingLabel}</span></div>
+                  </div>
+                  <div className="ot-puzzle-empty-title">No local pack available.</div>
                   <div className="ot-puzzle-empty-copy">Generate the pack, then reload this page.</div>
                   {tags && tags.length ? (
-                    <div className="ot-puzzle-tags ot-puzzle-tags-compact">
+                    <div className="ot-puzzle-tags ot-puzzle-tags-compact ot-puzzle-tags-minimal">
                       {tags.slice(0, 4).map((tag) => <span key={tag} className="ot-puzzle-tag">{tag}</span>)}
                     </div>
                   ) : null}
