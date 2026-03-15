@@ -358,6 +358,15 @@ function TopNav(props) {
                           My Profile
                         </Link>
 
+                        <Link
+                          to="/install"
+                          className="topnav-menu-item"
+                          role="menuitem"
+                          onClick={() => setMenuOpen(false)}
+                        >
+                          Install App
+                        </Link>
+
                         <button
                           type="button"
                           className="topnav-menu-item topnav-menu-danger"

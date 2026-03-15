@@ -14,6 +14,7 @@ import Signup from './components/Signup';
 import Profile from './components/Profile';
 import Leaderboards from './components/Leaderboards';
 import DiscordCallback from './components/DiscordCallback';
+import InstallAppPage from './components/InstallAppPage';
 
 import PublicProfile from './components/PublicProfile';
 import { installCloudSync } from './utils/cloudSync';
@@ -45,6 +46,7 @@ class App extends React.Component {
             <Route path='/openings' component={OpeningTrainer} />
             <Route path='/about' component={About} />
             <Route path='/leaderboards' component={Leaderboards} />
+            <Route path='/install' component={InstallAppPage} />
 
             <Route path='/discord' component={DiscordCallback} />
 
