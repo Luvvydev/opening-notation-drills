@@ -743,7 +743,10 @@ getShareUrlForLine = (line) => {
   const encoded = encodeSharedCustomLine(line, this.state.openingKey);
   if (!encoded) return "";
   const origin = window.location.origin || "";
-  const path = `${process.env.PUBLIC_URL || ""}/#/openings`;
+  const base = (typeof process !== "undefined" && process.env && process.env.PUBLIC_URL)
+    ? process.env.PUBLIC_URL
+    : "";
+  const path = `${base}/#/openings`;
   return `${origin}${path}?opening=${encodeURIComponent(this.state.openingKey)}&customRep=${encodeURIComponent(encoded)}`;
 };
 
@@ -3624,6 +3627,7 @@ render() {
 <option value="petrovDefense">Petrov Defense</option>
 <option value="rousseauGambit">Rousseau Gambit</option>
 <option value="bishopsOpening">Bishop's Opening</option>
+<option value="scandinavianDefense">Scandinavian Defense</option>
 
 </select>
             </div>

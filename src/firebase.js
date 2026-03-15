@@ -4,11 +4,18 @@ import { getAuth } from "firebase/auth";
 import { getFirestore, serverTimestamp } from "firebase/firestore";
 import { getFunctions } from "firebase/functions";
 
+const readEnv = (key) => {
+  if (typeof process !== "undefined" && process.env) {
+    return process.env[key];
+  }
+  return undefined;
+};
+
 const firebaseConfig = {
-  apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
-  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
-  appId: process.env.REACT_APP_FIREBASE_APP_ID
+  apiKey: readEnv("REACT_APP_FIREBASE_API_KEY"),
+  authDomain: readEnv("REACT_APP_FIREBASE_AUTH_DOMAIN"),
+  projectId: readEnv("REACT_APP_FIREBASE_PROJECT_ID"),
+  appId: readEnv("REACT_APP_FIREBASE_APP_ID")
 };
 
 export const app = initializeApp(firebaseConfig);

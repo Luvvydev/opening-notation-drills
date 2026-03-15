@@ -20,6 +20,7 @@ import { viennaGameLines } from "./viennaGameLines";
 import { kingsGambitLines } from "./kingsGambitLines";
 import { danishGambitLines } from "./danishGambitLines";
 import { petrovDefenseLines } from "./petrovDefenseLines";
+import { scandinavianDefenseLines, scandinavianDefenseSEOText } from "./scandinavianDefenseLines";
 
 export const OPENING_CATALOG = [
   {
@@ -320,6 +321,21 @@ export const OPENING_CATALOG = [
   position: "start",
   orientation: "white",
   playerColor: "w"
+},
+{
+  key: "scandinavianDefense",
+  title: "Scandinavian Defense",
+  description:
+    "Want to rip White’s center apart from move one, pull the game into messy territory, and challenge them to prove your queen activity is actually punishable?",
+  lines: scandinavianDefenseLines,
+  seoText: scandinavianDefenseSEOText,
+  accent: "red",
+  badge: "New",
+  access: "signup",
+  earlyAccessUntil: null,
+  position: "start",
+  orientation: "black",
+  playerColor: "b"
 },
 {
   key: "petrovDefense",

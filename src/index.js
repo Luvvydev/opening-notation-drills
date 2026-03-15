@@ -1,10 +1,3 @@
-/* eslint-disable import/first */
-
-if (typeof window !== "undefined") {
-  window.process = window.process || {};
-  window.process.env = window.process.env || {};
-}
-
 import React from 'react';
 import ReactDOM from 'react-dom';
 import App from './App';
