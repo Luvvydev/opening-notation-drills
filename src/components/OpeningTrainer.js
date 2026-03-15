@@ -326,7 +326,7 @@ class OpeningTrainer extends Component {
     this._mobileDockRef = React.createRef();
 this._countedSeenForRun = false;
 
-    const base = (typeof process !== "undefined" && process.env && process.env.PUBLIC_URL) ? process.env.PUBLIC_URL : "";
+    const base = "";
     this.sfx = {
       capture: new Audio(base + "/sounds/capture.mp3"),
       illegal: new Audio(base + "/sounds/illegal.mp3"),
@@ -3812,6 +3812,7 @@ render() {
 <option value="rousseauGambit">Rousseau Gambit</option>
 <option value="bishopsOpening">Bishop's Opening</option>
 <option value="scandinavianDefense">Scandinavian Defense</option>
+<option value="vantKruijs">Van't Kruijs Opening</option>
 
 </select>
             </div>
