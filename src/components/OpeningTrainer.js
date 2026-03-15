@@ -303,7 +303,9 @@ class OpeningTrainer extends Component {
       boardSize: 500,
       mobileHeaderMenu: null,
       learnRewardPending: false,
-      learnNextReady: false
+      learnNextReady: false,
+      feedbackPreview: null,
+      feedbackPreviewPosition: "before"
     
     };
     this._handleResize = () => {
@@ -536,6 +538,11 @@ this._countedSeenForRun = false;
   }
 
 componentWillUnmount() {
+    if (this._feedbackPreviewTimer) {
+      clearTimeout(this._feedbackPreviewTimer);
+      this._feedbackPreviewTimer = null;
+    }
+
     if (typeof window !== "undefined" && this._handleResize) {
       window.removeEventListener("resize", this._handleResize);
     }
@@ -2173,6 +2180,118 @@ toggleFeedbackExpanded = () => {
   this.setState((prev) => ({ feedbackExpanded: !prev.feedbackExpanded }));
 };
 
+getExpectedMovePreview = (expectedSan, fenOverride = null) => {
+  if (!expectedSan) return null;
+
+  try {
+    const fen = fenOverride || this.state.fen;
+    const normalizedFen = !fen || fen === "start" ? null : fen;
+    const g = normalizedFen ? new Chess(normalizedFen) : new Chess();
+    const beforeFen = normalizedFen || "start";
+    const mv = g.move(expectedSan, { sloppy: true });
+
+    if (!mv) return null;
+
+    return {
+      san: expectedSan,
+      beforeFen: beforeFen,
+      afterFen: g.fen(),
+      from: mv.from || null,
+      to: mv.to || null
+    };
+  } catch (_) {
+    return null;
+  }
+};
+
+openFeedbackPreview = (expectedSan) => {
+  const preview = this.getExpectedMovePreview(expectedSan);
+  if (!preview) return;
+
+  if (this._feedbackPreviewTimer) {
+    clearTimeout(this._feedbackPreviewTimer);
+    this._feedbackPreviewTimer = null;
+  }
+
+  this.setState({
+    feedbackPreview: preview,
+    feedbackPreviewPosition: "before"
+  });
+
+  this._feedbackPreviewTimer = setTimeout(() => {
+    this.setState((prev) => {
+      if (!prev.feedbackPreview || prev.feedbackPreview.san !== expectedSan) return null;
+      return { feedbackPreviewPosition: "after" };
+    });
+  }, 360);
+};
+
+closeFeedbackPreview = () => {
+  if (this._feedbackPreviewTimer) {
+    clearTimeout(this._feedbackPreviewTimer);
+    this._feedbackPreviewTimer = null;
+  }
+
+  this.setState({
+    feedbackPreview: null,
+    feedbackPreviewPosition: "before"
+  });
+};
+
+renderFeedbackPreviewPopover = (expectedSan) => {
+  const preview = this.state.feedbackPreview;
+  if (!preview || preview.san !== expectedSan) return null;
+
+  const boardFen = this.state.feedbackPreviewPosition === "after"
+    ? preview.afterFen
+    : preview.beforeFen;
+
+  const squareStyles = {};
+
+  if (preview.from) {
+    squareStyles[preview.from] = {
+      boxShadow: "inset 0 0 0 3px rgba(126, 196, 255, 0.9)"
+    };
+  }
+
+  if (preview.to) {
+    squareStyles[preview.to] = {
+      backgroundImage: "radial-gradient(circle at center, rgba(255, 225, 120, 0.98) 0 18%, rgba(255, 225, 120, 0.28) 19 38%, rgba(0,0,0,0) 39%)",
+      backgroundRepeat: "no-repeat",
+      backgroundPosition: "center",
+      backgroundSize: "100% 100%",
+      boxShadow: "inset 0 0 0 3px rgba(255, 225, 120, 0.95)"
+    };
+  }
+
+  return (
+    <div className="ot-feedback-preview-popover">
+      <div className="ot-feedback-preview-top">
+        <span className="ot-feedback-preview-label">Preview</span>
+        <span className="ot-feedback-preview-move">{expectedSan}</span>
+      </div>
+      <div className="ot-feedback-preview-board">
+        <Chessboard
+          width={150}
+          position={boardFen || "start"}
+          orientation={this.getPlayerColor() === "b" ? "black" : "white"}
+          draggable={false}
+          allowDrag={() => false}
+          showNotation={false}
+          squareStyles={squareStyles}
+          pieceTheme={this.getPieceThemeUrl()}
+          {...BOARD_THEMES[this.state.settings.boardTheme || DEFAULT_THEME]}
+        />
+      </div>
+      <div className="ot-feedback-preview-copy">
+        {this.state.feedbackPreviewPosition === "after"
+          ? "This is the target square after the best move lands."
+          : "Hovering shows the move before it lands, then the board updates."}
+      </div>
+    </div>
+  );
+};
+
 renderMoveFeedbackCard = () => {
   const feedback = this.state.lastMoveFeedback;
   if (!feedback || !feedback.text) return null;
@@ -2199,7 +2318,21 @@ renderMoveFeedbackCard = () => {
         {isWrong && feedback.played && feedback.expected ? (
           <div className="ot-move-feedback-san">
             <span className="ot-move-feedback-san-played">Played {feedback.played}</span>
-            <span className="ot-move-feedback-san-best">Best {feedback.expected}</span>
+            <span
+              className="ot-move-feedback-best-wrap"
+              onMouseEnter={() => this.openFeedbackPreview(feedback.expected)}
+              onMouseLeave={this.closeFeedbackPreview}
+              onFocus={() => this.openFeedbackPreview(feedback.expected)}
+              onBlur={this.closeFeedbackPreview}
+            >
+              <button
+                type="button"
+                className="ot-move-feedback-san-best ot-move-feedback-san-best-btn"
+              >
+                Best {feedback.expected}
+              </button>
+              {this.renderFeedbackPreviewPopover(feedback.expected)}
+            </span>
           </div>
         ) : null}
       </div>
@@ -2775,6 +2908,9 @@ render() {
     const yourProgressPct = totalYourMoves > 0 ? Math.round((doneYourMoves / totalYourMoves) * 100) : 0;
 
     const squareStyles = {};
+    const expectedPreview = this.state.lastMoveFeedback && this.state.lastMoveFeedback.kind === "wrong"
+      ? this.getExpectedMovePreview(this.state.lastMoveFeedback.expected)
+      : null;
 
     if (this.state.wrongAttempt && this.state.wrongAttempt.to) {
       squareStyles[this.state.wrongAttempt.to] = {
@@ -2800,6 +2936,34 @@ render() {
     if (this.state.hintFromSquare) {
       squareStyles[this.state.hintFromSquare] = {
         background: "rgba(80, 170, 255, 0.45)"
+      };
+    }
+
+    if (expectedPreview && expectedPreview.from) {
+      squareStyles[expectedPreview.from] = {
+        ...(squareStyles[expectedPreview.from] || {}),
+        boxShadow: "inset 0 0 0 3px rgba(126, 196, 255, 0.9)"
+      };
+    }
+
+    if (expectedPreview && expectedPreview.to) {
+      const existingTarget = squareStyles[expectedPreview.to] || {};
+      const bestGlow = "radial-gradient(circle at center, rgba(255, 225, 120, 0.95) 0 18%, rgba(255, 225, 120, 0.28) 19 38%, rgba(0,0,0,0) 39%)";
+      squareStyles[expectedPreview.to] = {
+        ...existingTarget,
+        backgroundImage: existingTarget.backgroundImage
+          ? `${existingTarget.backgroundImage}, ${bestGlow}`
+          : bestGlow,
+        backgroundRepeat: existingTarget.backgroundRepeat
+          ? `${existingTarget.backgroundRepeat}, no-repeat`
+          : "no-repeat",
+        backgroundPosition: existingTarget.backgroundPosition
+          ? `${existingTarget.backgroundPosition}, center`
+          : "center",
+        backgroundSize: existingTarget.backgroundSize
+          ? `${existingTarget.backgroundSize}, 100% 100%`
+          : "100% 100%",
+        boxShadow: "inset 0 0 0 3px rgba(255, 225, 120, 0.95), 0 0 22px rgba(255, 225, 120, 0.16)"
       };
     }
 

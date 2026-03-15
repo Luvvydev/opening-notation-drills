@@ -1459,6 +1459,11 @@
   font-weight: 800;
 }
 
+.ot-move-feedback-best-wrap {
+  position: relative;
+  display: inline-flex;
+}
+
 .ot-move-feedback-san-played,
 .ot-move-feedback-san-best {
   display: inline-flex;
@@ -1477,6 +1482,74 @@
   color: #fff4b8;
   border-color: rgba(255, 230, 140, 0.32);
   background: rgba(255, 230, 140, 0.08);
+}
+
+.ot-move-feedback-san-best-btn {
+  cursor: pointer;
+  font: inherit;
+  line-height: inherit;
+}
+
+.ot-move-feedback-san-best-btn:hover,
+.ot-move-feedback-san-best-btn:focus-visible {
+  background: rgba(255, 230, 140, 0.15);
+  border-color: rgba(255, 230, 140, 0.5);
+  box-shadow: 0 0 0 1px rgba(255, 230, 140, 0.18);
+  outline: none;
+}
+
+.ot-feedback-preview-popover {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 196px;
+  padding: 10px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 230, 140, 0.22);
+  background: rgba(14, 15, 22, 0.97);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.38);
+  z-index: 25;
+}
+
+.ot-feedback-preview-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.ot-feedback-preview-label {
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.22px;
+  text-transform: uppercase;
+  color: rgba(233, 237, 242, 0.7);
+}
+
+.ot-feedback-preview-move {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(255, 230, 140, 0.1);
+  border: 1px solid rgba(255, 230, 140, 0.28);
+  color: #fff0b2;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.ot-feedback-preview-board {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ot-feedback-preview-copy {
+  margin-top: 8px;
+  font-size: 11px;
+  line-height: 1.4;
+  color: rgba(233, 237, 242, 0.82);
 }
 
 .ot-move-feedback-sections {
@@ -1562,4 +1635,16 @@
 .ot-move-feedback-why-toggle:hover {
   background: rgba(255, 255, 255, 0.08);
   border-color: rgba(255, 255, 255, 0.18);
+}
+
+@media (max-width: 640px) {
+  .ot-move-feedback-san {
+    justify-content: flex-start;
+  }
+
+  .ot-feedback-preview-popover {
+    right: auto;
+    left: 0;
+    width: min(196px, calc(100vw - 56px));
+  }
 }
