@@ -179,14 +179,21 @@ function _isCompleted(stats) {
   return (stats && stats.timesClean >= 1) || false;
 }
 
-function _deriveCompletedCount(progress, openingKey, lines) {
+function _deriveCompletedCount(progress, learnProgress, openingKey, lines) {
   const total = (lines && lines.length) || 0;
   const statsMap = (progress && progress.lines && progress.lines[openingKey]) || {};
+  const learnStatsMap =
+    (learnProgress &&
+      learnProgress.openings &&
+      learnProgress.openings[openingKey] &&
+      learnProgress.openings[openingKey].lines) ||
+    {};
 
   let completed = 0;
   for (const l of lines || []) {
     const s = statsMap[l.id] || {};
-    if (_isCompleted(s)) completed += 1;
+    const ls = learnStatsMap[l.id] || {};
+    if (_isCompleted(s) || _isCompleted(ls)) completed += 1;
   }
 
   return { completed, total };
@@ -213,16 +220,10 @@ class Home extends Component {
 
     this.heroFrameRef = React.createRef();
 
-    const perOpening = {};
-    let totalCompleted = 0;
-    let totalLines = 0;
-
-    for (const o of OPENINGS) {
-      const r = _deriveCompletedCount(progress, o.key, o.lines);
-      perOpening[o.key] = r;
-      totalCompleted += r.completed;
-      totalLines += r.total;
-    }
+    const summary = this.buildProgressSummary(progress, learnProgress);
+    const perOpening = summary.perOpening;
+    const totalCompleted = summary.totalCompleted;
+    const totalLines = summary.totalLines;
 
     this.state = {
       search: "",
@@ -247,14 +248,50 @@ perOpening,
   componentDidMount() {
     if (typeof window === "undefined") return;
     window.addEventListener("resize", this.handleResize);
+    window.addEventListener("progress:updated", this.refreshProgressState);
+    window.addEventListener("learnprogress:updated", this.refreshProgressState);
+    window.addEventListener("storage", this.refreshProgressState);
     this.updateHeroBoardWidth();
     this.startHeroAutoplay();
     setTimeout(this.updateHeroBoardWidth, 0);
+    this.refreshProgressState();
   }
+
+  buildProgressSummary = (progress, learnProgress) => {
+    const perOpening = {};
+    let totalCompleted = 0;
+    let totalLines = 0;
+
+    for (const o of OPENINGS) {
+      const r = _deriveCompletedCount(progress, learnProgress, o.key, o.lines);
+      perOpening[o.key] = r;
+      totalCompleted += r.completed;
+      totalLines += r.total;
+    }
+
+    return { perOpening, totalCompleted, totalLines };
+  };
+
+  refreshProgressState = () => {
+    const progress = _loadProgress();
+    const learnProgress = _loadLearnProgress();
+    const summary = this.buildProgressSummary(progress, learnProgress);
+
+    this.setState({
+      progress,
+      learnProgress,
+      perOpening: summary.perOpening,
+      totalCompleted: summary.totalCompleted,
+      totalLines: summary.totalLines
+    });
+  };
 
   componentWillUnmount() {
     if (typeof window === "undefined") return;
     window.removeEventListener("resize", this.handleResize);
+    window.removeEventListener("progress:updated", this.refreshProgressState);
+    window.removeEventListener("learnprogress:updated", this.refreshProgressState);
+    window.removeEventListener("storage", this.refreshProgressState);
     this.stopHeroAutoplay();
   }
 
