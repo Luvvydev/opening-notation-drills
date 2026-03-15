@@ -12,6 +12,8 @@ import { getActivityDays, markActivityToday, touchActivityToday } from "../utils
 import { X_SVG_DATA_URI, pickRandomLineId, countMovesForSide, countDoneMovesForSide, groupLines, detectCustomInputFormat, parseCustomLineInput, lineToSanText, lineToPgn, encodeSharedCustomLine, decodeSharedCustomLine, getLineStartFen } from "./openingTrainer/otUtils";
 import { getOrderedLineIds } from "../utils/lineIndex";
 import { pickNextPracticeLineId, pickNextLearnLineId } from "./openingTrainer/practicePicker";
+import { getOpeningPuzzlePack, getOpeningPuzzleTagHints } from "./openingTrainer/openingPuzzleCatalog";
+import { preparePuzzle, moveMatchesUci, getLegalTargets, getSquarePieceColor } from "./openingTrainer/puzzleUtils";
 
 import { loadProgress, saveProgress, loadLearnProgress, saveLearnProgress, loadSettings, saveSettings, loadCustomLines, saveCustomLines, deleteCustomLineById, makeCustomId, ensureOpening, getLineStats, isCompleted, ensureLearnOpening, getLearnLineStats } from "./openingTrainer/otStorage";
 import OpeningTrainerCustomModal from "./openingTrainer/OpeningTrainerCustomModal";
@@ -305,7 +307,23 @@ class OpeningTrainer extends Component {
       learnRewardPending: false,
       learnNextReady: false,
       feedbackPreview: null,
-      feedbackPreviewPosition: "before"
+      feedbackPreviewPosition: "before",
+      puzzlePackSize: 0,
+      puzzleIndex: 0,
+      puzzleRawId: "",
+      puzzleSource: "",
+      puzzleRating: 0,
+      puzzleThemes: [],
+      puzzleFen: "start",
+      puzzlePlayerColor: "w",
+      puzzleSolution: [],
+      puzzleMoveIndex: 0,
+      puzzleSolved: false,
+      puzzleStatus: "",
+      puzzleMistakes: 0,
+      puzzleSelectedSquare: null,
+      puzzleLegalTargets: [],
+      puzzleHintArmed: false
     
     };
     this._handleResize = () => {
@@ -496,6 +514,7 @@ this._countedSeenForRun = false;
     if (this.enforceLearnGate()) return;
     this._backfillActivityFromStreak();
     this.resetLine(false);
+    if ((this.state.gameMode || "learn") === "puzzles") this.loadPuzzleForOpening(this.state.openingKey, { resetIndex: true });
   
     if (this._openCustomOnMount) {
       this._openCustomOnMount = false;
@@ -515,10 +534,16 @@ this._countedSeenForRun = false;
 
     if (prevState.gameMode !== this.state.gameMode) {
       if (this.enforceLearnGate()) return;
+      if (this.state.gameMode === "puzzles") {
+        this.loadPuzzleForOpening(this.state.openingKey, { resetIndex: true });
+      }
     }
 
     if (prevState.openingKey !== this.state.openingKey) {
       this.maybeRedirectForLockedOpening(this.state.openingKey);
+      if ((this.state.gameMode || "learn") === "puzzles") {
+        this.loadPuzzleForOpening(this.state.openingKey, { resetIndex: true });
+      }
     }
  
     // Mobile board sizing depends on actual rendered heights (coach text can change as you advance).
@@ -2309,6 +2334,434 @@ renderFeedbackPreviewPopover = (expectedSan) => {
   );
 };
 
+getOpeningPuzzles = (openingKey) => {
+  return getOpeningPuzzlePack(openingKey || this.state.openingKey);
+};
+
+getPuzzleProgressStorageKey = (openingKey) => `chessdrills:puzzleProgress:${openingKey || this.state.openingKey}`;
+
+loadSavedPuzzleIndex = (openingKey) => {
+  try {
+    const raw = window.localStorage.getItem(this.getPuzzleProgressStorageKey(openingKey));
+    const parsed = Number(raw);
+    return Number.isInteger(parsed) && parsed >= 0 ? parsed : null;
+  } catch (_) {
+    return null;
+  }
+};
+
+saveSavedPuzzleIndex = (openingKey, index) => {
+  try {
+    window.localStorage.setItem(this.getPuzzleProgressStorageKey(openingKey), String(Math.max(0, Number(index) || 0)));
+  } catch (_) {}
+};
+
+clearSavedPuzzleIndex = (openingKey) => {
+  try {
+    window.localStorage.removeItem(this.getPuzzleProgressStorageKey(openingKey));
+  } catch (_) {}
+};
+
+onPuzzleModeSelect = (e) => {
+  const nextMode = e && e.target ? e.target.value : 'puzzles';
+  if (!nextMode) return;
+  this.setGameMode(nextMode);
+};
+
+onPuzzleHintOrSolve = () => {
+  if ((this.state.gameMode || 'learn') !== 'puzzles') return;
+  if (this.state.puzzleSolved) return;
+
+  const expected = this.state.puzzleSolution[this.state.puzzleMoveIndex];
+  if (!expected) return;
+
+  const fromSquare = String(expected).slice(0, 2);
+  const toSquare = String(expected).slice(2, 4);
+  const promotion = String(expected).length > 4 ? String(expected).slice(4, 5).toLowerCase() : undefined;
+
+  if (this.state.puzzleHintArmed) {
+    this.tryPuzzleMove({ from: fromSquare, to: toSquare, promotion });
+    return;
+  }
+
+  this.setState({
+    puzzleHintArmed: true,
+    puzzleSelectedSquare: fromSquare,
+    puzzleLegalTargets: toSquare ? [toSquare] : [],
+    puzzleStatus: 'Hint: start with the highlighted piece.'
+  });
+};
+
+loadPuzzleForOpening = (openingKey, opts) => {
+  const pack = this.getOpeningPuzzles(openingKey);
+  const options = opts || {};
+  if (!Array.isArray(pack) || pack.length === 0) {
+    this.setState({
+      puzzlePackSize: 0,
+      puzzleIndex: 0,
+      puzzleRawId: "",
+      puzzleSource: "",
+      puzzleRating: 0,
+      puzzleThemes: [],
+      puzzleFen: "start",
+      puzzlePlayerColor: "w",
+      puzzleSolution: [],
+      puzzleMoveIndex: 0,
+      puzzleSolved: false,
+      puzzleStatus: "",
+      puzzleMistakes: 0,
+      puzzleSelectedSquare: null,
+      puzzleLegalTargets: [],
+      puzzleHintArmed: false
+    });
+    return;
+  }
+
+  const max = pack.length;
+  const savedIndex = this.loadSavedPuzzleIndex(openingKey);
+  const nextIndex = Number.isInteger(options.index)
+    ? Math.max(0, Math.min(options.index, max - 1))
+    : Number.isInteger(savedIndex)
+    ? Math.max(0, Math.min(savedIndex, max - 1))
+    : options.resetIndex
+    ? 0
+    : ((Number(this.state.puzzleIndex) || 0) % max);
+
+  const rawPuzzle = pack[nextIndex];
+  const prepared = preparePuzzle(rawPuzzle);
+  if (!prepared) {
+    this.setState({
+      puzzlePackSize: max,
+      puzzleIndex: nextIndex,
+      puzzleStatus: "This puzzle could not be loaded.",
+      puzzleSolved: false,
+      puzzleSelectedSquare: null,
+      puzzleLegalTargets: []
+    });
+    return;
+  }
+
+  this.saveSavedPuzzleIndex(openingKey, nextIndex);
+
+  this.setState({
+    puzzlePackSize: max,
+    puzzleIndex: nextIndex,
+    puzzleRawId: rawPuzzle.id || "",
+    puzzleSource: rawPuzzle.source || "Lichess",
+    puzzleRating: Number(rawPuzzle.rating) || 0,
+    puzzleThemes: Array.isArray(rawPuzzle.themes) ? rawPuzzle.themes : [],
+    puzzleFen: prepared.startFen,
+    puzzlePlayerColor: prepared.playerColor || "w",
+    puzzleSolution: prepared.solution || [],
+    puzzleMoveIndex: 0,
+    puzzleSolved: false,
+    puzzleStatus: "",
+    puzzleMistakes: 0,
+    puzzleSelectedSquare: null,
+    puzzleLegalTargets: [],
+    puzzleHintArmed: false
+  });
+};
+
+prevPuzzle = () => {
+  const pack = this.getOpeningPuzzles(this.state.openingKey);
+  if (!Array.isArray(pack) || pack.length === 0) return;
+  const currentIndex = Math.max(0, Number(this.state.puzzleIndex) || 0);
+  const prevIndex = Math.max(0, currentIndex - 1);
+  this.loadPuzzleForOpening(this.state.openingKey, { index: prevIndex });
+};
+
+nextPuzzle = () => {
+  const pack = this.getOpeningPuzzles(this.state.openingKey);
+  if (!Array.isArray(pack) || pack.length === 0) return;
+  const nextIndex = (((Number(this.state.puzzleIndex) || 0) + 1) % pack.length);
+  this.loadPuzzleForOpening(this.state.openingKey, { index: nextIndex });
+};
+
+retryPuzzle = () => {
+  this.loadPuzzleForOpening(this.state.openingKey, { index: Number(this.state.puzzleIndex) || 0 });
+};
+
+resetPuzzleProgress = () => {
+  this.clearSavedPuzzleIndex(this.state.openingKey);
+  this.loadPuzzleForOpening(this.state.openingKey, { index: 0, resetIndex: true });
+};
+
+tryPuzzleMove = (move) => {
+  if (!move || this.state.puzzleSolved) return;
+  const expected = this.state.puzzleSolution[this.state.puzzleMoveIndex];
+  if (!expected) return;
+
+  if (!moveMatchesUci(move, expected)) {
+    this.playSfx("illegal");
+    this.setState((prev) => ({
+      puzzleStatus: "Wrong move. Solve the tactic, not just any good move.",
+      puzzleMistakes: (Number(prev.puzzleMistakes) || 0) + 1,
+      puzzleSelectedSquare: null,
+      puzzleLegalTargets: [],
+      puzzleHintArmed: false
+    }));
+    return;
+  }
+
+  const game = new Chess(this.state.puzzleFen);
+  const played = game.move(move);
+  if (!played) return;
+
+  let nextIndex = (Number(this.state.puzzleMoveIndex) || 0) + 1;
+  let solved = nextIndex >= this.state.puzzleSolution.length;
+  let status = solved ? "Solved." : "Good. Find the next move.";
+
+  if (!solved) {
+    const reply = this.state.puzzleSolution[nextIndex];
+    const replyPlayed = game.move({
+      from: String(reply || "").slice(0, 2),
+      to: String(reply || "").slice(2, 4),
+      promotion: String(reply || "").length > 4 ? String(reply || "").slice(4, 5).toLowerCase() : undefined
+    });
+    if (replyPlayed) nextIndex += 1;
+    solved = nextIndex >= this.state.puzzleSolution.length;
+    status = solved ? "Solved." : "Keep going.";
+  }
+
+  this.playSfx(solved ? "capture" : "moveSelf");
+  this.setState({
+    puzzleFen: game.fen(),
+    puzzleMoveIndex: nextIndex,
+    puzzleSolved: solved,
+    puzzleStatus: status,
+    puzzleSelectedSquare: null,
+    puzzleLegalTargets: [],
+    puzzleHintArmed: false
+  });
+};
+
+onPuzzleDrop = ({ sourceSquare, targetSquare, piece }) => {
+  if (!sourceSquare || !targetSquare || !piece) return null;
+  let promotion;
+  if ((piece === "wP" && targetSquare.endsWith("8")) || (piece === "bP" && targetSquare.endsWith("1"))) {
+    promotion = "q";
+  }
+  this.tryPuzzleMove({ from: sourceSquare, to: targetSquare, promotion });
+  return null;
+};
+
+onPuzzleSquareClick = (square) => {
+  if (!square) return;
+  const currentFen = this.state.puzzleFen || "start";
+  const selected = this.state.puzzleSelectedSquare;
+  const turn = this.state.puzzlePlayerColor || "w";
+  const pieceColor = getSquarePieceColor(currentFen, square);
+
+  if (!selected) {
+    if (pieceColor === turn) {
+      this.setState({
+        puzzleSelectedSquare: square,
+        puzzleLegalTargets: getLegalTargets(currentFen, square)
+      });
+    }
+    return;
+  }
+
+  if (selected === square) {
+    this.setState({ puzzleSelectedSquare: null, puzzleLegalTargets: [] });
+    return;
+  }
+
+  if (pieceColor === turn) {
+    this.setState({
+      puzzleSelectedSquare: square,
+      puzzleLegalTargets: getLegalTargets(currentFen, square)
+    });
+    return;
+  }
+
+  let promotion;
+  if ((turn === "w" && selected && square.endsWith("8")) || (turn === "b" && selected && square.endsWith("1"))) {
+    promotion = "q";
+  }
+  this.tryPuzzleMove({ from: selected, to: square, promotion });
+};
+
+renderPuzzleMode = () => {
+  const opening = OPENING_SETS[this.state.openingKey] || {};
+  const openingLabel = (opening && (opening.name || opening.title || opening.label)) || this.state.openingKey;
+  const tags = getOpeningPuzzleTagHints(this.state.openingKey);
+  const mobileViewportWidth = (() => {
+    try {
+      return typeof window !== "undefined" ? Number(window.innerWidth) || 0 : 0;
+    } catch (_) {
+      return 0;
+    }
+  })();
+  const mobilePuzzleBoardMaxWidth = this.state.isMobile
+    ? Math.max(260, mobileViewportWidth - 64)
+    : 0;
+  const boardWidth = this.state.isMobile
+    ? Math.min(this.state.mobileBoardSize || this.state.boardSize, mobilePuzzleBoardMaxWidth || (this.state.mobileBoardSize || this.state.boardSize))
+    : this.state.boardSize;
+  const currentMode = this.state.gameMode || "learn";
+  const hasPack = this.state.puzzlePackSize > 0;
+  const puzzleStatus = this.state.puzzleStatus || (this.state.puzzleSolved ? "Solved." : "Solve the puzzle.");
+  const currentPuzzleNumber = hasPack ? this.state.puzzleIndex + 1 : 0;
+  const packProgressPct = hasPack ? Math.max(0, Math.min(100, Math.round((currentPuzzleNumber / this.state.puzzlePackSize) * 100))) : 0;
+  const compactThemes = Array.isArray(this.state.puzzleThemes) ? this.state.puzzleThemes.slice(0, 4) : [];
+  const squareStyles = {};
+  const selected = this.state.puzzleSelectedSquare;
+  if (selected) {
+    squareStyles[selected] = {
+      boxShadow: "inset 0 0 0 3px rgba(69, 208, 123, 0.9)"
+    };
+  }
+  if (this.state.puzzleLegalTargets && this.state.puzzleLegalTargets.length) {
+    for (const toSq of this.state.puzzleLegalTargets) {
+      squareStyles[toSq] = {
+        ...(squareStyles[toSq] || {}),
+        backgroundImage: "radial-gradient(circle at center, rgba(69, 208, 123, 0.72) 18%, rgba(0,0,0,0) 20%)",
+        backgroundRepeat: "no-repeat",
+        backgroundPosition: "center",
+        backgroundSize: "100% 100%"
+      };
+    }
+  }
+
+  return (
+    <div className={"ot-container" + (this.state.isMobile ? " ot-mobile" : "")}>
+      {this.state.isMobile ? null : <TopNav title="Chess Opening Drills" />}
+
+      <div className="ot-top-line ot-puzzle-topline">
+        <div className="ot-progress-bar ot-progress-bar-top">
+          <div className="ot-progress-fill ot-progress-fill-puzzles" style={{ width: packProgressPct + "%" }} />
+        </div>
+      </div>
+
+      <div className="ot-puzzle-shell ot-puzzle-shell-compact">
+        <div className="ot-puzzle-header ot-puzzle-header-compact">
+          <div className="ot-puzzle-header-main">
+            <div className="ot-puzzle-heading">{openingLabel}</div>
+            <div className="ot-puzzle-heading-meta">
+              {hasPack ? `Puzzle ${currentPuzzleNumber} of ${this.state.puzzlePackSize}` : "No pack loaded"}
+            </div>
+          </div>
+
+          <div className="ot-puzzle-header-actions">
+            {this.state.isMobile ? (
+              <select className="ot-select ot-puzzle-select ot-puzzle-mode-select" value={currentMode} onChange={this.onPuzzleModeSelect}>
+                <option value="learn">Learn</option>
+                <option value="practice">Practice</option>
+                <option value="drill">Drill</option>
+                <option value="puzzles">Puzzles</option>
+              </select>
+            ) : null}
+
+            <select className="ot-select ot-puzzle-select" value={this.state.openingKey} onChange={this.setOpeningKey}>
+              {Object.keys(OPENING_SETS).map((k) => {
+                const s = OPENING_SETS[k];
+                const label = (s && (s.name || s.title || s.label)) || k;
+                return <option key={k} value={k}>{label}</option>;
+              })}
+            </select>
+          </div>
+        </div>
+
+        {this.state.isMobile ? null : (
+          <div className="ot-mode-panel-puzzles ot-puzzle-modebar ot-puzzle-modebar-compact">
+            <button className={"ot-puzzle-modebtn" + (currentMode === "learn" ? " active" : "")} onClick={() => this.setGameMode("learn")} type="button">
+              <span className="ot-puzzle-modebtn-label">Learn</span>
+            </button>
+            <button className={"ot-puzzle-modebtn" + (currentMode === "practice" ? " active" : "") + (!this.props.isMember ? " locked" : "")} onClick={() => (this.props.isMember ? this.setGameMode("practice") : this.openMemberGate("practice"))} type="button">
+              <span className="ot-puzzle-modebtn-label">Practice</span>
+            </button>
+            <button className={"ot-puzzle-modebtn" + (currentMode === "drill" ? " active" : "") + (!this.props.isMember ? " locked" : "")} onClick={() => (this.props.isMember ? this.setGameMode("drill") : this.openMemberGate("drill"))} type="button">
+              <span className="ot-puzzle-modebtn-label">Drill</span>
+            </button>
+            <button className={"ot-puzzle-modebtn" + (currentMode === "puzzles" ? " active" : "")} onClick={() => this.setGameMode("puzzles")} type="button">
+              <span className="ot-puzzle-modebtn-label">Puzzles</span>
+            </button>
+          </div>
+        )}
+
+        <div className="ot-puzzle-grid ot-puzzle-grid-compact">
+          <div className="ot-puzzle-board-card ot-puzzle-board-card-compact">
+            <div className="ot-board">
+              <BoardErrorBoundary onReset={this.resetBoardRender}>
+                <Chessboard
+                  width={boardWidth}
+                  position={this.state.puzzleFen || "start"}
+                  onDrop={this.onPuzzleDrop}
+                  allowDrag={({ piece }) => {
+                    const turn = this.state.puzzlePlayerColor || "w";
+                    return !!piece && piece[0].toLowerCase() === turn;
+                  }}
+                  orientation={(this.state.puzzlePlayerColor || "w") === "b" ? "black" : "white"}
+                  showNotation={true}
+                  squareStyles={squareStyles}
+                  onSquareClick={this.onPuzzleSquareClick}
+                  onSquareRightClick={this.onSquareRightClick}
+                  pieceTheme={this.getPieceThemeUrl()}
+                  {...BOARD_THEMES[this.state.settings.boardTheme || DEFAULT_THEME]}
+                />
+              </BoardErrorBoundary>
+            </div>
+          </div>
+
+          <div className="ot-puzzle-side">
+            <div className="ot-puzzle-panel ot-puzzle-panel-compact">
+              {hasPack ? (
+                <>
+                  <div className="ot-puzzle-panel-kicker">Puzzles</div>
+                  <div className="ot-puzzle-status-wrap">
+                    <div className={"ot-puzzle-status" + (this.state.puzzleSolved ? " solved" : "")}>{puzzleStatus}</div>
+                  </div>
+
+                  <div className="ot-puzzle-stats ot-puzzle-stats-compact">
+                    <div className="ot-puzzle-stat"><span>Rating</span><strong>{this.state.puzzleRating || "-"}</strong></div>
+                    <div className="ot-puzzle-stat"><span>Mistakes</span><strong>{this.state.puzzleMistakes || 0}</strong></div>
+                    <div className="ot-puzzle-stat"><span>Progress</span><strong>{currentPuzzleNumber}/{this.state.puzzlePackSize}</strong></div>
+                  </div>
+
+                  {compactThemes.length ? (
+                    <div className="ot-puzzle-tags ot-puzzle-tags-compact">
+                      {compactThemes.map((tag) => <span key={tag} className="ot-puzzle-tag">{tag}</span>)}
+                    </div>
+                  ) : null}
+
+                  <div className="ot-puzzle-actions ot-puzzle-actions-compact">
+                    <button className={"ot-button" + (this.state.puzzleHintArmed ? " ot-hint-btn-on" : "")} type="button" onClick={this.onPuzzleHintOrSolve}>
+                      {this.state.puzzleHintArmed ? "Solve" : "Hint"}
+                    </button>
+                    <button className="ot-button" type="button" onClick={this.retryPuzzle}>Retry</button>
+                    <button className="ot-button" type="button" onClick={this.nextPuzzle}>Next</button>
+                  </div>
+
+                  <div className="ot-puzzle-subactions">
+                    <button className="ot-puzzle-linkbtn" type="button" onClick={this.prevPuzzle} disabled={currentPuzzleNumber <= 1}>Previous puzzle</button>
+                    <button className="ot-puzzle-linkbtn" type="button" onClick={this.resetPuzzleProgress} disabled={currentPuzzleNumber <= 1}>Reset progress</button>
+                  </div>
+
+                  <div className="ot-puzzle-footnote ot-puzzle-footnote-compact">Local opening pack · {this.state.puzzleSource || "Lichess"}</div>
+                </>
+              ) : (
+                <>
+                  <div className="ot-puzzle-panel-kicker">Puzzles</div>
+                  <div className="ot-puzzle-empty-title">No local pack available for this opening.</div>
+                  <div className="ot-puzzle-empty-copy">Generate the pack, then reload this page.</div>
+                  {tags && tags.length ? (
+                    <div className="ot-puzzle-tags ot-puzzle-tags-compact">
+                      {tags.slice(0, 4).map((tag) => <span key={tag} className="ot-puzzle-tag">{tag}</span>)}
+                    </div>
+                  ) : null}
+                  <div className="ot-puzzle-footnote ot-puzzle-footnote-compact">Run <code>python3 src/scripts/build_opening_puzzle_packs.py path/to/lichess_db_puzzle.csv.zst</code>.</div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 renderMoveFeedbackCard = () => {
   const feedback = this.state.lastMoveFeedback;
   if (!feedback || !feedback.text) return null;
@@ -2465,9 +2918,17 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
                 <>
                   <span role="img" aria-label="practice">🎯</span> Practice
                 </>
-              ) : (
+              ) : mode === "practice" ? (
+                <>
+                  <span role="img" aria-label="practice">🎯</span> Practice
+                </>
+              ) : mode === "drill" ? (
                 <>
                   <span role="img" aria-label="drill">🔥</span> Drill
+                </>
+              ) : (
+                <>
+                  <span role="img" aria-label="puzzles">🧩</span> Puzzles
                 </>
               )}
             </button>
@@ -2525,6 +2986,14 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
                 >
                   <span><span role="img" aria-label="drill">🔥</span> Drill</span>
                   <span>{!this.props.user || !this.props.isMember ? "Member" : ""}</span>
+                </button>
+
+                <button
+                  className={"ot-mode-item" + ((this.state.gameMode || "learn") === "puzzles" ? " active" : "")}
+                  onClick={() => { this.setGameMode("puzzles"); this.closeMobileHeaderMenu(); }}
+                >
+                  <span><span role="img" aria-label="puzzles">🧩</span> Puzzles</span>
+                  <span />
                 </button>
               </div>
             </>
@@ -2671,6 +3140,10 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
         legalTargets: []
       },
       () => {
+        if (mode === "puzzles") {
+          this.loadPuzzleForOpening(this.state.openingKey, { resetIndex: true });
+          return;
+        }
         if (mode === "practice" && this.state.linePicker === "random") {
           this.startPracticeLine({ reason: "mode_enter" });
           return;
@@ -2800,7 +3273,7 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
           type="button"
         >
           <div className="ot-mode-card-title"><span role="img" aria-label="learn">📘</span> Learn</div>
-          <div className="ot-mode-card-sub">Explanations on. Repeat until clean.</div>
+          <div className="ot-mode-card-sub">Guided</div>
         </button>
 
         <button
@@ -2810,7 +3283,7 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
 
         >
           <div className="ot-mode-card-title"><span role="img" aria-label="practice">🎯</span> Practice</div>
-          <div className="ot-mode-card-sub">Auto next. Help unlocks explanations.</div>
+          <div className="ot-mode-card-sub">Flow</div>
         </button>
 
         <button
@@ -2820,7 +3293,17 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
 
         >
           <div className="ot-mode-card-title"><span role="img" aria-label="drill">🔥</span> Drill</div>
-          <div className="ot-mode-card-sub">No hints. Streak resets on mistake.</div>
+          <div className="ot-mode-card-sub">Streak</div>
+        </button>
+
+        <button
+          className={"ot-mode-card" + (mode === "puzzles" ? " active" : "")}
+          onClick={() => this.setGameMode("puzzles")}
+          type="button"
+
+        >
+          <div className="ot-mode-card-title"><span role="img" aria-label="puzzles">🧩</span> Puzzles</div>
+          <div className="ot-mode-card-sub">Puzzles</div>
         </button>
       </div>
     );
@@ -2915,6 +3398,7 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
 render() {
     const line = this.getLine();
     if (!line) return null;
+    if ((this.state.gameMode || "learn") === "puzzles") return this.renderPuzzleMode();
     const nextExpected = line.moves[this.state.stepIndex] || null;
 
     const viewIndex = this.getViewIndex();
@@ -3422,9 +3906,13 @@ render() {
                         <>
                           <span role="img" aria-label="practice">🎯</span> Practice
                         </>
-                      ) : (
+                      ) : mode === "drill" ? (
                         <>
                           <span role="img" aria-label="drill">🔥</span> Drill
+                        </>
+                      ) : (
+                        <>
+                          <span role="img" aria-label="puzzles">🧩</span> Puzzles
                         </>
                       );
                     })()}{" "}
@@ -3500,6 +3988,14 @@ render() {
                             >
                               <span><span role="img" aria-label="drill">🔥</span> Drill</span>
                               <span>{!this.props.user || !this.props.isMember ? "Member" : ""}</span>
+                            </button>
+
+                            <button
+                              className={"ot-mode-item" + ((this.state.gameMode || "learn") === "puzzles" ? " active" : "")}
+                              onClick={() => { this.setGameMode("puzzles"); this.closeMobileHeaderMenu(); }}
+                            >
+                              <span><span role="img" aria-label="puzzles">🧩</span> Puzzles</span>
+                              <span />
                             </button>
                           </div>
                         </>
