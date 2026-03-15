@@ -428,10 +428,6 @@
   margin-top: 10px;
 }
 
-.ot-stat-grid-compact {
-  margin-top: 10px;
-}
-
 .ot-stat {
   border: 1px solid rgba(255, 255, 255, 0.10);
   background: rgba(255, 255, 255, 0.02);
@@ -463,24 +459,6 @@
   justify-content: space-between;
   gap: 10px;
   margin: 6px 0;
-}
-
-.ot-hint-row {
-  align-items: center;
-}
-
-.ot-hint-btn {
-  min-width: 86px;
-}
-
-.ot-hint-btn-on {
-  border-color: rgba(244, 197, 66, 0.35);
-}
-
-.ot-hint-value {
-  flex: 1;
-  text-align: right;
-  color: #e9edf2;
 }
 
 .ot-hint-row {
@@ -1658,5 +1636,106 @@
     right: auto;
     left: 0;
     width: min(196px, calc(100vw - 56px));
+  }
+}
+
+
+.ot-compact-icon-btn {
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  padding: 0;
+  border-radius: 10px;
+  font-size: 15px;
+}
+
+.ot-hint-btn-on {
+  border-color: rgba(244, 197, 66, 0.42);
+  background: rgba(244, 197, 66, 0.12);
+}
+
+.ot-next-reward-btn {
+  min-width: 76px;
+  border-color: rgba(244, 197, 66, 0.22);
+  background: rgba(244, 197, 66, 0.10);
+}
+
+.ot-next-reward-btn:hover {
+  border-color: rgba(244, 197, 66, 0.38);
+  background: rgba(244, 197, 66, 0.16);
+}
+
+.ot-dock {
+  min-height: 44px;
+}
+
+.ot-dock-left,
+.ot-dock-center,
+.ot-dock-right,
+.ot-mobile-dock-left,
+.ot-mobile-dock-center,
+.ot-mobile-dock-right {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ot-mobile-dock {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.ot-mobile-dock-center {
+  flex: 1;
+  justify-content: center;
+}
+
+.ot-mobile-dock-right {
+  justify-content: flex-end;
+}
+
+.ot-mini-btn {
+  padding: 7px 10px;
+  font-size: 11px;
+  border-radius: 10px;
+}
+
+.ot-gear,
+.ot-icon-btn,
+.ot-icon-btn-tight {
+  border-radius: 10px;
+}
+
+@media (max-width: 1100px) {
+  .ot-dock {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .ot-dock-center {
+    justify-content: center;
+  }
+
+  .ot-dock-left,
+  .ot-dock-right {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 550px) {
+  .ot-mobile-dock {
+    gap: 6px;
+  }
+
+  .ot-mobile-dock-left,
+  .ot-mobile-dock-center,
+  .ot-mobile-dock-right {
+    gap: 6px;
+  }
+
+  .ot-next-reward-btn {
+    min-width: 70px;
   }
 }

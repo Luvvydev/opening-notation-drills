@@ -747,9 +747,7 @@ getShareUrlForLine = (line) => {
   const encoded = encodeSharedCustomLine(line, this.state.openingKey);
   if (!encoded) return "";
   const origin = window.location.origin || "";
-  const base = (typeof process !== "undefined" && process.env && process.env.PUBLIC_URL)
-    ? process.env.PUBLIC_URL
-    : "";
+  const base = "";
   const path = `${base}/#/openings`;
   return `${origin}${path}?opening=${encodeURIComponent(this.state.openingKey)}&customRep=${encodeURIComponent(encoded)}`;
 };
@@ -2432,8 +2430,6 @@ renderCoachBubble = (line) => {
 renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
   if (!line) return null;
 
-  const canUndo = !!(this.state.lastMistake || this.state.wrongAttempt);
-
   const mode = this.state.gameMode || "learn";
 
   const unlocked = mode === "learn" ? true : mode === "practice" ? (!!this.state.mistakeUnlocked || !!this.state.helpUsed) : false;
@@ -2482,11 +2478,6 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
                 <div className="ot-drill-value">{Number(this.state.drillBestAllTime) || 0}</div>
               </div>
             </div>
-          ) : null}
-          {canUndo ? (
-            <button className="ot-mini-btn" onClick={this.undoMistake} title="Undo mistake">
-              Undo
-            </button>
           ) : null}
         
       {!this.state.isMobile && this.state.mobileHeaderMenu ? (
@@ -3352,19 +3343,27 @@ render() {
                 overflow-wrap: anywhere;
               }
 
-              .ot-container.ot-mobile .ot-bubble,
-              .ot-container.ot-mobile .ot-bubble-row {
+              .ot-container.ot-mobile .ot-bubble {
                 background: #ececf1;
                 color: #111111;
                 border: 1px solid rgba(0,0,0,0.08);
               }
 
-              .ot-container.ot-mobile .ot-coach-text {
-                color: #000000;
+              .ot-container.ot-mobile .ot-bubble-row {
+                background: transparent;
+                border: none;
               }
 
-              .ot-container.ot-mobile .ot-bubble-icon {
-                color: rgba(0,0,0,0.75);
+              .ot-container.ot-mobile .ot-coach-text {
+                color: #111111;
+              }
+
+              .ot-container.ot-mobile .ot-buddy {
+                display: none;
+              }
+
+              .ot-container.ot-mobile .ot-bubble::before {
+                display: none;
               }
 
             `}
@@ -3583,78 +3582,86 @@ render() {
               </div>
 
               <div className="ot-mobile-dock" ref={this._mobileDockRef}>
-                <button
-                  className="ot-gear ot-mobile-icon"
-                  onClick={this.toggleSettingsOpen}
-                  title="Settings"
-                  aria-label="Settings"
-                >
-                  <span role="img" aria-label="settings">⚙</span>
-                </button>
-
-                {canUndo ? (
-                  <button className="ot-mini-btn" onClick={this.undoMistake} title="Undo mistake">
-                    Undo
-                  </button>
-                ) : null}
-
-                {this.state.gameMode === "drill" ? null : (
+                <div className="ot-mobile-dock-left">
                   <button
-                    className={
-                      "ot-button ot-button-small ot-button-dock ot-hint-btn" +
-                      (this.state.showHint ? " ot-hint-btn-on" : "")
-                    }
-                    onClick={this.state.solveArmed ? this.playMoveForMe : this.onHint}
-                    disabled={!nextExpected || this.state.completed || this.state.viewing}
-                    title={
-                      !nextExpected
-                        ? "Line complete"
-                        : this.state.solveArmed
-                        ? "Play the move (breaks clean completion)"
-                        : "Highlight the piece to move"
-                    }
+                    className="ot-gear ot-mobile-icon ot-compact-icon-btn"
+                    onClick={this.toggleSettingsOpen}
+                    title="Settings"
+                    aria-label="Settings"
                   >
-                    {this.state.solveArmed ? "Solve" : "Hint"}
+                    <span role="img" aria-label="settings">⚙</span>
                   </button>
-                )}
 
-                <button
-                  className="ot-button ot-button-small ot-button-dock"
-                  onClick={this.retryLine}
-                  title="Retry"
-                >
-                  Retry
-                </button>
+                  {this.state.gameMode === "drill" ? null : (
+                    <button
+                      className={
+                        "ot-icon-btn ot-mobile-icon ot-compact-icon-btn" +
+                        (this.state.showHint ? " ot-hint-btn-on" : "")
+                      }
+                      onClick={this.state.solveArmed ? this.playMoveForMe : this.onHint}
+                      disabled={!nextExpected || this.state.completed || this.state.viewing}
+                      title={
+                        !nextExpected
+                          ? "Line complete"
+                          : this.state.solveArmed
+                          ? "Play the move (breaks clean completion)"
+                          : "Hint"
+                      }
+                      aria-label={this.state.solveArmed ? "Solve" : "Hint"}
+                    >
+                      {this.state.solveArmed ? "✓" : "💡"}
+                    </button>
+                  )}
 
-                {this.state.gameMode === "learn" && this.state.learnNextReady ? (
-                <button
-                  className="ot-button ot-button-small ot-button-dock"
-                  onClick={this.nextLine}
-                  title="Pick the next line"
-                >
-                  Next
-                </button>
-              ) : null}
+                  <button
+                    className="ot-icon-btn ot-mobile-icon ot-compact-icon-btn"
+                    onClick={this.retryLine}
+                    title="Retry"
+                    aria-label="Retry"
+                  >
+                    ↻
+                  </button>
+                </div>
 
-         <button
-                  className="ot-icon-btn ot-mobile-icon"
-                  onClick={this.viewBack}
-                  disabled={!canViewBack}
-                  title="Back"
-                  aria-label="Back"
-                >
-                  ‹
-                </button>
+                <div className="ot-mobile-dock-center">
+                  {canUndo ? (
+                    <button className="ot-icon-btn ot-mobile-icon ot-compact-icon-btn" onClick={this.undoMistake} title="Undo" aria-label="Undo">
+                      ↶
+                    </button>
+                  ) : null}
 
-                <button
-                  className="ot-icon-btn ot-mobile-icon"
-                  onClick={this.viewForward}
-                  disabled={!canViewForward}
-                  title="Forward"
-                  aria-label="Forward"
-                >
-                  ›
-                </button>
+                  {this.state.gameMode === "learn" && this.state.learnNextReady ? (
+                    <button
+                      className="ot-button ot-button-small ot-button-dock ot-next-reward-btn"
+                      onClick={this.nextLine}
+                      title="Pick the next line"
+                    >
+                      Next
+                    </button>
+                  ) : null}
+                </div>
+
+                <div className="ot-mobile-dock-right">
+                  <button
+                    className="ot-icon-btn ot-mobile-icon ot-compact-icon-btn"
+                    onClick={this.viewBack}
+                    disabled={!canViewBack}
+                    title="Back"
+                    aria-label="Back"
+                  >
+                    ‹
+                  </button>
+
+                  <button
+                    className="ot-icon-btn ot-mobile-icon ot-compact-icon-btn"
+                    onClick={this.viewForward}
+                    disabled={!canViewForward}
+                    title="Forward"
+                    aria-label="Forward"
+                  >
+                    ›
+                  </button>
+                </div>
               </div>
 
               {this.state.lineMenuOpen ? (
@@ -3849,8 +3856,38 @@ render() {
                     }}
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <button className="ot-gear" onClick={this.toggleSettingsOpen} title="Settings" aria-label="Settings">
+                    <button className="ot-gear ot-compact-icon-btn" onClick={this.toggleSettingsOpen} title="Settings" aria-label="Settings">
                       <span role="img" aria-label="settings">⚙</span>
+                    </button>
+
+                    {this.state.gameMode === "drill" ? null : (
+                      <button
+                        className={
+                          "ot-icon-btn ot-compact-icon-btn" +
+                          (this.state.showHint ? " ot-hint-btn-on" : "")
+                        }
+                        onClick={this.state.solveArmed ? this.playMoveForMe : this.onHint}
+                        disabled={!nextExpected || this.state.completed || this.state.viewing}
+                        title={
+                          !nextExpected
+                            ? "Line complete"
+                            : this.state.solveArmed
+                            ? "Play the move (breaks clean completion)"
+                            : "Hint"
+                        }
+                        aria-label={this.state.solveArmed ? "Solve" : "Hint"}
+                      >
+                        {this.state.solveArmed ? "✓" : "💡"}
+                      </button>
+                    )}
+
+                    <button
+                      className="ot-icon-btn ot-compact-icon-btn"
+                      onClick={this.retryLine}
+                      title="Retry"
+                      aria-label="Retry"
+                    >
+                      ↻
                     </button>
 
                     {this.state.settingsOpen ? (
@@ -3925,23 +3962,19 @@ render() {
                       </div>
                     ) : null}
                   </div>
-
-                  {canUndo ? (
-                    <button className="ot-mini-btn" onClick={this.undoMistake} title="Undo mistake">
-                      Undo
-                    </button>
-                  ) : null}
                 </div>
 
                 <div className="ot-dock-center">
-                  <button className="ot-button ot-button-small ot-button-dock" onClick={this.retryLine}>
-                    Retry
-                  </button>
+                  {canUndo ? (
+                    <button className="ot-icon-btn ot-compact-icon-btn" onClick={this.undoMistake} title="Undo" aria-label="Undo">
+                      ↶
+                    </button>
+                  ) : null}
 
                   {this.state.gameMode === "learn" ? (
                     this.state.learnNextReady ? (
                       <button
-                        className="ot-button ot-button-small ot-button-dock"
+                        className="ot-button ot-button-small ot-button-dock ot-next-reward-btn"
                         onClick={this.nextLine}
                         title="Pick the next line"
                       >
@@ -3950,7 +3983,7 @@ render() {
                     ) : null
                   ) : (
                     <button
-                      className="ot-button ot-button-small ot-button-dock"
+                      className="ot-button ot-button-small ot-button-dock ot-next-reward-btn"
                       onClick={this.nextLine}
                       disabled={this.state.gameMode === "drill" && this.state.linePicker !== "random"}
                       title={
@@ -3962,31 +3995,11 @@ render() {
                       Next
                     </button>
                   )}
-                  {this.state.gameMode === "drill" ? null : (
-
-                  <button
-                    className={
-                      "ot-button ot-button-small ot-button-dock ot-hint-btn" +
-                      (this.state.showHint ? " ot-hint-btn-on" : "")
-                    }
-                    onClick={this.state.solveArmed ? this.playMoveForMe : this.onHint}
-                    disabled={!nextExpected || this.state.completed || this.state.viewing}
-                    title={
-                      !nextExpected
-                        ? "Line complete"
-                        : this.state.solveArmed
-                        ? "Play the move (breaks clean completion)"
-                        : "Highlight the piece to move"
-                    }
-                  >
-                    {this.state.solveArmed ? "Solve" : "Hint"}
-                  </button>
-                  )}
                 </div>
 
                 <div className="ot-dock-right">
                   <button
-                    className="ot-icon-btn"
+                    className="ot-icon-btn ot-compact-icon-btn"
                     onClick={this.viewBack}
                     disabled={!canViewBack}
                     title="Back"
@@ -3996,7 +4009,7 @@ render() {
                   </button>
 
                   <button
-                    className="ot-icon-btn"
+                    className="ot-icon-btn ot-compact-icon-btn"
                     onClick={this.viewForward}
                     disabled={!canViewForward}
                     title="Forward"
@@ -4006,10 +4019,9 @@ render() {
                   </button>
                 </div>
               </div>
-
-              </div>
             </div>
           </div>
+        </div>
             </>
           )}
 
