@@ -376,6 +376,18 @@
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.15);
 }
 
+.ot-progress-fill-learn {
+  background: rgba(152, 103, 255, 0.95);
+}
+
+.ot-progress-fill-practice {
+  background: rgba(235, 87, 87, 0.95);
+}
+
+.ot-progress-fill-drill {
+  background: rgba(255, 90, 180, 0.95);
+}
+
 
 .ot-panel-body {
   padding: 12px;

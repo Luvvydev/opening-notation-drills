@@ -2925,6 +2925,7 @@ render() {
     const doneYourMoves = countDoneMovesForSide(this.state.stepIndex, playerColor);
 
     const yourProgressPct = totalYourMoves > 0 ? Math.round((doneYourMoves / totalYourMoves) * 100) : 0;
+    const progressModeClass = `ot-progress-fill-${this.state.gameMode || "learn"}`;
 
     const squareStyles = {};
     const expectedPreview = this.state.lastMoveFeedback && this.state.lastMoveFeedback.kind === "wrong"
@@ -3380,7 +3381,7 @@ render() {
           </div>
 
           <div className="ot-progress-bar ot-progress-bar-top">
-            <div className="ot-progress-fill" style={{ width: yourProgressPct + "%" }} />
+            <div className={`ot-progress-fill ${progressModeClass}`} style={{ width: yourProgressPct + "%" }} />
           </div>
         </div>
 
@@ -3446,7 +3447,7 @@ render() {
 
                   <div className="ot-mobile-progress-inline" aria-label="Progress">
                     <div className="ot-progress-bar ot-progress-bar-top">
-                      <div className="ot-progress-fill" style={{ width: yourProgressPct + "%" }} />
+                      <div className={`ot-progress-fill ${progressModeClass}`} style={{ width: yourProgressPct + "%" }} />
                     </div>
                   </div>
 
