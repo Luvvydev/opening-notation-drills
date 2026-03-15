@@ -538,10 +538,7 @@ this._countedSeenForRun = false;
   }
 
 componentWillUnmount() {
-    if (this._feedbackPreviewTimer) {
-      clearTimeout(this._feedbackPreviewTimer);
-      this._feedbackPreviewTimer = null;
-    }
+    this.clearFeedbackPreviewTimers();
 
     if (typeof window !== "undefined" && this._handleResize) {
       window.removeEventListener("resize", this._handleResize);
@@ -2204,33 +2201,55 @@ getExpectedMovePreview = (expectedSan, fenOverride = null) => {
   }
 };
 
-openFeedbackPreview = (expectedSan) => {
-  const preview = this.getExpectedMovePreview(expectedSan);
-  if (!preview) return;
-
+clearFeedbackPreviewTimers = () => {
   if (this._feedbackPreviewTimer) {
     clearTimeout(this._feedbackPreviewTimer);
     this._feedbackPreviewTimer = null;
   }
 
-  this.setState({
-    feedbackPreview: preview,
-    feedbackPreviewPosition: "before"
-  });
+  if (this._feedbackPreviewReplayTimer) {
+    clearTimeout(this._feedbackPreviewReplayTimer);
+    this._feedbackPreviewReplayTimer = null;
+  }
+};
+
+scheduleFeedbackPreviewReplay = (expectedSan) => {
+  this.clearFeedbackPreviewTimers();
 
   this._feedbackPreviewTimer = setTimeout(() => {
     this.setState((prev) => {
       if (!prev.feedbackPreview || prev.feedbackPreview.san !== expectedSan) return null;
       return { feedbackPreviewPosition: "after" };
     });
+
+    this._feedbackPreviewReplayTimer = setTimeout(() => {
+      this.setState((prev) => {
+        if (!prev.feedbackPreview || prev.feedbackPreview.san !== expectedSan) return null;
+        return { feedbackPreviewPosition: "before" };
+      }, () => {
+        if (!this.state.feedbackPreview || this.state.feedbackPreview.san !== expectedSan) return;
+        this.scheduleFeedbackPreviewReplay(expectedSan);
+      });
+    }, 5000);
   }, 360);
 };
 
+openFeedbackPreview = (expectedSan) => {
+  const preview = this.getExpectedMovePreview(expectedSan);
+  if (!preview) return;
+
+  this.clearFeedbackPreviewTimers();
+
+  this.setState({
+    feedbackPreview: preview,
+    feedbackPreviewPosition: "before"
+  }, () => {
+    this.scheduleFeedbackPreviewReplay(expectedSan);
+  });
+};
+
 closeFeedbackPreview = () => {
-  if (this._feedbackPreviewTimer) {
-    clearTimeout(this._feedbackPreviewTimer);
-    this._feedbackPreviewTimer = null;
-  }
+  this.clearFeedbackPreviewTimers();
 
   this.setState({
     feedbackPreview: null,
@@ -2285,8 +2304,8 @@ renderFeedbackPreviewPopover = (expectedSan) => {
       </div>
       <div className="ot-feedback-preview-copy">
         {this.state.feedbackPreviewPosition === "after"
-          ? "This is the target square after the best move lands."
-          : "Hovering shows the move before it lands, then the board updates."}
+          ? ""
+          : ""}
       </div>
     </div>
   );
