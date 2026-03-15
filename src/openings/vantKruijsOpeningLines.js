@@ -1,11 +1,12 @@
+
 import { withOpeningFeedback } from "./feedback";
 
 export const vantKruijsOpeningLines = withOpeningFeedback([
   {
     category: "Main setup",
     id: "vant-kruijs-01-central-build",
-    name: "Main line with ...d5, ...c5, and ...e5",
-    description: "Black takes the center early, develops normally, and punishes White for wasting time with Qb3.",
+    name: "Classical central build with ...d5, ...c5, and ...e5",
+    description: "Black takes the center early, develops normally, and reaches the ideal anti-system setup before striking with ...e5.",
     moves: ["e3", "d5", "c3", "Nf6", "d4", "c5", "Qb3", "Nc6", "Nf3", "e6", "Be2", "Bd6", "O-O", "O-O", "Nbd2", "e5"],
     explanations: [
       "White starts with a slow flexible move, but it does not challenge the center yet.",
@@ -15,50 +16,52 @@ export const vantKruijsOpeningLines = withOpeningFeedback([
       "White finally builds a center, but it can still be challenged before it stabilizes.",
       "Black hits the center right away. This is the clean punishment against slow e3 systems.",
       "White's queen move looks active, but it does not create enough pressure to justify the time spent.",
-      "Black develops and ignores the queen drama. Calm development matters more than tricks here.",
+      "Black develops and ignores the queen move. The center matters more than b7 ghosts.",
       "White develops toward castling and keeps the setup compact.",
-      "Black supports the center and prepares a full development shell.",
+      "Black supports the center and keeps both bishops flexible.",
       "White develops, but Black is still the side dictating the structure.",
-      "Black develops the bishop to an active square and keeps pressure on the center.",
+      "Black develops the bishop to an active square and prepares to finish development.",
       "White castles and says the position is ready.",
-      "Black castles too and removes all fake attack chances.",
-      "White finishes development, but the setup has given Black too much freedom.",
+      "Black castles too and removes cheap tactical chances.",
+      "White completes development, but the setup has given Black too much freedom.",
       "Black strikes with ...e5 and reaches the ideal version of this anti-system plan."
     ]
   },
   {
-    category: "Bishop drift",
-    id: "vant-kruijs-02-bf3-slow-setup",
-    name: "Bf3 setup met by clean development",
-    description: "When White wastes time moving the bishop around, Black should keep building and break in the center later.",
-    moves: ["e3", "d5", "c3", "Nf6", "d4", "c5", "Qb3", "Nc6", "Be2", "e6", "Bf3", "Bd6", "Nd2", "O-O", "Ne2", "e5"],
+    category: "Center tension",
+    id: "vant-kruijs-02-dxe5-main-break",
+    name: "Meeting dxe5 after the main central break",
+    description: "When White captures after Black finally breaks with ...e5, Black recaptures with a piece and keeps the initiative in the center.",
+    moves: ["e3", "d5", "c3", "Nf6", "d4", "c5", "Qb3", "Nc6", "Nf3", "e6", "Be2", "Bd6", "O-O", "O-O", "Nbd2", "e5", "dxe5", "Nxe5"],
     explanations: [
-      "White opens with the same slow structure and hopes to reach a comfortable setup.",
+      "White begins with the same restrained setup and hopes Black will drift.",
       "Black takes central space immediately.",
-      "White supports d4, but this is still very modest.",
-      "Black develops and keeps all the important central breaks available.",
-      "White occupies the center, but the structure is not secure yet.",
-      "Black challenges the center before White can drift into a free middlegame.",
-      "White places the queen on b3 again, trying to create queenside pressure.",
-      "Black keeps developing and refuses to overreact.",
-      "White develops, but there is still no direct threat.",
-      "Black supports the center and prepares smooth piece play.",
-      "White loses another tempo with the bishop. That is useful only if Black cooperates.",
-      "Black develops the bishop to a natural square and keeps the structure healthy.",
-      "White tries to complete development at last.",
-      "Black castles and reaches full safety first.",
-      "White keeps shuffling instead of challenging Black directly.",
-      "Black breaks with ...e5 once everything is ready and takes over the game."
+      "White supports d4, but the position is still quiet and slightly passive.",
+      "Black develops and keeps both ...c5 and ...e5 available.",
+      "White occupies the center.",
+      "Black challenges it before White can settle into a free setup.",
+      "White repeats the early queen move, trying to distract Black from central play.",
+      "Black keeps developing and refuses to waste time on side issues.",
+      "White develops naturally toward castling.",
+      "Black supports the center and prepares the dark-square bishop.",
+      "White keeps the position compact.",
+      "Black develops the bishop to an active square and nears full development.",
+      "White castles and hopes the structure will hold.",
+      "Black castles and completes the basic setup safely.",
+      "White brings out the last minor piece but still has not challenged Black's plan.",
+      "Black finally breaks with ...e5 at the right moment.",
+      "White captures to reduce the pressure in the center.",
+      "Black recaptures with a knight, improving piece activity and preserving central control."
     ]
   },
   {
-    category: "Center break",
-    id: "vant-kruijs-03-early-e5-punish-center",
-    name: "Punishing the broad center",
-    description: "If White tries to overbuild the center, Black should challenge it directly and recapture toward the middle.",
+    category: "Broad center",
+    id: "vant-kruijs-03-bd3-early-e5",
+    name: "Bd3 setup met by an immediate ...e5 break",
+    description: "If White develops the bishop early and aims for a broad center, Black can challenge it directly and recapture toward the middle.",
     moves: ["e3", "d5", "c3", "Nf6", "d4", "c5", "Qb3", "Nc6", "Bd3", "e5", "dxe5", "Nxe5", "Be2", "Bd6", "Nf3", "O-O"],
     explanations: [
-      "White starts with a noncommittal move and hopes to steer the game into comfort.",
+      "White starts with a quiet first move and hopes to steer the game into familiar channels.",
       "Black takes the center at once.",
       "White supports d4, but the setup is still slower than normal queen pawn openings.",
       "Black develops and prepares to challenge the center with pieces and pawns.",
@@ -71,14 +74,39 @@ export const vantKruijsOpeningLines = withOpeningFeedback([
       "White captures because leaving the tension alone would concede space.",
       "Black recaptures with a piece and improves central control at the same time.",
       "White retreats and admits the center did not hold.",
-      "Black develops smoothly and points more force toward the kingside and center.",
+      "Black develops smoothly and points more force toward the center and kingside.",
       "White develops, but Black already has the easier game.",
       "Black castles and reaches a very comfortable structure with no weaknesses."
     ]
   },
   {
+    category: "Pawn capture",
+    id: "vant-kruijs-04-dxc5-queen-pawn-grab",
+    name: "If White takes on c5 too early",
+    description: "When White grabs the c5 pawn before finishing development, Black gets easy piece play and a healthy structure after regaining it.",
+    moves: ["e3", "d5", "c3", "Nf6", "d4", "c5", "Qb3", "Nc6", "dxc5", "e6", "Nf3", "Bxc5", "Be2", "O-O", "O-O", "e5"],
+    explanations: [
+      "White starts with the same slow setup.",
+      "Black claims central space immediately.",
+      "White prepares d4 in Colle style.",
+      "Black develops and keeps the center under control.",
+      "White builds the center.",
+      "Black challenges it right away with ...c5.",
+      "White again places the queen on b3, trying to create side pressure.",
+      "Black develops and keeps the c5 pawn tactically supported.",
+      "White grabs the pawn, but this costs time and helps Black develop.",
+      "Black calmly supports recovery of the pawn and opens lines for the bishop.",
+      "White develops, but Black is about to win the pawn back under ideal conditions.",
+      "Black recaptures with the bishop and gains active piece play for free.",
+      "White continues development, but Black's pieces are already more active.",
+      "Black castles and reaches safety with no structural damage.",
+      "White castles too, but the pawn grab solved none of White's opening problems.",
+      "Black takes more space with ...e5 and claims the better version of the structure."
+    ]
+  },
+  {
     category: "Against Qb3 pressure",
-    id: "vant-kruijs-04-qc7-calms-queenside",
+    id: "vant-kruijs-05-qc7-calms-queenside",
     name: "Meeting Qb3 with ...Qc7",
     description: "Black answers the early queen pressure in a boring way, finishes development, and keeps the center under control.",
     moves: ["e3", "d5", "c3", "Nf6", "d4", "c5", "Qb3", "e6", "Nf3", "Nc6", "Be2", "Bd6", "O-O", "O-O", "Rd1", "Qc7"],
@@ -102,10 +130,87 @@ export const vantKruijsOpeningLines = withOpeningFeedback([
     ]
   },
   {
-    category: "Punishing Nh3",
-    id: "vant-kruijs-05-nh3-space-gain",
+    category: "Bishop drift",
+    id: "vant-kruijs-06-bf3-slow-setup",
+    name: "Bf3 setup met by clean development",
+    description: "When White wastes time moving the bishop around, Black should keep building and break in the center later.",
+    moves: ["e3", "d5", "c3", "Nf6", "d4", "c5", "Qb3", "Nc6", "Be2", "e6", "Bf3", "Bd6", "Nd2", "O-O", "Ne2", "e5"],
+    explanations: [
+      "White opens with the same slow structure and hopes to reach a comfortable setup.",
+      "Black takes central space immediately.",
+      "White supports d4, but this is still very modest.",
+      "Black develops and keeps all the important central breaks available.",
+      "White occupies the center, but the structure is not secure yet.",
+      "Black challenges the center before White can drift into a free middlegame.",
+      "White places the queen on b3 again, trying to create queenside pressure.",
+      "Black keeps developing and refuses to overreact.",
+      "White develops, but there is still no direct threat.",
+      "Black supports the center and prepares smooth piece play.",
+      "White loses another tempo with the bishop. That is useful only if Black cooperates.",
+      "Black develops the bishop to a natural square and keeps the structure healthy.",
+      "White tries to complete development at last.",
+      "Black castles and reaches full safety first.",
+      "White keeps shuffling instead of challenging Black directly.",
+      "Black breaks with ...e5 once everything is ready and takes over the game."
+    ]
+  },
+  {
+    category: "Development",
+    id: "vant-kruijs-07-nd2-before-nf3",
+    name: "Nd2 first still meets the same central plan",
+    description: "If White develops the queen knight before the king knight, Black still follows the same structure and breaks only after finishing development.",
+    moves: ["e3", "d5", "c3", "Nf6", "d4", "c5", "Qb3", "Nc6", "Nd2", "e6", "Ngf3", "Bd6", "Be2", "O-O", "O-O", "e5"],
+    explanations: [
+      "White begins with the same low-pressure setup.",
+      "Black takes central space immediately.",
+      "White supports d4 and still aims for the same shell.",
+      "Black develops naturally and keeps the center under control.",
+      "White builds the center.",
+      "Black challenges it before White gets everything for free.",
+      "White repeats the early queen move and points at b7.",
+      "Black develops calmly and refuses to get provoked.",
+      "White chooses a slightly different development order.",
+      "Black supports the center and prepares full development.",
+      "White finally develops the king knight as well.",
+      "Black develops the bishop to its most natural square in this structure.",
+      "White keeps consolidating rather than testing Black directly.",
+      "Black castles and removes tactical noise from the position.",
+      "White castles and reaches the same passive shell.",
+      "Black breaks with ...e5 and gets the same good version of the position."
+    ]
+  },
+  {
+    category: "Expansion",
+    id: "vant-kruijs-08-e4-overreach",
+    name: "Punishing e4 with central counterplay",
+    description: "If White overextends with e4, Black should not panic. Strike back in the center and use development to prove the setup was too slow.",
+    moves: ["e3", "d5", "c3", "Nf6", "d4", "c5", "Qb3", "Nc6", "Nf3", "e6", "Bd3", "Bd6", "O-O", "O-O", "Nbd2", "e5", "exd5", "Nxd5"],
+    explanations: [
+      "White begins with the same restrained setup.",
+      "Black takes central space at once.",
+      "White prepares d4 in typical system fashion.",
+      "Black develops and keeps the center flexible.",
+      "White occupies the center.",
+      "Black challenges that center immediately with ...c5.",
+      "White places the queen on b3 again, but this still does not solve White's development issues.",
+      "Black develops and keeps pressure on the middle of the board.",
+      "White develops and keeps the usual shell intact.",
+      "Black supports the center and prepares smooth piece play.",
+      "White points the bishop toward the kingside and center.",
+      "Black mirrors with active development and keeps the e5 break ready.",
+      "White castles and hopes the setup will finally function.",
+      "Black castles too and completes the basic setup safely.",
+      "White develops the last minor piece, but Black is now ready to challenge the center fully.",
+      "Black breaks with ...e5, the key move in this structure.",
+      "White captures to reduce the tension.",
+      "Black recaptures toward the center with a knight and reaches active, harmonious play."
+    ]
+  },
+  {
+    category: "Misplaced knight",
+    id: "vant-kruijs-09-nh3-space-gain",
     name: "Nh3 setup punished with space",
-    description: "When White places the knight awkwardly, Black can take even more space and attack the weak coordination.",
+    description: "When White places the knight awkwardly, Black can take more space and attack the weak coordination.",
     moves: ["e3", "d5", "c3", "Nf6", "d4", "c5", "Qb3", "Nc6", "Nh3", "e5", "dxe5", "Nxe5", "Nf4", "c4", "Qc2", "g5"],
     explanations: [
       "White begins with the same slow first move.",
@@ -125,5 +230,34 @@ export const vantKruijsOpeningLines = withOpeningFeedback([
       "White steps back to hold the position together.",
       "Black expands again with ...g5 and starts hunting the misplaced knight."
     ]
+  },
+  {
+    category: "Development race",
+    id: "vant-kruijs-10-be2-before-nf3",
+    name: "Quiet Be2 move order still favors Black's setup",
+    description: "If White delays the king knight and keeps making quiet moves, Black should just complete development and use the standard break.",
+    moves: ["e3", "d5", "c3", "Nf6", "d4", "c5", "Qb3", "Nc6", "Be2", "e6", "Nf3", "Bd6", "O-O", "O-O", "Nbd2", "e5"],
+    explanations: [
+      "White starts with the same slow plan and still does not challenge the center.",
+      "Black occupies the center immediately.",
+      "White supports d4 in standard system style.",
+      "Black develops and keeps control over e4.",
+      "White claims central space.",
+      "Black strikes back immediately with ...c5 and asks White to justify the setup.",
+      "White again spends time on Qb3 instead of faster development.",
+      "Black continues naturally and keeps the c5 pressure intact.",
+      "White develops quietly, but there is still no threat to solve.",
+      "Black supports the center and prepares to complete development.",
+      "White finally brings out the king knight.",
+      "Black places the bishop on its most active square in this structure.",
+      "White castles and reaches a familiar shell.",
+      "Black castles too and completes the safe setup.",
+      "White finishes development, but Black has already reached the ideal version of the structure.",
+      "Black plays ...e5 and claims more central space at exactly the right moment."
+    ]
   }
 ]);
+
+export const vantKruijsOpeningSEOText = `
+The Van't Kruijs Opening drill teaches Black how to punish White's slow e3, c3, d4, and Qb3 setup with principled central play instead of cheap tricks. The core plan is simple: meet the system with ...d5 and ...c5, develop cleanly with ...Nf6, ...Nc6, and ...Bd6, castle safely, and only then strike with ...e5 or recapture toward the center when White exchanges. These lines are built around reliable anti-system ideas drawn from stronger Colle and London structures, so players learn repeatable plans against passive setup play rather than memorizing random tactics.
+`;
