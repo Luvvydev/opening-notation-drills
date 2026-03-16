@@ -4,13 +4,15 @@ import './About.css';
 import '../App.css';
 
 import { httpsCallable } from "firebase/functions";
-import { functions } from "../firebase";
+import { doc, runTransaction } from "firebase/firestore";
+import { db, functions, serverTimestamp } from "../firebase";
 import { useAuth } from "../auth/AuthProvider";
 
 
 export default function About(props) {
-  const { user } = useAuth();
-  const [busy, setBusy] = useState(false);
+  const { user, hasPaidMembership, trialActive, trialEligible, trialExpired } = useAuth();
+  const [trialBusy, setTrialBusy] = useState(false);
+  const [checkoutBusy, setCheckoutBusy] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState("yearly");
 
   const fromState = props && props.location && props.location.state ? props.location.state : null;
@@ -26,26 +28,90 @@ export default function About(props) {
     } catch (_) {}
   };
 
-  const startTrialCheckout = async () => {
-    if (!user) {
-      try {
-        const from = window.location.hash || "#/about";
-        window.location.href = `#/signup?from=${encodeURIComponent(from)}&reason=membership_requires_account`;
-      } catch (_) {}
+  const goToSignup = () => {
+    try {
+      const from = window.location.hash || "#/about";
+      window.location.href = `#/signup?from=${encodeURIComponent(from)}&reason=membership_requires_account`;
+    } catch (_) {}
+  };
+
+  const goBack = () => {
+    const from = fromState && typeof fromState.from === "string" ? fromState.from : "";
+
+    if (props && props.history && typeof props.history.replace === "function" && from && from.charAt(0) === "/") {
+      props.history.replace(from);
       return;
     }
 
-    setBusy(true);
+    try {
+      if (from && from.charAt(0) === "/") {
+        window.location.hash = `#${from}`;
+      } else {
+        window.location.hash = "#/openings";
+      }
+    } catch (_) {}
+  };
+
+  const startFreeTrial = async () => {
+    if (!user) {
+      goToSignup();
+      return;
+    }
+
+    if (hasPaidMembership || trialActive) {
+      goBack();
+      return;
+    }
+
+    if (!trialEligible) {
+      alert("This account has already used its free trial.");
+      return;
+    }
+
+    setTrialBusy(true);
+    try {
+      const ref = doc(db, "users", user.uid);
+      await runTransaction(db, async (tx) => {
+        const snap = await tx.get(ref);
+        const data = snap.exists() ? (snap.data() || {}) : {};
+        const membershipTier = data.membershipTier || "free";
+        const hasActiveMembership = !!data.membershipActive && (membershipTier === "member" || membershipTier === "lifetime");
+
+        if (hasActiveMembership || data.trialUsed || data.trialStartedAt) {
+          throw new Error("trial_unavailable");
+        }
+
+        tx.set(ref, {
+          trialUsed: true,
+          trialStartedAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+      });
+
+      goBack();
+    } catch (_) {
+      alert("Could not start the free trial. Please try again.");
+    } finally {
+      setTrialBusy(false);
+    }
+  };
+
+  const startPaidCheckout = async () => {
+    if (!user) {
+      goToSignup();
+      return;
+    }
+
+    setCheckoutBusy(true);
     try {
       const fn = httpsCallable(functions, "createCheckoutSession");
       const res = await fn({ tier: "member", plan: selectedPlan });
       const url = res && res.data && res.data.url ? String(res.data.url) : "";
       if (url) go(url);
     } catch (e) {
-      // eslint-disable-next-line no-alert
       alert("Checkout failed. Please try again in a moment.");
     } finally {
-      setBusy(false);
+      setCheckoutBusy(false);
     }
   };
 
@@ -63,15 +129,15 @@ export default function About(props) {
       <div className="about-wrap">
         <div className="about-card">
           <div className="about-hero">
-            <div className="about-hero-badge">7 day free trial</div>
+            <div className="about-hero-badge">3 day free trial</div>
             <h2 className="about-title">ChessDrills Premium</h2>
-            <p className="about-lead">Then $39/year (Only $3.25/month) or $5.99/month.</p>
+            <p className="about-lead">Start a 3 day free trial with no card required. After that, join for $39/year or $5.99/month.</p>
           </div>
 
           {showLockedNote ? (
             <div className="about-note">
               <div className="about-note-title">That feature is Premium only.</div>
-              <div className="about-note-sub">Start the free trial to unlock it.</div>
+              <div className="about-note-sub">Start the free trial to unlock it right away, or join now and subscribe through Stripe.</div>
             </div>
           ) : null}
 
@@ -117,19 +183,51 @@ export default function About(props) {
               </button>
             </div>
 
-            <button
-              className="about-tier-btn"
-              type="button"
-              onClick={startTrialCheckout}
-              disabled={busy}
-              style={{ marginTop: 12, width: "100%" }}
-            >
-              {busy ? "Opening checkout..." : "Start Free Trial"}
-            </button>
+            <div className="about-cta-row">
+              <button
+                className="about-tier-btn"
+                type="button"
+                onClick={startFreeTrial}
+                disabled={trialBusy || checkoutBusy || hasPaidMembership || (!trialActive && !trialEligible)}
+              >
+                {trialBusy
+                  ? "Starting trial..."
+                  : hasPaidMembership
+                  ? "Already subscribed"
+                  : trialActive
+                  ? "Trial active"
+                  : trialEligible
+                  ? "Start 3 Day Free Trial"
+                  : "Trial already used"}
+              </button>
+
+              <button
+                className="about-tier-btn secondary"
+                type="button"
+                onClick={startPaidCheckout}
+                disabled={trialBusy || checkoutBusy}
+              >
+                {checkoutBusy ? "Opening checkout..." : "Join Now"}
+              </button>
+            </div>
 
             <div className="about-muted" style={{ marginTop: 10 }}>
-              Cancel anytime before day 7
+              No payment info is required to start the trial. Full access unlocks immediately.
             </div>
+
+            {trialActive ? (
+              <div className="about-inline-note">
+                <div className="about-inline-note-title">Free trial is active</div>
+                <div className="about-inline-note-sub">Your trial is running now. Join before it ends to keep access without interruption.</div>
+              </div>
+            ) : null}
+
+            {trialExpired ? (
+              <div className="about-inline-note warning">
+                <div className="about-inline-note-title">Free trial ended</div>
+                <div className="about-inline-note-sub">This account already used its 3 day trial. Join now to unlock premium features again.</div>
+              </div>
+            ) : null}
           </div>
         <div className="about-section">
           <div className="about-section-title">What you get</div>
@@ -146,8 +244,8 @@ export default function About(props) {
             <div className="about-section-title">How it works</div>
             <ol className="about-steps">
               <li>Create a free account</li>
-              <li>Upgrade via Stripe</li>
-              <li>Your account is marked as Member automatically and features unlock</li>
+              <li>Start the 3 day free trial instantly or join now through Stripe</li>
+              <li>When the trial ends, premium access stays locked until you subscribe</li>
             </ol>
           </div>
 

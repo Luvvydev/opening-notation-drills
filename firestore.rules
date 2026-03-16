@@ -59,6 +59,79 @@ service cloud.firestore {
         );
     }
 
+    function usernameOwner(username) {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/usernames/$(username))
+        && get(/databases/$(database)/documents/usernames/$(username)).data.uid == request.auth.uid;
+    }
+
+    function isValidPublicProfileWrite(username) {
+      // Migration-safe: allow BOTH avatarUrl (Storage) and legacy avatar.dataUrl (base64).
+      return request.resource.data.keys().hasOnly([
+        "uid",
+        "username",
+        "displayName",
+        "avatarUrl",
+        "avatar",
+        "activityDays",
+        "settings",
+        "publicBadge",
+        "updatedAt"
+      ])
+      && request.resource.data.uid == request.auth.uid
+      && request.resource.data.username == username
+      && request.resource.data.displayName is string
+      && request.resource.data.displayName.size() >= 1
+      && request.resource.data.displayName.size() <= 40
+
+      // Allows serverTimestamp() while preventing spoofed timestamps.
+      && request.resource.data.updatedAt == request.time
+
+      && (
+        !("publicBadge" in request.resource.data) ||
+        (request.resource.data.publicBadge is string && request.resource.data.publicBadge.size() <= 32)
+      )
+
+      // New Storage URL avatar
+      && (
+        !("avatarUrl" in request.resource.data) ||
+        (
+          request.resource.data.avatarUrl is string
+          && request.resource.data.avatarUrl.size() <= 2000
+        )
+      )
+
+      // Legacy base64 avatar (kept temporarily for existing users)
+      && (
+        !("avatar" in request.resource.data) ||
+        (
+          request.resource.data.avatar is map
+          && request.resource.data.avatar.keys().hasOnly(["dataUrl"])
+          && request.resource.data.avatar.dataUrl is string
+          && request.resource.data.avatar.dataUrl.size() <= 150000
+        )
+      )
+
+      && (
+        !("settings" in request.resource.data) ||
+        (
+          request.resource.data.settings is map
+          && request.resource.data.settings.keys().hasOnly(["boardTheme", "pieceTheme"])
+          && request.resource.data.settings.boardTheme is string
+          && request.resource.data.settings.boardTheme.size() <= 32
+          && request.resource.data.settings.pieceTheme is string
+          && request.resource.data.settings.pieceTheme.size() <= 32
+        )
+      )
+      && (
+        !("activityDays" in request.resource.data) ||
+        (
+          request.resource.data.activityDays is map
+          && request.resource.data.activityDays.size() <= 500
+        )
+      );
+    }
+
     // private per-user state
     match /users/{userId} {
       allow read: if isOwner(userId);
@@ -81,12 +154,46 @@ service cloud.firestore {
         && !isClientAttemptingToWriteMembershipFields();
 
       allow delete: if false;
+
+      // Member-readable stats for public profile highlights
+      match /memberStats/{docId} {
+        allow read: if isMember(request.auth.uid);
+
+        allow create, update: if isOwner(userId)
+          && request.resource.data.keys().hasOnly([
+            "openingsTrained",
+            "linesLearned",
+            "totalCompletions",
+            "cleanRuns",
+            "streakBest",
+            "streakCurrent",
+            "updatedAt"
+          ])
+          && request.resource.data.openingsTrained is int
+          && request.resource.data.openingsTrained >= 0
+          && request.resource.data.linesLearned is int
+          && request.resource.data.linesLearned >= 0
+          && request.resource.data.totalCompletions is int
+          && request.resource.data.totalCompletions >= 0
+          && request.resource.data.cleanRuns is int
+          && request.resource.data.cleanRuns >= 0
+          && request.resource.data.streakBest is int
+          && request.resource.data.streakBest >= 0
+          && request.resource.data.streakCurrent is int
+          && request.resource.data.streakCurrent >= 0
+
+          // Allows serverTimestamp() while preventing spoofed timestamps.
+          && request.resource.data.updatedAt == request.time;
+
+        allow delete: if false;
+      }
     }
 
     // public profile (safe fields only)
     match /publicProfiles/{username} {
       allow read: if true;
-      allow write: if isSignedIn();
+      allow create, update: if usernameOwner(username) && isValidPublicProfileWrite(username);
+      allow delete: if false;
     }
 
     // username -> uid mapping (public readable so /u lookup works)

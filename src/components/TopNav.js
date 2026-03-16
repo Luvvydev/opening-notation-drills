@@ -31,6 +31,26 @@ const wittySubtitles = [
 
 const WEEKDAY_LABELS = ["S", "M", "T", "W", "T", "F", "S"];
 
+
+function formatTrialCountdown(targetMs, nowMs) {
+  const remainingMs = Math.max(0, (Number(targetMs) || 0) - (Number(nowMs) || 0));
+  const totalSeconds = Math.floor(remainingMs / 1000);
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  return {
+    remainingMs,
+    segments: [
+      { label: 'Days', value: days },
+      { label: 'Hours', value: hours },
+      { label: 'Min', value: minutes },
+      { label: 'Sec', value: seconds }
+    ]
+  };
+}
+
 function buildCurrentWeek(activityDays) {
   const today = new Date();
   const start = new Date(today);
@@ -59,10 +79,11 @@ function TopNav(props) {
   const [activityDays, setActivityDays] = useState(() => getActivityDays());
   const [streakOpen, setStreakOpen] = useState(false);
 
-  const { user, signOut, isMember } = useAuth();
+  const { user, signOut, isMember, trialActive, trialEndsAtMs } = useAuth();
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [ctaLabel, setCtaLabel] = useState('Start for free');
+  const [trialNowMs, setTrialNowMs] = useState(() => Date.now());
   const menuWrapRef = useRef(null);
   const streakWrapRef = useRef(null);
 
@@ -95,6 +116,16 @@ function TopNav(props) {
 
     setCtaLabel(variants[v] || variants.A);
   }, [user, isMember]);
+
+  useEffect(() => {
+    if (!trialActive) return undefined;
+
+    const tick = () => setTrialNowMs(Date.now());
+    tick();
+
+    const id = window.setInterval(tick, 1000);
+    return () => window.clearInterval(id);
+  }, [trialActive, trialEndsAtMs]);
 
   useEffect(() => {
     const refresh = () => {
@@ -197,6 +228,8 @@ function TopNav(props) {
   };
 
   const weekDays = buildCurrentWeek(activityDays);
+  const trialCountdown = formatTrialCountdown(trialEndsAtMs, trialNowMs);
+  const showTrialBanner = !!user && trialActive && trialCountdown.remainingMs > 0;
   const streakTitle = `${streak.current || 0} ${(streak.current || 0) === 1 ? 'day' : 'days'} streak`;
   const streakSubtitle = streak.completedToday
     ? "You've done your line for today!"
@@ -284,10 +317,10 @@ function TopNav(props) {
                     (isMember ? "member" : "free")
                   }
                   title={
-                    isMember ? "Member" : "Free"
+                    trialActive ? "Trial active" : isMember ? "Member" : "Free"
                   }
                 >
-                  {isMember ? "⭐" : "🆓"}
+                  {trialActive ? "⏳" : isMember ? "⭐" : "🆓"}
                 </div>
               ) : null}
 
@@ -406,6 +439,32 @@ function TopNav(props) {
           </div>
         </div>
       </div>
+
+      {showTrialBanner ? (
+        <div className="topnav-trial-banner">
+          <div className="topnav-trial-banner-inner">
+            <div className="topnav-trial-banner-copy">
+              <span className="topnav-trial-banner-label">Trial ends in:</span>
+            </div>
+
+            <div className="topnav-trial-banner-timer" aria-label="Trial countdown">
+              {trialCountdown.segments.map((segment) => (
+                <div key={segment.label} className="topnav-trial-banner-segment">
+                  <span className="topnav-trial-banner-value">{String(segment.value).padStart(2, '0')}</span>
+                  <span className="topnav-trial-banner-unit">{segment.label}</span>
+                </div>
+              ))}
+            </div>
+
+            <Link
+              to={{ pathname: "/about", state: { from: window.location.hash.replace(/^#/, '') || "/about", reason: "upgrade_cta" } }}
+              className="topnav-trial-banner-btn"
+            >
+              Join Now
+            </Link>
+          </div>
+        </div>
+      ) : null}
 
       {!hideHero ? (
         <div className="page-hero">

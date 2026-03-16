@@ -125,6 +125,18 @@ function activityLevel(count) {
   return 4;
 }
 
+function formatTrialRemaining(targetMs) {
+  const remainingMs = Math.max(0, (Number(targetMs) || 0) - Date.now());
+  const totalMinutes = Math.floor(remainingMs / 60000);
+  const days = Math.floor(totalMinutes / 1440);
+  const hours = Math.floor((totalMinutes % 1440) / 60);
+  const minutes = totalMinutes % 60;
+
+  if (days > 0) return `${days}d ${hours}h left`;
+  if (hours > 0) return `${hours}h ${minutes}m left`;
+  return `${minutes}m left`;
+}
+
 function buildHeatmap(daysMap, weeks) {
   const CELL = 16;
   const GAP = 4;
@@ -190,7 +202,7 @@ function buildHeatmap(daysMap, weeks) {
 }
 
 export default function Profile() {
-  const { user, membershipTier, membershipActive, userDoc } = useAuth();
+  const { user, membershipTier, userDoc, hasPaidMembership, trialActive, trialEligible, trialExpired, trialEndsAtMs } = useAuth();
 
  
 
@@ -216,6 +228,7 @@ export default function Profile() {
   const avatarInputRef = useRef(null);
   const unlockSecretRef = useRef(null);
   const membershipPlan = (userData && userData.membershipPlan) || (userDoc && userDoc.membershipPlan) || null;
+  const trialRemainingLabel = trialActive ? formatTrialRemaining(trialEndsAtMs) : "";
 
   useEffect(() => {
     const el = boardPreviewRef.current;
@@ -637,8 +650,10 @@ async function syncPublicProfile(patch) {
             publicBadge:
               membershipTier === "lifetime"
                 ? "Lifetime Member"
-                : membershipActive
+                : hasPaidMembership
                 ? "Member"
+                : trialActive
+                ? "Trial"
                 : "",
             updatedAt: serverTimestamp()
           },
@@ -705,7 +720,7 @@ const onChangePieceTheme = async (nextPieceTheme) => {
     if (!user) return;
 
     // Lifetime purchases have no subscription to cancel.
-    if (!membershipActive || membershipTier !== "member") {
+    if (!hasPaidMembership || membershipTier !== "member") {
       return;
     }
 
@@ -828,7 +843,7 @@ const onChangePieceTheme = async (nextPieceTheme) => {
             <div>
               <div className="profile-label">Membership Status</div>
               <div className="profile-value">
-                {membershipTier === "lifetime" ? "Lifetime Member" : (membershipActive ? (membershipPlan === "yearly" ? "Member (Yearly)" : "Member (Monthly)") : "Free")}
+                {membershipTier === "lifetime" ? "Lifetime Member" : trialActive ? "Free Trial" : hasPaidMembership ? (membershipPlan === "yearly" ? "Member (Yearly)" : "Member (Monthly)") : trialExpired ? "Trial Ended" : "Free"}
               </div>
             </div>
           </div>
@@ -1003,7 +1018,7 @@ const onChangePieceTheme = async (nextPieceTheme) => {
                 <div className="profile-membership-row">
                   <div className="profile-membership-text">Lifetime Member</div>
                 </div>
-              ) : membershipActive ? (
+              ) : hasPaidMembership ? (
                 <div className="profile-membership-row">
                   <div className="profile-membership-text">
                     {membershipPlan === "yearly" ? "Yearly subscription" : "Monthly subscription"}
@@ -1017,15 +1032,37 @@ const onChangePieceTheme = async (nextPieceTheme) => {
                     {billingBusy ? "Opening..." : "Manage subscription"}
                   </button>
                 </div>
-              ) : (
+              ) : trialActive ? (
                 <div className="profile-membership-row">
-                  <div className="profile-membership-text">Start your 7 day free trial.</div>
+                  <div className="profile-membership-text">3 day free trial active. {trialRemainingLabel}</div>
+                  <button
+                    type="button"
+                    className="profile-membership-btn"
+                    onClick={() => { try { window.location.href = "#/about"; } catch (_) {} }}
+                  >
+                    Join Now
+                  </button>
+                </div>
+              ) : trialEligible ? (
+                <div className="profile-membership-row">
+                  <div className="profile-membership-text">Start your 3 day free trial.</div>
                   <button
                     type="button"
                     className="profile-membership-btn"
                     onClick={() => { try { window.location.href = "#/about"; } catch (_) {} }}
                   >
                     Start Free Trial
+                  </button>
+                </div>
+              ) : (
+                <div className="profile-membership-row">
+                  <div className="profile-membership-text">Your free trial has ended. Join now to unlock premium again.</div>
+                  <button
+                    type="button"
+                    className="profile-membership-btn"
+                    onClick={() => { try { window.location.href = "#/about"; } catch (_) {} }}
+                  >
+                    Join Now
                   </button>
                 </div>
               )

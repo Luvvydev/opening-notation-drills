@@ -80,7 +80,6 @@ exports.createCheckoutSession = functions
     const session = await stripe.checkout.sessions.create({
       mode: tier === "lifetime" ? "payment" : "subscription",
       line_items: [{ price: priceId, quantity: 1 }],
-      subscription_data: tier === "member" ? { trial_period_days: 7 } : undefined,
       success_url: `${baseUrl}/#/profile?checkout=success`,
       cancel_url: `${baseUrl}/#/about?checkout=cancel`,
       client_reference_id: uid,

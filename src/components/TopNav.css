@@ -746,3 +746,111 @@
     font-size: 15px;
   }
 }
+
+
+.topnav-trial-banner {
+  width: 100%;
+  margin-top: 24px;
+  margin-bottom: 8px;
+  padding: 0 18px;
+}
+
+.topnav-trial-banner-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  min-height: 58px;
+  padding: 10px 14px;
+  border-radius: 16px;
+  background:
+    radial-gradient(120% 180% at 0% 50%, rgba(244, 197, 66, 0.18) 0%, rgba(244, 197, 66, 0) 44%),
+    linear-gradient(135deg, rgba(18, 22, 28, 0.98) 0%, rgba(12, 15, 20, 0.98) 62%, rgba(25, 21, 12, 0.98) 100%);
+  border: 1px solid rgba(244, 197, 66, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.34);
+}
+
+.topnav-trial-banner-copy {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.topnav-trial-banner-label {
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.topnav-trial-banner-timer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.topnav-trial-banner-segment {
+  min-width: 62px;
+  padding: 7px 10px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(244, 197, 66, 0.16);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.topnav-trial-banner-value {
+  font-size: 24px;
+  line-height: 1;
+  font-weight: 1000;
+  color: #f4c542;
+}
+
+.topnav-trial-banner-unit {
+  margin-top: 4px;
+  font-size: 10px;
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(233, 237, 242, 0.78);
+}
+
+.topnav-trial-banner-btn {
+  height: 40px;
+  padding: 0 16px;
+  border-radius: 12px;
+  background: rgba(244, 197, 66, 0.95);
+  border: 1px solid rgba(244, 197, 66, 0.85);
+  color: #111111;
+  text-decoration: none;
+  font-weight: 900;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.topnav-trial-banner-btn:hover {
+  filter: brightness(1.03);
+}
+
+@media (max-width: 720px) {
+  .topnav-trial-banner {
+    margin-top: 18px;
+    padding: 0 14px;
+  }
+
+  .topnav-trial-banner-inner {
+    justify-content: center;
+    text-align: center;
+    flex-wrap: wrap;
+  }
+}
