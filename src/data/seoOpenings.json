@@ -1,0 +1,448 @@
+[
+  {
+    "key": "london",
+    "slug": "london-system",
+    "title": "London System",
+    "side": "White",
+    "access": "free",
+    "description": "Train the London System with structured opening drills, clean repetition, and move by move recall practice.",
+    "summary": "The London System gives White a practical setup with fast development, stable pawn structure, and recurring middlegame plans. It is popular because it is easier to reuse across many black responses than highly theoretical e4 repertoires.",
+    "moves": [
+      "1. d4",
+      "2. Nf3",
+      "3. Bf4",
+      "4. e3",
+      "5. c3"
+    ],
+    "related": [
+      "qga",
+      "qgd",
+      "english"
+    ]
+  },
+  {
+    "key": "sicilian",
+    "slug": "sicilian-defense",
+    "title": "Sicilian Defense",
+    "side": "Black",
+    "access": "free",
+    "description": "Practice the Sicilian Defense with interactive drills built for sharper recall against 1.e4.",
+    "summary": "The Sicilian Defense meets 1.e4 with immediate counterplay and asymmetry. It is one of the most ambitious black responses because it aims for winning chances rather than quick equality.",
+    "moves": [
+      "1. e4 c5",
+      "2. Nf3",
+      "3. d4 cxd4",
+      "4. Nxd4"
+    ],
+    "related": [
+      "carokann",
+      "french",
+      "scandinavianDefense"
+    ]
+  },
+  {
+    "key": "ruy",
+    "slug": "ruy-lopez",
+    "title": "Ruy Lopez",
+    "side": "White",
+    "access": "free",
+    "description": "Learn the Ruy Lopez through guided repetition so you remember key moves and plans after 1.e4 e5.",
+    "summary": "The Ruy Lopez is one of the most respected open games in chess. White develops naturally, pressures e5, and often plays for long term positional pressure rather than immediate tactics.",
+    "moves": [
+      "1. e4 e5",
+      "2. Nf3 Nc6",
+      "3. Bb5"
+    ],
+    "related": [
+      "italian",
+      "scotchgame",
+      "petrovDefense"
+    ]
+  },
+  {
+    "key": "friedliver",
+    "slug": "fried-liver-attack",
+    "title": "Fried Liver Attack",
+    "side": "White",
+    "access": "free",
+    "description": "Study the Fried Liver Attack with tactical opening drills and repeat the sharp lines until they stick.",
+    "summary": "The Fried Liver Attack is a forcing attacking system that punishes inaccurate defense in open positions. It appeals to players who want immediate initiative and tactical targets against the king.",
+    "moves": [
+      "1. e4 e5",
+      "2. Nf3 Nc6",
+      "3. Bc4 Nf6",
+      "4. Ng5"
+    ],
+    "related": [
+      "italian",
+      "stafford",
+      "kingsGambit"
+    ]
+  },
+  {
+    "key": "stafford",
+    "slug": "stafford-gambit",
+    "title": "Stafford Gambit",
+    "side": "Black",
+    "access": "free",
+    "description": "Train the Stafford Gambit and drill the tactical ideas that arise after Black sacrifices a pawn for activity.",
+    "summary": "The Stafford Gambit is a high risk, high pressure response in the Petrov structure. Black gives up material to gain rapid development, tactical threats, and practical chances in fast games.",
+    "moves": [
+      "1. e4 e5",
+      "2. Nf3 Nf6",
+      "3. Nxe5 Nc6"
+    ],
+    "related": [
+      "petrovDefense",
+      "friedliver",
+      "rousseauGambit"
+    ]
+  },
+  {
+    "key": "carokann",
+    "slug": "caro-kann-defense",
+    "title": "Caro-Kann Defense",
+    "side": "Black",
+    "access": "free",
+    "description": "Memorize practical Caro-Kann Defense lines with structured drills and repeatable review.",
+    "summary": "The Caro-Kann Defense is a solid answer to 1.e4 built around healthy structure and reliable development. It is popular with players who want a resilient position without diving into the sharpest theory immediately.",
+    "moves": [
+      "1. e4 c6",
+      "2. d4 d5"
+    ],
+    "related": [
+      "french",
+      "sicilian",
+      "scandinavianDefense"
+    ]
+  },
+  {
+    "key": "qga",
+    "slug": "queens-gambit-accepted",
+    "title": "Queen's Gambit Accepted",
+    "side": "White",
+    "access": "free",
+    "description": "Train the Queen's Gambit Accepted and improve recall in one of the main d4 openings.",
+    "summary": "In Queen's Gambit Accepted positions, Black takes the c4 pawn and White fights for central space and development. It leads to classical structures where understanding move order matters.",
+    "moves": [
+      "1. d4 d5",
+      "2. c4 dxc4"
+    ],
+    "related": [
+      "qgd",
+      "london",
+      "kingsindian"
+    ]
+  },
+  {
+    "key": "qgd",
+    "slug": "queens-gambit-declined",
+    "title": "Queen's Gambit Declined",
+    "side": "Black",
+    "access": "free",
+    "description": "Practice Queen's Gambit Declined lines with repeatable drills for stable d4 repertoire recall.",
+    "summary": "The Queen's Gambit Declined is a classical black defense based on strong central control, patient development, and reliable structure. It rewards understanding and accurate move order more than cheap tactics.",
+    "moves": [
+      "1. d4 d5",
+      "2. c4 e6"
+    ],
+    "related": [
+      "qga",
+      "kingsindian",
+      "london"
+    ]
+  },
+  {
+    "key": "italian",
+    "slug": "italian-game",
+    "title": "Italian Game",
+    "side": "White",
+    "access": "free",
+    "description": "Learn the Italian Game with opening drills that reinforce clean development and attacking patterns.",
+    "summary": "The Italian Game develops quickly, targets f7, and can lead to either quiet buildup or direct attacks. It is one of the most natural open games for players building an e4 repertoire.",
+    "moves": [
+      "1. e4 e5",
+      "2. Nf3 Nc6",
+      "3. Bc4"
+    ],
+    "related": [
+      "ruy",
+      "friedliver",
+      "scotchgame"
+    ]
+  },
+  {
+    "key": "kingsindian",
+    "slug": "kings-indian-defense",
+    "title": "King's Indian Defense",
+    "side": "Black",
+    "access": "free",
+    "description": "Drill King's Indian Defense lines and practice the setups, pawn breaks, and attacking plans that define the opening.",
+    "summary": "The King's Indian Defense gives White space early and then challenges the center later with dynamic counterplay. It is a flexible defense for players comfortable with tension and active middlegames.",
+    "moves": [
+      "1. d4 Nf6",
+      "2. c4 g6",
+      "3. Nc3 Bg7"
+    ],
+    "related": [
+      "qgd",
+      "english",
+      "french"
+    ]
+  },
+  {
+    "key": "french",
+    "slug": "french-defense",
+    "title": "French Defense",
+    "side": "Black",
+    "access": "free",
+    "description": "Train the French Defense and repeat the main structures until your responses to 1.e4 feel automatic.",
+    "summary": "The French Defense creates a durable center and a strategic battle around pawn chains, space, and timely breaks. It is a strong option for players who like structure and counterplay.",
+    "moves": [
+      "1. e4 e6",
+      "2. d4 d5"
+    ],
+    "related": [
+      "carokann",
+      "sicilian",
+      "scandinavianDefense"
+    ]
+  },
+  {
+    "key": "englund",
+    "slug": "englund-gambit",
+    "title": "Englund Gambit",
+    "side": "Black",
+    "access": "free",
+    "description": "Practice the Englund Gambit and learn the forcing ideas that arise after 1.d4 e5.",
+    "summary": "The Englund Gambit is a provocative sideline that seeks immediate initiative against 1.d4. It is mainly a practical surprise weapon rather than a classical positional defense.",
+    "moves": [
+      "1. d4 e5"
+    ],
+    "related": [
+      "scandinavianDefense",
+      "stafford",
+      "vantKruijs"
+    ]
+  },
+  {
+    "key": "english",
+    "slug": "english-opening",
+    "title": "English Opening",
+    "side": "White",
+    "access": "signup",
+    "description": "Study the English Opening with structured drills that reinforce flexible setups and move order awareness.",
+    "summary": "The English Opening begins with 1.c4 and often leads to flexible, transpositional positions. It suits players who want options and are willing to learn plans across several pawn structures.",
+    "moves": [
+      "1. c4"
+    ],
+    "related": [
+      "london",
+      "kingsindian",
+      "qgd"
+    ]
+  },
+  {
+    "key": "scotchgame",
+    "slug": "scotch-game",
+    "title": "Scotch Game",
+    "side": "White",
+    "access": "signup",
+    "description": "Train the Scotch Game and practice the early central break that gives the opening its direct character.",
+    "summary": "The Scotch Game opens the center early and aims for active piece play. It is attractive to players who want a direct approach against 1...e5 without the slower maneuvering of some other main lines.",
+    "moves": [
+      "1. e4 e5",
+      "2. Nf3 Nc6",
+      "3. d4"
+    ],
+    "related": [
+      "italian",
+      "ruy",
+      "friedliver"
+    ]
+  },
+  {
+    "key": "vienna",
+    "slug": "vienna-gambit",
+    "title": "Vienna Gambit",
+    "side": "White",
+    "access": "signup",
+    "description": "Learn the Vienna Gambit and drill the attacking patterns that follow an early f-pawn push.",
+    "summary": "The Vienna Gambit is an aggressive opening choice for White that mixes development with kingside attacking ideas. It can punish unprepared defense quickly in practical play.",
+    "moves": [
+      "1. e4 e5",
+      "2. Nc3 Nf6",
+      "3. f4"
+    ],
+    "related": [
+      "viennaCounter",
+      "kingsGambit",
+      "bishopsOpening"
+    ]
+  },
+  {
+    "key": "viennaCounter",
+    "slug": "vienna-gambit-counter",
+    "title": "Vienna Gambit Counter",
+    "side": "Black",
+    "access": "signup",
+    "description": "Practice Black's critical responses to the Vienna Gambit with focused opening drills.",
+    "summary": "The Vienna Gambit Counter page focuses on the practical defensive and counterattacking ideas Black needs after White chooses the Vienna Gambit. The main value is remembering accurate early responses.",
+    "moves": [
+      "1. e4 e5",
+      "2. Nc3 Nf6",
+      "3. f4 d5"
+    ],
+    "related": [
+      "vienna",
+      "petrovDefense",
+      "french"
+    ]
+  },
+  {
+    "key": "rousseauGambit",
+    "slug": "rousseau-gambit",
+    "title": "Rousseau Gambit",
+    "side": "Black",
+    "access": "signup",
+    "description": "Train the Rousseau Gambit and memorize the forcing attacking ideas that arise from Black's early pawn sacrifice.",
+    "summary": "The Rousseau Gambit is an offbeat but dangerous try in Italian structures. It is mainly useful as a surprise weapon that demands concrete defensive accuracy from White.",
+    "moves": [
+      "1. e4 e5",
+      "2. Nf3 Nc6",
+      "3. Bc4 f5"
+    ],
+    "related": [
+      "stafford",
+      "friedliver",
+      "italian"
+    ]
+  },
+  {
+    "key": "bishopsOpening",
+    "slug": "bishops-opening",
+    "title": "Bishop's Opening",
+    "side": "White",
+    "access": "signup",
+    "description": "Study the Bishop's Opening and drill the move orders that let White sidestep heavier main line theory.",
+    "summary": "The Bishop's Opening develops the bishop early to c4 and often aims for quick initiative with a lighter theory burden. It can transpose into Italian type play or branch into independent attacking ideas.",
+    "moves": [
+      "1. e4 e5",
+      "2. Bc4"
+    ],
+    "related": [
+      "italian",
+      "vienna",
+      "kingsGambit"
+    ]
+  },
+  {
+    "key": "viennaGame",
+    "slug": "vienna-game",
+    "title": "Vienna Game",
+    "side": "White",
+    "access": "signup",
+    "description": "Train the Vienna Game and build practical recall in one of White's flexible e4 systems.",
+    "summary": "The Vienna Game begins with 1.e4 e5 2.Nc3 and keeps several options open, including aggressive and quieter systems. It is a useful repertoire choice for players who want variety without abandoning principle.",
+    "moves": [
+      "1. e4 e5",
+      "2. Nc3"
+    ],
+    "related": [
+      "vienna",
+      "bishopsOpening",
+      "kingsGambit"
+    ]
+  },
+  {
+    "key": "kingsGambit",
+    "slug": "kings-gambit",
+    "title": "King's Gambit",
+    "side": "White",
+    "access": "signup",
+    "description": "Practice the King's Gambit with direct opening drills built around initiative and tactical pressure.",
+    "summary": "The King's Gambit sacrifices a pawn early to accelerate development and attack the king. It remains popular with players who value initiative and practical complexity over structural caution.",
+    "moves": [
+      "1. e4 e5",
+      "2. f4"
+    ],
+    "related": [
+      "vienna",
+      "friedliver",
+      "bishopsOpening"
+    ]
+  },
+  {
+    "key": "danishGambit",
+    "slug": "danish-gambit",
+    "title": "Danish Gambit",
+    "side": "White",
+    "access": "signup",
+    "description": "Learn the Danish Gambit and drill the forcing attacking lines that come from White's early pawn offers.",
+    "summary": "The Danish Gambit gives up central pawns to open files and diagonals for rapid development. It is a practical attacking weapon in fast time controls and against unprepared defenders.",
+    "moves": [
+      "1. e4 e5",
+      "2. d4 exd4",
+      "3. c3"
+    ],
+    "related": [
+      "scotchgame",
+      "kingsGambit",
+      "friedliver"
+    ]
+  },
+  {
+    "key": "scandinavianDefense",
+    "slug": "scandinavian-defense",
+    "title": "Scandinavian Defense",
+    "side": "Black",
+    "access": "signup",
+    "description": "Train the Scandinavian Defense and learn the practical move orders that challenge White from move one.",
+    "summary": "The Scandinavian Defense answers 1.e4 with an immediate strike in the center. Black often accepts early queen activity in exchange for simple structure, direct plans, and practical play.",
+    "moves": [
+      "1. e4 d5"
+    ],
+    "related": [
+      "carokann",
+      "french",
+      "sicilian"
+    ]
+  },
+  {
+    "key": "vantKruijs",
+    "slug": "vant-kruijs-opening",
+    "title": "Van't Kruijs Opening",
+    "side": "Black",
+    "access": "signup",
+    "description": "Practice practical black responses against the Van't Kruijs style setup and related slow systems.",
+    "summary": "This page covers a practical anti-system approach against early e3, c3, d4, and Qb3 structures. The goal is to occupy the center early, finish development, and punish passive move orders.",
+    "moves": [
+      "1. e3",
+      "2. d4",
+      "3. c3"
+    ],
+    "related": [
+      "englund",
+      "qgd",
+      "london"
+    ]
+  },
+  {
+    "key": "petrovDefense",
+    "slug": "petrov-defense",
+    "title": "Petrov Defense",
+    "side": "Black",
+    "access": "signup",
+    "description": "Train the Petrov Defense and drill the solid move orders that keep Black organized against 1.e4.",
+    "summary": "The Petrov Defense is a fundamentally sound response to 1.e4 built on symmetry, development, and accurate central play. It appeals to players who want dependable positions and fewer structural weaknesses.",
+    "moves": [
+      "1. e4 e5",
+      "2. Nf3 Nf6"
+    ],
+    "related": [
+      "stafford",
+      "ruy",
+      "italian"
+    ]
+  }
+]

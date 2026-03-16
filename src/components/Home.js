@@ -5,6 +5,7 @@ import TopNav from "./TopNav";
 import { OPENING_CATALOG } from "../openings/openingCatalog";
 import { BOARD_THEMES, DEFAULT_THEME } from "../theme/boardThemes";
 import "./Home.css";
+import SEO from "./SEO";
 
 const STORAGE_KEY = "notation_trainer_opening_progress_v2";
 const LEARN_STORAGE_KEY = "notation_trainer_learn_progress_v1";
@@ -812,6 +813,14 @@ renderHeroCarousel = (slides) => {
 
 return (
 <div className="home-page">
+
+      <SEO
+        title="ChessDrills | Chess Opening Training"
+        description="Train chess openings with structured drills, move feedback, and repeatable opening recall practice."
+        canonical="https://chessdrills.net/"
+        image="https://chessdrills.net/logo512.png"
+      />
+
   <TopNav title="Chess Opening Drills"  hideHero />
 
   <div className="home-hero-v2">{this.renderHeroCarousel(heroSlides)}</div>
