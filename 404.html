@@ -1,7 +1,18 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <meta http-equiv="refresh" content="0; url=/opening-notation-drills/index.html#/" />
+    <meta charset="utf-8" />
+    <meta http-equiv="refresh" content="0; url=/#/" />
+    <script>
+      (function () {
+        var path = window.location.pathname || "/";
+        var search = window.location.search || "";
+        var hash = window.location.hash || "";
+        if (path && path !== "/") {
+          window.location.replace("/#"+ path + search + hash);
+        }
+      })();
+    </script>
   </head>
   <body></body>
 </html>
