@@ -2431,6 +2431,17 @@
   gap: 12px;
 }
 
+.ot-puzzle-mobile-topbar-left {
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.ot-puzzle-mobile-back {
+  flex: 0 0 auto;
+}
+
 .ot-puzzle-mobile-titleblock {
   min-width: 0;
 }

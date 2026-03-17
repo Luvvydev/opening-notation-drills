@@ -2,279 +2,150 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>Bishop's Opening Opening Trainer | ChessDrills</title>
+    <title>Bishop&#x27;s Opening Guide and Training | ChessDrills</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="Study the Bishop's Opening and drill the move orders that let White sidestep heavier main line theory." />
+    <meta name="description" content="Bishop&#x27;s Opening guide with a position snapshot, practical ideas, and a direct link into ChessDrills training." />
+    <meta name="robots" content="index,follow" />
+    <meta name="theme-color" content="#0b1016" />
     <link rel="canonical" href="https://chessdrills.net/openings/bishops-opening.html" />
+    <link rel="stylesheet" href="/openings/opening-pages.css" />
     <meta property="og:type" content="article" />
-    <meta property="og:title" content="Bishop's Opening Opening Trainer | ChessDrills" />
-    <meta property="og:description" content="Study the Bishop's Opening and drill the move orders that let White sidestep heavier main line theory." />
+    <meta property="og:title" content="Bishop&#x27;s Opening Guide and Training | ChessDrills" />
+    <meta property="og:description" content="Bishop&#x27;s Opening guide with a position snapshot, practical ideas, and a direct link into ChessDrills training." />
     <meta property="og:url" content="https://chessdrills.net/openings/bishops-opening.html" />
-    <meta property="og:image" content="https://chessdrills.net/logo512.png" />
+    <meta property="og:image" content="https://chessdrills.net/openings/images/bishops-opening.png" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Bishop's Opening Opening Trainer | ChessDrills" />
-    <meta name="twitter:description" content="Study the Bishop's Opening and drill the move orders that let White sidestep heavier main line theory." />
-    <meta name="twitter:image" content="https://chessdrills.net/logo512.png" />
-    <style>
-    :root {
-      color-scheme: dark;
-      --bg: #0b1118;
-      --panel: #121b25;
-      --panel-2: #172231;
-      --text: #edf2f7;
-      --muted: #a7b1bc;
-      --line: rgba(255,255,255,0.10);
-      --accent: #f4c542;
-      --accent-text: #201600;
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      background: radial-gradient(circle at top, #182536 0%, var(--bg) 42%);
-      color: var(--text);
-      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      line-height: 1.6;
-    }
-    a { color: inherit; }
-    .wrap {
-      width: min(1080px, calc(100% - 32px));
-      margin: 0 auto;
-      padding: 28px 0 64px;
-    }
-    .nav {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      margin-bottom: 28px;
-      color: var(--muted);
-      font-size: 14px;
-    }
-    .nav a {
-      text-decoration: none;
-      color: var(--muted);
-    }
-    .hero, .panel {
-      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.015));
-      border: 1px solid var(--line);
-      border-radius: 24px;
-      box-shadow: 0 18px 60px rgba(0,0,0,0.25);
-    }
-    .hero {
-      padding: 32px;
-      margin-bottom: 22px;
-    }
-    .eyebrow {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 7px 12px;
-      border-radius: 999px;
-      background: rgba(244,197,66,0.14);
-      color: #f7d46e;
-      font-size: 13px;
-      font-weight: 700;
-      letter-spacing: 0.02em;
-      margin-bottom: 14px;
-    }
-    h1 {
-      margin: 0 0 12px;
-      font-size: clamp(32px, 5vw, 48px);
-      line-height: 1.08;
-    }
-    .sub {
-      margin: 0;
-      color: var(--muted);
-      font-size: 18px;
-      max-width: 820px;
-    }
-    .cta-row {
-      display: flex;
-      gap: 14px;
-      flex-wrap: wrap;
-      margin-top: 24px;
-    }
-    .btn, .btn-alt {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 48px;
-      border-radius: 14px;
-      padding: 0 18px;
-      text-decoration: none;
-      font-weight: 700;
-      border: 1px solid transparent;
-    }
-    .btn {
-      background: var(--accent);
-      color: var(--accent-text);
-    }
-    .btn-alt {
-      border-color: var(--line);
-      background: rgba(255,255,255,0.03);
-      color: var(--text);
-    }
-    .grid {
-      display: grid;
-      grid-template-columns: 1.5fr 1fr;
-      gap: 22px;
-      margin-bottom: 22px;
-    }
-    .panel {
-      padding: 24px;
-    }
-    h2 {
-      margin: 0 0 12px;
-      font-size: 24px;
-    }
-    p {
-      margin: 0 0 16px;
-    }
-    ul, ol {
-      margin: 0;
-      padding-left: 20px;
-    }
-    li + li {
-      margin-top: 8px;
-    }
-    .muted { color: var(--muted); }
-    .tag-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 16px;
-    }
-    .tag {
-      display: inline-flex;
-      align-items: center;
-      min-height: 34px;
-      border-radius: 999px;
-      padding: 0 12px;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid var(--line);
-      color: var(--text);
-      font-size: 14px;
-    }
-    .related-list a {
-      text-decoration: none;
-      display: block;
-      border: 1px solid var(--line);
-      background: rgba(255,255,255,0.03);
-      border-radius: 16px;
-      padding: 14px 16px;
-    }
-    .related-list li + li {
-      margin-top: 12px;
-    }
-    .cards {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 16px;
-    }
-    .card {
-      border: 1px solid var(--line);
-      border-radius: 18px;
-      background: rgba(255,255,255,0.03);
-      padding: 18px;
-      text-decoration: none;
-    }
-    .card h3 {
-      margin: 0 0 8px;
-      font-size: 18px;
-    }
-    .footer {
-      margin-top: 18px;
-      color: var(--muted);
-      font-size: 14px;
-    }
-    @media (max-width: 860px) {
-      .grid { grid-template-columns: 1fr; }
-      .cards { grid-template-columns: 1fr; }
-      .hero, .panel { padding: 20px; }
-    }
-  </style>
-    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Course","name":"Bishop's Opening Opening Trainer","description":"Study the Bishop's Opening and drill the move orders that let White sidestep heavier main line theory.","provider":{"@type":"Organization","name":"ChessDrills","url":"https://chessdrills.net"},"url":"https://chessdrills.net/openings/bishops-opening.html"}</script>
+    <meta name="twitter:title" content="Bishop&#x27;s Opening Guide and Training | ChessDrills" />
+    <meta name="twitter:description" content="Bishop&#x27;s Opening guide with a position snapshot, practical ideas, and a direct link into ChessDrills training." />
+    <meta name="twitter:image" content="https://chessdrills.net/openings/images/bishops-opening.png" />
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Bishop&#x27;s Opening","description":"Bishop&#x27;s Opening guide with a position snapshot, practical ideas, and a direct link into ChessDrills training.","image":"https://chessdrills.net/openings/images/bishops-opening.png","url":"https://chessdrills.net/openings/bishops-opening.html","isPartOf":{"@type":"WebSite","name":"ChessDrills","url":"https://chessdrills.net"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://chessdrills.net/"},{"@type":"ListItem","position":2,"name":"Opening Guides","item":"https://chessdrills.net/openings/index.html"},{"@type":"ListItem","position":3,"name":"Bishop&#x27;s Opening","item":"https://chessdrills.net/openings/bishops-opening.html"}]}</script>
   </head>
   <body>
-    <div class="wrap">
-      <div class="nav">
+    <div class="site-shell">
+      <header class="site-header">
+        <a class="brand" href="/">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <span>ChessDrills</span>
+        </a>
+        <div class="header-links">
+          <a class="header-link" href="/">Homepage</a>
+          <a class="header-link" href="/#/openings">Trainer</a>
+        </div>
+      </header>
+
+      <nav class="breadcrumbs" aria-label="Breadcrumb">
         <a href="/">Home</a>
         <span>/</span>
         <a href="/openings/index.html">Opening guides</a>
         <span>/</span>
-        <span>Bishop's Opening</span>
-      </div>
+        <span>Bishop&#x27;s Opening</span>
+      </nav>
 
-      <section class="hero">
-        <div class="eyebrow">White repertoire • Account required</div>
-        <h1>Bishop's Opening Opening Trainer</h1>
-        <p class="sub">Study the Bishop's Opening and drill the move orders that let White sidestep heavier main line theory.</p>
+      <main>
+        <section class="hero hero-split">
+          <div class="hero-copy">
+            <div class="eyebrow">White opening • Account required</div>
+            <h1>Bishop&#x27;s Opening</h1>
+            <p>The Bishop’s Opening develops the bishop to c4 on move two and keeps several transposition routes available. It is practical, light on theory compared with major e4 openings, and still asks clear questions of Black.</p>
+            <ul class="hero-tags"><li class="hero-tag">Flexible e4 line</li><li class="hero-tag">Theory: Low to medium</li><li class="hero-tag">Account required</li></ul>
+            <div class="actions">
+              <a class="btn" href="/#/openings">Open trainer</a>
+              <a class="btn-secondary" href="/openings/index.html">Browse all guides</a>
+            </div>
+          </div>
+          <figure class="hero-media card-media">
+            <img src="/openings/images/bishops-opening.png" alt="Bishop&#x27;s Opening position preview" loading="eager" />
+            <figcaption>A flexible Bishop’s Opening structure after White steps the bishop back and keeps central options open.</figcaption>
+          </figure>
+        </section>
 
-        <div class="tag-row">
-          <div class="tag">White side</div>
-          <div class="tag">Account required</div>
-          <div class="tag">Interactive drills</div>
-          <div class="tag">Opening recall</div>
+        <div class="content-grid">
+          <article class="stack">
+            <section class="card prose-card">
+              <div class="section-head">
+                <h2>How the opening starts</h2>
+                <p>White begins 1.e4 e5 2.Bc4. The bishop targets f7 immediately and leaves the knight on g1 free to support different setups. Some branches resemble the Italian, while others stay more independent.</p>
+              </div>
+              <div class="move-box">
+                <div class="move-label">Move order preview</div>
+                <div class="move-sequence">1.e4 e5 2.Bc4 Nf6 3.d3 c6 4.Nf3 d5 5.Bb3</div>
+              </div>
+            </section>
+
+            <section class="card two-col-card">
+              <div>
+                <h2>What matters early</h2>
+                <ul class="list"><li>The opening is flexible, so choose a plan rather than making neutral waiting moves.</li><li>Early pressure on f7 matters mainly because it influences Black’s development choices.</li><li>White often wants d3, Nf3, and c3 or Nc3 depending on the response.</li></ul>
+              </div>
+              <div>
+                <h2>What usually goes wrong</h2>
+                <ul class="list"><li>Moving the bishop out early does not justify ignoring development.</li><li>If White mis-times the center, Black can equalize with ...d5.</li><li>Because it is less theoretical, many positions still require original thought.</li></ul>
+              </div>
+            </section>
+
+            <section class="card diagram-card">
+              <div class="diagram-copy">
+                <h2>Position snapshot</h2>
+                <p>A flexible Bishop’s Opening structure after White steps the bishop back and keeps central options open.</p>
+                <p class="muted">Use the position snapshot to anchor the structure before drilling lines. A lot of opening mistakes come from remembering move order without remembering the board you were trying to reach.</p>
+              </div>
+              <div class="diagram-media">
+                <img src="/openings/images/bishops-opening.png" alt="Bishop&#x27;s Opening position snapshot" loading="lazy" />
+              </div>
+            </section>
+
+            <section class="card related-section">
+              <div class="section-head">
+                <h2>Related opening guides</h2>
+                <p>These are the closest nearby guides from the same library.</p>
+              </div>
+              <div class="related-grid">
+                <a class="related-card" href="/openings/italian-game.html">
+              <img class="related-image" src="/openings/images/italian-game.png" alt="Italian Game position preview" loading="lazy" />
+              <div class="card-label">White opening</div>
+              <h3>Italian Game</h3>
+              <p class="small">The Italian Game leads to open piece play, early control of the center, and very common attacking themes against f7 and the kingside.</p>
+            </a>
+<a class="related-card" href="/openings/ruy-lopez.html">
+              <img class="related-image" src="/openings/images/ruy-lopez.png" alt="Ruy Lopez position preview" loading="lazy" />
+              <div class="card-label">White opening</div>
+              <h3>Ruy Lopez</h3>
+              <p class="small">The Ruy Lopez develops naturally and places immediate pressure on the e5 pawn through the knight on c6. A lot of its value comes from understanding plans after the opening, not from landing one early trick.</p>
+            </a>
+<a class="related-card" href="/openings/vienna-game.html">
+              <img class="related-image" src="/openings/images/vienna-game.png" alt="Vienna Game position preview" loading="lazy" />
+              <div class="card-label">White opening</div>
+              <h3>Vienna Game</h3>
+              <p class="small">The Vienna Game begins with 1.e4 e5 2.Nc3. White keeps several setups available, including quiet development and sharper f4 based play.</p>
+            </a>
+              </div>
+            </section>
+          </article>
+
+          <aside class="stack">
+            <section class="card facts-card">
+              <h2>At a glance</h2>
+              <div class="facts"><div class="fact"><p class="fact-label">Category</p><p class="fact-value">White opening</p></div><div class="fact"><p class="fact-label">Style</p><p class="fact-value">Flexible e4 line</p></div><div class="fact"><p class="fact-label">Theory</p><p class="fact-value">Low to medium</p></div><div class="fact"><p class="fact-label">Usually suits</p><p class="fact-value">Players who want an active bishop early without entering the full Italian move order.</p></div><div class="fact"><p class="fact-label">Access</p><p class="fact-value">Account required</p></div></div>
+            </section>
+
+            <section class="card coach-card">
+              <h2>How to study it</h2>
+              <ol class="move-list">
+                <li>Use the move order preview to anchor the first position you are aiming for.</li>
+                <li>Look at the board image and identify which side has the easier plan in that structure.</li>
+                <li>Go into the trainer when you want line recall and repeated reps.</li>
+              </ol>
+            </section>
+
+            <section class="card coach-card accent-card">
+              <h2>Train inside ChessDrills</h2>
+              <p>These guide pages are meant to get you oriented fast. The trainer is where the line work actually gets repeated.</p>
+              <a class="btn full-width" href="/#/openings">Open the trainer</a>
+            </section>
+          </aside>
         </div>
-
-        <div class="cta-row">
-          <a class="btn" href="/#/openings?opening=bishopsOpening">Start training this opening</a>
-          <a class="btn-alt" href="/openings/index.html">Browse all opening guides</a>
-        </div>
-      </section>
-
-      <div class="grid">
-        <section class="panel">
-          <h2>What this opening is about</h2>
-          <p>The Bishop's Opening develops the bishop early to c4 and often aims for quick initiative with a lighter theory burden. It can transpose into Italian type play or branch into independent attacking ideas.</p>
-          <p>ChessDrills uses guided repetition so you can practice the move order, review common setups, and stop losing time in the opening. The goal is not to dump theory onto one page. The goal is to make the first phase of the game easier to remember under practical conditions.</p>
-          <p>If you are building a white repertoire and want a repeatable way to study positions, this opening page gives you a direct route into the trainer while still leaving enough text for search engines and new visitors to understand what the opening does.</p>
-        </section>
-
-        <aside class="panel">
-          <h2>Starter move order</h2>
-          <ol><li>1. e4 e5</li><li>2. Bc4</li></ol>
-          <p class="footer">Move order examples here are intentionally short. The full training content lives inside the trainer.</p>
-        </aside>
-      </div>
-
-      <div class="grid">
-        <section class="panel">
-          <h2>How ChessDrills helps you learn it</h2>
-          <ul>
-            <li>Repeat key opening lines in a structure designed for recall, not passive reading.</li>
-            <li>See move feedback during training so mistakes are easier to understand and fix.</li>
-            <li>Jump directly into a dedicated trainer route for this opening from this page.</li>
-            <li>Use this guide page as a simple public explanation of what the opening is and why you might train it.</li>
-          </ul>
-        </section>
-
-        <section class="panel">
-          <h2>Related opening guides</h2>
-          <ul class="related-list">
-      <li>
-        <a href="/openings/italian-game.html">
-          <strong>Italian Game</strong><br />
-          <span class="muted">Learn the Italian Game with opening drills that reinforce clean development and attacking patterns.</span>
-        </a>
-      </li>
-      <li>
-        <a href="/openings/vienna-gambit.html">
-          <strong>Vienna Gambit</strong><br />
-          <span class="muted">Learn the Vienna Gambit and drill the attacking patterns that follow an early f-pawn push.</span>
-        </a>
-      </li>
-      <li>
-        <a href="/openings/kings-gambit.html">
-          <strong>King's Gambit</strong><br />
-          <span class="muted">Practice the King's Gambit with direct opening drills built around initiative and tactical pressure.</span>
-        </a>
-      </li></ul>
-        </section>
-      </div>
-
-      <div class="footer">
-        ChessDrills is an interactive opening training site focused on move recall, repetition, and practical study.
-      </div>
+      </main>
     </div>
   </body>
 </html>

@@ -2723,11 +2723,16 @@ renderPuzzleMode = () => {
           {mobileMenu}
 
           <div className="ot-puzzle-mobile-topbar">
-            <div className="ot-puzzle-mobile-titleblock">
-              <div className="ot-puzzle-mobile-kicker"><span role="img" aria-label="puzzles">🧩</span> Puzzles</div>
-              <button className="ot-puzzle-mobile-openingbtn" type="button" onClick={() => this.toggleMobileHeaderMenu("opening")}>
-                {openingLabel}
+            <div className="ot-puzzle-mobile-topbar-left">
+              <button className="ot-icon-btn ot-mobile-back ot-puzzle-mobile-back" onClick={this.goHome} title="Back" aria-label="Back">
+                ←
               </button>
+              <div className="ot-puzzle-mobile-titleblock">
+                <div className="ot-puzzle-mobile-kicker"><span role="img" aria-label="puzzles">🧩</span> Puzzles</div>
+                <button className="ot-puzzle-mobile-openingbtn" type="button" onClick={() => this.toggleMobileHeaderMenu("opening")}>
+                  {openingLabel}
+                </button>
+              </div>
             </div>
             <div className="ot-puzzle-mobile-count">
               {hasPack ? `Puzzle ${currentPuzzleNumber} of ${this.state.puzzlePackSize}` : "No pack loaded"}
