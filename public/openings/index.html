@@ -4,442 +4,313 @@
     <meta charset="utf-8" />
     <title>Chess Opening Guides | ChessDrills</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="Browse ChessDrills opening guides with board images, short summaries, and direct links into the training app." />
-    <meta name="robots" content="index,follow" />
-    <meta name="theme-color" content="#0b1016" />
+    <meta name="description" content="Browse ChessDrills opening guides and jump into interactive training for the London System, Sicilian Defense, Ruy Lopez, Caro-Kann, and more." />
     <link rel="canonical" href="https://chessdrills.net/openings/index.html" />
-    <link rel="stylesheet" href="/openings/opening-pages.css" />
     <meta property="og:type" content="website" />
     <meta property="og:title" content="Chess Opening Guides | ChessDrills" />
-    <meta property="og:description" content="Browse ChessDrills opening guides with board images, short summaries, and direct links into the training app." />
+    <meta property="og:description" content="Browse opening guides and launch interactive opening drills from ChessDrills." />
     <meta property="og:url" content="https://chessdrills.net/openings/index.html" />
-    <meta property="og:image" content="https://chessdrills.net/openings/images/london-system.png" />
+    <meta property="og:image" content="https://chessdrills.net/logo512.png" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Chess Opening Guides | ChessDrills" />
-    <meta name="twitter:description" content="Browse ChessDrills opening guides with board images, short summaries, and direct links into the training app." />
-    <meta name="twitter:image" content="https://chessdrills.net/openings/images/london-system.png" />
-    <script type="application/ld+json">{"@context":"https://schema.org","@type":"CollectionPage","name":"Chess Opening Guides | ChessDrills","description":"Browse ChessDrills opening guides with board images, short summaries, and direct links into the training app.","url":"https://chessdrills.net/openings/index.html","isPartOf":{"@type":"WebSite","name":"ChessDrills","url":"https://chessdrills.net"}}</script>
+    <meta name="twitter:description" content="Browse opening guides and launch interactive opening drills from ChessDrills." />
+    <meta name="twitter:image" content="https://chessdrills.net/logo512.png" />
+    <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0b1118;
+      --panel: #121b25;
+      --panel-2: #172231;
+      --text: #edf2f7;
+      --muted: #a7b1bc;
+      --line: rgba(255,255,255,0.10);
+      --accent: #f4c542;
+      --accent-text: #201600;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: radial-gradient(circle at top, #182536 0%, var(--bg) 42%);
+      color: var(--text);
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.6;
+    }
+    a { color: inherit; }
+    .wrap {
+      width: min(1080px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 28px 0 64px;
+    }
+    .nav {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 28px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .nav a {
+      text-decoration: none;
+      color: var(--muted);
+    }
+    .hero, .panel {
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.015));
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      box-shadow: 0 18px 60px rgba(0,0,0,0.25);
+    }
+    .hero {
+      padding: 32px;
+      margin-bottom: 22px;
+    }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: rgba(244,197,66,0.14);
+      color: #f7d46e;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      margin-bottom: 14px;
+    }
+    h1 {
+      margin: 0 0 12px;
+      font-size: clamp(32px, 5vw, 48px);
+      line-height: 1.08;
+    }
+    .sub {
+      margin: 0;
+      color: var(--muted);
+      font-size: 18px;
+      max-width: 820px;
+    }
+    .cta-row {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-top: 24px;
+    }
+    .btn, .btn-alt {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 48px;
+      border-radius: 14px;
+      padding: 0 18px;
+      text-decoration: none;
+      font-weight: 700;
+      border: 1px solid transparent;
+    }
+    .btn {
+      background: var(--accent);
+      color: var(--accent-text);
+    }
+    .btn-alt {
+      border-color: var(--line);
+      background: rgba(255,255,255,0.03);
+      color: var(--text);
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr;
+      gap: 22px;
+      margin-bottom: 22px;
+    }
+    .panel {
+      padding: 24px;
+    }
+    h2 {
+      margin: 0 0 12px;
+      font-size: 24px;
+    }
+    p {
+      margin: 0 0 16px;
+    }
+    ul, ol {
+      margin: 0;
+      padding-left: 20px;
+    }
+    li + li {
+      margin-top: 8px;
+    }
+    .muted { color: var(--muted); }
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 34px;
+      border-radius: 999px;
+      padding: 0 12px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--line);
+      color: var(--text);
+      font-size: 14px;
+    }
+    .related-list a {
+      text-decoration: none;
+      display: block;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.03);
+      border-radius: 16px;
+      padding: 14px 16px;
+    }
+    .related-list li + li {
+      margin-top: 12px;
+    }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: rgba(255,255,255,0.03);
+      padding: 18px;
+      text-decoration: none;
+    }
+    .card h3 {
+      margin: 0 0 8px;
+      font-size: 18px;
+    }
+    .footer {
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    @media (max-width: 860px) {
+      .grid { grid-template-columns: 1fr; }
+      .cards { grid-template-columns: 1fr; }
+      .hero, .panel { padding: 20px; }
+    }
+  </style>
   </head>
   <body>
-    <div class="site-shell">
-      <header class="site-header">
-        <a class="brand" href="/">
-          <span class="brand-mark" aria-hidden="true"></span>
-          <span>ChessDrills</span>
-        </a>
-        <div class="header-links">
-          <a class="header-link" href="/">Homepage</a>
-          <a class="header-link" href="/#/openings">Trainer</a>
-        </div>
-      </header>
-
-      <nav class="breadcrumbs" aria-label="Breadcrumb">
+    <div class="wrap">
+      <div class="nav">
         <a href="/">Home</a>
         <span>/</span>
         <span>Opening guides</span>
-      </nav>
+      </div>
 
-      <main>
-        <section class="hero hero-split index-hero">
-          <div class="hero-copy">
-            <div class="eyebrow">Opening library</div>
-            <h1>Chess opening guides</h1>
-            <p>Each opening page has a short written overview, a position image, practical notes, and a direct path into the trainer.</p>
-            <div class="quick-links">
-              <a class="quick-link" href="#white-openings">White guides</a>
-              <a class="quick-link" href="#black-openings">Black guides</a>
-              <a class="quick-link" href="/#/openings">Open trainer</a>
-            </div>
-            <div class="stats-row">
-              <div class="stat-pill"><strong>24</strong><span>Guides</span></div>
-              <div class="stat-pill"><strong>12</strong><span>Free pages</span></div>
-              <div class="stat-pill"><strong>12</strong><span>White lines</span></div>
-              <div class="stat-pill"><strong>12</strong><span>Black lines</span></div>
-            </div>
-          </div>
-          <div class="showcase-stack">
-            <a class="showcase-card" href="/openings/london-system.html">
-              <img src="/openings/images/london-system.png" alt="London System position preview" loading="lazy" />
-              <div>
-                <div class="card-label">White opening</div>
-                <h3>London System</h3>
-              </div>
-            </a>
-<a class="showcase-card" href="/openings/sicilian-defense.html">
-              <img src="/openings/images/sicilian-defense.png" alt="Sicilian Defense position preview" loading="lazy" />
-              <div>
-                <div class="card-label">Black defense</div>
-                <h3>Sicilian Defense</h3>
-              </div>
-            </a>
-<a class="showcase-card" href="/openings/ruy-lopez.html">
-              <img src="/openings/images/ruy-lopez.png" alt="Ruy Lopez position preview" loading="lazy" />
-              <div>
-                <div class="card-label">White opening</div>
-                <h3>Ruy Lopez</h3>
-              </div>
-            </a>
-          </div>
-        </section>
+      <section class="hero">
+        <div class="eyebrow">Searchable opening pages</div>
+        <h1>Chess opening guides for search and training</h1>
+        <p class="sub">These pages give ChessDrills a crawlable public surface while still sending visitors into the interactive trainer for the full drill experience.</p>
+        <div class="cta-row">
+          <a class="btn" href="/#/openings">Open the trainer</a>
+          <a class="btn-alt" href="/">Go to homepage</a>
+        </div>
+      </section>
 
-        <section class="section-block" id="white-openings">
-          <div class="section-head split-head">
-            <div>
-              <h2>White openings and attacks</h2>
-              <p>These pages cover practical White repertoires, attacking tries, and a few offbeat entries that still reach coherent positions.</p>
-            </div>
-          </div>
-          <div class="guides-grid index-grid">
-            <a class="guide-card" href="/openings/london-system.html">
-            <div class="guide-card-media">
-              <img src="/openings/images/london-system.png" alt="London System position preview" loading="lazy" />
-            </div>
-            <div class="guide-card-body">
-              <div class="card-label">White opening • Free</div>
-              <h3>London System</h3>
-              <p>The London System gives White a familiar structure with early Bf4, solid central support, and plans that stay usable across a lot of Black move orders.</p>
-              <div class="guide-meta">
-                <span>Stable setup</span>
-                <span>Low to medium</span>
-              </div>
-            </div>
-          </a>
-<a class="guide-card" href="/openings/ruy-lopez.html">
-            <div class="guide-card-media">
-              <img src="/openings/images/ruy-lopez.png" alt="Ruy Lopez position preview" loading="lazy" />
-            </div>
-            <div class="guide-card-body">
-              <div class="card-label">White opening • Free</div>
-              <h3>Ruy Lopez</h3>
-              <p>The Ruy Lopez develops naturally and places immediate pressure on the e5 pawn through the knight on c6. A lot of its value comes from understanding plans after the opening, not from landing one early trick.</p>
-              <div class="guide-meta">
-                <span>Classical pressure</span>
-                <span>Medium to high</span>
-              </div>
-            </div>
-          </a>
-<a class="guide-card" href="/openings/italian-game.html">
-            <div class="guide-card-media">
-              <img src="/openings/images/italian-game.png" alt="Italian Game position preview" loading="lazy" />
-            </div>
-            <div class="guide-card-body">
-              <div class="card-label">White opening • Free</div>
-              <h3>Italian Game</h3>
-              <p>The Italian Game leads to open piece play, early control of the center, and very common attacking themes against f7 and the kingside.</p>
-              <div class="guide-meta">
-                <span>Open development</span>
-                <span>Medium</span>
-              </div>
-            </div>
-          </a>
-<a class="guide-card" href="/openings/fried-liver-attack.html">
-            <div class="guide-card-media">
-              <img src="/openings/images/fried-liver-attack.png" alt="Fried Liver Attack position preview" loading="lazy" />
-            </div>
-            <div class="guide-card-body">
-              <div class="card-label">White attack • Free</div>
-              <h3>Fried Liver Attack</h3>
-              <p>The Fried Liver Attack appears after White jumps a knight into f7 in the Two Knights Defense. It is concrete, tactical, and very easy to mishandle if either side is guessing.</p>
-              <div class="guide-meta">
-                <span>Tactical attack</span>
-                <span>Medium</span>
-              </div>
-            </div>
-          </a>
-<a class="guide-card" href="/openings/english-opening.html">
-            <div class="guide-card-media">
-              <img src="/openings/images/english-opening.png" alt="English Opening position preview" loading="lazy" />
-            </div>
-            <div class="guide-card-body">
-              <div class="card-label">White opening • Account required</div>
-              <h3>English Opening</h3>
-              <p>The English Opening begins with 1.c4 and often aims at d5 control, queenside space, and transpositions into a wide range of structures.</p>
-              <div class="guide-meta">
-                <span>Flank control</span>
-                <span>Medium</span>
-              </div>
-            </div>
-          </a>
-<a class="guide-card" href="/openings/bishops-opening.html">
-            <div class="guide-card-media">
-              <img src="/openings/images/bishops-opening.png" alt="Bishop&#x27;s Opening position preview" loading="lazy" />
-            </div>
-            <div class="guide-card-body">
-              <div class="card-label">White opening • Account required</div>
-              <h3>Bishop&#x27;s Opening</h3>
-              <p>The Bishop’s Opening develops the bishop to c4 on move two and keeps several transposition routes available. It is practical, light on theory compared with major e4 openings, and still asks clear questions of Black.</p>
-              <div class="guide-meta">
-                <span>Flexible e4 line</span>
-                <span>Low to medium</span>
-              </div>
-            </div>
-          </a>
-<a class="guide-card" href="/openings/danish-gambit.html">
-            <div class="guide-card-media">
-              <img src="/openings/images/danish-gambit.png" alt="Danish Gambit position preview" loading="lazy" />
-            </div>
-            <div class="guide-card-body">
-              <div class="card-label">White gambit • Account required</div>
-              <h3>Danish Gambit</h3>
-              <p>The Danish Gambit gives up central pawns to open lines and flood the board with active pieces. White is betting that development and diagonals will matter more than material in the short term.</p>
-              <div class="guide-meta">
-                <span>Open-file attack</span>
-                <span>Medium</span>
-              </div>
-            </div>
-          </a>
-<a class="guide-card" href="/openings/kings-gambit.html">
-            <div class="guide-card-media">
-              <img src="/openings/images/kings-gambit.png" alt="King&#x27;s Gambit position preview" loading="lazy" />
-            </div>
-            <div class="guide-card-body">
-              <div class="card-label">White gambit • Account required</div>
-              <h3>King&#x27;s Gambit</h3>
-              <p>The King’s Gambit offers the f pawn after 1.e4 e5 2.f4 and tries to open the kingside before Black is ready. The opening is old, sharp, and still very dangerous in practical play.</p>
-              <div class="guide-meta">
-                <span>Direct kingside attack</span>
-                <span>Medium</span>
-              </div>
-            </div>
-          </a>
-<a class="guide-card" href="/openings/scotch-game.html">
-            <div class="guide-card-media">
-              <img src="/openings/images/scotch-game.png" alt="Scotch Game position preview" loading="lazy" />
-            </div>
-            <div class="guide-card-body">
-              <div class="card-label">White opening • Account required</div>
-              <h3>Scotch Game</h3>
-              <p>The Scotch Game breaks the center with 1.e4 e5 2.Nf3 Nc6 3.d4. White is trying to open lines quickly and avoid some of the slower maneuvering from the Ruy Lopez.</p>
-              <div class="guide-meta">
-                <span>Direct central play</span>
-                <span>Medium</span>
-              </div>
-            </div>
-          </a>
-<a class="guide-card" href="/openings/vienna-game.html">
-            <div class="guide-card-media">
-              <img src="/openings/images/vienna-game.png" alt="Vienna Game position preview" loading="lazy" />
-            </div>
-            <div class="guide-card-body">
-              <div class="card-label">White opening • Account required</div>
-              <h3>Vienna Game</h3>
-              <p>The Vienna Game begins with 1.e4 e5 2.Nc3. White keeps several setups available, including quiet development and sharper f4 based play.</p>
-              <div class="guide-meta">
-                <span>Flexible e4 system</span>
-                <span>Low to medium</span>
-              </div>
-            </div>
-          </a>
-<a class="guide-card" href="/openings/vienna-gambit.html">
-            <div class="guide-card-media">
-              <img src="/openings/images/vienna-gambit.png" alt="Vienna Gambit position preview" loading="lazy" />
-            </div>
-            <div class="guide-card-body">
-              <div class="card-label">White gambit • Account required</div>
-              <h3>Vienna Gambit</h3>
-              <p>The Vienna Gambit combines 2.Nc3 with an early f4 and aims for fast initiative against the center and kingside. It keeps some Vienna flexibility while turning the game sharp very quickly.</p>
-              <div class="guide-meta">
-                <span>Aggressive center break</span>
-                <span>Medium</span>
-              </div>
-            </div>
-          </a>
-<a class="guide-card" href="/openings/vant-kruijs-opening.html">
-            <div class="guide-card-media">
-              <img src="/openings/images/vant-kruijs-opening.png" alt="Van&#x27;t Kruijs Opening position preview" loading="lazy" />
-            </div>
-            <div class="guide-card-body">
-              <div class="card-label">White opening • Account required</div>
-              <h3>Van&#x27;t Kruijs Opening</h3>
-              <p>The Van’t Kruijs Opening starts with 1.e3 and keeps almost every central plan available. White is delaying commitment and trying to choose the structure after seeing Black’s setup.</p>
-              <div class="guide-meta">
-                <span>Quiet flexible setup</span>
-                <span>Low</span>
-              </div>
-            </div>
-          </a>
-          </div>
-        </section>
-
-        <section class="section-block" id="black-openings">
-          <div class="section-head split-head">
-            <div>
-              <h2>Black defenses and counterattacks</h2>
-              <p>These pages cover the main Black repertoires in the library, plus sharper gambits that are used for practical surprise value.</p>
-            </div>
-          </div>
-          <div class="guides-grid index-grid">
-            <a class="guide-card" href="/openings/sicilian-defense.html">
-            <div class="guide-card-media">
-              <img src="/openings/images/sicilian-defense.png" alt="Sicilian Defense position preview" loading="lazy" />
-            </div>
-            <div class="guide-card-body">
-              <div class="card-label">Black defense • Free</div>
-              <h3>Sicilian Defense</h3>
-              <p>The Sicilian Defense starts with 1...c5 and accepts an uneven structure from move one. Black gives up symmetry to get active piece play and queenside counterplay.</p>
-              <div class="guide-meta">
-                <span>Counterattacking</span>
-                <span>High</span>
-              </div>
-            </div>
-          </a>
-<a class="guide-card" href="/openings/caro-kann-defense.html">
-            <div class="guide-card-media">
-              <img src="/openings/images/caro-kann-defense.png" alt="Caro-Kann Defense position preview" loading="lazy" />
-            </div>
-            <div class="guide-card-body">
-              <div class="card-label">Black defense • Free</div>
-              <h3>Caro-Kann Defense</h3>
-              <p>The Caro-Kann meets 1.e4 with 1...c6 and usually follows with ...d5. Black challenges the center early while keeping the light squared bishop flexible.</p>
-              <div class="guide-meta">
-                <span>Solid structure</span>
-                <span>Medium</span>
-              </div>
-            </div>
-          </a>
-<a class="guide-card" href="/openings/french-defense.html">
-            <div class="guide-card-media">
-              <img src="/openings/images/french-defense.png" alt="French Defense position preview" loading="lazy" />
-            </div>
-            <div class="guide-card-body">
-              <div class="card-label">Black defense • Free</div>
-              <h3>French Defense</h3>
-              <p>The French Defense challenges 1.e4 with 1...e6 and ...d5. Black often accepts less space early, then tries to undermine White’s center with piece pressure and pawn breaks.</p>
-              <div class="guide-meta">
-                <span>Closed center</span>
-                <span>Medium</span>
-              </div>
-            </div>
-          </a>
-<a class="guide-card" href="/openings/queens-gambit-declined.html">
-            <div class="guide-card-media">
-              <img src="/openings/images/queens-gambit-declined.png" alt="Queen&#x27;s Gambit Declined position preview" loading="lazy" />
-            </div>
-            <div class="guide-card-body">
-              <div class="card-label">Black defense • Free</div>
-              <h3>Queen&#x27;s Gambit Declined</h3>
-              <p>The Queen’s Gambit Declined keeps the center intact and leads to structures that have been studied for a long time. Black does not accept the c4 pawn and focuses on stable development.</p>
-              <div class="guide-meta">
-                <span>Classical structure</span>
-                <span>Medium</span>
-              </div>
-            </div>
-          </a>
-<a class="guide-card" href="/openings/queens-gambit-accepted.html">
-            <div class="guide-card-media">
-              <img src="/openings/images/queens-gambit-accepted.png" alt="Queen&#x27;s Gambit Accepted position preview" loading="lazy" />
-            </div>
-            <div class="guide-card-body">
-              <div class="card-label">Black defense • Free</div>
-              <h3>Queen&#x27;s Gambit Accepted</h3>
-              <p>The Queen’s Gambit Accepted takes the c4 pawn and asks White to prove compensation through development and central pressure. Black tries to return the pawn under decent conditions or hold it briefly while finishing development.</p>
-              <div class="guide-meta">
-                <span>Direct central test</span>
-                <span>Medium</span>
-              </div>
-            </div>
-          </a>
-<a class="guide-card" href="/openings/kings-indian-defense.html">
-            <div class="guide-card-media">
-              <img src="/openings/images/kings-indian-defense.png" alt="King&#x27;s Indian Defense position preview" loading="lazy" />
-            </div>
-            <div class="guide-card-body">
-              <div class="card-label">Black defense • Free</div>
-              <h3>King&#x27;s Indian Defense</h3>
-              <p>The King’s Indian Defense lets White build a center, then tries to attack that center with piece pressure and pawn breaks. Black often castles quickly and plays for ...e5 or ...c5, depending on the setup.</p>
-              <div class="guide-meta">
-                <span>Hypermodern counterplay</span>
-                <span>High</span>
-              </div>
-            </div>
-          </a>
-<a class="guide-card" href="/openings/scandinavian-defense.html">
-            <div class="guide-card-media">
-              <img src="/openings/images/scandinavian-defense.png" alt="Scandinavian Defense position preview" loading="lazy" />
-            </div>
-            <div class="guide-card-body">
-              <div class="card-label">Black defense • Account required</div>
-              <h3>Scandinavian Defense</h3>
-              <p>The Scandinavian meets 1.e4 with 1...d5 and forces an immediate central decision. Black often develops the queen early, then aims for a compact and familiar structure.</p>
-              <div class="guide-meta">
-                <span>Direct center strike</span>
-                <span>Low to medium</span>
-              </div>
-            </div>
-          </a>
-<a class="guide-card" href="/openings/petrov-defense.html">
-            <div class="guide-card-media">
-              <img src="/openings/images/petrov-defense.png" alt="Petrov Defense position preview" loading="lazy" />
-            </div>
-            <div class="guide-card-body">
-              <div class="card-label">Black defense • Account required</div>
-              <h3>Petrov Defense</h3>
-              <p>The Petrov Defense replies to 1.e4 e5 2.Nf3 with 2...Nf6 and often heads into symmetrical positions where accuracy matters more than excitement.</p>
-              <div class="guide-meta">
-                <span>Symmetrical and sound</span>
-                <span>Medium</span>
-              </div>
-            </div>
-          </a>
-<a class="guide-card" href="/openings/vienna-gambit-counter.html">
-            <div class="guide-card-media">
-              <img src="/openings/images/vienna-gambit-counter.png" alt="Vienna Gambit Counter position preview" loading="lazy" />
-            </div>
-            <div class="guide-card-body">
-              <div class="card-label">Black countergambit • Account required</div>
-              <h3>Vienna Gambit Counter</h3>
-              <p>The Vienna Gambit Counter is Black’s practical answer to the Vienna Gambit. The point is to hit the center with ...d5 and make White justify the pawn push to f4.</p>
-              <div class="guide-meta">
-                <span>Direct central counter</span>
-                <span>Medium</span>
-              </div>
-            </div>
-          </a>
-<a class="guide-card" href="/openings/englund-gambit.html">
-            <div class="guide-card-media">
-              <img src="/openings/images/englund-gambit.png" alt="Englund Gambit position preview" loading="lazy" />
-            </div>
-            <div class="guide-card-body">
-              <div class="card-label">Black gambit • Free</div>
-              <h3>Englund Gambit</h3>
-              <p>The Englund Gambit throws in 1...e5 against 1.d4 and invites White to enter an unusual position immediately. It is mostly a practical weapon built on initiative and unfamiliarity.</p>
-              <div class="guide-meta">
-                <span>Practical surprise</span>
-                <span>Low to medium</span>
-              </div>
-            </div>
-          </a>
-<a class="guide-card" href="/openings/rousseau-gambit.html">
-            <div class="guide-card-media">
-              <img src="/openings/images/rousseau-gambit.png" alt="Rousseau Gambit position preview" loading="lazy" />
-            </div>
-            <div class="guide-card-body">
-              <div class="card-label">Black gambit • Account required</div>
-              <h3>Rousseau Gambit</h3>
-              <p>The Rousseau Gambit appears after 1.e4 e5 2.Nf3 Nc6 3.Bc4 f5. Black is immediately asking White whether the bishop on c4 and the center are ready for a sharp game.</p>
-              <div class="guide-meta">
-                <span>Immediate initiative</span>
-                <span>Medium</span>
-              </div>
-            </div>
-          </a>
-<a class="guide-card" href="/openings/stafford-gambit.html">
-            <div class="guide-card-media">
-              <img src="/openings/images/stafford-gambit.png" alt="Stafford Gambit position preview" loading="lazy" />
-            </div>
-            <div class="guide-card-body">
-              <div class="card-label">Black gambit • Free</div>
-              <h3>Stafford Gambit</h3>
-              <p>The Stafford Gambit comes from the Petrov after Black sacrifices a pawn for rapid development and tactical threats. It is popular in online play because the danger is immediate and many players misstep quickly.</p>
-              <div class="guide-meta">
-                <span>Trap-heavy attack</span>
-                <span>Medium</span>
-              </div>
-            </div>
-          </a>
-          </div>
-        </section>
-      </main>
+      <section class="panel">
+        <h2>Available opening guides</h2>
+        <div class="cards">
+      <a class="card" href="/openings/london-system.html">
+        <h3>London System</h3>
+        <p class="muted">Train the London System with structured opening drills, clean repetition, and move by move recall practice.</p>
+      </a>
+      <a class="card" href="/openings/sicilian-defense.html">
+        <h3>Sicilian Defense</h3>
+        <p class="muted">Practice the Sicilian Defense with interactive drills built for sharper recall against 1.e4.</p>
+      </a>
+      <a class="card" href="/openings/ruy-lopez.html">
+        <h3>Ruy Lopez</h3>
+        <p class="muted">Learn the Ruy Lopez through guided repetition so you remember key moves and plans after 1.e4 e5.</p>
+      </a>
+      <a class="card" href="/openings/fried-liver-attack.html">
+        <h3>Fried Liver Attack</h3>
+        <p class="muted">Study the Fried Liver Attack with tactical opening drills and repeat the sharp lines until they stick.</p>
+      </a>
+      <a class="card" href="/openings/stafford-gambit.html">
+        <h3>Stafford Gambit</h3>
+        <p class="muted">Train the Stafford Gambit and drill the tactical ideas that arise after Black sacrifices a pawn for activity.</p>
+      </a>
+      <a class="card" href="/openings/caro-kann-defense.html">
+        <h3>Caro-Kann Defense</h3>
+        <p class="muted">Memorize practical Caro-Kann Defense lines with structured drills and repeatable review.</p>
+      </a>
+      <a class="card" href="/openings/queens-gambit-accepted.html">
+        <h3>Queen's Gambit Accepted</h3>
+        <p class="muted">Train the Queen's Gambit Accepted and improve recall in one of the main d4 openings.</p>
+      </a>
+      <a class="card" href="/openings/queens-gambit-declined.html">
+        <h3>Queen's Gambit Declined</h3>
+        <p class="muted">Practice Queen's Gambit Declined lines with repeatable drills for stable d4 repertoire recall.</p>
+      </a>
+      <a class="card" href="/openings/italian-game.html">
+        <h3>Italian Game</h3>
+        <p class="muted">Learn the Italian Game with opening drills that reinforce clean development and attacking patterns.</p>
+      </a>
+      <a class="card" href="/openings/kings-indian-defense.html">
+        <h3>King's Indian Defense</h3>
+        <p class="muted">Drill King's Indian Defense lines and practice the setups, pawn breaks, and attacking plans that define the opening.</p>
+      </a>
+      <a class="card" href="/openings/french-defense.html">
+        <h3>French Defense</h3>
+        <p class="muted">Train the French Defense and repeat the main structures until your responses to 1.e4 feel automatic.</p>
+      </a>
+      <a class="card" href="/openings/englund-gambit.html">
+        <h3>Englund Gambit</h3>
+        <p class="muted">Practice the Englund Gambit and learn the forcing ideas that arise after 1.d4 e5.</p>
+      </a>
+      <a class="card" href="/openings/english-opening.html">
+        <h3>English Opening</h3>
+        <p class="muted">Study the English Opening with structured drills that reinforce flexible setups and move order awareness.</p>
+      </a>
+      <a class="card" href="/openings/scotch-game.html">
+        <h3>Scotch Game</h3>
+        <p class="muted">Train the Scotch Game and practice the early central break that gives the opening its direct character.</p>
+      </a>
+      <a class="card" href="/openings/vienna-gambit.html">
+        <h3>Vienna Gambit</h3>
+        <p class="muted">Learn the Vienna Gambit and drill the attacking patterns that follow an early f-pawn push.</p>
+      </a>
+      <a class="card" href="/openings/vienna-gambit-counter.html">
+        <h3>Vienna Gambit Counter</h3>
+        <p class="muted">Practice Black's critical responses to the Vienna Gambit with focused opening drills.</p>
+      </a>
+      <a class="card" href="/openings/rousseau-gambit.html">
+        <h3>Rousseau Gambit</h3>
+        <p class="muted">Train the Rousseau Gambit and memorize the forcing attacking ideas that arise from Black's early pawn sacrifice.</p>
+      </a>
+      <a class="card" href="/openings/bishops-opening.html">
+        <h3>Bishop's Opening</h3>
+        <p class="muted">Study the Bishop's Opening and drill the move orders that let White sidestep heavier main line theory.</p>
+      </a>
+      <a class="card" href="/openings/vienna-game.html">
+        <h3>Vienna Game</h3>
+        <p class="muted">Train the Vienna Game and build practical recall in one of White's flexible e4 systems.</p>
+      </a>
+      <a class="card" href="/openings/kings-gambit.html">
+        <h3>King's Gambit</h3>
+        <p class="muted">Practice the King's Gambit with direct opening drills built around initiative and tactical pressure.</p>
+      </a>
+      <a class="card" href="/openings/danish-gambit.html">
+        <h3>Danish Gambit</h3>
+        <p class="muted">Learn the Danish Gambit and drill the forcing attacking lines that come from White's early pawn offers.</p>
+      </a>
+      <a class="card" href="/openings/scandinavian-defense.html">
+        <h3>Scandinavian Defense</h3>
+        <p class="muted">Train the Scandinavian Defense and learn the practical move orders that challenge White from move one.</p>
+      </a>
+      <a class="card" href="/openings/vant-kruijs-opening.html">
+        <h3>Van't Kruijs Opening</h3>
+        <p class="muted">Practice practical black responses against the Van't Kruijs style setup and related slow systems.</p>
+      </a>
+      <a class="card" href="/openings/petrov-defense.html">
+        <h3>Petrov Defense</h3>
+        <p class="muted">Train the Petrov Defense and drill the solid move orders that keep Black organized against 1.e4.</p>
+      </a></div>
+      </section>
     </div>
   </body>
 </html>
