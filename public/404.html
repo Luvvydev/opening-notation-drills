@@ -8,8 +8,14 @@
         var path = window.location.pathname || "/";
         var search = window.location.search || "";
         var hash = window.location.hash || "";
+
+        if (/^\/openings\/.*\.html$/.test(path) || path === "/openings/index.html") {
+          window.location.replace("/");
+          return;
+        }
+
         if (path && path !== "/") {
-          window.location.replace("/#"+ path + search + hash);
+          window.location.replace("/#" + path + search + hash);
         }
       })();
     </script>

@@ -43,7 +43,7 @@ class App extends React.Component {
 
             <Route exact path='/' component={Home} />
             <Route path='/practice' component={Practice} />
-            <Route path='/openings' component={OpeningTrainer} />
+            <Route exact path='/openings' component={OpeningTrainer} />
             <Route path='/about' component={About} />
             <Route path='/leaderboards' component={Leaderboards} />
             <Route path='/install' component={InstallAppPage} />
