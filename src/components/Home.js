@@ -722,7 +722,7 @@ renderHeroCarousel = (slides) => {
         id: "overview",
         kicker: "Build stronger recall",
         title: "Ready to improve?",
-        subtitle: "Start building accurate move recall today.",
+        subtitle: "Use structured chess drills to build accurate move recall today.",
         cta: "Start Drilling →",
         onClick: this.startFirstAvailable,
         pills: ["Learn", "Practice", "Drill"],
@@ -815,8 +815,8 @@ return (
 <div className="home-page">
 
       <SEO
-        title="ChessDrills | Chess Opening Training"
-        description="Train chess openings with structured drills, move feedback, and repeatable opening recall practice."
+        title="ChessDrills | Chess Drills for Opening Training"
+        description="ChessDrills is a chess drills site for opening training, opening recall, and repeatable move practice with structured drills and feedback."
         canonical="https://chessdrills.net/"
         image="https://chessdrills.net/logo512.png"
       />
@@ -949,7 +949,7 @@ return (
             <div className="home-section-row home-section-row-tight">
               <div className="home-section-left">
                 <div className="home-section-title">All openings</div>
-                <div className="home-section-sub">Browse the full library</div>
+                <div className="home-section-sub">Browse the full library of chess opening drills</div>
               </div>
               <div className="home-section-meta">Total: {OPENINGS.length}</div>
             </div>
