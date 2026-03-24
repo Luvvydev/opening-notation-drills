@@ -58,6 +58,7 @@ export default function SEO({ title, description, canonical, image, type = "webs
     }
 
     setMeta('meta[property="og:type"]', "property", type);
+    setMeta('meta[property="og:site_name"]', "property", "ChessDrills");
     setMeta('meta[name="twitter:card"]', "name", "summary_large_image");
   }, [title, description, canonical, image, type]);
 

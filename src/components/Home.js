@@ -816,7 +816,7 @@ return (
 
       <SEO
         title="ChessDrills | Chess Drills for Opening Training"
-        description="ChessDrills is a chess drills site for opening training, opening recall, and repeatable move practice with structured drills and feedback."
+        description="ChessDrills is a chess opening trainer built around chess drills, opening recall, and repeatable move practice with structured feedback."
         canonical="https://chessdrills.net/"
         image="https://chessdrills.net/logo512.png"
       />
