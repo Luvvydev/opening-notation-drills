@@ -5,6 +5,7 @@ import { OPENING_SETS as CATALOG_OPENING_SETS } from "../openings/openingCatalog
 import { buildMoveFeedback } from "../openings/feedback";
 import { useAuth } from "../auth/AuthProvider";
 import TopNav from "./TopNav";
+import SEO from "./SEO";
 import { BOARD_THEMES, DEFAULT_THEME, PIECE_THEMES } from "../theme/boardThemes";
 import "./OpeningTrainer.css";
 import { getStreakState, markLineCompletedTodayDetailed } from "../utils/streak";
@@ -3655,8 +3656,30 @@ render() {
       }
     }
 
+    let seoOpening = null;
+    try {
+      const search = this.props && this.props.location ? this.props.location.search : "";
+      const params = new URLSearchParams(search || "");
+      const openingKey = params.get("opening");
+      if (openingKey && OPENING_SETS[openingKey]) seoOpening = OPENING_SETS[openingKey];
+    } catch (_) {
+      seoOpening = null;
+    }
+
+    const seoTitle = seoOpening
+      ? `${seoOpening.label} Trainer | ChessDrills`
+      : "Chess Opening Trainer | ChessDrills";
+    const seoDescription = seoOpening
+      ? `Practice ${seoOpening.label} with structured chess opening drills, move feedback, and opening recall training in ChessDrills.`
+      : "Practice chess openings with structured drills, move feedback, and opening recall training in ChessDrills.";
+
     return (
       <div className={"ot-container" + (this.state.isMobile ? " ot-mobile" : "")}>
+        <SEO
+          title={seoTitle}
+          description={seoDescription}
+          image="https://chessdrills.net/logo512.png"
+        />
         <OpeningTrainerConfetti active={this.state.confettiActive} />
 <OpeningTrainerCustomModal
   open={this.state.customModalOpen}
