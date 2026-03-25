@@ -1,27 +1,28 @@
 import { withOpeningFeedback } from "./feedback";
 
 export const scandinavianDefenseSEOText = `
-The Scandinavian Defense is a direct answer to 1.e4 where Black challenges the center immediately with ...d5.
-It leads to practical positions where Black removes White's e-pawn early, develops quickly, and pressures the center instead of sitting back.
+The Scandinavian Defense is one of the most practical answers to 1.e4 because Black challenges the center on move one and forces the game into Scandinavian territory.
+It gives Black direct play, clear piece development, and a lot of practical chances when White plays natural moves without understanding the tactical details.
 
-This page is built for players who want to memorize real Scandinavian move orders through repetition.
-The drills focus on the classical 2...Qxd5 lines, the main ...Qa5 setups, and the tactical patterns that appear when White treats the early queen move too casually.
+This page is built for players who want real Scandinavian move orders, not vague opening advice.
+The drills cover the classical 2...Qxd5 and ...Qa5 setups, the important ...Bf5, ...Bg4, ...Qb6, and ...Qf5 ideas, and the modern 2...Nf6 move order where Black delays the queen and recovers the pawn more cleanly.
 
-If you keep getting playable Scandinavian positions and then forgetting the right move order, these drills are meant to make the structure automatic and teach what each move is actually doing.
+It also includes common practical sidelines like the advance 2.e5 setup, the Tennison Gambit, and the tricky modern 3.c4 gambit structure.
+If you keep reaching playable Scandinavian positions but forgetting when to play ...Qa5, ...c6, ...Qb6, ...Bg4, or ...Nf6, these lines are here to make the ideas automatic and explain what each move is trying to do.
 `;
 
 const QA5_INTRO = [
   "White claims central space and opens lines right away.",
-  "Black challenges the center immediately instead of letting White build freely.",
+  "Let's learn the Scandinavian Defense! Black challenges the center immediately instead of letting White build freely with pawn to d5.",
   "White accepts the challenge and forces Black into an open Scandinavian structure.",
   "Black recaptures at once because removing White's e-pawn is the whole point of this defense.",
   "White develops with tempo and asks the queen to justify itself.",
-  "Qa5 is the classical retreat, keeping the queen active while staying out of easy tactics."
+  "Qa5 is the classical retreat, keeping the queen active while often supporting ...c6 and a later retreat to c7 if White starts x-raying the queen."
 ];
 
 const D4_NF6 = [
   "White rebuilds the broad center and tries to turn space into initiative.",
-  "Black develops cleanly and keeps e4 and d5 break ideas under control."
+  "Black develops cleanly, keeps e4 and d5 break ideas under control, and often keeps queenside castling in reserve."
 ];
 
 const NF3_BF5 = [
@@ -31,7 +32,7 @@ const NF3_BF5 = [
 
 const BD2_BG4 = [
   "White develops, but the bishop on d2 often ends up doing defensive work instead of improving the center.",
-  "Black pins and develops at the same time, asking White to spend tempi dealing with active pieces."
+  "Black develops with tempo on the d1 diagonal, forcing White to solve concrete coordination problems before the center is really secure."
 ];
 
 export const scandinavianDefenseLines = withOpeningFeedback([
@@ -300,8 +301,8 @@ export const scandinavianDefenseLines = withOpeningFeedback([
       "Black develops calmly and keeps the structure under control.",
       "White supports the center, but the move order is a little slow.",
       "Black pins and develops at the same time.",
-      "White kicks the bishop, but this weakens dark squares and delays castling.",
-      "Black simply retreats; provoking f3 was already useful, so Black keeps the bishop pair and the better long-term target structure."
+      "White kicks the bishop, but f3 is doing more than that. It blocks the diagonal to the queen and can support Qe2 and long castling later.",
+      "Black simply retreats; provoking f3 was already useful, but Black still has to respect White's typical Qe2, O-O-O, and kingside pawn storm ideas from here."
     ]
   },
   {
@@ -337,8 +338,8 @@ export const scandinavianDefenseLines = withOpeningFeedback([
       ...D4_NF6,
       "White develops aggressively and targets f7.",
       "Black develops with a pin instead of wasting time on passive defense.",
-      "White chases the bishop, but the pawn move weakens dark squares and delays castling.",
-      "Black calmly retreats because the bishop already provoked the concession Black wanted."
+      "White chases the bishop, but f3 also hints at Qe2 and long castling with a kingside pawn storm.",
+      "Black calmly retreats because the bishop already provoked the concession Black wanted, though Black should remember that White's attacking plan is now very straightforward."
     ]
   },
   {
@@ -403,7 +404,7 @@ export const scandinavianDefenseLines = withOpeningFeedback([
       "White develops aggressively and targets f7.",
       "Black supports the center and opens the dark bishop without losing coordination.",
       "White castles and says the initiative should now favor White.",
-      "Black plays ...c6 to clamp d5, prepare ...Nbd7, and make the queen on a5 fully justified."
+      "Black plays ...c6 to clamp d5, prepare ...Nbd7, keep Nb5 out, and give the queen a clean retreat to c7 if White lines up on the diagonal."
     ]
   },
   {
@@ -497,5 +498,130 @@ export const scandinavianDefenseLines = withOpeningFeedback([
       "White jumps into e5, attacking the queen and trying to turn development into initiative.",
       "Black calmly shifts to b6, where the queen sidesteps the attack and often creates tactical pressure against d4 and b2 at the same time."
     ]
+  },
+  {
+    category: "Modern 2...Nf6",
+    id: "scandinavian-defense-26-modern-nf6-clean-recapture",
+    name: "Modern 2...Nf6 with clean queen recapture",
+    description: "Black delays the queen, wins the d5 pawn back with a knight, and only brings the queen out once it lands on a stable square.",
+    moves: ["e4", "d5", "exd5", "Nf6", "Nc3", "Nxd5", "Nxd5", "Qxd5", "d4", "Nc6", "Nf3", "Bg4"],
+    explanations: [
+      "White opens in the most direct way and asks Black to prove the defense works.",
+      "Black strikes the center immediately and forces Scandinavian territory.",
+      "White accepts the pawn and tests whether Black can recover it cleanly.",
+      "Black chooses the modern move order with ...Nf6, developing first and avoiding an early queen target.",
+      "White develops and looks like the extra pawn can still be held.",
+      "Black simply takes on d5 because the queen on d8 already protects the knight.",
+      "White trades knights and hopes Black will still suffer from queen exposure later.",
+      "Black recaptures with the queen only now, when the c3 knight is gone and d5 is a comfortable square.",
+      "White builds the center and tries to use the extra tempo from the queen move.",
+      "Black develops naturally and starts hitting the center immediately.",
+      "White develops toward castling and reinforces d4.",
+      "Black develops with tempo and starts aiming at d4 and the kingside dark squares."
+    ]
+  },
+  {
+    category: "Modern 2...Nf6",
+    id: "scandinavian-defense-27-modern-c4-palme-gambit",
+    name: "Modern line versus 3.c4 gambit",
+    description: "Against the critical 3.c4 try, Black accepts a gambit structure, activates both knights, and uses ...e5 and ...e4 to make White's development awkward.",
+    moves: ["e4", "d5", "exd5", "Nf6", "c4", "c6", "dxc6", "Nxc6", "Nc3", "e5", "Nf3", "e4", "Ng5", "Bf5"],
+    explanations: [
+      "White opens in the most direct way and asks Black to prove the defense works.",
+      "Black strikes the center immediately and forces Scandinavian territory.",
+      "White accepts the pawn and tries to keep the extra material.",
+      "Black chooses the modern move order with ...Nf6, developing first and avoiding an early queen target.",
+      "White plays the critical c4 move, the only try that really stops Black from recovering on d5 right away.",
+      "Black answers with ...c6, attacking the advanced pawn and accepting a gambit structure if needed.",
+      "White takes on c6, but giving back the pawn also opens lines for Black's pieces.",
+      "Black recaptures with the knight, and suddenly both knights are active while White is still behind in development.",
+      "White develops, but this move can be too natural for its own good in this structure.",
+      "Black strikes with ...e5, opening the bishop and preparing to drive White's pieces back.",
+      "White develops toward castling, but the knight on f3 becomes the real target.",
+      "Black pushes ...e4, gains space, and drives the knight away while White's queenside is still asleep.",
+      "White jumps forward because the central retreat squares are no longer available.",
+      "Black develops with tempo, keeps the knight on g5 awkward, and makes the e4 wedge extremely unpleasant to challenge."
+    ]
+  },
+  {
+    category: "Modern 2...Nf6",
+    id: "scandinavian-defense-28-modern-nb4-queen-e4",
+    name: "Modern trap with ...Nb4 and ...Qe4+",
+    description: "A practical Scandinavian trap where Black's strange-looking ...Nb4 sets up ...Qe4+ and a fork on c2.",
+    moves: ["e4", "d5", "exd5", "Nf6", "Nc3", "Nxd5", "Nxd5", "Qxd5", "d4", "Nc6", "Nf3", "Nb4", "c3", "Qe4+", "Be2", "Nc2+"],
+    explanations: [
+      "White opens in the most direct way and asks Black to prove the defense works.",
+      "Black strikes the center immediately and forces Scandinavian territory.",
+      "White accepts the pawn and tries to test Black's move order.",
+      "Black chooses the modern move order with ...Nf6, developing first and avoiding an early queen target.",
+      "White develops and hopes the d5 pawn is still a long-term problem.",
+      "Black simply takes it back because the knight is already defended.",
+      "White trades knights to force the queen out.",
+      "Black recaptures when the queen can actually sit on d5 comfortably.",
+      "White builds the center and tries to use development against the queen.",
+      "Black develops and increases pressure on d4.",
+      "White supports the center and prepares normal development.",
+      "Black plays the strange-looking ...Nb4, ignoring rules of thumb because the concrete threat matters more.",
+      "White attacks the knight in the most natural way.",
+      "Black checks on e4, where the queen hits the king and also clears the way for a c2 fork.",
+      "White blocks and tries to finish development.",
+      "Black jumps into c2 with check, and the fork on king and rook shows what ...Nb4 was really about."
+    ]
+  },
+  {
+    category: "Advance Variation",
+    id: "scandinavian-defense-29-advance-c5-french-upgrade",
+    name: "Advance variation with ...c5 and active bishop",
+    description: "Black treats 2.e5 as a target, not a problem, and reaches a French-like structure with the light bishop already outside the pawn chain.",
+    moves: ["e4", "d5", "e5", "c5", "d4", "Nc6", "Nf3", "Bg4", "Be2", "e6", "O-O", "Nge7"],
+    explanations: [
+      "White grabs space and tries to shut down Black's most natural knight square.",
+      "Black does not panic. The advanced pawn can become a target instead of a strength.",
+      "White supports the center and hopes space will carry the position.",
+      "Black hits back with ...c5, making the e5 pawn harder to support cleanly.",
+      "White reinforces the chain and claims more space.",
+      "Black develops naturally and keeps pressure on d4 and e5.",
+      "White develops toward castling and tries to hold the center together.",
+      "Black develops the bishop outside the pawn chain, which is the big difference from a normal French structure.",
+      "White breaks the pin and keeps things solid.",
+      "Black supports the center and prepares to finish development without giving up the active bishop.",
+      "White castles and says the extra space should matter now.",
+      "Black continues calmly. The structure is French-like, but Black got the light bishop out before locking it in."
+    ]
+  },
+  {
+    category: "Sidelines",
+    id: "scandinavian-defense-30-tennison-safe-acceptance",
+    name: "Tennison Gambit met with simple development",
+    description: "Black avoids the cheap trap, develops normally, and keeps the extra pawn.",
+    moves: ["e4", "d5", "Nf3", "dxe4", "Ng5", "Nf6", "d3", "exd3", "Bxd3", "Nc6"],
+    explanations: [
+      "White sidesteps the main lines and offers a gambit setup instead.",
+      "Black accepts the pawn because the gambit only becomes dangerous if Black cooperates.",
+      "White attacks at once and hopes for quick tactical play.",
+      "Black develops with the safe move. This is the important practical point, because flashy moves like ...h6 are what get Black in trouble.",
+      "White builds more pressure on e4 and tries to pull Black into a trap.",
+      "Black keeps developing and covers the key squares instead of chasing the knight.",
+      "White attacks the pawn again and tries to justify the gambit.",
+      "Black gives the pawn back on Black's terms and removes one of White's attackers.",
+      "White recaptures and says the lead in development should be enough compensation.",
+      "Black develops normally and keeps the extra pawn without walking into the cheap shot."
+    ]
+  },
+  {
+    category: "Sidelines",
+    id: "scandinavian-defense-31-nc3-d4-space-gain",
+    name: "2.Nc3 met by ...d4",
+    description: "If White defends the pawn with Nc3, Black can often gain time and space by pushing past with ...d4.",
+    moves: ["e4", "d5", "Nc3", "d4", "Nce2", "e5"],
+    explanations: [
+      "White opens in the most direct way and hopes early development will support the d-pawn.",
+      "Black challenges the center immediately and makes White answer right away.",
+      "White defends the pawn with a knight, but this also gives Black a useful target.",
+      "Black pushes past with ...d4, gaining space and driving the knight off a natural square.",
+      "White retreats to keep the position together, but the knight is already awkward.",
+      "Black follows with ...e5, grabs more space, and shows why 2.Nc3 can actually help Black build the center."
+    ]
+
   }
 ]);

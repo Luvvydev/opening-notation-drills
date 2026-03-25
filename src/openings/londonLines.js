@@ -28,7 +28,7 @@ export const londonLines = withOpeningFeedback([
     description: "Baseline London: bishop outside the pawn chain, e3 before Nf3, then choose between calm development and active plans.",
     moves: ["d4", "d5", "Bf4", "Nf6", "e3", "e6", "Nf3", "Bd6", "Nbd2", "O-O"],
     explanations: [
-      "Claim central space and keep the London structure available.",
+      "Let's learn the London system! Claim central space with pawn to d4",
       "Black mirrors the center and asks how you will support d4.",
       "Get the bishop outside the pawn chain before e3 shuts the diagonal.",
       "Black develops and starts contesting e4 and d5.",

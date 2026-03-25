@@ -30,7 +30,7 @@ export const sicilianDefenseLines = withOpeningFeedback([
     moves: ["e4", "c5", "Nf3", "d6", "d4", "cxd4", "Nxd4", "Nf6", "Nc3", "Nc6", "Be3", "e6", "f3", "Be7", "Qd2", "O-O"],
     explanations: [
       "White takes central space and opens lines for pieces quickly.",
-      "Sicilian. Pawn to c5. Fight for d4 without mirroring with e5, and create imbalance.",
+      "Let's learn the Sicilian Defense! Pawn to c5 let's create imbalance!",
       "Develop and attack d4 and e5 squares, also supports the d4 push.",
       "Support ...c5 structure and prepare ...Nf6 without allowing e5 tactics.",
       "White challenges the center directly and opens lines.",
