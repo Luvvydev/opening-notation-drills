@@ -2602,6 +2602,7 @@ renderPuzzleMode = () => {
     ? Math.min(this.state.mobileBoardSize || this.state.boardSize, mobilePuzzleBoardMaxWidth || (this.state.mobileBoardSize || this.state.boardSize))
     : this.state.boardSize;
   const currentMode = this.state.gameMode || "learn";
+  const modeClass = ` ot-mode-${currentMode}`;
   const hasPack = this.state.puzzlePackSize > 0;
   const puzzleStatus = this.state.puzzleStatus || (this.state.puzzleSolved ? "Solved." : "Solve the puzzle.");
   const currentPuzzleNumber = hasPack ? this.state.puzzleIndex + 1 : 0;
@@ -2719,7 +2720,7 @@ renderPuzzleMode = () => {
 
   if (this.state.isMobile) {
     return (
-      <div className="ot-container ot-mobile ot-puzzle-mobile-root">
+      <div className={"ot-container ot-mobile ot-puzzle-mobile-root" + modeClass}>
         <div className="ot-puzzle-mobile-shell">
           {mobileMenu}
 
@@ -2803,7 +2804,7 @@ renderPuzzleMode = () => {
   }
 
   return (
-    <div className="ot-container">
+    <div className={"ot-container" + modeClass}>
       <TopNav title="Chess Opening Drills" />
 
       <div className="ot-top-line ot-puzzle-topline">
@@ -3673,8 +3674,10 @@ render() {
       ? `Practice ${seoOpening.label} with structured chess opening drills, move feedback, and opening recall training in ChessDrills.`
       : "Practice chess openings with structured drills, move feedback, and opening recall training in ChessDrills.";
 
+    const modeClass = ` ot-mode-${this.state.gameMode || "learn"}`;
+
     return (
-      <div className={"ot-container" + (this.state.isMobile ? " ot-mobile" : "")}>
+      <div className={"ot-container" + modeClass + (this.state.isMobile ? " ot-mobile" : "")}>
         <SEO
           title={seoTitle}
           description={seoDescription}

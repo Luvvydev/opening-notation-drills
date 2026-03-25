@@ -707,9 +707,41 @@ renderHeroCarousel = (slides) => {
 
     const recommended = recommendedPool.slice(0, recommendedCount);
 
-    const resumeOpening = startedNotCompleted[0] || recentlyPlayed[0] || sorted[0];
-    const focusOpening = sorted.find((o) => !isCompletedOpening(o)) || sorted[0];
-    const exploreOpening = newOpenings[0] || fallbackCatalog[0] || sorted[0];
+    const pickDistinctOpening = (usedKeys, ...lists) => {
+      for (const list of lists) {
+        const found = (list || []).find((o) => o && !usedKeys.has(o.key));
+        if (found) return found;
+      }
+
+      for (const list of lists) {
+        const fallback = (list || []).find(Boolean);
+        if (fallback) return fallback;
+      }
+
+      return null;
+    };
+
+    const resumeOpening = pickDistinctOpening(new Set(), startedNotCompleted, recentlyPlayed, sorted);
+
+    const heroUsedKeys = new Set(resumeOpening ? [resumeOpening.key] : []);
+
+    const focusOpening = pickDistinctOpening(
+      heroUsedKeys,
+      startedNotCompleted,
+      sorted.filter((o) => !isCompletedOpening(o)),
+      recentlyPlayed,
+      sorted
+    );
+
+    if (focusOpening) heroUsedKeys.add(focusOpening.key);
+
+    const exploreOpening = pickDistinctOpening(
+      heroUsedKeys,
+      newOpenings,
+      fallbackCatalog,
+      sorted.filter((o) => !isStartedOpening(o)),
+      sorted
+    );
 
     const getOpeningPct = (o) => {
       const s = getStatsFor(o);
@@ -721,8 +753,8 @@ renderHeroCarousel = (slides) => {
       {
         id: "overview",
         kicker: "Build stronger recall",
-        title: "Ready to improve?",
-        subtitle: "Use structured chess drills to build accurate move recall today.",
+        title: "Train openings with cleaner structure.",
+        subtitle: "Drill full lines, get immediate move feedback, and pick back up exactly where you left off.",
         cta: "Start Drilling →",
         onClick: this.startFirstAvailable,
         pills: ["Learn", "Practice", "Drill"],
