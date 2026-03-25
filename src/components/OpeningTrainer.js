@@ -12,7 +12,7 @@ import { getStreakState, markLineCompletedTodayDetailed } from "../utils/streak"
 import { getActivityDays, markActivityToday, touchActivityToday } from "../utils/activityDays";
 import { X_SVG_DATA_URI, pickRandomLineId, countMovesForSide, countDoneMovesForSide, groupLines, detectCustomInputFormat, parseCustomLineInput, lineToSanText, lineToPgn, encodeSharedCustomLine, decodeSharedCustomLine, getLineStartFen } from "./openingTrainer/otUtils";
 import { getOrderedLineIds } from "../utils/lineIndex";
-import { pickNextPracticeLineId, pickNextLearnLineId } from "./openingTrainer/practicePicker";
+import { pickNextPracticeLineId } from "./openingTrainer/practicePicker";
 import { getOpeningPuzzlePack, getOpeningPuzzleTagHints } from "./openingTrainer/openingPuzzleCatalog";
 import { preparePuzzle, moveMatchesUci, getLegalTargets, getSquarePieceColor } from "./openingTrainer/puzzleUtils";
 
@@ -97,106 +97,159 @@ function incFreeDrillsCount(openingKey) {
 }
 
 
-// ---- Learn shuffle bag (prevents repeating same few lines) ----
-const _learnBagKey = (openingKey) => `chessdrills.learn_bag.v1.${String(openingKey || "")}`;
 
-function _shuffleIds(ids) {
-  const a = Array.isArray(ids) ? ids.slice() : [];
-  for (let i = a.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(Math.random() * (i + 1));
-    const tmp = a[i];
-    a[i] = a[j];
-    a[j] = tmp;
+function pickDefaultLearnLineId(openingKey, lines, preferredId = null) {
+  const safeLines = Array.isArray(lines) ? lines.filter(Boolean) : [];
+  if (!safeLines.length) return "";
+
+  if (preferredId && safeLines.find((line) => line && line.id === preferredId)) {
+    return String(preferredId);
   }
-  return a;
+
+  const orderedIds = getOrderedLineIds(openingKey) || [];
+  for (let i = 0; i < orderedIds.length; i += 1) {
+    const candidateId = String(orderedIds[i] || "");
+    if (candidateId && safeLines.find((line) => line && line.id === candidateId)) {
+      return candidateId;
+    }
+  }
+
+  return safeLines[0] && safeLines[0].id ? String(safeLines[0].id) : "";
 }
 
-function _loadLearnBag(openingKey) {
-  try {
-    const raw = window.localStorage.getItem(_learnBagKey(openingKey));
-    if (!raw) return null;
-    const obj = JSON.parse(raw);
-    if (!obj || !Array.isArray(obj.order)) return null;
-    const idx = Number(obj.idx) || 0;
-    return { order: obj.order.map(String), idx };
-  } catch (_) {
-    return null;
+function getOrderedLineIdsForLines(openingKey, lines) {
+  const safeLines = Array.isArray(lines) ? lines.filter(Boolean) : [];
+  if (!safeLines.length) return [];
+
+  const lineIds = safeLines.map((line) => String(line.id || "")).filter(Boolean);
+  const available = new Set(lineIds);
+  const orderedRaw = getOrderedLineIds(openingKey) || [];
+  const seen = new Set();
+  const ordered = [];
+
+  for (let i = 0; i < orderedRaw.length; i += 1) {
+    const candidateId = String(orderedRaw[i] || "");
+    if (!candidateId || !available.has(candidateId) || seen.has(candidateId)) continue;
+    ordered.push(candidateId);
+    seen.add(candidateId);
   }
+
+  for (let i = 0; i < lineIds.length; i += 1) {
+    const candidateId = lineIds[i];
+    if (!candidateId || seen.has(candidateId)) continue;
+    ordered.push(candidateId);
+    seen.add(candidateId);
+  }
+
+  return ordered;
 }
 
-function _saveLearnBag(openingKey, bag) {
-  try {
-    window.localStorage.setItem(_learnBagKey(openingKey), JSON.stringify(bag || {}));
-  } catch (_) {}
+function getLineNumberForLines(openingKey, lines, lineId) {
+  const ids = getOrderedLineIdsForLines(openingKey, lines);
+  const targetId = String(lineId || "");
+  if (!targetId || !ids.length) return null;
+  const idx = ids.indexOf(targetId);
+  return idx >= 0 ? idx + 1 : null;
 }
 
-function _sameIdSet(a, b) {
-  if (!Array.isArray(a) || !Array.isArray(b)) return false;
-  if (a.length !== b.length) return false;
-  const sa = a.map(String).slice().sort();
-  const sb = b.map(String).slice().sort();
-  for (let i = 0; i < sa.length; i += 1) {
-    if (sa[i] !== sb[i]) return false;
+function getLearnDiscoveredCountForLines(openingKey, lines, learnProgress) {
+  const ids = getOrderedLineIdsForLines(openingKey, lines);
+  if (!ids.length) return 0;
+
+  let count = 0;
+  for (let i = 0; i < ids.length; i += 1) {
+    const stats = getLearnLineStats(learnProgress, openingKey, ids[i]);
+    if ((Number(stats && stats.timesClean) || 0) >= 1) count += 1;
   }
-  return true;
+  return count;
 }
 
-function _pickNextLearnFromBag({ openingKey, lineIds, excludeLineIds, lastLineId, forceRepeatLineId }) {
-  if (!openingKey) return null;
-  const idsAll = Array.isArray(lineIds) ? lineIds.filter(Boolean).map(String) : [];
-  if (idsAll.length === 0) return null;
+function pickNextOrderedLearnLineId({ openingKey, lines, learnProgress, currentLineId = null, advancePastCurrent = false, preferredId = null }) {
+  const ids = getOrderedLineIdsForLines(openingKey, lines);
+  if (!ids.length) return "";
 
-  if (forceRepeatLineId) return String(forceRepeatLineId);
+  const preferred = String(preferredId || "");
+  if (preferred && ids.includes(preferred)) return preferred;
 
-  const exclude = Array.isArray(excludeLineIds) ? excludeLineIds.filter(Boolean).map(String) : [];
-  const excludeSet = new Set(exclude);
+  const currentId = String(currentLineId || "");
+  const currentIdx = currentId ? ids.indexOf(currentId) : -1;
 
-  let bag = _loadLearnBag(openingKey);
-  if (!bag || !_sameIdSet(bag.order, idsAll) || bag.order.length === 0) {
-    bag = { order: _shuffleIds(idsAll), idx: 0 };
+  if (advancePastCurrent && currentIdx >= 0) {
+    for (let i = currentIdx + 1; i < ids.length; i += 1) {
+      const stats = getLearnLineStats(learnProgress, openingKey, ids[i]);
+      if ((Number(stats && stats.timesClean) || 0) < 1) return ids[i];
+    }
+    for (let i = 0; i < currentIdx; i += 1) {
+      const stats = getLearnLineStats(learnProgress, openingKey, ids[i]);
+      if ((Number(stats && stats.timesClean) || 0) < 1) return ids[i];
+    }
   }
 
-  // Try up to N picks from the bag to find a non-excluded line.
-  // If everything is excluded, we will fall back to allowing excluded lines.
-  const maxTries = bag.order.length;
-  let tries = 0;
-  let pick = null;
-
-  while (tries < maxTries) {
-    const i = bag.idx % bag.order.length;
-    const candidate = bag.order[i];
-    bag.idx = i + 1;
-    tries += 1;
-
-    if (excludeSet.size > 0 && excludeSet.has(String(candidate))) continue;
-    if (lastLineId && String(candidate) === String(lastLineId) && bag.order.length > 1) continue;
-
-    pick = candidate;
-    break;
+  for (let i = 0; i < ids.length; i += 1) {
+    const stats = getLearnLineStats(learnProgress, openingKey, ids[i]);
+    if ((Number(stats && stats.timesClean) || 0) < 1) return ids[i];
   }
 
-  // If we couldn't find a non-excluded candidate, allow excluded but still avoid immediate repeat if possible.
-  if (!pick) {
-    for (let k = 0; k < bag.order.length; k += 1) {
-      const candidate = bag.order[(bag.idx + k) % bag.order.length];
-      if (lastLineId && String(candidate) === String(lastLineId) && bag.order.length > 1) continue;
-      pick = candidate;
-      bag.idx = (bag.idx + k + 1) % bag.order.length;
+  if (currentIdx >= 0) return ids[currentIdx];
+  return ids[0];
+}
+
+function normalizeFenKey(fen) {
+  const raw = String(fen || "").trim();
+  if (!raw || raw === "start") return "start";
+  const parts = raw.split(/\s+/);
+  return parts.slice(0, 4).join(" ");
+}
+
+function findTranspositionMatch({ lines, fen, minStepIndex, preferredLineId }) {
+  const safeLines = Array.isArray(lines) ? lines.filter(Boolean) : [];
+  if (!safeLines.length) return null;
+
+  const targetFenKey = normalizeFenKey(fen);
+  if (!targetFenKey || targetFenKey === "start") return null;
+
+  const safeMinStepIndex = Math.max(0, Number(minStepIndex) || 0);
+  const preferredId = preferredLineId ? String(preferredLineId) : "";
+  let best = null;
+  let bestScore = Number.POSITIVE_INFINITY;
+
+  for (let lineIdx = 0; lineIdx < safeLines.length; lineIdx += 1) {
+    const line = safeLines[lineIdx];
+    const moves = Array.isArray(line && line.moves) ? line.moves : [];
+    if (!moves.length || !line || !line.id) continue;
+
+    const startFen = getLineStartFen(line);
+    const game = startFen && startFen !== "start" ? new Chess(startFen) : new Chess();
+
+    for (let moveIdx = 0; moveIdx < moves.length; moveIdx += 1) {
+      const applied = game.move(moves[moveIdx], { sloppy: true });
+      if (!applied) break;
+
+      const nextStepIndex = moveIdx + 1;
+      if (nextStepIndex < safeMinStepIndex) continue;
+      if (normalizeFenKey(game.fen()) !== targetFenKey) continue;
+
+      const sameLinePenalty = preferredId && String(line.id) === preferredId ? 0 : 1000;
+      const stepDistance = Math.max(0, nextStepIndex - safeMinStepIndex);
+      const score = sameLinePenalty + stepDistance;
+
+      if (score < bestScore) {
+        best = {
+          lineId: String(line.id),
+          stepIndex: nextStepIndex,
+          matchedMoveIndex: moveIdx,
+          matchedSan: moves[moveIdx]
+        };
+        bestScore = score;
+      }
+
+      if (score === 0) return best;
       break;
     }
   }
 
-  // If we've effectively exhausted the bag, reshuffle for the next cycle.
-  if (bag.idx >= bag.order.length) {
-    bag.order = _shuffleIds(idsAll);
-    bag.idx = 0;
-  }
-
-  _saveLearnBag(openingKey, bag);
-  return pick || null;
+  return best;
 }
-
-// ---- End Learn shuffle bag ----
 
 class OpeningTrainer extends Component {
   constructor(props) {
@@ -235,7 +288,6 @@ class OpeningTrainer extends Component {
     if (sharedCustomLine && !customAll.find((l) => l && l.id === sharedCustomLine.id)) customAll.push(sharedCustomLine);
     const customForFirst = customAll.filter((l) => l && l.openingKey === firstSetKey);
     const firstLines = firstLinesBuiltIn.concat(customForFirst);
-    const firstId = sharedCustomLine ? sharedCustomLine.id : (pickRandomLineId(firstLines, null) || (firstLines[0] ? firstLines[0].id : ""));
 
     this._autoNextTimer = null;
     this._confettiTimer = null;
@@ -245,6 +297,12 @@ class OpeningTrainer extends Component {
     const progress = loadProgress();
     const learnProgress = loadLearnProgress();
     const settings = loadSettings(DEFAULT_THEME);
+    const firstId = pickNextOrderedLearnLineId({
+      openingKey: firstSetKey,
+      lines: firstLines,
+      learnProgress,
+      preferredId: sharedCustomLine ? sharedCustomLine.id : null
+    }) || pickDefaultLearnLineId(firstSetKey, firstLines, sharedCustomLine ? sharedCustomLine.id : null);
 
     const drillStats = this.loadDrillStats();
 
@@ -322,6 +380,7 @@ class OpeningTrainer extends Component {
       puzzleSolved: false,
       puzzleStatus: "",
       puzzleMistakes: 0,
+      puzzleWrongAttempt: null,
       puzzleSelectedSquare: null,
       puzzleLegalTargets: [],
       puzzleHintArmed: false
@@ -921,6 +980,16 @@ saveCustomModal = () => {
     return lines.find((l) => l.id === this.state.lineId) || lines[0];
   };
 
+  getTranspositionMatchForFen = (fen, minStepIndex) => {
+    const currentLine = this.getLine();
+    return findTranspositionMatch({
+      lines: this.getLines(),
+      fen,
+      minStepIndex,
+      preferredLineId: currentLine && currentLine.id ? currentLine.id : this.state.lineId
+    });
+  };
+
   getHintFromSquare = (expectedSan) => {
     if (!expectedSan) return null;
 
@@ -1397,38 +1466,24 @@ nextLine = () => {
     }
 
     const openingKey = this.state.openingKey;
-    const lineIdsRaw = getOrderedLineIds(openingKey);
-    const lineIds = (lineIdsRaw && lineIdsRaw.length) ? lineIdsRaw : this.getLines().map((l) => l.id);
-    const shouldExcludeRecent = (_reason === "clean_complete" || _reason === "next_button")
-      && !this.state.learnForceRepeat;
+    const lines = this.getLines();
+    const orderedIds = getOrderedLineIdsForLines(openingKey, lines);
+    const shouldAdvancePastCurrent = _reason === "next_button" || _reason === "mode_continue" || _reason === "mode_reselect";
 
-    const recent = Array.isArray(this.state.learnRecentLineIds) ? this.state.learnRecentLineIds : [];
-    const excludeLineIds = shouldExcludeRecent
-      ? [this.state.lineId, this.state.prevLearnLineId].concat(recent).filter(Boolean).map(String).slice(0, 6)
-      : [];
-
-    let nextId = _pickNextLearnFromBag({
-      openingKey,
-      lineIds,
-      excludeLineIds,
-      lastLineId: this.state.lineId,
-      forceRepeatLineId: this.state.learnForceRepeat ? this.state.lineId : null
-    });
-
-    // Safety: if bag selection fails for any reason, fall back to weighted picker
-    if (!nextId) {
-      nextId = pickNextLearnLineId({
+    let nextId = "";
+    if (this.state.learnForceRepeat && this.state.lineId) {
+      nextId = String(this.state.lineId);
+    } else {
+      nextId = pickNextOrderedLearnLineId({
         openingKey,
-        lineIds,
+        lines,
         learnProgress: this.state.learnProgress,
-        getLearnLineStats: getLearnLineStats,
-        lastLineId: this.state.lineId,
-        forceRepeatLineId: this.state.learnForceRepeat ? this.state.lineId : null,
-        excludeLineIds
+        currentLineId: shouldAdvancePastCurrent ? this.state.lineId : null,
+        advancePastCurrent: shouldAdvancePastCurrent
       });
     }
 
-    const safeNextId = nextId || (lineIds && lineIds.length ? lineIds[0] : null);
+    const safeNextId = nextId || (orderedIds && orderedIds.length ? orderedIds[0] : null);
     if (!safeNextId) return;
 
     this.setState(
@@ -1438,7 +1493,7 @@ nextLine = () => {
         linePicker: "random",
         learnForceRepeat: false,
         prevLearnLineId: this.state.lineId,
-        learnRecentLineIds: [this.state.lineId].concat(recent).filter(Boolean).map(String).slice(0, 6),
+        learnRecentLineIds: [],
         mistakeUnlocked: false,
         lastMistake: null,
         lastMoveFeedback: null,
@@ -1487,12 +1542,10 @@ if (this.state.linePicker === "random" && this.state.gameMode === "practice") {
     forceRepeatLineId: null
   }) || "";
 } else if (this.state.linePicker === "random" && this.state.gameMode === "learn") {
-  nextId = _pickNextLearnFromBag({
+  nextId = pickNextOrderedLearnLineId({
     openingKey: nextKey,
-    lineIds: orderedIds,
-    excludeLineIds: [],
-    lastLineId: null,
-    forceRepeatLineId: null
+    lines: nextLines,
+    learnProgress: this.state.learnProgress
   }) || "";
 } else {
   nextId = pickRandomLineId(nextLines, null) || "";
@@ -1784,7 +1837,9 @@ onCompletedLine = () => {
 
   const mode = this.state.gameMode || "learn";
 
-  const wasClean = !this.state.mistakeUnlocked && !this.state.helpUsed;
+  const wasClean = mode === "learn"
+    ? !this.state.mistakeUnlocked
+    : !this.state.mistakeUnlocked && !this.state.helpUsed;
 
   this.bumpCompletedForMode(wasClean);
 
@@ -1948,8 +2003,54 @@ onCompletedLine = () => {
     try { touchActivityToday(); } catch (_) {}
 
     const playedSAN = move.san;
+    const flags = typeof move.flags === "string" ? move.flags : "";
+    const isCapture = flags.includes("c") || flags.includes("e");
 
     if (playedSAN !== expected) {
+      const transpositionMatch = this.getTranspositionMatchForFen(this.game.fen(), this.state.stepIndex + 1);
+
+      if (transpositionMatch) {
+        const matchedLine = this.getLines().find((entry) => entry && entry.id === transpositionMatch.lineId) || line;
+        const matchedExpected = (matchedLine && matchedLine.moves && matchedLine.moves[transpositionMatch.matchedMoveIndex]) || transpositionMatch.matchedSan || playedSAN;
+        const matchedFeedback = this.resolveMoveFeedback({
+          line: matchedLine,
+          index: transpositionMatch.matchedMoveIndex,
+          expectedSan: matchedExpected,
+          playedSan: playedSAN,
+          isCorrect: true
+        });
+        const nextLinePicker = this.state.linePicker === "random" ? "random" : transpositionMatch.lineId;
+
+        this.setState(
+          {
+            fen: this.game.fen(),
+            lineId: transpositionMatch.lineId,
+            sessionLineId: transpositionMatch.lineId,
+            linePicker: nextLinePicker,
+            stepIndex: transpositionMatch.stepIndex,
+            completed: false,
+            lastMistake: null,
+            lastMoveFeedback: matchedFeedback,
+            feedbackExpanded: false,
+            wrongAttempt: null,
+            showHint: false,
+            solveArmed: false,
+            hintFromSquare: null,
+            selectedSquare: null,
+            legalTargets: [],
+            lastMove: { from: sourceSquare, to: targetSquare },
+            userHasPlayedThisLine: true,
+            modePanelVisible: false
+          },
+          () => {
+            this.playSfx(isCapture ? "capture" : "moveSelf");
+            this.playAutoMovesIfNeeded();
+          }
+        );
+
+        return;
+      }
+
       this.playSfx("illegal");
 
       this.bumpMistakeForMode();
@@ -2019,8 +2120,6 @@ onCompletedLine = () => {
       return;
     }
 
-    const flags = typeof move.flags === "string" ? move.flags : "";
-    const isCapture = flags.includes("c") || flags.includes("e");
     this.playSfx(isCapture ? "capture" : "moveSelf");
 
     const nextStep = this.state.stepIndex + 1;
@@ -2371,7 +2470,7 @@ onPuzzleModeSelect = (e) => {
 
 onPuzzleHintOrSolve = () => {
   if ((this.state.gameMode || 'learn') !== 'puzzles') return;
-  if (this.state.puzzleSolved) return;
+  if (this.state.puzzleSolved || this.state.puzzleWrongAttempt) return;
 
   const expected = this.state.puzzleSolution[this.state.puzzleMoveIndex];
   if (!expected) return;
@@ -2394,6 +2493,9 @@ onPuzzleHintOrSolve = () => {
 };
 
 loadPuzzleForOpening = (openingKey, opts) => {
+  if (this._autoNextTimer) clearTimeout(this._autoNextTimer);
+  if (this._confettiTimer) clearTimeout(this._confettiTimer);
+
   const pack = this.getOpeningPuzzles(openingKey);
   const options = opts || {};
   if (!Array.isArray(pack) || pack.length === 0) {
@@ -2411,9 +2513,11 @@ loadPuzzleForOpening = (openingKey, opts) => {
       puzzleSolved: false,
       puzzleStatus: "",
       puzzleMistakes: 0,
+      puzzleWrongAttempt: null,
       puzzleSelectedSquare: null,
       puzzleLegalTargets: [],
-      puzzleHintArmed: false
+      puzzleHintArmed: false,
+      confettiActive: false
     });
     return;
   }
@@ -2436,6 +2540,7 @@ loadPuzzleForOpening = (openingKey, opts) => {
       puzzleIndex: nextIndex,
       puzzleStatus: "This puzzle could not be loaded.",
       puzzleSolved: false,
+      puzzleWrongAttempt: null,
       puzzleSelectedSquare: null,
       puzzleLegalTargets: []
     });
@@ -2458,9 +2563,11 @@ loadPuzzleForOpening = (openingKey, opts) => {
     puzzleSolved: false,
     puzzleStatus: "",
     puzzleMistakes: 0,
+    puzzleWrongAttempt: null,
     puzzleSelectedSquare: null,
     puzzleLegalTargets: [],
-    puzzleHintArmed: false
+    puzzleHintArmed: false,
+    confettiActive: false
   });
 };
 
@@ -2489,18 +2596,23 @@ resetPuzzleProgress = () => {
 };
 
 tryPuzzleMove = (move) => {
-  if (!move || this.state.puzzleSolved) return;
+  if (!move || this.state.puzzleSolved || this.state.puzzleWrongAttempt) return;
   const expected = this.state.puzzleSolution[this.state.puzzleMoveIndex];
   if (!expected) return;
 
   if (!moveMatchesUci(move, expected)) {
     this.playSfx("illegal");
     this.setState((prev) => ({
-      puzzleStatus: "Wrong move. Solve the tactic, not just any good move.",
+      puzzleStatus: "Wrong move. Retry the puzzle.",
       puzzleMistakes: (Number(prev.puzzleMistakes) || 0) + 1,
+      puzzleWrongAttempt: {
+        from: move && move.from ? move.from : null,
+        to: move && move.to ? move.to : null
+      },
       puzzleSelectedSquare: null,
       puzzleLegalTargets: [],
-      puzzleHintArmed: false
+      puzzleHintArmed: false,
+      confettiActive: false
     }));
     return;
   }
@@ -2526,11 +2638,44 @@ tryPuzzleMove = (move) => {
   }
 
   this.playSfx(solved ? "capture" : "moveSelf");
+
+  if (solved) {
+    if (this._autoNextTimer) clearTimeout(this._autoNextTimer);
+    if (this._confettiTimer) clearTimeout(this._confettiTimer);
+
+    const wantsConfetti = !!(this.state.settings && this.state.settings.showConfetti);
+    const nextPuzzleDelay = wantsConfetti ? 1200 : 450;
+
+    this.setState({
+      puzzleFen: game.fen(),
+      puzzleMoveIndex: nextIndex,
+      puzzleSolved: true,
+      puzzleStatus: status,
+      puzzleWrongAttempt: null,
+      puzzleSelectedSquare: null,
+      puzzleLegalTargets: [],
+      puzzleHintArmed: false,
+      confettiActive: wantsConfetti
+    });
+
+    if (wantsConfetti) {
+      this._confettiTimer = setTimeout(() => {
+        this.setState({ confettiActive: false });
+      }, 1200);
+    }
+
+    this._autoNextTimer = setTimeout(() => {
+      this.nextPuzzle();
+    }, nextPuzzleDelay);
+    return;
+  }
+
   this.setState({
     puzzleFen: game.fen(),
     puzzleMoveIndex: nextIndex,
-    puzzleSolved: solved,
+    puzzleSolved: false,
     puzzleStatus: status,
+    puzzleWrongAttempt: null,
     puzzleSelectedSquare: null,
     puzzleLegalTargets: [],
     puzzleHintArmed: false
@@ -2538,6 +2683,7 @@ tryPuzzleMove = (move) => {
 };
 
 onPuzzleDrop = ({ sourceSquare, targetSquare, piece }) => {
+  if (this.state.puzzleWrongAttempt) return null;
   if (!sourceSquare || !targetSquare || !piece) return null;
   let promotion;
   if ((piece === "wP" && targetSquare.endsWith("8")) || (piece === "bP" && targetSquare.endsWith("1"))) {
@@ -2548,6 +2694,7 @@ onPuzzleDrop = ({ sourceSquare, targetSquare, piece }) => {
 };
 
 onPuzzleSquareClick = (square) => {
+  if (this.state.puzzleWrongAttempt) return;
   if (!square) return;
   const currentFen = this.state.puzzleFen || "start";
   const selected = this.state.puzzleSelectedSquare;
@@ -2625,15 +2772,27 @@ renderPuzzleMode = () => {
       };
     }
   }
+  if (this.state.puzzleWrongAttempt && this.state.puzzleWrongAttempt.to) {
+    squareStyles[this.state.puzzleWrongAttempt.to] = {
+      ...(squareStyles[this.state.puzzleWrongAttempt.to] || {}),
+      backgroundImage: `url("${X_SVG_DATA_URI}")`,
+      backgroundRepeat: "no-repeat",
+      backgroundPosition: "center",
+      backgroundSize: "70%",
+      boxShadow: "inset 0 0 0 999px rgba(255, 64, 64, 0.16)"
+    };
+  }
 
   const puzzleBoard = (
     <div className="ot-board">
       <BoardErrorBoundary onReset={this.resetBoardRender}>
         <Chessboard
+          key={`puzzle:${this.state.puzzleRawId || "none"}:${this.state.puzzleMoveIndex || 0}:${this.state.puzzleFen || "start"}`}
           width={boardWidth}
           position={this.state.puzzleFen || "start"}
           onDrop={this.onPuzzleDrop}
           allowDrag={({ piece }) => {
+            if (this.state.puzzleWrongAttempt || this.state.puzzleSolved) return false;
             const turn = this.state.puzzlePlayerColor || "w";
             return !!piece && piece[0].toLowerCase() === turn;
           }}
@@ -2776,6 +2935,7 @@ renderPuzzleMode = () => {
                   onClick={this.onPuzzleHintOrSolve}
                   title={this.state.puzzleHintArmed ? "Solve" : "Hint"}
                   aria-label={this.state.puzzleHintArmed ? "Solve" : "Hint"}
+                  disabled={!!this.state.puzzleWrongAttempt}
                 >
                   <span aria-hidden="true">{this.state.puzzleHintArmed ? "✓" : "💡"}</span>
                 </button>
@@ -2874,6 +3034,7 @@ renderPuzzleMode = () => {
                         onClick={this.onPuzzleHintOrSolve}
                         title={this.state.puzzleHintArmed ? "Solve" : "Hint"}
                         aria-label={this.state.puzzleHintArmed ? "Solve" : "Hint"}
+                      disabled={!!this.state.puzzleWrongAttempt}
                       >
                         <span aria-hidden="true">{this.state.puzzleHintArmed ? "✓" : "💡"}</span>
                       </button>
@@ -3060,7 +3221,8 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
   const raw = unlocked ? (line.explanations[coachIndex] || "") : mode === "drill" ? "No help in Drill Mode" : "What's the best move?";
   const text = unlocked ? this.stripMovePrefix(raw) : raw;
   const openingDisplayName = this.getOpeningDisplayName();
-  const lineMenuLabel = "Lines";
+  const currentLineNumber = getLineNumberForLines(this.state.openingKey, this.getLines(), this.state.lineId);
+  const lineMenuLabel = ((mode === "learn" || mode === "drill") && currentLineNumber) ? `#${currentLineNumber}` : "Lines";
 
   return (
     <div className="ot-coach" style={{ position: "relative" }}>
@@ -3273,7 +3435,12 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
       }
     }
 
-    if (mode === this.state.gameMode) return;
+    if (mode === this.state.gameMode) {
+      if (mode === "learn" && this.state.linePicker === "random" && (this.state.completed || !this.state.userHasPlayedThisLine || this.state.modePanelVisible)) {
+        this.startLearnLine({ reason: this.state.completed ? "mode_continue" : "mode_reselect" });
+      }
+      return;
+    }
 
     this.setState(
       {
@@ -3423,6 +3590,11 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
     const show = !this.state.userHasPlayedThisLine || this.state.completed;
     if (!show) return null;
 
+    const lines = this.getLines();
+    const totalLearnLines = getOrderedLineIdsForLines(this.state.openingKey, lines).length;
+    const discoveredLearnLines = getLearnDiscoveredCountForLines(this.state.openingKey, lines, this.state.learnProgress);
+    const learnProgressLabel = `${discoveredLearnLines}/${totalLearnLines || 0} lines discovered`;
+
     return (
       <div className="ot-mode-panel">
         <button
@@ -3431,7 +3603,7 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
           type="button"
         >
           <div className="ot-mode-card-title"><span role="img" aria-label="learn">📘</span> Learn</div>
-          <div className="ot-mode-card-sub">Guided</div>
+          <div className="ot-mode-card-sub">{learnProgressLabel}</div>
         </button>
 
         <button
@@ -3574,6 +3746,10 @@ render() {
 
     const yourProgressPct = totalYourMoves > 0 ? Math.round((doneYourMoves / totalYourMoves) * 100) : 0;
     const progressModeClass = `ot-progress-fill-${this.state.gameMode || "learn"}`;
+    const currentLineNumber = getLineNumberForLines(this.state.openingKey, this.getLines(), this.state.lineId);
+    const mobileLineLabel = (((this.state.gameMode || "learn") === "learn" || (this.state.gameMode || "learn") === "drill") && currentLineNumber)
+      ? `#${currentLineNumber}`
+      : "Lines";
 
     const squareStyles = {};
     const expectedPreview = this.state.lastMoveFeedback && this.state.lastMoveFeedback.kind === "wrong"
@@ -4120,7 +4296,7 @@ render() {
                     title="Line"
                     aria-label="Line"
                   >
-                    Lines ▾
+                    {mobileLineLabel} ▾
                   </button>
                 </div>
 

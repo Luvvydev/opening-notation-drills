@@ -388,9 +388,9 @@ export const londonLines = withOpeningFeedback([
 
   {
     id: "london-qh3-attack",
-    name: "London Qh3 attacking lift",
-    description: "Against a quieter ...Be7 setup, you can delay castling, plant Ne5, and lift the queen to h3 to ask direct questions around h7.",
-    moves: ["d4", "d5", "Bf4", "Nf6", "e3", "e6", "Nf3", "Be7", "Bd3", "c5", "c3", "O-O", "Nbd2", "b6", "Ne5", "Bb7", "Qh3"],
+    name: "London Qf3 attacking lift",
+    description: "Against a quieter ...Be7 setup, you can delay castling, plant Ne5, and lift the queen to f3 to ask direct questions around h7.",
+    moves: ["d4", "d5", "Bf4", "Nf6", "e3", "e6", "Nf3", "Be7", "Bd3", "c5", "c3", "O-O", "Nbd2", "b6", "Ne5", "Bb7", "Qf3"],
     explanations: [
       "Take central space and keep your setup flexible.",
       "Black mirrors the center and waits for your plan.",
@@ -408,7 +408,7 @@ export const londonLines = withOpeningFeedback([
       "Black prepares to fianchetto or at least cover the queenside more carefully.",
       "Ne5 is the moment the London stops being a setup and starts becoming an attack.",
       "Black develops, but h7 and the dark squares are still the long-term concern.",
-      "Qh3 is the lift. It points straight at h7 and forces Black to think about ...h6, ...g6, or tactical concessions."
+      "Qf3 is the lift. It reinforces e4 pressure, lines up against f7 and h7, and makes Black think about kingside concessions."
     ]
   },
 
