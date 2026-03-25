@@ -8,7 +8,7 @@ export const englishOpeningLines = withOpeningFeedback([
     "description": "Early e4 push against Nf6",
     "moves": ["c4", "Nf6", "Nc3", "e6", "e4", "Bb4", "e5", "Bxc3", "bxc3", "Ne4", "Qg4", "Ng5", "h4"],
     "explanations": [
-      "Let's learn the English Opening! Rather than immediately pushing our central pawns, we start with the flank pawn to c4. This flexible opening can transpose into many different structures.",
+      "Let's learn the English Opening! Rather than immediately pushing our central pawns, we start with the flank pawn to c4.",
       "Black responds with the knight to f6, preparing to control the center and develop pieces.",
       "We develop our queenside knight, supporting the center and preparing to control key squares.",
       "Black plays e6, supporting a future d5 break and preparing bishop development.",
@@ -20,7 +20,7 @@ export const englishOpeningLines = withOpeningFeedback([
       "Black's knight moves to e4, occupying a central outpost and attacking our weakened pawn structure.",
       "We develop the queen aggressively to g4, attacking the g7 pawn and threatening the knight on e4.",
       "Black retreats the knight to g5, avoiding capture but moving to a less stable square.",
-      "After the final move - Well done! We're winning that knight :D By pushing h4, we attack the knight on g5 which has limited retreat squares, forcing Black into difficult defensive choices."
+      "We're winning that knight, By pushing h4, we attack the knight on g5 which has limited retreat squares"
     ]
   },
   {
@@ -40,55 +40,55 @@ export const englishOpeningLines = withOpeningFeedback([
       "Black recaptures with the knight, maintaining material equality.",
       "We push d4, challenging Black's center and opening lines for our pieces.",
       "Black captures our knight on c4, winning material but placing the knight on an unstable square.",
-      "After the final move - Nice! Even though material is equal, black's knight is so misplaced that the computer gives us a +2 point advantage. By capturing on c5, we regain our pawn and leave Black's knight stranded on c4 with no retreat."
+      "Even though material is equal, black's knight is so misplaced that the computer gives us a +2 point advantage. By capturing on c5, we regain our pawn and leave Black's knight stranded on c4 with no retreat."
     ]
   },
   {
     "category": "English Opening",
     "id": "english-03",
     "name": "Botvinnik System with Bishop Win",
-    "description": "Knight maneuver wins bishop",
+    "description": "Nd5 and Qa4+ punish the pin",
     "moves": ["c4", "e5", "Nc3", "Nf6", "Nf3", "Nc6", "e3", "Bb4", "Qc2", "d6", "Nd5", "Nxd5", "cxd5", "Ne7", "Qa4+", "Bd7", "Qxb4"],
     "explanations": [
-      "We open with the English, playing c4 to control the center from the flank.",
-      "Black responds with e5, establishing a classical center.",
-      "We develop the queenside knight, preparing for central control.",
-      "Black develops the knight to f6, attacking the center and preparing castling.",
-      "We develop the kingside knight, increasing central pressure.",
-      "Black develops the other knight to c6, completing knight development.",
-      "We play e3, supporting the center and preparing bishop development.",
-      "Black pins our knight with Bb4, creating tactical possibilities.",
-      "We develop the queen to c2, supporting the center and preparing queenside play.",
-      "Black supports the e5 pawn with d6, maintaining the central structure.",
-      "We move the knight to d5, challenging Black's pieces and creating threats.",
-      "Black captures our knight, simplifying the position.",
-      "We recapture with the pawn, gaining central control and opening the c-file.",
-      "Black retreats the knight to e7, preparing to regroup.",
-      "We check with the queen, developing with tempo and attacking the bishop.",
-      "Black blocks with the bishop, defending while developing.",
-      "After the final move -  You just won yourself a free bishop :D By capturing on b4, we win a piece for free as the bishop has no safe retreat."
+      "We start with c4 to control d5 and steer into an English structure.",
+      "Black answers with e5, which usually means a reversed Sicilian. White has an extra tempo, so active piece play matters.",
+      "Nc3 adds pressure to d5 and prepares our normal development.",
+      "Black develops naturally and fights for central squares.",
+      "Nf3 covers d4 and e5 and gets us ready to castle.",
+      "Black completes the usual knight setup.",
+      "e3 is a practical English move. It supports d4, frees the dark bishop, and prepares the tactical Nd5 idea against the pin.",
+      "Bb4 looks active, but it also gives us a concrete target.",
+      "Qc2 keeps pressure on the queenside and supports future central play.",
+      "d6 reinforces e5, but it also slows black down a bit.",
+      "Nd5 is the key idea. We attack the bishop, increase pressure on c7, and make the pin much less comfortable for black.",
+      "Black usually trades, hoping the tension disappears.",
+      "cxd5 is the right recapture. We gain central space, open the c-file, and keep the bishop on b4 loose.",
+      "The retreat to e7 looks tidy, but it loses time and leaves the bishop undefended.",
+      "Qa4+ is the point. We check the king and attack the bishop at the same time.",
+      "Bd7 is forced.",
+      "Qxb4 wins the bishop cleanly. This is why black has to treat an early ...Bb4 pin very carefully in the English."
     ]
   },
   {
-    "category": " English Opening",
+    "category": "English Opening",
     "id": "english-04",
     "name": "Queen's Gambit Declined Structure",
-    "description": "Early d5 exchange leads to development advantage",
+    "description": "Punishing the early ...d5 queen move",
     "moves": ["c4", "d5", "cxd5", "Qxd5", "Nc3", "Qd8", "Nf3", "Nf6", "d4", "e6", "e4", "Bb4", "Bd3"],
     "explanations": [
-      "We begin with the English Opening, playing c4 to control the center.",
-      "Black immediately challenges with d5, entering Queen's Gambit Declined territory.",
-      "We capture on d5, simplifying the center.",
-      "Black recaptures with the queen, centralizing but potentially exposing it.",
-      "We develop the knight with tempo against the queen.",
-      "Black retreats the queen to d8, avoiding further harassment.",
-      "We develop the kingside knight, completing our knight development.",
-      "Black develops the knight to f6, attacking the center.",
-      "We establish a strong pawn center with d4.",
-      "Black plays e6, supporting the center and preparing bishop development.",
-      "We push e4, establishing a powerful pawn duo in the center.",
-      "Black pins our knight with Bb4, creating tactical tension.",
-      "After the final move - Our development and our center are soooo much better than black's. Even with equal material, the computer is giving us a +1.3 point advantage. By developing the bishop to d3, we complete our development with a strong piece eyeing the kingside."
+      "We begin with c4, taking control of d5 from the flank and keeping the position flexible.",
+      "d5 tries to claim the center immediately, but against the English it often hands white a useful tempo.",
+      "cxd5 removes the advanced pawn and forces black to decide how to recover it.",
+      "Qxd5 wins the pawn back, but now the queen is exposed far too early.",
+      "Nc3 develops with tempo by hitting the queen. This is the clean reason the transcript gave for why an early ...d5 is usually inaccurate here.",
+      "Qd8 admits that black has lost time.",
+      "Nf3 keeps our development smooth and supports central expansion.",
+      "Black develops the knight and hopes the opening trouble is over.",
+      "d4 grabs central space while our pieces are coming out naturally.",
+      "e6 supports black's center, but white is still ahead in useful development.",
+      "e4 gives us the full pawn duo. This is the kind of central build-up the English often aims for once the queen has been chased around.",
+      "Bb4 adds a pin, but black is still reacting instead of dictating.",
+      "Bd3 completes development and points at the kingside. White has the easier game because the early queen move cost black time."
     ]
   },
   {
@@ -106,7 +106,7 @@ export const englishOpeningLines = withOpeningFeedback([
       "Black pins our knight with Bb4, creating immediate tension.",
       "We push e5, attacking the knight and gaining space.",
       "Black retreats the knight all the way to g8, losing considerable time.",
-      "After the final move - Beautiful! Black has a few ways to save the g7 pawn, but they all come at a cost of pawn structure or development. The computer loves our position so much that we get a +1.3 point advantage. By playing Qg4, we attack the vulnerable g7 pawn and maintain strong initiative."
+      "Black has a few ways to save the g7 pawn, but they all come at a cost of pawn structure or development. The computer loves our position so much that we get a +1.3 point advantage. By playing Qg4, we attack the vulnerable g7 pawn and maintain strong initiative."
     ]
   },
   {
@@ -130,7 +130,7 @@ export const englishOpeningLines = withOpeningFeedback([
       "Black retreats the knight to g6, avoiding capture.",
       "We capture on e6, opening the position and damaging Black's pawn structure.",
       "Black recaptures with the bishop, developing a piece.",
-      "After the final move - Nice!! We have a solid space advantage over black. The eval bar says +0.8 for us. By pushing d5, we gain space, attack the bishop, and establish a strong passed pawn."
+      "We have a solid space advantage over black. The eval bar says +0.8 for us. By pushing d5, we gain space, attack the bishop, and establish a strong passed pawn."
     ]
   },
   {
@@ -148,7 +148,7 @@ export const englishOpeningLines = withOpeningFeedback([
       "Black pushes e4, gaining space but locking the position.",
       "We develop the bishop to f4, controlling key squares and preparing development.",
       "Black develops the knight to f6, completing kingside development.",
-      "After the final move - Nice! Our center is stronger and we have more development than black. The computer gives us a +1 point advantage. By playing e3, we support our center, prepare bishop development, and maintain a solid position."
+      "Our center is stronger and we have more development than black. The computer gives us a +1 point advantage. By playing e3, we support our center, prepare bishop development, and maintain a solid position."
     ]
   },
   {
@@ -168,7 +168,7 @@ export const englishOpeningLines = withOpeningFeedback([
       "Black challenges our knight with c6.",
       "We push d4, attacking the bishop and opening the center.",
       "Black captures our knight, simplifying the position.",
-      "After the final move - Well done! Our bishop pair gives us a +1 eval advantage. By capturing on c5, we win the bishop pair and establish a strong positional advantage."
+      "Our bishop pair gives us a +1 eval advantage. By capturing on c5, we win the bishop pair and establish a strong positional advantage."
     ]
   },
   {
@@ -186,29 +186,29 @@ export const englishOpeningLines = withOpeningFeedback([
       "Black develops the knight to f6.",
       "We push d4, challenging the center.",
       "Black captures on d4.",
-      "After the final move - Well done! Now we have 2 pawns in the center while black has 0 - and they also have to spend a turn moving their bishop. By recapturing with the pawn, we establish a strong central pawn majority."
+      "Now we have 2 pawns in the center while black has 0 - and they also have to spend a turn moving their bishop. By recapturing with the pawn, we establish a strong central pawn majority."
     ]
   },
   {
     "category": "English Opening",
     "id": "english-10",
     "name": "King's Indian Reversed",
-    "description": "Symmetrical fianchetto setup",
+    "description": "Main English fianchetto setup",
     "moves": ["c4", "Nf6", "Nc3", "g6", "g3", "Bg7", "Bg2", "O-O", "d4", "d6", "Nf3", "Nbd7", "O-O"],
     "explanations": [
-      "We open with the English, playing c4.",
-      "Black develops the knight to f6.",
-      "We develop the queenside knight.",
-      "Black plays g6, preparing a fianchetto.",
-      "We play g3, preparing our own fianchetto.",
-      "Black completes the fianchetto with Bg7.",
-      "We complete our fianchetto with Bg2.",
-      "Black castles kingside.",
-      "We establish a central presence with d4.",
-      "Black supports the center with d6.",
-      "We develop the kingside knight.",
-      "Black develops the queenside knight.",
-      "After the final move - Well done!! We are slightly ahead in evaluation and winrate. By castling, we complete our development and secure our king."
+      "c4 starts the English and keeps the center flexible.",
+      "Nf6 is one of black's most natural replies.",
+      "Nc3 supports d5 and e4 and keeps our options open.",
+      "g6 signals a kingside fianchetto from black.",
+      "g3 prepares our own bishop for the long diagonal.",
+      "Bg7 mirrors the plan and contests dark squares.",
+      "Bg2 is the standard English bishop placement. This was one of the big transcript points: in these structures the bishop usually belongs on g2, not stuck behind e3.",
+      "Black castles and gets the king safe.",
+      "d4 takes more central space once our bishop is already active.",
+      "d6 keeps black solid and prepares further development.",
+      "Nf3 completes our normal setup and increases control over e5 and d4.",
+      "Nbd7 reinforces the center and prepares black's next pawn break.",
+      "O-O finishes the shell. Against fianchetto structures, this c4 g3 Bg2 Nf3 O-O setup is the backbone of the English."
     ]
   },
   {
@@ -228,7 +228,7 @@ export const englishOpeningLines = withOpeningFeedback([
       "Black develops the knight to f6.",
       "We develop the kingside knight.",
       "Black castles kingside.",
-      "After the final move - Well done! That's what I like to see :) It's a symmetrical game, and you'll play on from here. By castling, we complete our development and prepare for middlegame play."
+      "That's what I like to see It's a symmetrical game, and you'll play on from here. By castling, we complete our development and prepare for middlegame play."
     ]
   },
   {
@@ -252,7 +252,7 @@ export const englishOpeningLines = withOpeningFeedback([
       "Black captures on d4.",
       "We recapture with the knight, centralizing it.",
       "Black castles kingside.",
-      "After the final move - That was... emotional. By castling, we complete our development and secure our king in a complex symmetrical position."
+      "By castling, we complete our development and secure our king in a complex symmetrical position."
     ]
   },
   {
@@ -272,7 +272,7 @@ export const englishOpeningLines = withOpeningFeedback([
       "Black develops the bishop to g4, pinning our knight.",
       "We develop the queen to b3, attacking b7 and challenging the pin.",
       "Black develops the queen to b6, defending b7 and maintaining the pin.",
-      "After the final move - Nice!! We got out of that sticky pin. And if black ever trades our queens, we're happy to open up the a-file for our rook. By playing Ne5, we attack the bishop and break the pin while occupying a strong central square."
+      "We got out of that sticky pin. And if black ever trades our queens, we're happy to open up the a-file for our rook. By playing Ne5, we attack the bishop and break the pin while occupying a strong central square."
     ]
   },
   {
@@ -296,7 +296,7 @@ export const englishOpeningLines = withOpeningFeedback([
       "Black retreats the bishop to c5.",
       "We play a3, preventing ...Bb4 ideas and preparing queenside expansion.",
       "Black plays a5, preventing our b4 advance.",
-      "After the final move - Well done! We'll plant our bishop on b2 next, and then play the game from there. By playing b3, we prepare to develop our bishop to b2 and maintain a solid position."
+      "We'll plant our bishop on b2 next, and then play the game from there. By playing b3, we prepare to develop our bishop to b2 and maintain a solid position."
     ]
   },
   {
@@ -314,7 +314,7 @@ export const englishOpeningLines = withOpeningFeedback([
       "Black plays f5, adopting a Dutch-style setup.",
       "We play g3, preparing a fianchetto.",
       "Black develops the knight to f6.",
-      "After the final move - Well done! After a castle, we'll enjoy the rest of the game with an extremely strong bishop on g2. By completing our fianchetto, we establish a strong diagonal for our bishop."
+      "After a castle, we'll enjoy the rest of the game with an extremely strong bishop on g2. By completing our fianchetto, we establish a strong diagonal for our bishop."
     ]
   },
   {
@@ -336,7 +336,7 @@ export const englishOpeningLines = withOpeningFeedback([
       "Black captures our knight on c3.",
       "We recapture with the b-pawn.",
       "Black recaptures the pawn on f6 with the queen.",
-      "After the final move - Nice! Next, we'll develop our bishop to d3 and then castle. The position is about equal. By developing the knight to f3, we complete our knight development and prepare for castling."
+      "Next, we'll develop our bishop to d3 and then castle. The position is about equal. By developing the knight to f3, we complete our knight development and prepare for castling."
     ]
   },
   {
@@ -360,77 +360,78 @@ export const englishOpeningLines = withOpeningFeedback([
       "Black plays c5, challenging the center.",
       "We capture on d5.",
       "Black recaptures with the e-pawn.",
-      "After the final move - Nice! We put an end to blacks central pawn storm. By playing d4, we establish a strong pawn center and challenge Black's position."
+      "We put an end to blacks central pawn storm. By playing d4, we establish a strong pawn center and challenge Black's position."
     ]
   },
   {
     "category": "English Opening",
     "id": "english-18",
-    "name": "Closed System with Bb4",
-    "description": "Standard development against pin",
-    "moves": ["c4", "e5", "Nc3", "Nf6", "Nf3", "Nc6", "e3", "Bb4", "Qc2", "d6", "Nd5", "Nxd5", "cxd5", "Ne7", "Qa4+", "Bd7", "Qxb4"],
+    "name": "Recommended Setup vs 1...e5",
+    "description": "Use g3 and Bg2 before the main central decision",
+    "moves": ["c4", "e5", "g3", "Nf6", "Bg2", "Nc6", "Nc3", "Bc5", "Nf3", "d6", "O-O", "O-O"],
     "explanations": [
-      "We open with the English, playing c4.",
-      "Black responds with e5.",
-      "We develop the queenside knight.",
-      "Black develops the knight to f6.",
-      "We develop the kingside knight.",
-      "Black develops the other knight to c6.",
-      "We play e3, preparing development.",
-      "Black pins our knight with Bb4.",
-      "We develop the queen to c2.",
-      "Black supports the center with d6.",
-      "We move the knight to d5.",
-      "Black captures our knight.",
-      "We recapture with the pawn.",
-      "Black retreats the knight to e7.",
-      "We check with the queen.",
-      "Black blocks with the bishop.",
-      "After the final move - You just won yourself a free bishop :D By capturing on b4, we win a piece for free."
+      "c4 starts the English and controls d5 without touching the king-side pawns.",
+      "e5 is the most common answer and usually means a reversed Sicilian.",
+      "g3 is the move-order the transcript recommended first. It prepares the bishop and avoids some early ...Bb4 annoyances before we are ready.",
+      "Nf6 is natural development from black.",
+      "Bg2 puts the bishop on its best diagonal, where it supports both central play and queenside pressure.",
+      "Nc6 is the standard follow-up from black.",
+      "Nc3 develops once the bishop is already committed to g2.",
+      "Bc5 is active, but it also gives us a clear target for later d4 ideas.",
+      "Nf3 completes minor-piece development and increases pressure on e5.",
+      "d6 keeps black solid but slightly slower.",
+      "O-O gets our king safe and connects the rook toward the center.",
+      "O-O and now white chooses between a quieter d3 setup or the more direct d4 break. That choice is one of the core English themes from the transcript."
     ]
   },
   {
     "category": "English Opening",
     "id": "english-19",
-    "name": "Botvinnik System Repeat",
-    "description": "Repeat of bishop win line",
-    "moves": ["c4", "e5", "Nc3", "Nf6", "Nf3", "Nc6", "e3", "Bb4", "Qc2", "d6", "Nd5", "Nxd5", "cxd5", "Ne7", "Qa4+", "Bd7", "Qxb4"],
+    "name": "Early ...d5 Break Meets Central Build-Up",
+    "description": "Meet ...d5 by exchanging and then taking the center",
+    "moves": ["c4", "e5", "g3", "Nf6", "Bg2", "d5", "cxd5", "Nxd5", "Nc3", "Nxc3", "bxc3", "Be7", "d4", "O-O", "e4"],
     "explanations": [
-      "We begin with the English Opening, playing c4.",
-      "Black responds with e5.",
-      "We develop the queenside knight.",
-      "Black develops the knight to f6.",
-      "We develop the kingside knight.",
-      "Black develops the other knight to c6.",
-      "We play e3, supporting the center.",
-      "Black pins our knight with Bb4.",
-      "We develop the queen to c2.",
-      "Black supports the center with d6.",
-      "We move the knight to d5.",
-      "Black captures our knight.",
-      "We recapture with the pawn.",
-      "Black retreats the knight to e7.",
-      "We check with the queen.",
-      "Black blocks with the bishop.",
-      "After the final move - You just won yourself a free bishop :D By capturing on b4, we win a piece for free."
+      "c4 controls d5 and keeps our structure flexible.",
+      "e5 usually means we are in reversed Sicilian territory.",
+      "g3 prepares the bishop for its most natural square.",
+      "Nf6 develops and keeps an eye on the center.",
+      "Bg2 places the bishop on the long diagonal, where it supports later central expansion.",
+      "d5 is the direct break the transcript discussed. White is happy to challenge it.",
+      "cxd5 removes the advanced pawn immediately.",
+      "Nxd5 is the normal recapture, but now that knight can be challenged by development.",
+      "Nc3 develops with tempo against the knight on d5.",
+      "Nxc3 is a common practical decision from black.",
+      "bxc3 is the point. The pawn comes closer to the center, the b-file opens, and our bishop on g2 gets more scope.",
+      "Be7 lets black continue developing, but white already has the better long-term central structure.",
+      "d4 claims more space and opens lines for the rest of our pieces.",
+      "O-O gets black safe, but it also gives us time for the last central step.",
+      "e4 builds the full pawn duo. This is one of the cleanest English rewards for meeting an early ...d5 correctly."
     ]
   },
   {
     "category": "English Opening",
     "id": "english-20",
-    "name": "King's Indian Attack Setup",
-    "description": "Fianchetto against Dutch setup",
-    "moves": ["c4", "e5", "Nc3", "d6", "Nf3", "f5", "g3", "Nf6", "Bg2"],
+    "name": "Bc5 and Be6 Setup Punished by d4 and d5",
+    "description": "Use the central break to hit both bishop and knight",
+    "moves": ["c4", "e5", "Nc3", "Nf6", "g3", "Nc6", "Bg2", "Bc5", "e3", "d6", "Nge2", "Be6", "O-O", "O-O", "d4", "Bb6", "d5"],
     "explanations": [
-      "We open with the English, playing c4.",
-      "Black responds with e5.",
-      "We develop the queenside knight.",
-      "Black supports the center with d6.",
-      "We develop the kingside knight.",
-      "Black plays f5, adopting a Dutch setup.",
-      "We play g3, preparing a fianchetto.",
-      "Black develops the knight to f6.",
-      "After the final move - Well done! After a castle, we'll enjoy the rest of the game with an extremely strong bishop on g2."
+      "c4 starts the English and points at d5 from the flank.",
+      "e5 creates the reversed Sicilian structure.",
+      "Nc3 develops and supports our central breaks.",
+      "Nf6 is natural development.",
+      "g3 prepares the fianchetto that the transcript recommended in most English structures.",
+      "Nc6 adds more central control for black.",
+      "Bg2 completes the fianchetto and gives us a useful long diagonal.",
+      "Bc5 is active, but it can become a target when we strike in the center.",
+      "e3 supports d4 and frees the dark bishop.",
+      "d6 clears the c8 bishop and reinforces e5.",
+      "Nge2 is a very English move. It supports d4 without blocking the bishop on g2.",
+      "Be6 looks clever because black wants to pressure c4.",
+      "O-O gets our king safe before the center opens.",
+      "O-O and now the moment is right.",
+      "d4 attacks the bishop on c5 and makes black solve two problems at once.",
+      "Bb6 is a natural retreat, but it walks into the next pawn thrust.",
+      "d5 is the point. We hit the bishop on e6 and the knight on c6 together, so black cannot keep everything coordinated."
     ]
   },
   {
@@ -452,31 +453,33 @@ export const englishOpeningLines = withOpeningFeedback([
       "Black captures our knight on c3.",
       "We recapture with the b-pawn.",
       "Black recaptures the pawn on f6 with the queen.",
-      "After the final move - Nice! Next, we'll develop our bishop to d3 and then castle. The position is about equal."
+      "Next, we'll develop our bishop to d3 and then castle. The position is about equal."
     ]
   },
   {
     "category": "English Opening",
     "id": "english-22",
-    "name": "Queen's Pawn Game Structure",
-    "description": "Transpositional line",
-    "moves": ["c4", "e6", "Nc3", "d5", "e3", "Nf6", "Nf3", "Be7", "b3", "O-O", "Bb2", "c5", "cxd5", "exd5", "d4"],
+    "name": "Symmetrical English with Qxd4 and Qd3",
+    "description": "Break symmetry and centralize the queen before regrouping",
+    "moves": ["c4", "c5", "Nc3", "Nc6", "g3", "g6", "Bg2", "Bg7", "Nf3", "Nf6", "d4", "cxd4", "Qxd4", "d6", "Qd3", "O-O", "O-O"],
     "explanations": [
-      "We open with the English, playing c4.",
-      "Black plays e6, preparing d5.",
-      "We develop the queenside knight.",
-      "Black plays d5, challenging the center.",
-      "We play e3, supporting the center.",
-      "Black develops the knight to f6.",
-      "We develop the kingside knight.",
-      "Black develops the bishop to e7.",
-      "We play b3, preparing a queenside fianchetto.",
-      "Black castles kingside.",
-      "We complete our fianchetto with Bb2.",
-      "Black plays c5, challenging the center.",
-      "We capture on d5.",
-      "Black recaptures with the e-pawn.",
-      "After the final move - Nice! We put an end to blacks central pawn storm."
+      "c4 starts the English and claims d5.",
+      "c5 keeps the game symmetrical for now.",
+      "Nc3 develops and supports d5 and e4.",
+      "Nc6 mirrors the setup.",
+      "g3 prepares the usual English fianchetto.",
+      "g6 mirrors and heads for a balanced position.",
+      "Bg2 places our bishop on the long diagonal.",
+      "Bg7 completes black's fianchetto.",
+      "Nf3 develops and prepares the key central break.",
+      "Nf6 mirrors once again.",
+      "d4 is the important moment. In the symmetrical English, white should not just keep copying moves forever.",
+      "cxd4 is basically forced.",
+      "Qxd4 is the specific transcript idea that the old file was missing. The queen centralizes, and the bishop behind it suddenly has more influence.",
+      "d6 keeps black solid and supports e5 ideas later.",
+      "Qd3 is a useful regroup. We step away from knight tempos while still supporting e4 and queenside play.",
+      "O-O finishes black's development.",
+      "O-O leaves white with the easier plan. The symmetry is broken, our pieces are coordinated, and moves like Rd1, b3-Bb2, or Nd5 become natural."
     ]
   },
   {
@@ -500,31 +503,31 @@ export const englishOpeningLines = withOpeningFeedback([
       "Black captures on d4.",
       "We recapture with the knight.",
       "Black castles kingside.",
-      "After the final move - That was... emotional. By castling, we complete our development."
+      "By castling, we complete our development."
     ]
   },
   {
     "category": "English Opening",
     "id": "english-24",
-    "name": "Four Knights English",
-    "description": "Standard four knights setup",
-    "moves": ["c4", "e5", "Nc3", "Nf6", "Nf3", "Nc6", "e3", "Bb4", "Qc2", "d6", "Nd5", "Bc5", "a3", "a5", "b3"],
+    "name": "Nd5 Pressure against the ...g6 Setup",
+    "description": "Delay the recapture and use Nd5 plus Bg5 for activity",
+    "moves": ["c4", "e5", "Nc3", "Nc6", "Nf3", "g6", "d4", "exd4", "Nd5", "Bg7", "Bg5", "Nge7", "Nxd4", "Bxd4", "Qxd4"],
     "explanations": [
-      "We open with the English, playing c4.",
-      "Black responds with e5.",
-      "We develop the queenside knight.",
-      "Black develops the knight to f6.",
-      "We develop the kingside knight.",
-      "Black develops the other knight to c6.",
-      "We play e3, preparing development.",
-      "Black pins our knight with Bb4.",
-      "We develop the queen to c2.",
-      "Black supports the center with d6.",
-      "We move the knight to d5.",
-      "Black retreats the bishop to c5.",
-      "We play a3, preventing ...Bb4.",
-      "Black plays a5, preventing b4.",
-      "After the final move - Well done! We'll plant our bishop on b2 next, and then play the game from there."
+      "c4 starts the English and keeps the center flexible.",
+      "e5 is the most common answer and gives us a reversed Sicilian.",
+      "Nc3 develops and supports d5.",
+      "Nc6 mirrors the setup.",
+      "Nf3 attacks e5 and prepares the central break.",
+      "g6 signals a fianchetto setup from black.",
+      "d4 challenges the center before black has fully coordinated.",
+      "exd4 accepts the challenge, and now there is a more active option than the automatic recapture.",
+      "Nd5 is the key idea from the trap transcript. We jump forward first and make black react.",
+      "Bg7 is natural, but it does not solve the coordination issues.",
+      "Bg5 adds pressure and makes the knight development awkward.",
+      "Nge7 looks normal, but it blocks the bishop and gives us time to recover the pawn under better conditions.",
+      "Nxd4 finally wins the pawn back, and our pieces are more active than they would be after an immediate recapture.",
+      "Bxd4 tries to remove the active knight.",
+      "Qxd4 keeps the initiative. The queen lands actively, the rook on h8 can become a tactical target, and black still has to sort out development."
     ]
   }
 ]);
