@@ -4,16 +4,18 @@ import { withOpeningFeedback } from "./feedback";
 
 // SEO / page intro text for Sicilian Defense drills
 export const sicilianSEOText = `
-The Sicilian Defense is the most popular response to 1.e4 and leads to unbalanced,
-dynamic positions. This opening emphasizes asymmetrical pawn structures, active
-piece play, and precise move orders.
+The Sicilian Defense fights for the center in an imbalanced way. Black uses the c-pawn
+to challenge d4 and is often happy to trade a flank pawn for White's central pawn,
+which is why Sicilian positions usually feel sharper than 1...e5 games.
 
-This page provides Sicilian Defense opening drills for players who want to memorize
-common setups and early continuations without wading through dense theory.
-The focus is on repetition of correct moves rather than deep analysis.
+This page gives you Sicilian Defense opening drills built around recurring ideas:
+Dragon and Accelerated Dragon fianchetto pressure, Najdorf and Classical flexibility,
+Paulsen and Kan setups with ...Qc7, and practical answers to anti-Sicilians like the
+Alapin, Bowdler, Grand Prix, and Moscow or Rossolimo systems.
 
-These drills are best suited for players who already play the Sicilian and want
-their openings to survive beyond the first few moves in real games.
+Treat the Sicilian as a family of structures, not one memorized line. The goal of
+these drills is to help you recognize what White is aiming for, then respond with the
+right setup, central break, or tactical resource before the position drifts.
 `;
 
 
@@ -99,7 +101,7 @@ export const sicilianDefenseLines = withOpeningFeedback([
   {
     id: "sicilian-open-dragon-basic",
     name: "Open Sicilian: Dragon setup",
-    description: "Dragon: play ...g6 and fianchetto the dark bishop, sharp opposite-side castling often happens.",
+    description: "Dragon: fianchetto the bishop, pressure the long diagonal, and expect opposite-side castling races with h-pawn storms.",
     moves: ["e4", "c5", "Nf3", "d6", "d4", "cxd4", "Nxd4", "Nf6", "Nc3", "g6", "Be3", "Bg7", "f3", "O-O", "Qd2", "Nc6"],
     explanations: [
       "White claims the center and opens development lanes.",
@@ -111,12 +113,12 @@ export const sicilianDefenseLines = withOpeningFeedback([
       "White recaptures with a piece and centralizes.",
       "Develop and hit e4.",
       "Defend e4 and develop.",
-      "Dragon. Prepare ...Bg7 for pressure on the long diagonal.",
+      "Dragon. The bishop is awkward elsewhere, so Black fianchettos and aims straight down the long diagonal.",
       "Yugoslav Attack setup, aiming for opposite side castling.",
       "Complete the fianchetto and pressure the center.",
       "Reinforce e4 and support the kingside pawn storm ideas.",
       "Castle and bring the rook into play on the f file later.",
-      "Connect pieces and prepare long castling.",
+      "White usually wants long castling here, often followed by h4, h5, and Bh6 to rip open the black king.",
       "Develop and add pressure on d4."
     ]
   },
@@ -124,7 +126,7 @@ export const sicilianDefenseLines = withOpeningFeedback([
   {
     id: "sicilian-accelerated-dragon-basic",
     name: "Accelerated Dragon",
-    description: "Accelerated Dragon: skip ...d6 early, play ...Nc6 and ...g6 quickly.",
+    description: "Accelerated Dragon: delay ...d6, develop fast with ...Nc6 and ...g6, and keep the one-move ...d5 break in reserve.",
     moves: ["e4", "c5", "Nf3", "Nc6", "d4", "cxd4", "Nxd4", "g6", "Nc3", "Bg7", "Be3", "Nf6", "f3", "d6", "Qd2", "O-O"],
     explanations: [
       "White takes space and threatens quick development.",
@@ -140,7 +142,7 @@ export const sicilianDefenseLines = withOpeningFeedback([
       "Develop and prepare aggressive setups.",
       "Develop and hit e4.",
       "Reinforce e4 and limit ...Ng4.",
-      "Solidify the center and support ...Bg7 pressure.",
+      "Only now commit to ...d6 if you want a Dragon structure. The whole point of the Accelerated Dragon is that delaying this pawn keeps ...d5 available earlier.",
       "Prepare long castling and coordinate pieces.",
       "Castle and connect rooks."
     ]
@@ -174,7 +176,7 @@ export const sicilianDefenseLines = withOpeningFeedback([
   {
     id: "sicilian-kan-basic",
     name: "Kan Sicilian",
-    description: "Kan: ...e6 early, flexible development and often ...Qc7.",
+    description: "Kan and Paulsen style setup: ...e6, ...a6, and often ...Qc7, keeping flexible development and strong central breaks.",
     moves: ["e4", "c5", "Nf3", "e6", "d4", "cxd4", "Nxd4", "a6", "Nc3", "Qc7", "Be2", "Nf6", "O-O", "d6", "Be3", "b5"],
     explanations: [
       "White takes central space.",
@@ -297,6 +299,140 @@ export const sicilianDefenseLines = withOpeningFeedback([
   },
 
 
+
+  {
+    id: "sicilian-accelerated-dragon-d5-break",
+    name: "Accelerated Dragon: punish Yugoslav setup with ...d5",
+    description: "If White copies Dragon attacking ideas too early, keeping the pawn on d7 lets Black hit the center with ...d5 in one move.",
+    moves: ["e4", "c5", "Nf3", "Nc6", "d4", "cxd4", "Nxd4", "g6", "Nc3", "Bg7", "Be3", "Nf6", "f3", "O-O", "Qd2", "d5", "exd5", "Nxd5", "Nxc6", "bxc6"],
+    explanations: [
+      "White claims central space and opens lines for quick development.",
+      "Sicilian. Use the c-pawn to fight for d4 without mirroring White's structure.",
+      "Develop and prepare the central break with d4.",
+      "Develop immediately and add pressure to d4 before showing your full setup.",
+      "White opens the center and asks Black to clarify the pawn structure.",
+      "Trade the flank pawn for White's central pawn and reach an open Sicilian structure.",
+      "White recaptures with development and central presence.",
+      "Accelerated Dragon move order. The bishop belongs on g7 and Black still has not committed the d-pawn.",
+      "Develop and reinforce e4 and d5 control.",
+      "Complete the fianchetto and pressure the long diagonal.",
+      "White copies Dragon attacking ideas and points toward long castling.",
+      "Develop and hit e4 while staying ready for a central break.",
+      "White reinforces e4 and prepares Qd2 with a Yugoslav style attack.",
+      "Castle first. Black is ready to answer wing play with central counterplay.",
+      "White signals queenside castling and a kingside pawn storm.",
+      "This is the Accelerated Dragon point. Because the pawn is still on d7, Black can break with ...d5 in one move.",
+      "White usually takes because allowing Black to keep that center is even worse.",
+      "Recapture with the knight, develop with tempo, and activate every piece at once.",
+      "White often trades to reduce the pressure and simplify.",
+      "The b-pawn recaptures toward the center, opens the b-file, and Black gets active piece play for free."
+    ]
+  },
+
+  {
+    category: "Anti-Sicilian",
+    id: "sicilian-bowdler-e6-d5-punish",
+    name: "Vs Bowdler: ...e6 and ...d5 with tempo",
+    description: "Against 2.Bc4, block the bishop, prepare ...d5, and gain time by hitting that bishop when the center opens.",
+    moves: ["e4", "c5", "Bc4", "e6", "Nf3", "a6", "O-O", "Nf6", "Nc3", "d5", "exd5", "exd5", "Bb3", "Be7"],
+    explanations: [
+      "White takes space and keeps options open.",
+      "Sicilian response, immediately contesting d4 and aiming for imbalance.",
+      "Bowdler Attack. White develops as if Black had played ...e5, but the bishop is not especially well placed here.",
+      "Block the bishop's diagonal right away and prepare a central strike with ...d5.",
+      "White develops and prepares to castle.",
+      "Useful Sicilian move. It supports ...b5 later and makes queenside expansion easier.",
+      "White castles before the center is clarified.",
+      "Develop and pressure e4 while keeping ...d5 ready.",
+      "White develops naturally and keeps the bishop on c4.",
+      "Strike in the center with tempo. The bishop on c4 now becomes a target instead of an attacker.",
+      "White usually takes because leaving Black's pawn on d5 gives Black too much space.",
+      "Recapture toward the center, open lines, and keep the bishop on c4 under fire.",
+      "The bishop has to retreat. White spent time on a setup that did not generate real pressure.",
+      "Finish development and enjoy the cleaner center and easier piece play."
+    ]
+  },
+
+  {
+    category: "Classical Sicilian",
+    id: "sicilian-classical-ng4-qxf2-trap",
+    name: "Classical: ...Ng4 and ...Qxf2# trap",
+    description: "A common trap when White copies Be3 systems too casually. ...Ng4 and ...Qb6 create a direct mate threat on f2.",
+    moves: ["e4", "c5", "Nf3", "Nc6", "d4", "cxd4", "Nxd4", "Nf6", "Nc3", "d6", "Be3", "Ng4", "Bg5", "Qb6", "Nb3", "Qxf2#"],
+    explanations: [
+      "White takes central space and opens lines for the pieces.",
+      "Sicilian. Fight for d4 with an imbalanced pawn structure.",
+      "Develop and prepare the Open Sicilian.",
+      "Develop and pressure d4 immediately.",
+      "White opens the center and heads for standard Sicilian play.",
+      "Trade in the center and reach an open, tactical structure.",
+      "White recaptures with development and central presence.",
+      "Develop and hit e4, forcing White to defend accurately.",
+      "White covers e4 and adds another piece to the center.",
+      "Classical Sicilian. Support the center and keep your bishops flexible.",
+      "White often chooses Be3 to copy Dragon style attacking setups.",
+      "Challenge the bishop immediately. Black does not have to sit and watch White build up freely.",
+      "White keeps the bishop active, but the move also clears the diagonal to f2.",
+      "Hit b2, pressure d4, and most importantly line up the queen against f2.",
+      "This natural knight retreat looks sensible, but it walks straight into the mating idea.",
+      "The queen lands on f2 supported by the knight on g4, and White is mated."
+    ]
+  },
+
+  {
+    category: "Kan",
+    id: "sicilian-paulsen-bb4-d5-break",
+    name: "Paulsen and Kan: ...Qc7, ...Bb4, and ...d5",
+    description: "This flexible setup makes queenside-castling attacks much harder because Black can pin the knight and break in the center.",
+    moves: ["e4", "c5", "Nf3", "e6", "d4", "cxd4", "Nxd4", "a6", "Nc3", "Qc7", "Be3", "Nf6", "Qd2", "Bb4", "f3", "d5", "exd5", "Nxd5"],
+    explanations: [
+      "White takes space and opens lines.",
+      "Sicilian. Black accepts asymmetry from move one.",
+      "Develop and prepare d4.",
+      "Keep the structure flexible and open the dark bishop.",
+      "White challenges the center directly.",
+      "Trade the flank pawn for White's central pawn and reach open Sicilian play.",
+      "White recaptures with development.",
+      "A typical Kan move. It stops Nb5 and keeps ...Qc7 and ...b5 available.",
+      "White develops and reinforces the center.",
+      "Paulsen style. The queen supports ...d5 and keeps Black's setup flexible.",
+      "White points toward the usual Be3 and Qd2 attacking structure.",
+      "Develop and hit e4 while waiting to see how White commits.",
+      "White signals queenside castling and a kingside attack.",
+      "Pin the knight and make White's attacking setup less comfortable.",
+      "White has to defend e4 because the c3-knight is pinned.",
+      "Now hit the center. This is the main point of the setup, answer the flank attack with central counterplay.",
+      "White usually takes because keeping the tension favors Black.",
+      "Recapture with a piece, keep the initiative, and get active squares everywhere."
+    ]
+  },
+
+  {
+    category: "Smith-Morra Gambit",
+    id: "sicilian-smith-morra-e5-trap-warning",
+    name: "Smith-Morra: do not walk into the e5 and Bxf7+ tactic",
+    description: "A tactical warning line. If Black accepts the gambit and develops carelessly, White can win the queen with e5 and Bxf7+.",
+    moves: ["e4", "c5", "d4", "cxd4", "c3", "dxc3", "Nxc3", "Nc6", "Nf3", "d6", "Bc4", "Nf6", "e5", "dxe5", "Bxf7+", "Kxf7", "Qxd8"],
+    explanations: [
+      "White takes central space and opens the queen and bishop.",
+      "Sicilian. Black chooses imbalance immediately.",
+      "White offers the Smith-Morra Gambit to get speed and active pieces.",
+      "Black accepts the pawn. That is playable, but accuracy matters.",
+      "White keeps investing in rapid development instead of material.",
+      "Accepting the second gambit pawn opens lines, but Black's king and queen need respect.",
+      "White recaptures with a piece and gets exactly the development they wanted.",
+      "Natural development and central control.",
+      "White develops another piece and prepares to castle quickly.",
+      "A normal looking support move, but Black still has to watch tactical details.",
+      "The bishop points at f7, which is the soft spot in many accepted Morra positions.",
+      "This natural move is the mistake. Black walks into a central tactic.",
+      "White strikes in the center and opens lines before Black is coordinated.",
+      "Taking the pawn looks greedy, but it allows the real point.",
+      "Deflect the king away from the queen's defense and rip open the position.",
+      "Forced. Black's king takes, but now the queen is loose.",
+      "White wins the queen. The lesson is simple: in the Morra, do not develop on autopilot."
+    ]
+  },
 
   {
     id: "sicilian-dragon-yugoslav-rc8-nxe4-sac",
