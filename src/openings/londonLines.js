@@ -4,16 +4,18 @@ import { withOpeningFeedback } from "./feedback";
 
 // SEO / page intro text for London System drills
 export const londonSEOText = `
-The London System is a solid, low theory chess opening for White starting with d4 and Bf4.
-It focuses on reliable development, strong pawn structure, and repeatable move orders
-rather than sharp tactical battles.
+The London System starts with d4 and Bf4, getting the bishop outside the pawn chain before e3.
+Its appeal is not just that the setup is easy to repeat. The real value is that the structure gives
+White a reliable base while still allowing timely attacking plans when Black drifts.
 
-This page is designed for players who already know the rules of chess and want to
-memorize London System move orders through repetition. The drills emphasize correct
-piece placement, common setups, and typical early middlegame transitions.
+These drills focus on the patterns that actually matter in practical London games: meeting ...Bd6
+without reacting mechanically, using Ne5 as an outpost, supporting the center with c3 against ...c5,
+keeping the bishop active with Bc2 after ...c4, switching to c4 and Qb3 ideas against early ...Bf5,
+and grabbing more space with e4 against King's Indian setups.
 
-If your London games fall apart because you forget the move order, these drills are
-meant to lock the structure into memory rather than teach abstract strategy.
+The goal is to make the London feel coached instead of memorized move by move. You are learning why
+Bf4 comes before e3, why e3 often comes before Nf3, and which plans become dangerous once Black
+underestimates the position.
 `;
 
 export const londonLines = withOpeningFeedback([
@@ -23,57 +25,57 @@ export const londonLines = withOpeningFeedback([
     category: "Classic London",
     id: "london-classic-solid-setup",
     name: "London Classic: solid setup",
-    description: "Baseline London: develop naturally, meet ...Bd6 with Nbd2, and castle.",
+    description: "Baseline London: bishop outside the pawn chain, e3 before Nf3, then choose between calm development and active plans.",
     moves: ["d4", "d5", "Bf4", "Nf6", "e3", "e6", "Nf3", "Bd6", "Nbd2", "O-O"],
     explanations: [
-      "Claim central space and keep flexible options for a London structure.",
-      "Black matches the center and contests d4.",
-      "Develop the bishop before locking it in with e3.",
-      "Black develops and adds pressure to e4 and d5 squares.",
-      "Stabilize d4 and open lines for the light bishop and queen.",
-      "Black supports d5 and opens lines for the dark-squared bishop.",
-      "Develop and support the center.",
-      "Black often tries to trade the London bishop to reduce your pressure.",
-      "Support e4 ideas later, reinforce the center, and keep pieces coordinated.",
-      "Black finishes basic king safety and connects rooks."
+      "Claim central space and keep the London structure available.",
+      "Black mirrors the center and asks how you will support d4.",
+      "Get the bishop outside the pawn chain before e3 shuts the diagonal.",
+      "Black develops and starts contesting e4 and d5.",
+      "This is the standard London order: secure d4 first, then finish development behind it.",
+      "Black supports d5 and prepares natural development.",
+      "Develop only after e3 so your setup is harder to annoy with early pins.",
+      "Black offers the bishop trade to reduce the pressure from your best developed piece.",
+      "Nbd2 keeps the setup compact, reinforces e4 and Ne5 ideas, and leaves you flexible.",
+      "Black castles, and now the game usually turns on whether you stay solid or switch into an active plan."
     ]
   },
 
   {
     id: "london-c3-nbd2",
     name: "London with early c3 and Nbd2",
-    description: "Triangle structure: c3 supports d4 and keeps a slow, solid center.",
+    description: "The classic London triangle: c3 overprotects d4, helps meet ...c5, and keeps Ne5 and e4 ideas in reserve.",
     moves: ["d4", "d5", "Bf4", "Nf6", "e3", "e6", "Nf3", "Bd6", "c3", "O-O", "Nbd2"],
     explanations: [
-      "Take space and make ...e5 harder.",
-      "Black mirrors the central claim.",
-      "Commit to the London bishop placement early.",
-      "Black develops and contests the middle.",
-      "Reinforce d4 and open the diagonal for the f1 bishop.",
-      "Black supports d5 and prepares ...Bd6 or ...c5.",
-      "Develop and keep options for c4 or e3 structures.",
-      "Black wants to trade your active bishop on f4.",
-      "Build the London triangle, support d4, and reduce early tactics on b2.",
-      "Black secures the king and finishes basic development.",
-      "Develop while supporting e4 ideas and keeping pieces flexible."
+      "Take space and make Black commit to a structure.",
+      "Black mirrors the center and keeps the position balanced for now.",
+      "Develop the bishop before locking the chain with e3.",
+      "Black develops and contests the key central squares.",
+      "Support d4 and keep the London shell intact.",
+      "Black backs up d5 and keeps ...c5 and ...Bd6 available.",
+      "Finish kingside development without showing your full plan yet.",
+      "Black challenges the bishop and asks whether you want to keep tension or trade.",
+      "c3 is more than a setup move. It overprotects d4, slows down Black's counterplay, and prepares Bc2 if ...c4 comes.",
+      "Black castles and reaches a normal Queen's Pawn structure.",
+      "Nbd2 connects the London setup to real play by supporting e4 and Ne5 without loosening the center."
     ]
   },
 
   {
     id: "london-vs-bf5",
-    name: "London vs early ...Bf5",
-    description: "Black mirrors the bishop. You develop calmly and prepare Bd3 ideas.",
-    moves: ["d4", "d5", "Bf4", "Bf5", "e3", "e6", "Nf3", "Bd6", "Bd3"],
+    name: "London vs early ...Bf5: c4 transition",
+    description: "When Black brings the bishop out early, you do not have to stay mechanical. c4 and Qb3 punish the loose queenside squares.",
+    moves: ["d4", "d5", "Bf4", "Bf5", "c4", "e6", "Nc3", "Nf6", "Qb3"],
     explanations: [
       "Take the center first and define the structure.",
-      "Black matches the center and keeps symmetry.",
-      "Develop the bishop before locking it in with e3.",
-      "Black mirrors, contesting your bishop and controlling e4.",
-      "Solidify the center and open your light bishop and queen.",
-      "Black supports d5 and keeps the option of ...Bd6.",
-      "Develop and keep your pawn structure flexible.",
-      "Black also develops and often aims for bishop trades.",
-      "Challenge the bishop on f5 and prepare a clear development plan."
+      "Black mirrors and keeps central symmetry.",
+      "Develop the bishop before e3 would lock it in.",
+      "An early bishop development looks natural, but it also means Black is not fully ready for queenside pressure.",
+      "Switch gears instead of auto-piloting. c4 challenges d5 directly and heads toward Queen's Gambit style play.",
+      "Black supports d5 and opens the dark bishop.",
+      "Develop and increase pressure on d5 while keeping Qb3 in mind.",
+      "Black develops normally, but b7 is still a practical target.",
+      "Qb3 hits b7 and d5 at once, which is the main reason this plan is so annoying for early ...Bf5 setups."
     ]
   },
 
@@ -98,18 +100,18 @@ export const londonLines = withOpeningFeedback([
   {
     id: "london-vs-c5-qb6",
     name: "London vs ...c5 and ...Qb6",
-    description: "A common plan: Black hits b2 and d4. Nc3 is a direct practical defense.",
+    description: "Black hits b2 and d4 early. Nc3 is practical because it develops, defends, and sets up Nb5 ideas if Black gets careless.",
     moves: ["d4", "d5", "Bf4", "Nf6", "e3", "c5", "Nf3", "Qb6", "Nc3"],
     explanations: [
-      "Claim the center and invite a structured defense.",
-      "Black mirrors and supports central play.",
-      "London bishop out before e3 locks it in.",
-      "Black develops and adds central pressure.",
-      "Stabilize the center and open pieces.",
-      "Black attacks d4 and tries to open lines early.",
-      "Develop and keep your structure flexible.",
-      "Black attacks b2 and increases pressure on d4.",
-      "Defend d5 and b2 indirectly, develop, and keep central options."
+      "Claim the center and invite Black to challenge it.",
+      "Black mirrors and keeps the structure classical.",
+      "Get the bishop out before e3 fixes the chain.",
+      "Black develops and starts looking at e4 and d5.",
+      "Stabilize d4 and open lines for the bishop and queen.",
+      "This is the standard early counterpunch against the London. Black wants quick pressure before your setup settles.",
+      "Develop and keep your structure ready to absorb the pressure.",
+      "Black attacks b2 and leans on d4, hoping for a simple target game.",
+      "Nc3 is the practical answer. It develops, reinforces the center, and often makes Nb5 with c7 pressure a real tactical idea later."
     ]
   },
 
@@ -170,7 +172,7 @@ export const londonLines = withOpeningFeedback([
   {
     id: "london-preserve-bishop-bg3",
     name: "Preserve bishop vs ...Bd6",
-    description: "When Black plays ...Bd6, Bg3 avoids the bishop trade and keeps your pressure.",
+    description: "Bg3 is the simple way to keep the London bishop, but it is a strategic choice, not an automatic move.",
     moves: ["d4", "d5", "Bf4", "Nf6", "e3", "e6", "Nf3", "Bd6", "Bg3"],
     explanations: [
       "Claim the center first.",
@@ -178,17 +180,17 @@ export const londonLines = withOpeningFeedback([
       "Develop the bishop outside the pawn chain.",
       "Black develops and contests e4.",
       "Stabilize d4 and open your pieces.",
-      "Black supports d5 and opens their dark bishop.",
-      "Develop and support central play.",
-      "Black aims to trade off your London bishop.",
-      "Keep the bishop, avoid the trade, and maintain long-term pressure."
+      "Black supports d5 and opens the dark bishop.",
+      "Develop and keep the position compact before choosing a plan.",
+      "Black aims to trade off your most active minor piece.",
+      "Bg3 keeps the bishop pair pressure alive, but it also means you are choosing a quieter route than the more active Ne5 ideas."
     ]
   },
 
   {
     id: "london-trade-bishop-bxd6",
     name: "Trade bishop intentionally",
-    description: "Sometimes you accept the trade to simplify and play a straightforward structure.",
+    description: "Bxd6 is the low-theory answer to ...Bd6. It is fine, but it also gives up the bishop that makes the London special.",
     moves: ["d4", "d5", "Bf4", "Nf6", "e3", "e6", "Nf3", "Bd6", "Bxd6"],
     explanations: [
       "Take the center and define the structure.",
@@ -198,8 +200,8 @@ export const londonLines = withOpeningFeedback([
       "Support d4 and open your light bishop and queen.",
       "Black supports the center and prepares development.",
       "Develop and keep your setup flexible.",
-      "Black offers a bishop trade to reduce your activity.",
-      "Trade on d6 if you prefer a simpler position and clear plans."
+      "Black offers the trade to reduce your pressure.",
+      "Taking is completely playable, but it is the most simplifying reaction and gives up some of the attacking potential tied to the London bishop."
     ]
   },
 
@@ -224,7 +226,7 @@ export const londonLines = withOpeningFeedback([
   {
     id: "london-early-ne5",
     name: "London with early Ne5",
-    description: "An aggressive outpost idea: Ne5 pressures c6 and f7 and can support kingside play.",
+    description: "Against ...Bd6, Ne5 is the ambitious choice. It keeps tension, claims an outpost, and points at tactical ideas on c6 and f7.",
     moves: ["d4", "d5", "Bf4", "Nf6", "e3", "e6", "Nf3", "Bd6", "Ne5"],
     explanations: [
       "Take the center and claim space.",
@@ -233,9 +235,9 @@ export const londonLines = withOpeningFeedback([
       "Black develops and increases central influence.",
       "Stabilize d4 and open your light bishop and queen.",
       "Black supports d5 and prepares to develop pieces.",
-      "Develop and keep your pawn structure flexible.",
+      "Develop and keep your structure flexible.",
       "Black aims to trade off your active bishop.",
-      "Centralize and create a useful outpost that can support an e4 break or kingside plans."
+      "Ne5 is the key teaching move here. Instead of reacting mechanically, you keep the tension and plant a knight that can support e4, kingside play, and tactical shots on c6 or f7."
     ]
   },
 
@@ -277,19 +279,19 @@ export const londonLines = withOpeningFeedback([
   {
     id: "london-vs-bg4-pin",
     name: "London vs ...Bg4 pin",
-    description: "Black pins early. You continue development and decide later how to respond.",
+    description: "If Black pins anyway, the London still holds together. e3 first keeps the pin from being more annoying than it should be.",
     moves: ["d4", "d5", "Bf4", "Nf6", "e3", "Bg4", "Nf3", "e6", "Nbd2", "Bd6"],
     explanations: [
       "Take central space and establish a stable base.",
       "Black mirrors and contests the center.",
-      "Develop the bishop outside the pawn chain.",
-      "Black develops and increases central influence.",
-      "Stabilize d4 and open the light bishop and queen.",
-      "Black supports d5 and prepares bishop development.",
-      "Develop and keep your c pawn flexible.",
-      "Black often tries to trade your bishop on f4.",
-      "Develop and prepare to unpin or support e4.",
-      "Black pins the knight and increases development pressure."
+      "Develop the bishop outside the pawn chain before closing the structure.",
+      "Black develops and keeps pressure on the center.",
+      "e3 first is useful here because your setup is less vulnerable to early pin ideas than if the knight had already gone to f3.",
+      "Black pins anyway, trying to slow your kingside development.",
+      "Develop calmly. The pin is manageable and you still keep the London shell intact.",
+      "Black supports d5 and prepares normal development.",
+      "Nbd2 backs up e4 and gives you a clean way to unpin on your own terms.",
+      "Black keeps aiming for the bishop trade, which is still one of the main strategic themes in these lines."
     ]
   },
 
@@ -312,9 +314,9 @@ export const londonLines = withOpeningFeedback([
 
   {
     id: "london-h4-idea",
-    name: "London with kingside expansion idea",
-    description: "h4 is a commitment. It tries to gain space and can support an attack, but it creates targets.",
-    moves: ["d4", "d5", "Bf4", "Nf6", "e3", "e6", "Nf3", "Bd6", "h4"],
+    name: "London h-pawn launch after Ne5",
+    description: "Once Ne5 has done its job and Black's kingside defenders get shifted, h4 becomes a real attacking plan instead of a random pawn push.",
+    moves: ["d4", "d5", "Bf4", "Nf6", "e3", "e6", "Nf3", "Bd6", "Ne5", "O-O", "Nd2", "c5", "c3", "Nc6", "Bd3", "Bxe5", "dxe5", "Nd7", "h4"],
     explanations: [
       "Claim space and define a stable structure.",
       "Black mirrors and contests the center.",
@@ -324,7 +326,17 @@ export const londonLines = withOpeningFeedback([
       "Black supports d5 and opens the dark bishop.",
       "Develop and keep pawn structure options open.",
       "Black aims to trade the bishop and reduce activity.",
-      "Gain kingside space and signal aggressive intentions, with the cost of weakening squares."
+      "Ne5 takes space and starts asking for concrete answers from Black's setup.",
+      "Black castles before the position is fully clarified.",
+      "Nd2 backs up e4 ideas and keeps your kingside pieces coordinated.",
+      "Black strikes at the center, which is their standard counterplay.",
+      "c3 keeps d4 under control and gives your bishop a safe retreat to c2 if Black advances.",
+      "Black develops and increases pressure on the center.",
+      "Bd3 points more force at the kingside and prepares a direct attack if Black loosens up.",
+      "Black simplifies and hopes the tension disappears.",
+      "Recapture with the pawn so the center stays strong and the f6 knight no longer helps defend the king.",
+      "Black reroutes the knight, but the kingside has already lost one important defender.",
+      "Now h4 makes sense. The rook can join via the h-file and the attack becomes easier to justify than in a normal quiet London."
     ]
   },
 
@@ -345,6 +357,78 @@ export const londonLines = withOpeningFeedback([
       "Develop and support central play, often preparing queenside coordination.",
       "Black secures the king and completes basic development.",
       "Connect pieces and keep the option of long castling in some structures."
+    ]
+  },
+
+  {
+    id: "london-bishop-c2-vs-c4",
+    name: "London setup vs ...c4 with Bc2",
+    description: "When Black gains space with ...c4, Bc2 keeps the bishop alive on the same useful diagonal instead of letting the expansion bother you.",
+    moves: ["d4", "d5", "Bf4", "Nf6", "e3", "e6", "Nf3", "Be7", "Bd3", "O-O", "O-O", "c5", "c3", "Nc6", "Nbd2", "c4", "Bc2"],
+    explanations: [
+      "Take central space and keep London development available.",
+      "Black mirrors and builds a normal Queen's Pawn center.",
+      "Develop the bishop before the e-pawn closes the diagonal.",
+      "Black develops and keeps an eye on e4.",
+      "Support d4 and prepare smooth piece development.",
+      "Black supports d5 and keeps ...c5 in reserve.",
+      "Develop and keep your structure compact.",
+      "Black uses a quieter bishop setup and keeps options flexible.",
+      "Bd3 points toward the kingside and keeps the bishop active.",
+      "Black castles and reaches a standard structure.",
+      "Castle before starting flank play so your king is settled.",
+      "Black now starts the usual counterplay against d4.",
+      "c3 overprotects the center and prepares for exactly this kind of queenside expansion.",
+      "Black develops and keeps pressing around d4.",
+      "Nbd2 backs up e4 and keeps pieces coordinated.",
+      "Black gains space with ...c4 and tries to shove your bishop off the useful diagonal.",
+      "Bc2 is the standard London retreat. The bishop stays active and Black's space gain does not actually solve your main plans."
+    ]
+  },
+
+  {
+    id: "london-qh3-attack",
+    name: "London Qh3 attacking lift",
+    description: "Against a quieter ...Be7 setup, you can delay castling, plant Ne5, and lift the queen to h3 to ask direct questions around h7.",
+    moves: ["d4", "d5", "Bf4", "Nf6", "e3", "e6", "Nf3", "Be7", "Bd3", "c5", "c3", "O-O", "Nbd2", "b6", "Ne5", "Bb7", "Qh3"],
+    explanations: [
+      "Take central space and keep your setup flexible.",
+      "Black mirrors the center and waits for your plan.",
+      "Get the bishop outside the pawn chain first.",
+      "Black develops and contests the key central squares.",
+      "Support d4 and prepare a stable London structure.",
+      "Black supports d5 and opens the dark bishop.",
+      "Develop without showing whether the game will stay quiet or turn sharp.",
+      "Black avoids ...Bd6 for the moment and keeps the bishop at home.",
+      "Bd3 improves your kingside pressure and lines up with later queen lifts.",
+      "Black starts the standard break against d4.",
+      "c3 keeps the center together and prevents Black from undermining it too easily.",
+      "Black castles and assumes White will do the same soon.",
+      "Nbd2 brings the last minor piece toward e4 and Ne5 support.",
+      "Black prepares to fianchetto or at least cover the queenside more carefully.",
+      "Ne5 is the moment the London stops being a setup and starts becoming an attack.",
+      "Black develops, but h7 and the dark squares are still the long-term concern.",
+      "Qh3 is the lift. It points straight at h7 and forces Black to think about ...h6, ...g6, or tactical concessions."
+    ]
+  },
+
+  {
+    id: "london-vs-kid-center-grab",
+    name: "London vs King's Indian setup",
+    description: "Against ...g6 and ...d6, the usual London plan is too tame. Grab the center with Nc3 and e4 before Black finishes the setup.",
+    moves: ["d4", "Nf6", "Bf4", "g6", "Nc3", "Bg7", "e4", "d6", "Qd2", "O-O", "O-O-O"],
+    explanations: [
+      "Take central space and keep several structures available.",
+      "Black avoids ...d5 and heads for a King's Indian setup.",
+      "Develop the bishop actively before deciding how big the center should become.",
+      "Black commits to the fianchetto.",
+      "Nc3 is important here because you are not playing a purely mechanical London anymore.",
+      "Black finishes the bishop setup and prepares ...d6.",
+      "Now e4 is the point. Since Black did not put a pawn on d5, you are allowed to grab more space than in a normal London.",
+      "Black finally supports the dark squares, but White already has the bigger center.",
+      "Qd2 connects rooks, supports queenside castling, and points toward a direct kingside pawn storm later.",
+      "Black castles into the side you often want to attack.",
+      "Castle long and make the plan clear: use the space edge in the center and then push on the kingside before Black gets their counterplay."
     ]
   },
 
@@ -747,9 +831,9 @@ export const londonLines = withOpeningFeedback([
       "Take the center.",
       "Black mirrors and contests space.",
       "Develop actively.",
-      "Develop and contest e4.",
+      "Black develops and contests e4.",
       "Support d4 and open pieces.",
-      "Develop and contest your bishop.",
+      "Black develops and contests your bishop.",
       "Increase central tension.",
       "Support d5 and open lines.",
       "Pressure b7 and d5 early.",
@@ -758,6 +842,11 @@ export const londonLines = withOpeningFeedback([
       "Develop and prepare to castle.",
       "Clarify the center and open files.",
       "Recapture and keep a central pawn presence.",
+      "Nb5 is the key jump. It increases pressure on c7 and makes Black solve a concrete problem.",
+      "Black blocks the diagonal and tries to untangle without giving up c7.",
+      "Trade the bishop when it helps remove defenders and simplify into a favorable structure.",
+      "Black recaptures, but the d6 pawn can become a long-term target and the c-file stays sensitive.",
+      "Rc1 is the follow-up. Put a rook on the open file and keep c7 and c8 under pressure."
     ]
   },
 
