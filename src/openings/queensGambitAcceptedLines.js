@@ -30,16 +30,16 @@ export const queensGambitAcceptedLines = withOpeningFeedback([
       "Qxb5+"
     ],
     "explanations": [
-      "Establishes central control and opens lines for the queen and bishop.",
+      "Let's learn the Queen's Gambit! We start with, of course, the queen's pawn to d4.",
       "Black occupies the center, preparing a solid pawn structure.",
       "Offers the queen's gambit to disrupt Black's center and gain space.",
-      "Black accepts the gambit, taking a pawn but delaying development.",
-      "White builds a strong pawn center, creating immediate pressure.",
-      "Black defends the pawn while expanding on the queenside.",
-      "White immediately challenges the advanced b5 pawn, creating tension.",
-      "Black protects the b5 pawn with this pawn move.",
-      "Forces the capture, opening the a-file for White's rook.",
-      "Black recaptures, maintaining material but weakening queenside structure.",
+      "Black accepts the gambit, but now has to justify giving up central tension.",
+      "White grabs the center immediately instead of spending time chasing the pawn first.",
+      "Black overextends to hold the c4-pawn on the queenside.",
+      "White undermines the pawn chain at its base before Black finishes development.",
+      "Black patches the b5 pawn, but the queenside is becoming tactically loose.",
+      "White forces the a-file open and starts exposing Black's queenside pieces.",
+      "Black keeps the extra material for the moment, but the rook and bishop can become targets.",
       "Develops a knight with tempo as it attacks the loose b5 pawn.",
       "Black saves the bishop from potential capture after Nxb5.",
       "White pushes the d-pawn to cramp Black's position and limit piece activity.",
@@ -123,14 +123,14 @@ export const queensGambitAcceptedLines = withOpeningFeedback([
       "Standard central opening.",
       "Central pawn response.",
       "Queen's Gambit offer to create imbalance.",
-      "Accepts the pawn but gives up center control.",
-      "White builds a strong pawn center.",
-      "Black tries to hold onto the gambit pawn with this expansion.",
-      "White immediately challenges the advanced pawn, creating a weakness.",
-      "Black defends the pawn but creates an opportunity for White.",
-      "Forces the capture, opening the a-file completely.",
-      "Black recaptures, but now the rook on a8 is unprotected.",
-      "White immediately captures the undefended rook on a8, winning material."
+      "Black accepts the pawn, but the queenside hold is already fragile.",
+      "White takes central space first and makes the extra pawn harder for Black to justify.",
+      "Black tries to keep the c4-pawn with a broad pawn chain.",
+      "White undermines that chain immediately instead of letting Black settle.",
+      "This natural defense is the mistake: it leaves the a-file tactic in the position.",
+      "White opens the a-file by force.",
+      "Black keeps the pawn chain, but the rook on a8 is now loose behind it.",
+      "White simply takes the rook. Black's attempt to cling to the extra pawn has backfired."
     ]
   },
   {
@@ -331,14 +331,14 @@ export const queensGambitAcceptedLines = withOpeningFeedback([
       "Standard central opening.",
       "Central pawn response.",
       "Queen's Gambit offer.",
-      "Accepts the pawn but gives up center control.",
-      "White builds a strong pawn center.",
-      "Black tries to hold onto the gambit pawn.",
-      "White immediately challenges the advanced pawn.",
-      "Black captures, opening the a-file.",
-      "Check! White develops queen with tempo, attacking a4 pawn and rook.",
-      "Black blocks the check and develops a piece.",
-      "White recaptures the gambit pawn, equalizing material with better development."
+      "Black accepts the pawn, but White is ready to punish any attempt to overhold it.",
+      "White claims central space and makes the extra c-pawn less important than development.",
+      "Black overextends to keep the pawn chain intact.",
+      "White attacks the base of that chain immediately.",
+      "Black captures, but this loosens the queenside and gives White a clean recovery route.",
+      "White recaptures with check, gains tempo, and lines up the c4 pawn next.",
+      "Black must block the check instead of consolidating.",
+      "White gets the pawn back and keeps the better development."
     ]
   },
   {
@@ -679,6 +679,38 @@ export const queensGambitAcceptedLines = withOpeningFeedback([
       "White develops knight, preparing to recapture on c4.",
       "Black captures the bishop, simplifying.",
       "White recaptures with knight, maintaining central control and piece activity."
+    ]
+  },
+  {
+    "category": "Queen's Gambit Accepted",
+    "id": "queens-gambit-accepted-17",
+    "name": "Punish ...c6 with Ra3",
+    "description": "Simple recovery plan: undermine the queenside chain and trap the a8 rook.",
+    "moves": [
+      "d4",
+      "d5",
+      "c4",
+      "dxc4",
+      "e3",
+      "b5",
+      "a4",
+      "c6",
+      "axb5",
+      "cxb5",
+      "Ra3"
+    ],
+    "explanations": [
+      "Standard central opening.",
+      "Black stakes out the center.",
+      "White challenges the d5 pawn from the side.",
+      "Black accepts the gambit and gives White a target on the queenside.",
+      "White chooses the simple setup: free the bishop and prepare to recover the pawn.",
+      "Black tries to hang on to the extra pawn with a broad pawn chain.",
+      "White undermines that chain before Black can finish development.",
+      "This looks solid, but it traps the rook on a8 behind its own pawn.",
+      "White forces the a-file open.",
+      "Black keeps the pawn for the moment, but the queenside is now tactically lost.",
+      "The rook lift attacks a8 at once. Black cannot save everything, so the whole pawn-holding plan collapses."
     ]
   }
 ]);
