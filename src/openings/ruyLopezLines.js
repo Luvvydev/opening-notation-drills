@@ -5,11 +5,12 @@ import { withOpeningFeedback } from "./feedback";
 // SEO / page intro text for Ruy Lopez drills
 export const ruyLopezSEOText = `
 The Ruy Lopez (Spanish Opening) starts with 1.e4 e5 2.Nf3 Nc6 3.Bb5.
-White pressures the e5 pawn and usually aims for long-term positional pressure,
-while Black can choose between solid defenses and sharp counterplay.
+The opening is about central control and clear piece jobs, not memorizing endless variations.
 
-This page provides Ruy Lopez move-order drills focused on repetition, not theory dumps.
-Each line is a concrete sequence you can practice until the moves feel automatic.
+White usually pressures e5, puts a rook on e1, prepares c3 and d4, and only trades on c6 when the e-pawn is secure.
+From there, White often uses the center and extra space to build a kingside attack while Black looks for queenside counterplay.
+
+These drills focus on the move orders and plans that make those middlegames easier to understand.
 `;
 
 
@@ -580,74 +581,105 @@ export const ruyLopezLines = withOpeningFeedback([
 {
   category: "Morphy Defense",
   id: "ruy-morphy-open-nxe4-re1-core",
-  name: "Morphy: ...Nxe4 and Re1 pressure",
-  description: "After White castles in the Open Morphy, ...Nxe4 can be met at once because the e-file is already working for White.",
+  name: "Morphy: castle first, then Re1 anyway",
+  description: "Open Morphy structure where White castles before worrying about e4, then uses Re1 to make the e-file the real point of the position.",
   moves: ["e4","e5","Nf3","Nc6","Bb5","a6","Ba4","Nf6","d4","exd4","O-O","Nxe4","Re1"],
   explanations: [
-    "Claim central space.",
-    "Black matches the center.",
-    "Develop and hit e5.",
-    "Defend e5 and develop.",
-    "Pressure the knight that protects e5.",
-    "Gain queenside space and ask the bishop to retreat.",
-    "Keep the bishop and maintain the pin idea.",
-    "Develop and attack e4.",
-    "Challenge the center immediately.",
-    "Black captures to reduce White's central space.",
-    "Castle first. This is important because it leaves the e-file ready for rook play.",
-    "Black grabs the pawn, but that capture can be risky because the king's position is not fully secure.",
-    "Hit the knight and use the open e-file right away. This is the standard punishment theme from the transcript."
+    "Play e4 to claim central space and open lines for the queen and bishop.",
+    "Black takes central space back and keeps d4 under control for the moment.",
+    "Nf3 attacks e5 and starts the usual fight over the center.",
+    "Black defends e5 and adds more control over central squares.",
+    "The bishop's job is to watch the knight that defends e5 and wait for the right moment to trade.",
+    "Black gains space and asks the bishop to choose a square.",
+    "Keep the bishop. In many Ruy Lopez positions it just waits until trading on c6 actually wins something.",
+    "Black develops and attacks e4.",
+    "White strikes the center before Black finishes coordinating.",
+    "Black reduces the central tension and hopes the pawn on e4 will become loose.",
+    "Castle first. This is one of the transcript's main points. White wants the rook ready for e1 before starting the next phase.",
+    "Black grabs the pawn, but that is exactly why the rook plan matters.",
+    "Put the rook on e1 anyway. Even if the pawn is gone, the open e-file becomes White's main source of pressure."
   ]
 },
 {
   category: "Morphy Defense",
   id: "ruy-morphy-c3-h3-setup",
-  name: "Morphy: c3 and h3 setup",
-  description: "Closed Morphy structure built around Re1, c3, and h3 before the central d4 break.",
+  name: "Morphy: Re1, c3, h3 setup",
+  description: "Closed Morphy structure built around the transcript's core setup: rook to e1, c3 to support d4 and save the bishop, then h3 before opening the center.",
   moves: ["e4","e5","Nf3","Nc6","Bb5","a6","Ba4","Nf6","O-O","Be7","Re1","b5","Bb3","d6","c3","O-O","h3"],
   explanations: [
-    "Take the center and open lines.",
-    "Black mirrors the center.",
-    "Develop and attack e5.",
-    "Defend e5 and develop.",
-    "Pressure the knight that supports e5.",
-    "Gain queenside space and ask the bishop to choose.",
-    "Keep the bishop on the long diagonal.",
-    "Develop and attack e4.",
-    "Castle first so White can build the center safely.",
-    "Black chooses a solid square for the bishop.",
-    "Defend e4 and renew the threat against e5 if Black is careless.",
-    "Black gains space before White can play c3 and d4 with tempo.",
-    "Keep the bishop active. In the transcript this light-squared bishop is one of White's key pieces.",
-    "Support e5 and finish Black's basic setup.",
-    "This is the transcript's main multipurpose move. It prepares d4 and gives the bishop an escape if ...Ne5 comes.",
+    "Play e4 to claim central space and open lines for the queen and bishop.",
+    "Black takes central space back and keeps d4 from arriving for free.",
+    "Nf3 attacks e5 and begins the usual central fight.",
+    "Black defends e5 and develops.",
+    "The bishop's job is to keep pressure on the knight that guards e5.",
+    "Black gains space and asks the bishop to retreat.",
+    "Keep the bishop on the long diagonal. In the Ruy Lopez it often waits rather than trading too early.",
+    "Black develops and attacks e4.",
+    "Castle first so the rook is ready for the e-file plan.",
+    "Black chooses a solid setup and keeps the center closed for the moment.",
+    "Re1 is standard here. It defends the e-pawn and makes future pressure on e5 much more real.",
+    "Black grabs queenside space before White can roll the center forward.",
+    "The bishop stays useful on b3, where it still looks toward the kingside.",
+    "Once Black plays ...d6, the e5-pawn no longer depends only on the knight, so White has to think about the bishop's retreat squares.",
+    "c3 is the key multipurpose move from the transcript. It prepares d4 and gives the bishop an escape if Black's knight jumps in.",
     "Black castles and waits for White's center break.",
-    "Another transcript move. h3 stops ...Bg4 first, so White can play d4 next without the pin becoming annoying."
+    "h3 is the clean-up move. It stops ...Bg4 first so White can play d4 without the pin becoming annoying."
+  ]
+},
+
+{
+  category: "Morphy Defense",
+  id: "ruy-morphy-c3-h3-d4-center",
+  name: "Morphy: h3, then d4 and cxd4",
+  description: "Closed Morphy plan from the transcript. After Re1, c3, and h3, White finally breaks with d4 and takes back to claim the center.",
+  moves: ["e4","e5","Nf3","Nc6","Bb5","a6","Ba4","Nf6","O-O","Be7","Re1","b5","Bb3","d6","c3","O-O","h3","Bb7","d4","exd4","cxd4"],
+  explanations: [
+    "Play e4 to claim central space and open lines for the queen and bishop.",
+    "Black takes central space back and keeps d4 from arriving immediately.",
+    "Nf3 attacks e5 and starts the central fight.",
+    "Black defends e5 and develops.",
+    "The bishop keeps pressure on the knight that guards e5 and waits for the right moment to trade.",
+    "Black gains space and asks the bishop to retreat.",
+    "Keep the bishop. White does not want to give it up before the center is ready.",
+    "Black develops and attacks e4.",
+    "Castle first so the rook is ready for e1 and the center plan can be played safely.",
+    "Black chooses a solid square for the bishop.",
+    "The rook belongs on e1 in this opening. It supports the e-pawn and makes the e-file useful later.",
+    "Black expands on the queenside before White can hit the center.",
+    "The bishop stays on the b3 to f7 diagonal and keeps kingside ideas alive.",
+    "Black finishes the basic setup and keeps e5 protected.",
+    "c3 supports the main break and gives the bishop an escape square if Black's knight jumps forward.",
+    "Black castles and waits for White to show the central plan.",
+    "h3 stops ...Bg4 first. That way the center can open without a pin getting in the way.",
+    "This bishop development is acceptable for White because it still does not stop the main plan.",
+    "Now White plays the big break from the transcript. d4 challenges the center and tries to take over more space.",
+    "Black accepts the challenge and hopes White's center will disappear.",
+    "White takes back and gets the center superiority the transcript was aiming for."
   ]
 },
 
 {
   category: "Morphy Defense",
   id: "ruy-morphy-d6-c3-nxe4-bd5",
-  name: "Morphy: ...Nxe4 met by Bd5",
-  description: "After ...d6 and ...b5, c3 prepares d4. If Black greedily grabs e4, Bd5 hits too many targets at once.",
+  name: "Morphy: c3 punishes ...Nxe4 with Bd5",
+  description: "After ...d6 and ...b5, c3 prepares d4 and keeps the bishop safe. If Black grabs e4 anyway, Bd5 hits too many targets at once.",
   moves: ["e4","e5","Nf3","Nc6","Bb5","a6","Ba4","d6","O-O","b5","Bb3","Nf6","c3","Nxe4","Bd5"],
   explanations: [
-    "Take the center and open lines.",
-    "Black mirrors the center.",
-    "Develop and pressure e5.",
-    "Defend e5 and develop.",
-    "Pressure the defender of e5.",
-    "Gain space and ask the bishop to choose.",
+    "Play e4 to claim central space and open lines for the queen and bishop.",
+    "Black mirrors the center and keeps d4 under pressure.",
+    "Nf3 attacks e5 and develops toward the center.",
+    "Black defends e5 and develops.",
+    "The bishop keeps pressure on the knight that supports e5.",
+    "Black gains space and asks the bishop to retreat.",
     "Keep the bishop and stay flexible.",
-    "Black protects e5, but that also invites White to challenge the center quickly.",
-    "Castle first. This is useful anyway and keeps the rook ready for central play.",
-    "Black gains more space and chases the bishop again.",
-    "Keep the bishop on an active diagonal.",
+    "...d6 is solid, but it also tells White the center should be challenged soon.",
+    "Castle first so the rook is ready for the e-file and central play.",
+    "Black grabs more queenside space and keeps pushing the bishop around.",
+    "The bishop stays active and keeps long-diagonal pressure.",
     "Black develops and attacks e4.",
-    "c3 is the transcript move. It prepares d4 and supports White's central expansion.",
-    "Black grabs the pawn and hopes White only has routine compensation.",
-    "Bd5 is the point. The bishop suddenly hits e4, c6, and f7, so the greedy capture becomes much harder to justify."
+    "c3 is the key move here. It supports d4 and gives the bishop a safe future square if Black's knight jumps in.",
+    "Black gets greedy and takes e4 before White has shown the full center break.",
+    "Bd5 is the tactical answer. The bishop attacks e4, c6, and f7 at the same time, so the pawn grab becomes very uncomfortable."
   ]
 },
 

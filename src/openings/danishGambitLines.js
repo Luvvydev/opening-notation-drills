@@ -28,17 +28,17 @@ export const danishGambitLines = withOpeningFeedback([
       "Black advances a central pawn to e5 to claim space and define which files and diagonals will open.",
       "White plays d4, offering central contact immediately; the whole gambit is built around opening the center for bishops.",
       "Black captures on d4 to open files and change the structure; ask what new line just opened and who benefits from it.",
-      "White plays c3 to undermine the pawn on d4 and open the c file; if Black takes, White gets rapid piece play.",
+      "c3 offers another pawn on purpose. The transcript's point is simple: keep opening lines until Black's extra material stops mattering.",
       "Black captures on c3 to open files and change the structure; ask what new line just opened and who benefits from it.",
       "Develop Bc4 and point straight at f7. In the Danish, this bishop plus the queen create the attack before Black finishes development.",
       "Black captures on b2 to open files and change the structure; ask what new line just opened and who benefits from it.",
-      "Recapture on b2 and accept the material deficit. Your compensation is the bishop pair on open diagonals and immediate pressure on the king side.",
-      "Black gives check with a bishop to win time; in open games this often comes with a pin or an attack on an undefended piece.",
+      "Bxb2 restores the bishop pair. This is the real Danish compensation: both bishops get long open diagonals and Black still has loose pieces and an exposed king side.",
+      "Bb4+ is Black's bishop attack from the transcript. The check looks annoying, but White can block, keep developing, and stay on the attack.",
       "White plays Nc3 to add central control over d5 and e4 and to support a future d4 push or recapture.",
       "Black develops Nf6 to contest the center, hitting e5 or e4 and preparing quick castling.",
-      "Qb3 is the standard Danish idea: hit f7 and b7 at once and make Black solve threats instead of consolidating the extra pawns.",
+      "Qb3 is the standard Danish pressure move. You hit f7 and b7 at the same time and force Black to answer threats instead of untangling.",
       "Black castles kingside to get the king safe and connect rooks; now you can think about central breaks instead of tactics on the back rank.",
-      "Take on b4 once the bishop has become loose. White has won a key attacker back while keeping both bishops active."
+      "Take on b4 once the bishop is loose. You have recovered a key piece and kept the bishop pair and initiative."
     ]
   },
   {
@@ -172,9 +172,9 @@ export const danishGambitLines = withOpeningFeedback([
       "Black captures on b2 to open files and change the structure; ask what new line just opened and who benefits from it.",
       "White captures on b2 with the bishop, usually removing a key defender or converting initiative into material.",
       "Black develops Nf6 to contest the center, hitting e5 or e4 and preparing quick castling.",
-      "Push e5 with tempo. The knight on f6 is the usual target in these accepted Danish lines.",
-      "Nh5 tries to cling to the extra pawn, but it simply hangs the knight.",
-      "Qxh5 wins the misplaced knight outright. This is one of the cleanest tactical punishments in the opening."
+      "e5 is the standard Danish reaction to ...Nf6. You gain time, push the knight around, and keep the attack flowing before Black can consolidate.",
+      "Nh5 is the kind of greedy move the transcript warns about. Black tries to hold material and forgets basic piece safety.",
+      "Qxh5 wins the knight cleanly. This is one of the easiest Danish punishments to remember: kick the knight, then take it when it lands badly."
     ]
   },
   {
@@ -215,18 +215,18 @@ export const danishGambitLines = withOpeningFeedback([
       "White develops Bc4 to point at f7 and to support quick checks; in open games this bishop is often the main attacking piece.",
       "Black captures on b2 to open files and change the structure; ask what new line just opened and who benefits from it.",
       "White captures on b2 with the bishop, usually removing a key defender or converting initiative into material.",
-      "Black gives check with a bishop to win time; in open games this often comes with a pin or an attack on an undefended piece.",
+      "Bb4+ is the bishop check line from the transcript. Black uses the check to gain time, but White can keep developing without giving up the attack.",
       "White plays Nc3 to add central control over d5 and e4 and to support a future d4 push or recapture.",
       "Black develops Nf6 to contest the center, hitting e5 or e4 and preparing quick castling.",
-      "White plays Qb3, immediately threatening f7 and b7 and forcing Black to spend a move on defense instead of consolidating.",
+      "Qb3 is the classic Danish pressure move. You hit f7 and b7 at once and keep Black reacting instead of coordinating.",
       "Black gives check with a bishop to win time; in open games this often comes with a pin or an attack on an undefended piece.",
       "White captures on c3 with the queen, usually removing a key defender or converting initiative into material.",
       "Black castles kingside to get the king safe and connect rooks; now you can think about central breaks instead of tactics on the back rank.",
       "White develops Nf3 to contest the center, hitting e5 or e4 and preparing quick castling.",
       "Black places the knight on c6 to improve central influence and set up the next tactic or break.",
       "White castles kingside to get the king safe and connect rooks; now you can think about central breaks instead of tactics on the back rank.",
-      "Black captures on e4 with the knight, usually removing a key defender or converting initiative into material.",
-      "White gives checkmate with the queen, forcing a response and usually gaining a tempo for development or a follow up threat."
+      "Nxe4 looks like a double attack, but Black is ignoring the mating threat on g7.",
+      "Qxg7# is the point. Black got distracted by material and forgot that the bishop on c4 and queen on c3 already built a mating net."
     ]
   },
   {
@@ -695,18 +695,18 @@ export const danishGambitLines = withOpeningFeedback([
       "White develops Bc4 to point at f7 and to support quick checks; in open games this bishop is often the main attacking piece.",
       "Black captures on b2 to open files and change the structure; ask what new line just opened and who benefits from it.",
       "White captures on b2 with the bishop, usually removing a key defender or converting initiative into material.",
-      "Black gives check with a bishop to win time; in open games this often comes with a pin or an attack on an undefended piece.",
+      "Bb4+ is the bishop attack from the transcript. The check is annoying, but White can block, finish development, and keep the initiative.",
       "White plays Nc3 to add central control over d5 and e4 and to support a future d4 push or recapture.",
       "Black develops Nf6 to contest the center, hitting e5 or e4 and preparing quick castling.",
-      "White plays Qb3, immediately threatening f7 and b7 and forcing Black to spend a move on defense instead of consolidating.",
-      "Black gives check with a bishop to win time; in open games this often comes with a pin or an attack on an undefended piece.",
+      "Qb3 keeps the usual Danish pressure on f7 and b7 and makes Black solve threats before improving the position.",
+      "Bxc3+ gives up the checking bishop for White's knight. In an open game, White is usually happy to keep both bishops and recapture with the queen.",
       "White captures on c3 with the queen, usually removing a key defender or converting initiative into material.",
       "Black castles kingside to get the king safe and connect rooks; now you can think about central breaks instead of tactics on the back rank.",
       "White develops Nf3 to contest the center, hitting e5 or e4 and preparing quick castling.",
       "Black places the knight on c6 to improve central influence and set up the next tactic or break.",
       "White castles kingside to get the king safe and connect rooks; now you can think about central breaks instead of tactics on the back rank.",
-      "Black pushes a pawn to d6 to support a plan; check what weakness it creates and whether it helps development or attack.",
-      "Rfe1 is the natural follow-up once Black plays ...d6. The rook joins the open file and White keeps pressure before Black can untangle."
+      "...d6 is a solid defensive move, but it also gives White one more tempo to pile up pressure before Black is fully coordinated.",
+      "Rfe1 keeps attacking instead of cashing out. The rook joins the e-file, supports e5 ideas, and makes it harder for Black to coordinate."
     ]
   },
   {
@@ -745,12 +745,12 @@ export const danishGambitLines = withOpeningFeedback([
       "Recapture with the bishop and keep the bishop pair alive. This is the core Danish compensation.",
       "Black develops the knight and wants to castle, but that piece becomes the target.",
       "e5 gains time and kicks the knight. This is the standard reaction when Black brings the knight to f6 too early.",
-      "Ne4 looks active, but it walks into the classic Danish bishop sacrifice.",
-      "Bxf7+ drags the king out and clears the way for a queen fork.",
+      "Ne4 looks active, but this is exactly the kind of knight jump the Danish wants to punish.",
+      "Bxf7+ is the standard Danish sacrifice here. You drag the king forward so the queen can hit both the king and the loose knight.",
       "Black has to take, and now the king has lost castling rights.",
-      "Qd5+ hits both the king and the knight on e4. This is the tactical point of the whole sequence.",
+      "Qd5+ is the tactical point. It checks the king and attacks the knight on e4 at the same time.",
       "Black steps back, but the knight is still loose.",
-      "Qxe4 wins the piece back cleanly. White has restored material while leaving Black's king awkward and undeveloped."
+      "Qxe4 wins the knight back and leaves Black with the worse king and worse coordination. That is the Danish trade: activity first, material later."
     ]
   },
   {
@@ -799,8 +799,8 @@ export const danishGambitLines = withOpeningFeedback([
       "Develop with pressure on f7. The bishop is the spearhead of the Danish attack.",
       "Black takes the second pawn too, but now both bishops become extremely strong.",
       "Recover the bishop and keep every diagonal open toward Black's king side.",
-      "Bb4+ is Black's main defensive try, using check to gain time and prepare castling.",
-      "Block with Nbd2. This keeps the c3 square free and preserves the bishop's diagonal, exactly as the transcript recommends.",
+      "Bb4+ is the main bishop check setup. Black tries to gain time with the check and slow White's attack before the center blows open.",
+      "Nd2 is the clean block. You meet the bishop attack without giving up momentum and keep your pieces ready for the next wave.",
       "Black develops and hopes to castle next.",
       "e5 gains time and starts the attack before Black can finish coordinating.",
       "Ne4 attacks the pinned knight and looks clever, but it misses the standard sacrifice.",
@@ -808,9 +808,9 @@ export const danishGambitLines = withOpeningFeedback([
       "Black takes, but now the king is stuck in the center.",
       "Qb3+ attacks the king and the bishop on b4 at the same time.",
       "Black tries to close the position with ...d5 and save the bishop.",
-      "exd6+ is the key en passant resource. It is check, it opens lines, and it keeps the attack rolling.",
+      "exd6+ is the key resource. The en passant check keeps the king exposed and opens even more lines for the attack.",
       "Black blocks the check and attacks the queen, but the bishop on b4 is still loose.",
-      "Qxb4 wins that bishop back and keeps the passed d-pawn and c-pawn ideas alive.",
+      "Qxb4 wins the checking bishop back. White is still attacking, and Black still has not solved the king problem.",
       "Black grabs on d2 and hopes White will finally slow down.",
       "Qf4+ is the stronger move. The queen swings to the king side and keeps the initiative instead of recapturing immediately.",
       "Black runs to g8, but the position is still collapsing.",
@@ -818,7 +818,7 @@ export const danishGambitLines = withOpeningFeedback([
       "Black tries to keep control of the back rank and the knight on b8.",
       "Qe5 builds the long-diagonal battery and threatens to crash through on g7.",
       "Black defends as best as possible, but the knight on b8 is no longer protected enough.",
-      "cxb8=Q+ is the payoff. The passed pawn promotes with check and White's attack converts into decisive material."
+      "cxb8=Q+ is the payoff. The passed pawn queens with check, and the attack turns into decisive material."
     ]
   },
   {

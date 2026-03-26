@@ -93,11 +93,11 @@ export const queensGambitDeclinedLines = withOpeningFeedback([
       "White recaptures with the knight, gaining a central outpost."
     ]
   },
-  {
+    {
     "category": "Queen's Gambit Declined",
     "id": "queens-gambit-declined-03",
-    "name": "Semi-Slav: aggressive queen sortie",
-    "description": "Semi-Slav structure with space and early queen pressure.",
+    "name": "Semi-Slav: e5 and Qg4 pressure",
+    "description": "Win space with e5, kick the knight, and use Qg4 to ask direct kingside questions.",
     "moves": [
       "d4",
       "d5",
@@ -114,19 +114,19 @@ export const queensGambitDeclinedLines = withOpeningFeedback([
       "Qg4"
     ],
     "explanations": [
-      "Standard central opening.",
-      "Solid central response.",
-      "Queen's Gambit offer.",
-      "Prepares bishop development.",
-      "Develops knight to control central squares.",
-      "Semi-Slav Defense: supports d5 pawn and prepares ...b5.",
-      "White strikes in the center, claiming more space.",
-      "Black develops knight, attacking e4 pawn.",
-      "White exchanges to open the center.",
-      "Black recaptures, maintaining central pawn.",
-      "White gains space and attacks the knight.",
-      "Black retreats knight, preparing ...Nc6 or ...Nb6.",
-      "White attacks g7 pawn, creating immediate kingside pressure."
+      "Start with the queen pawn and claim central space.",
+      "Black meets it directly and builds a solid center of their own.",
+      "Offer the c-pawn to challenge d5 from the side.",
+      "Black keeps a QGD shell and opens the diagonal for the dark-squared bishop.",
+      "Nc3 is standard and increases pressure on d5.",
+      "With ...c6 Black supports d5 and heads for a Semi-Slav structure.",
+      "White grabs the full center before Black finishes development.",
+      "Black hits e4 immediately and asks White to justify the space grab.",
+      "Clarify the center before Black can settle comfortably.",
+      "Black keeps the pawn chain intact and hopes the center will hold.",
+      "e5 gains space, drives the knight back, and starts to squeeze Black.",
+      "The knight retreats and Black loses some freedom in the center.",
+      "Qg4 is the direct follow-up: it hits g7 and turns the space advantage into kingside pressure."
     ]
   },
   {
@@ -177,11 +177,11 @@ export const queensGambitDeclinedLines = withOpeningFeedback([
       "White captures the undefended d5 pawn, winning material."
     ]
   },
-  {
+    {
     "category": "Queen's Gambit Declined",
     "id": "queens-gambit-declined-05",
-    "name": "Main Exchange QGD plan with f3 and e4",
-    "description": "Develop, regroup, then break the center with f3 and e4.",
+    "name": "Exchange QGD: Qc2, f3, and e4 plan",
+    "description": "Use the Qc2 waiting move, keep the bishop pin, then prepare the standard f3 and e4 break.",
     "moves": [
       "d4",
       "d5",
@@ -229,31 +229,31 @@ export const queensGambitDeclinedLines = withOpeningFeedback([
       "Reinforces the center and prepares bishop development.",
       "Black castles to safety.",
       "White develops bishop to active diagonal.",
-      "Black supports the d5 pawn.",
-      "White supports the e4 break and places a heavy piece on the c-file for future pressure.",
-      "A useful waiting move: Black asks the bishop to decide before finishing queenside development.",
-      "White keeps the pin, but the bishop has been pushed back and Black keeps kingside space-gaining ideas.",
-      "Black develops without tying up the queenside and keeps ...Ne4 in mind.",
-      "White develops knight, preparing f3 and e4.",
-      "The rook supports ...Ne4 and gives Black more central bite on the e-file.",
+      "Black stabilizes the d5 chain and keeps the standard QGD shell.",
+      "Qc2 is the useful waiting move from the transcript. It supports e4, coordinates with Bd3 on the h7 diagonal, and keeps queenside castling available.",
+      "Black asks the bishop to decide before finishing queenside development.",
+      "Keep the bishop when possible. The retreat preserves the pin and keeps attacking ideas alive.",
+      "Black finishes queenside development and keeps ...Ne4 in reserve.",
+      "White develops the last minor piece and prepares the standard f3-e4 plan.",
+      "The rook supports ...Ne4 and gives Black extra central bite.",
       "White castles to safety.",
       "Black occupies central outpost.",
       "White exchanges bishops to relieve pressure.",
       "Black recaptures with queen.",
       "White activates rook on e-file.",
-      "Black repositions knight.",
-      "White prepares e4 break by supporting the pawn.",
-      "Black retreats knight.",
-      "White executes central break.",
-      "Black captures, opening the center.",
-      "White recaptures, gaining central space and activity."
+      "Black regroups to keep d5 covered and reduce the force of White's break.",
+      "f3 is the key preparatory move. It kicks the knight and makes e4 much easier to achieve.",
+      "The knight falls back but still watches central squares.",
+      "White finally gets the thematic break and asks Black to solve the center on White's terms.",
+      "Black captures to reduce the bind before White can roll forward.",
+      "White recaptures and keeps a broad center with active pieces behind it."
     ]
   },
-  {
+    {
     "category": "Queen's Gambit Declined",
     "id": "queens-gambit-declined-06",
-    "name": "Semi-Slav: push e5",
-    "description": "Semi-Slav structure where White gains space with e5.",
+    "name": "Semi-Slav: central space with e5",
+    "description": "A compact Semi-Slav line where White claims space and immediately chases the f6-knight.",
     "moves": [
       "d4",
       "d5",
@@ -268,17 +268,17 @@ export const queensGambitDeclinedLines = withOpeningFeedback([
       "e5"
     ],
     "explanations": [
-      "Standard central opening.",
-      "Solid central response.",
-      "Queen's Gambit offer.",
-      "Prepares bishop development.",
-      "Develops knight to control central squares.",
-      "Semi-Slav Defense: supports d5 pawn.",
-      "White strikes in the center, claiming more space.",
-      "Black develops knight, attacking e4 pawn.",
-      "White exchanges to open the center.",
-      "Black recaptures, maintaining central pawn.",
-      "White gains space, attacks the knight, and restricts Black's pieces."
+      "White starts by staking out the center.",
+      "Black answers in kind and keeps a solid pawn chain.",
+      "The gambit challenges d5 from the side and asks Black how they want to hold the center.",
+      "Black keeps QGD options open and frees the dark-squared bishop.",
+      "Nc3 adds pressure to d5 and supports e4.",
+      "With ...c6 Black reinforces d5 and heads into Semi-Slav territory.",
+      "e4 takes as much central space as possible while Black is still undeveloped.",
+      "The knight attacks e4 and forces White to decide how to handle the center.",
+      "White clarifies the structure before Black can trade everything on favorable terms.",
+      "Black keeps the d5 pawn and hopes the chain will hold.",
+      "e5 is the whole point here: White gains space, kicks the knight, and starts restricting Black's pieces."
     ]
   },
   {
@@ -429,11 +429,11 @@ export const queensGambitDeclinedLines = withOpeningFeedback([
       "White captures, opening the center and gaining pawn majority."
     ]
   },
-  {
+    {
     "category": "Queen's Gambit Declined",
     "id": "queens-gambit-declined-10",
-    "name": "QGD with ...dxc4, immediate e4",
-    "description": "Black takes on c4, White responds by building a strong pawn center.",
+    "name": "QGD with ...dxc4: immediate e4",
+    "description": "If Black grabs on c4, take the center first with e4 and win the pawn back later with development.",
     "moves": [
       "d4",
       "d5",
@@ -444,13 +444,13 @@ export const queensGambitDeclinedLines = withOpeningFeedback([
       "e4"
     ],
     "explanations": [
-      "Standard central opening.",
-      "Solid central response.",
-      "Queen's Gambit offer.",
-      "Prepares bishop development.",
-      "Develops knight to control central squares.",
-      "Black accepts the gambit in QGD structure.",
-      "White immediately builds strong pawn center, compensating for the pawn."
+      "Start with the queen pawn and claim central space.",
+      "Black meets it directly and makes a classical d4-d5 center.",
+      "Offer the c-pawn to distract Black from the middle.",
+      "Black declines the gambit for the moment and keeps a solid chain.",
+      "Nc3 is the standard development square and adds pressure to d5.",
+      "Once Black grabs the pawn, the transcript's rule is simple: stop chasing it for a move and take the center instead.",
+      "e4 builds the full pawn duo in the center. White gets the kind of space edge that usually pays the pawn back with interest."
     ]
   },
   {
@@ -797,11 +797,11 @@ export const queensGambitDeclinedLines = withOpeningFeedback([
       "White activates rook on semi-open file, attacking queen."
     ]
   },
-  {
+    {
     "category": "Queen's Gambit Declined",
     "id": "queens-gambit-declined-18",
-    "name": "QGD Exchange: long mainline with b6",
-    "description": "Long exchange mainline with queenside development and activity.",
+    "name": "QGD Exchange: long mainline with ...b6",
+    "description": "A long Exchange QGD where Black solves the c8 bishop with ...b6 and White keeps the more active setup.",
     "moves": [
       "d4",
       "d5",
@@ -855,11 +855,11 @@ export const queensGambitDeclinedLines = withOpeningFeedback([
       "White recaptures, developing queen.",
       "Black castles to safety.",
       "White develops bishop to active square.",
-      "Black develops to d7 so the c8 bishop and the queenside stay freer than after ...Nc6.",
+      "Black chooses ...Nd7 so the queenside stays flexible and the bishop can often come to b7 later.",
       "White castles to safety.",
-      "Black starts the fianchetto plan to solve the c8 bishop.",
-      "White activates rook on e-file.",
-      "Black develops bishop to long diagonal.",
+      "...b6 is the standard fix for the c8 bishop, but it also shows Black is still spending tempi solving development problems.",
+      "White improves the rook and keeps pressure on the central files before anything opens.",
+      "Now the bishop finally gets to b7, but White has already completed a cleaner setup.",
       "White activates rook on d-file.",
       "Black activates rook on semi-open file.",
       "White retreats bishop to maintain pressure on a2-g8 diagonal."
@@ -913,11 +913,11 @@ export const queensGambitDeclinedLines = withOpeningFeedback([
       "White castles to safety, completing development."
     ]
   },
-  {
+    {
     "category": "Queen's Gambit Declined",
     "id": "queens-gambit-declined-20",
-    "name": "Exchange QGD: standard mainline",
-    "description": "Standard exchange mainline through f3 and Nxc3, good for drilling move order.",
+    "name": "Exchange QGD: standard Qc2 and e4 break",
+    "description": "Drill the main Exchange move order with Qc2, the bishop retreat, and the standard f3-e4 break.",
     "moves": [
       "d4",
       "d5",
@@ -964,11 +964,11 @@ export const queensGambitDeclinedLines = withOpeningFeedback([
       "Black castles to safety.",
       "White develops bishop to active diagonal.",
       "Black supports the d5 pawn.",
-      "White supports the e4 break and places a heavy piece on the c-file for future pressure.",
+      "Qc2 is the waiting move that keeps the plan simple: support e4, line up with Bd3, and keep queenside castling as an option.",
       "A useful waiting move: Black asks the bishop to decide before finishing queenside development.",
-      "White keeps the pin, but the bishop has been pushed back and Black keeps kingside space-gaining ideas.",
+      "The bishop drops back but the pin still mattered, and White has not lost the thread of the plan.",
       "Black develops without tying up the queenside and keeps ...Ne4 in mind.",
-      "White develops knight, preparing f3 and e4.",
+      "White develops the last minor piece and gets ready for the standard central expansion.",
       "The rook supports ...Ne4 and gives Black more central bite on the e-file.",
       "White castles to safety.",
       "Black occupies central outpost.",
@@ -976,16 +976,16 @@ export const queensGambitDeclinedLines = withOpeningFeedback([
       "Black recaptures with queen.",
       "White activates rook on e-file.",
       "Black repositions knight.",
-      "White attacks knight and prepares e4 break.",
+      "This is the main trigger: hit the knight, support e4, and prepare to open the center under favorable conditions.",
       "Black captures knight to relieve pressure.",
-      "White recaptures, maintaining central control and piece activity."
+      "White recaptures with the knight and keeps central control plus active pieces."
     ]
   },
-  {
+    {
     "category": "Queen's Gambit Declined",
     "id": "queens-gambit-declined-21",
-    "name": "Exchange QGD: Rubinstein trap",
-    "description": "Classic tactical shot where ...Nh5 runs into Nxd5 and Bc7, trapping the queen.",
+    "name": "Exchange QGD: Rubinstein queen trap",
+    "description": "A classic tactical trap where ...Nh5 looks natural but walks into Nxd5 and Bc7.",
     "moves": [
       "d4",
       "d5",
@@ -1014,31 +1014,162 @@ export const queensGambitDeclinedLines = withOpeningFeedback([
       "Bc7"
     ],
     "explanations": [
-      "Standard central opening.",
-      "Black meets d4 with a solid central reply.",
-      "White challenges the center from the side.",
-      "Black declines the gambit and keeps the pawn chain intact.",
-      "White develops and increases central control.",
-      "Black develops a knight toward the center.",
-      "In the Exchange Variation, White clarifies the center on purpose.",
-      "Black recaptures with the e-pawn and keeps the usual QGD structure.",
-      "White brings the bishop out before e3 so it does not get boxed in.",
+      "White starts with the queen pawn and claims central space.",
+      "Black answers with the standard QGD center.",
+      "The c-pawn challenges d5 and asks Black how they want to hold the middle.",
+      "Black declines the gambit and keeps the structure intact.",
+      "Nc3 develops and adds pressure to d5.",
+      "Black develops the knight toward the center.",
+      "White chooses the Exchange structure on purpose, aiming for a clear plan rather than tension.",
+      "Black recaptures with the e-pawn and keeps the usual QGD formation.",
+      "The bishop comes out before e3 so it does not get boxed in.",
       "Black breaks the pin and prepares to castle.",
-      "White supports the center and opens the diagonal for the dark-squared bishop.",
-      "Black castles to safety.",
-      "White develops the bishop to an active square aimed at the kingside.",
-      "Black supports d5 and takes b5 away from White's knight.",
-      "White finishes kingside development and keeps central options flexible.",
-      "Black develops without clogging the queenside and keeps central piece play ready.",
-      "White castles before starting tactics in the center.",
-      "Black puts the rook on e8 to support central activity.",
-      "White supports e4 and places a heavy piece on the c-file, which matters in this trap.",
-      "Black chases the bishop, thinking the follow-up will win it.",
-      "White retreats to f4, keeping the bishop on the long c7-d8 tactical diagonal.",
-      "Black continues with the natural-looking attack on the bishop.",
-      "This is the point: White uses the overloaded center. If Black takes with the c-pawn, the queen gets trapped.",
-      "Black accepts the knight, but now the back rank and queen squares are jammed by Black's own pieces.",
-      "The bishop lands on c7 and traps the queen on d8. This is the Rubinstein trap."
+      "White supports the center and opens the diagonal for the other bishop.",
+      "Black castles and hopes the position will stay quiet.",
+      "Bd3 is the natural square in these Exchange structures because it supports the kingside and central breaks.",
+      "...c6 keeps d5 solid and takes b5 away from White's knight.",
+      "Nge2 finishes development without blocking the f-pawn, which matters in many Exchange plans.",
+      "Black develops calmly and thinks the position is under control.",
+      "White castles before starting any concrete tactics.",
+      "The rook steps to e8 to support central play and future ...Ne4 ideas.",
+      "Qc2 is a precise waiting move: it supports e4, reinforces the bishop on d3, and points toward h7.",
+      "Black asks the bishop a question and expects to gain time.",
+      "Bf4 keeps the bishop active and, more importantly, preserves the c7-d8 diagonal.",
+      "...Nh5 looks logical because Black attacks the bishop again, but this is the tactical mistake.",
+      "Nxd5 blows up the center at the right moment. White uses the fact that Black's queen and back rank pieces are poorly coordinated.",
+      "Black has to take, but that capture jams the queen's escape squares.",
+      "Bc7 is the punchline. The bishop traps the queen on d8 and turns the natural-looking ...Nh5 plan into a tactical disaster."
+    ]
+  }
+,
+  {
+    "category": "Queen's Gambit Declined",
+    "id": "queens-gambit-declined-22",
+    "name": "Main QGD mission line with queenside castling",
+    "description": "Use Bg5, Qc2, cxd5, and Bd3 before castling long when Black heads for ...Bb7.",
+    "moves": [
+      "d4",
+      "d5",
+      "c4",
+      "e6",
+      "Nc3",
+      "Nf6",
+      "Bg5",
+      "Be7",
+      "e3",
+      "O-O",
+      "Nf3",
+      "Nbd7",
+      "Qc2",
+      "b6",
+      "cxd5",
+      "exd5",
+      "Bd3",
+      "Bb7",
+      "O-O-O"
+    ],
+    "explanations": [
+      "White starts with the queen pawn and claims the center.",
+      "Black answers with the standard QGD setup.",
+      "The gambit challenges d5 from the side and fights for more central space.",
+      "Black keeps the pawn chain intact and frees the dark-squared bishop.",
+      "Nc3 adds pressure to d5 and fits the main QGD plan.",
+      "Black develops the knight and now gives White something concrete to pin.",
+      "Bg5 is the transcript's first bishop mission in the main declined setup: pin the knight before playing e3.",
+      "Black breaks the pin with the usual bishop development.",
+      "Now e3 is safe because the c1 bishop already escaped.",
+      "Black castles and waits to see how White will organize the center.",
+      "Nf3 completes kingside development and keeps the center flexible.",
+      "Black finishes queenside development and holds the center together.",
+      "Qc2 is the useful waiting move. It supports e4 ideas, lines up with Bd3, and keeps long castling available.",
+      "Black tries to solve the c8 bishop with a b6-Bb7 setup.",
+      "This is the moment the transcript highlights: White can release the tension because Black's bishop is about to look silly behind the pawn chain.",
+      "Black must recapture and keeps the basic structure, but the bishop path is no longer especially impressive.",
+      "Bd3 is now the natural square. White develops with direct kingside pressure and no wasted move.",
+      "Black gets the bishop out, but it does not challenge White's central plan very much from b7.",
+      "Castling long fits the transcript's practical low-Elo plan: line the rooks up and start pawn play on the kingside."
+    ]
+  },
+  {
+    "category": "Queen's Gambit Declined",
+    "id": "queens-gambit-declined-23",
+    "name": "Main QGD: hold the bishop until ...dxc4",
+    "description": "Keep the light-squared bishop flexible so it can recapture on c4 in one move.",
+    "moves": [
+      "d4",
+      "d5",
+      "c4",
+      "e6",
+      "Nc3",
+      "Nf6",
+      "Bg5",
+      "Be7",
+      "e3",
+      "O-O",
+      "Nf3",
+      "Nbd7",
+      "Qc2",
+      "dxc4",
+      "Bxc4"
+    ],
+    "explanations": [
+      "White starts with the queen pawn and claims central space.",
+      "Black meets it with the standard QGD center.",
+      "The c-pawn challenges d5 and asks Black how they want to defend the middle.",
+      "Black declines the gambit and keeps the pawn chain intact.",
+      "Nc3 is the normal square and increases pressure on d5.",
+      "Black develops the knight, which gives White a piece to pin.",
+      "Bg5 gets the bishop out before e3 and makes Black explain the knight on f6.",
+      "Black breaks the pin with the usual bishop move.",
+      "e3 supports the center and opens the diagonal for the other bishop.",
+      "Black castles and hopes White will waste time recovering the pawn.",
+      "Nf3 finishes kingside development and keeps everything under control.",
+      "Black develops calmly and keeps the c4 pawn for the moment.",
+      "Qc2 is the waiting move from the transcript: improve the queen before committing the f1 bishop.",
+      "Once Black finally releases the tension with ...dxc4, the bishop mission becomes simple.",
+      "Bxc4 develops with tempo and wins the pawn back in the cleanest possible way."
+    ]
+  },
+  {
+    "category": "Queen's Gambit Declined",
+    "id": "queens-gambit-declined-24",
+    "name": "Semi-Slav mission line with Qc2 and Bh4",
+    "description": "Against an early ...c6 setup, develop by mission: Nf3 first, then Bg5, e3, Qc2, and only retreat the bishop when asked.",
+    "moves": [
+      "d4",
+      "d5",
+      "c4",
+      "c6",
+      "Nc3",
+      "e6",
+      "Nf3",
+      "Nf6",
+      "Bg5",
+      "Be7",
+      "e3",
+      "Nbd7",
+      "Qc2",
+      "h6",
+      "Bh4",
+      "O-O"
+    ],
+    "explanations": [
+      "White starts with the queen pawn and claims space.",
+      "Black answers directly and builds a classical center.",
+      "The c-pawn challenges d5 from the side.",
+      "With ...c6 Black shows a Slav or Semi-Slav shell instead of the pure QGD move order.",
+      "Nc3 supports the center and keeps pressure on d5.",
+      "Black keeps the structure solid and opens the diagonal for the dark-squared bishop.",
+      "Because there is no knight on f6 yet, the transcript's left-to-right mission says to move on and develop the knight first.",
+      "Now the knight appears on f6 and White can come back to the bishop mission.",
+      "Bg5 is the clean developing move: pin the knight before locking the bishop in with e3.",
+      "Black unpins immediately and asks White how the center will be supported.",
+      "e3 keeps the chain solid and opens the diagonal for the other bishop.",
+      "Black develops the queenside and keeps the center together.",
+      "Qc2 is the useful waiting move here too. It supports e4 ideas and coordinates with a future Bd3.",
+      "Black finally asks the bishop a direct question.",
+      "Bh4 follows the transcript exactly: keep the bishop if you can and do not lose the thread of development.",
+      "Black castles, and White has reached a clean Semi-Slav setup without memorizing anything sharp."
     ]
   }
 ]);
