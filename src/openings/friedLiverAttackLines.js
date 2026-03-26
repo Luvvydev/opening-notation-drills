@@ -4,95 +4,263 @@ import { withOpeningFeedback } from "./feedback";
 
 // SEO / page intro text for Fried Liver Attack drills
 export const friedLiverSEOText = `
-The Fried Liver Attack is a sharp tactical line that can arise from the Italian Game, Two Knights Defense:
+The Fried Liver Attack is one of the sharpest tactical weapons in the Italian Game, arising after
 1. e4 e5 2. Nf3 Nc6 3. Bc4 Nf6 4. Ng5.
 
-White aims at the sensitive f7 square and is often willing to sacrifice a knight to drag Black's king into the open.
-These drills focus on forcing lines, checks, and common tactical motifs like king hunts, forks, and rapid development.
+White attacks the sensitive f7 square, often sacrifices on f7, and tries to drag Black's king into the center.
+These drills cover the main Ke8 and Ke6 king retreats, common tactical blunders after Bxd5, and practical sidelines like the Traxler and the 5...Na5 defense.
 
-Use this page to practice the exact move orders and understand why each move is played.
+Use this page to rehearse forcing move orders, spot Qf7 mate patterns, and understand when the attack is winning and when it should be toned down.
 `;
 
 export const friedLiverAttackLines = withOpeningFeedback([
   // Categories: Main line, Ke6 king-walk, Declined lines, Traxler, Two Knights sidelines
+
   {
     category: "Fried Liver Attack",
     id: "fried-liver-main-line-ke8-retreat",
-    name: "Main line: Ke8 retreat",
-    description: "Classic Fried Liver sacrifice. If Black only retreats, White regains the piece on d5 and keeps the attack.",
+    name: "Main line: Ke8 retreat, recover on d5",
+    description: "Classic Fried Liver. Black retreats, White takes on d5, and the direct Qf7 mate threat remains the main point.",
     moves: ["e4", "e5", "Nf3", "Nc6", "Bc4", "Nf6", "Ng5", "d5", "exd5", "Nxd5", "Nxf7", "Kxf7", "Qf3+", "Ke8", "Bxd5"],
     explanations: [
       "Let's learn the Fried Liver Attack, An opening where you can potentially checkmate your opponent in 8 moves. It starts with pawn to e4.",
-      "Mirror the center and fight for space.",
-      "Attack e5 and develop the king knight.",
-      "Defend e5 and develop.",
-      "Target f7 and develop with initiative.",
-      "Attack e4 and develop.",
-      "Attack f7 and invite the usual ...d5 cover, which is exactly what this line is built around.",
-      "Gain space and open lines, also hits pieces.",
-      "Accept the challenge and open lines.",
-      "Natural recapture, but this is the losing move that allows the Fried Liver sacrifice.",
-      "Sacrifice for initiative by dragging the king out and hitting key squares.",
-      "Accept the sacrifice and expose the king.",
-      "Bring the queen out with check and add a second attacker to the knight on d5.",
-      "Retreat, but this lets White recover the piece with tempo and keep the initiative.",
-      "Recover the knight on d5 and keep threats like Qf7# and Bxc6+ in the air.",
+      "Black mirrors the center and keeps the game open.",
+      "Develop with tempo by attacking e5.",
+      "Defend e5 and develop normally.",
+      "Put the bishop on the long diagonal and start aiming at f7.",
+      "Black develops, but this allows the sharp Two Knights positions.",
+      "This is the key Fried Liver move. White attacks f7 and invites ...d5.",
+      "Black hits the center and opens lines. This is standard, but it also makes the coming sacrifice possible.",
+      "White accepts and clears the e4 square while opening the position.",
+      "This natural recapture is the move the Fried Liver is built against.",
+      "The signature sacrifice. White gives up the knight to drag the king out and expose the dark squares.",
+      "Black accepts the piece, but the king is now in the open and the knight on d5 is pinned.",
+      "Queen out with check. White attacks the exposed king and adds a second attacker to the pinned knight on d5.",
+      "This retreat is solid compared with the wilder king walk, but it still leaves Black under heavy pressure.",
+      "White wins the knight back and keeps the real threat in view: Qf7 mate is now hanging over the position."
     ]
   },
+
 
   {
     category: "Fried Liver Attack",
     id: "fried-liver-main-line-ke8-nd4-blunder-mate",
-    name: "Main line: ...Nd4 blunder loses at once",
-    description: "After the king retreats, ...Nd4 looks active but walks into an immediate mate on f7.",
+    name: "Main line: ...Nd4 loses to Qf7 mate",
+    description: "After Ke8 and Bxd5, ...Nd4 looks active but it stops defending f7 and loses on the spot.",
     moves: ["e4", "e5", "Nf3", "Nc6", "Bc4", "Nf6", "Ng5", "d5", "exd5", "Nxd5", "Nxf7", "Kxf7", "Qf3+", "Ke8", "Bxd5", "Nd4", "Qf7#"],
     explanations: [
-      "Take the center and open lines for pieces.",
-      "Mirror the center and fight for space.",
-      "Attack e5 and develop the king knight.",
-      "Defend e5 and develop.",
-      "Target f7 and develop with initiative.",
-      "Attack e4 and develop.",
-      "Attack f7 and invite the usual ...d5 cover, which is exactly what this line is built around.",
-      "Gain space and open lines, also hits pieces.",
-      "Accept the challenge and open lines.",
-      "Natural recapture, but this is the losing move that allows the Fried Liver sacrifice.",
-      "Sacrifice for initiative by dragging the king out and hitting key squares.",
-      "Accept the sacrifice and expose the king.",
-      "Bring the queen out with check and add a second attacker to the knight on d5.",
-      "Retreat, but this lets White recover the piece with tempo and keep the initiative.",
-      "Recover the knight on d5 and keep threats like Qf7# and Bxc6+ in the air.",
-      "This counterattack hits the queen and c2, but it abandons the dark squares around the king.",
-      "Mate immediately. The queen lands on f7 with support from the bishop on d5 and the king has no escape.",
+      "Start with e4 and claim the center.",
+      "Black mirrors the center and keeps the game open.",
+      "Develop with tempo by attacking e5.",
+      "Defend e5 and develop normally.",
+      "Develop and point straight at f7.",
+      "Black develops, but the f7 square is now the target.",
+      "This is the Fried Liver setup.",
+      "Black challenges the center and opens lines.",
+      "White takes and keeps the position open.",
+      "Black recaptures in the usual way.",
+      "White sacrifices on f7 to drag the king out.",
+      "Black accepts, but the king is exposed and the d5-knight is pinned.",
+      "Queen check. White immediately attacks the king and the knight on d5.",
+      "Ke8 is playable, but only if Black respects the Qf7 mating idea.",
+      "White recovers the pinned knight and keeps the attack going.",
+      "This move attacks the queen and c2, but it abandons control of f7.",
+      "Mate. The queen lands on f7 with support from the bishop on d5, exactly the pattern this line is trying to reach."
+    ]
+  },
+
+
+  {
+    category: "Fried Liver Attack",
+    id: "fried-liver-main-line-kg8-and-quick-mate",
+    name: "Main line: Kg8 walks into mate",
+    description: "If Black runs to g8 instead of e8, the attack becomes forcing and White mates quickly.",
+    moves: ["e4", "e5", "Nf3", "Nc6", "Bc4", "Nf6", "Ng5", "d5", "exd5", "Nxd5", "Nxf7", "Kxf7", "Qf3+", "Kg8", "Bxd5+", "Qxd5", "Qxd5+", "Be6", "Qxe6#"],
+    explanations: [
+      "Start with e4 and claim the center.",
+      "Black mirrors the center and keeps the game open.",
+      "Develop with tempo by attacking e5.",
+      "Defend e5 and develop normally.",
+      "Develop and point straight at f7.",
+      "Black develops, but the f7 square is now the target.",
+      "This is the Fried Liver setup.",
+      "Black challenges the center and opens lines.",
+      "White takes and keeps the position open.",
+      "Black recaptures in the usual way.",
+      "White sacrifices on f7 to drag the king out.",
+      "Black accepts, but the king is exposed and the d5-knight is pinned.",
+      "Queen check. White immediately attacks the king and the knight on d5.",
+      "Running to g8 looks safer, but it actually walks into a forcing mating net.",
+      "White takes the pinned knight with check and keeps every move forcing.",
+      "Black tries to trade pieces and slow the attack.",
+      "White welcomes the queen trade because it comes with check and keeps the king exposed.",
+      "Black blocks, but this places the bishop on the mating square.",
+      "Mate on e6. This is the clean finish the transcript points to after ...Kg8."
+    ]
+  },
+
+
+  {
+    category: "Fried Liver Attack",
+    id: "fried-liver-main-line-bd7-blunder-mate",
+    name: "Main line: ...Bd7 loses to Qf7 mate",
+    description: "After Bxd5, ...Bd7 looks like development, but it still leaves the f7 square undefended.",
+    moves: ["e4", "e5", "Nf3", "Nc6", "Bc4", "Nf6", "Ng5", "d5", "exd5", "Nxd5", "Nxf7", "Kxf7", "Qf3+", "Ke8", "Bxd5", "Bd7", "Qf7#"],
+    explanations: [
+      "Start with e4 and claim the center.",
+      "Black mirrors the center and keeps the game open.",
+      "Develop with tempo by attacking e5.",
+      "Defend e5 and develop normally.",
+      "Develop and point straight at f7.",
+      "Black develops, but the f7 square is now the target.",
+      "This is the Fried Liver setup.",
+      "Black challenges the center and opens lines.",
+      "White takes and keeps the position open.",
+      "Black recaptures in the usual way.",
+      "White sacrifices on f7 to drag the king out.",
+      "Black accepts, but the king is exposed and the d5-knight is pinned.",
+      "Queen check. White immediately attacks the king and the knight on d5.",
+      "Ke8 is only safe if Black deals with the Qf7 mate threat.",
+      "White recovers the pinned knight and keeps the attack going.",
+      "Natural development is not enough here. The f7 square is still collapsing.",
+      "Mate. This is one of the direct transcript blunders after Bxd5."
     ]
   },
 
   {
     category: "Fried Liver Attack",
-    id: "fried-liver-main-line-kg8-and-quick-mate",
-    name: "Main line: Kg8 and quick mate",
-    description: "If Black runs to g8, the attack stays forcing and ends in a direct mate on e6.",
-    moves: ["e4", "e5", "Nf3", "Nc6", "Bc4", "Nf6", "Ng5", "d5", "exd5", "Nxd5", "Nxf7", "Kxf7", "Qf3+", "Kg8", "Bxd5+", "Qxd5", "Qxd5+", "Be6", "Qxe6#"],
+    id: "fried-liver-main-line-nb4-blunder-mate",
+    name: "Main line: ...Nb4 loses to Qf7 mate",
+    description: "The knight jump looks active, but it ignores the only threat that matters.",
+    moves: ["e4", "e5", "Nf3", "Nc6", "Bc4", "Nf6", "Ng5", "d5", "exd5", "Nxd5", "Nxf7", "Kxf7", "Qf3+", "Ke8", "Bxd5", "Nb4", "Qf7#"],
     explanations: [
-      "Take the center and open lines for pieces.",
-      "Mirror the center and fight for space.",
-      "Attack e5 and develop the king knight.",
-      "Defend e5 and develop.",
-      "Target f7 and develop with initiative.",
-      "Attack e4 and develop.",
-      "Attack f7 and invite the usual ...d5 cover, which is exactly what this line is built around.",
-      "Gain space and open lines, also hits pieces.",
-      "Accept the challenge and open lines.",
-      "Natural recapture, but this is the losing move that allows the Fried Liver sacrifice.",
-      "Sacrifice for initiative by dragging the king out and hitting key squares.",
-      "Accept the sacrifice and expose the king.",
-      "Bring the queen out with check and add a second attacker to the knight on d5.",
-      "Run to g8, but this actually walks into a forcing mating net.",
-      "Pick up the d5-knight with check and keep the attack rolling.",
-      "Return material and trade attackers if possible.",
-      "Trade queens under check to reduce danger, if allowed.",
-      "Develop and cover key squares, also blocking lines.",
-      "Deliver mate on e6, using the queen and bishop coordination.",
+      "Start with e4 and claim the center.",
+      "Black mirrors the center and keeps the game open.",
+      "Develop with tempo by attacking e5.",
+      "Defend e5 and develop normally.",
+      "Develop and point straight at f7.",
+      "Black develops, but the f7 square is now the target.",
+      "This is the Fried Liver setup.",
+      "Black challenges the center and opens lines.",
+      "White takes and keeps the position open.",
+      "Black recaptures in the usual way.",
+      "White sacrifices on f7 to drag the king out.",
+      "Black accepts, but the king is exposed and the d5-knight is pinned.",
+      "Queen check. White immediately attacks the king and the knight on d5.",
+      "Ke8 is only safe if Black deals with Qf7.",
+      "White recovers the pinned knight and keeps the attack going.",
+      "This knight jump attacks c2, but it is completely irrelevant to the mating threat.",
+      "Mate. The attack is so forcing here that Black does not get time for side threats."
+    ]
+  },
+
+  {
+    category: "Fried Liver Attack",
+    id: "fried-liver-main-line-bc5-blunder-mate",
+    name: "Main line: ...Bc5 loses to Qf7 mate",
+    description: "Developing the bishop does not matter when the king is still getting mated on f7.",
+    moves: ["e4", "e5", "Nf3", "Nc6", "Bc4", "Nf6", "Ng5", "d5", "exd5", "Nxd5", "Nxf7", "Kxf7", "Qf3+", "Ke8", "Bxd5", "Bc5", "Qf7#"],
+    explanations: [
+      "Start with e4 and claim the center.",
+      "Black mirrors the center and keeps the game open.",
+      "Develop with tempo by attacking e5.",
+      "Defend e5 and develop normally.",
+      "Develop and point straight at f7.",
+      "Black develops, but the f7 square is now the target.",
+      "This is the Fried Liver setup.",
+      "Black challenges the center and opens lines.",
+      "White takes and keeps the position open.",
+      "Black recaptures in the usual way.",
+      "White sacrifices on f7 to drag the king out.",
+      "Black accepts, but the king is exposed and the d5-knight is pinned.",
+      "Queen check. White immediately attacks the king and the knight on d5.",
+      "Ke8 is only safe if Black deals with Qf7.",
+      "White recovers the pinned knight and keeps the attack going.",
+      "This bishop move develops a piece, but it still fails to address the direct mate.",
+      "Mate. Another transcript blunder that dies immediately on f7."
+    ]
+  },
+
+  {
+    category: "Fried Liver Attack",
+    id: "fried-liver-main-line-bd6-blunder-mate",
+    name: "Main line: ...Bd6 loses to Qf7 mate",
+    description: "Even a blocking bishop move is too slow once White has reached Bxd5 with threats intact.",
+    moves: ["e4", "e5", "Nf3", "Nc6", "Bc4", "Nf6", "Ng5", "d5", "exd5", "Nxd5", "Nxf7", "Kxf7", "Qf3+", "Ke8", "Bxd5", "Bd6", "Qf7#"],
+    explanations: [
+      "Start with e4 and claim the center.",
+      "Black mirrors the center and keeps the game open.",
+      "Develop with tempo by attacking e5.",
+      "Defend e5 and develop normally.",
+      "Develop and point straight at f7.",
+      "Black develops, but the f7 square is now the target.",
+      "This is the Fried Liver setup.",
+      "Black challenges the center and opens lines.",
+      "White takes and keeps the position open.",
+      "Black recaptures in the usual way.",
+      "White sacrifices on f7 to drag the king out.",
+      "Black accepts, but the king is exposed and the d5-knight is pinned.",
+      "Queen check. White immediately attacks the king and the knight on d5.",
+      "Ke8 is only safe if Black deals with Qf7.",
+      "White recovers the pinned knight and keeps the attack going.",
+      "Trying to interpose or develop is still too slow here.",
+      "Mate. The bishop on d6 does nothing against the queen-bishop attack on f7."
+    ]
+  },
+
+  {
+    category: "Fried Liver Attack",
+    id: "fried-liver-main-line-qxd5-loses-queen",
+    name: "Main line: ...Qxd5 just drops the queen",
+    description: "If Black gets impatient and takes the bishop with the queen, White simply wins the queen back.",
+    moves: ["e4", "e5", "Nf3", "Nc6", "Bc4", "Nf6", "Ng5", "d5", "exd5", "Nxd5", "Nxf7", "Kxf7", "Qf3+", "Ke8", "Bxd5", "Qxd5", "Qxd5"],
+    explanations: [
+      "Start with e4 and claim the center.",
+      "Black mirrors the center and keeps the game open.",
+      "Develop with tempo by attacking e5.",
+      "Defend e5 and develop normally.",
+      "Develop and point straight at f7.",
+      "Black develops, but the f7 square is now the target.",
+      "This is the Fried Liver setup.",
+      "Black challenges the center and opens lines.",
+      "White takes and keeps the position open.",
+      "Black recaptures in the usual way.",
+      "White sacrifices on f7 to drag the king out.",
+      "Black accepts, but the king is exposed and the d5-knight is pinned.",
+      "Queen check. White immediately attacks the king and the knight on d5.",
+      "Ke8 is only safe if Black deals with Qf7.",
+      "White recovers the pinned knight and keeps the attack going.",
+      "This queen grab is a pure blunder. The queen walks onto a square where White can trade it off immediately.",
+      "White simply takes the queen. This is the transcript's free queen branch."
+    ]
+  },
+
+  {
+    category: "Fried Liver Attack",
+    id: "fried-liver-main-line-qe7-bxc6-and-qxc6-check",
+    name: "Main line: ...Qe7 allows Bxc6+ and Qxc6+",
+    description: "Qe7 covers f7, but it still lets White remove the knight on c6 and hit the a8 rook with check.",
+    moves: ["e4", "e5", "Nf3", "Nc6", "Bc4", "Nf6", "Ng5", "d5", "exd5", "Nxd5", "Nxf7", "Kxf7", "Qf3+", "Ke8", "Bxd5", "Qe7", "Bxc6+", "bxc6", "Qxc6+"],
+    explanations: [
+      "Start with e4 and claim the center.",
+      "Black mirrors the center and keeps the game open.",
+      "Develop with tempo by attacking e5.",
+      "Defend e5 and develop normally.",
+      "Develop and point straight at f7.",
+      "Black develops, but the f7 square is now the target.",
+      "This is the Fried Liver setup.",
+      "Black challenges the center and opens lines.",
+      "White takes and keeps the position open.",
+      "Black recaptures in the usual way.",
+      "White sacrifices on f7 to drag the king out.",
+      "Black accepts, but the king is exposed and the d5-knight is pinned.",
+      "Queen check. White immediately attacks the king and the knight on d5.",
+      "Ke8 is only safe if Black deals with Qf7.",
+      "White recovers the pinned knight and keeps the attack going.",
+      "This does stop the immediate mate on f7, so it is a better try than the outright blunders.",
+      "White switches targets and removes the c6-knight with check.",
+      "Black usually recaptures, but that opens a new tactical problem.",
+      "Queen takes c6 with check. White wins the c6-pawn and attacks the rook on a8 at the same time, exactly the tactic described in the transcript."
     ]
   },
 
@@ -202,34 +370,36 @@ export const friedLiverAttackLines = withOpeningFeedback([
     ]
   },
 
+
   {
     category: "Fried Liver Attack",
     id: "fried-liver-ke6-line-qd3-pressure",
-    name: "Ke6 line: Qd3 pressure",
-    description: "King walks to e6, White keeps checks and centralized queen.",
+    name: "Ke6 line: Nc3, Bxd5+, Qd3 pressure",
+    description: "Against the king walk to e6, White keeps attacking the pinned knight on d5 and centralizes the queen again.",
     moves: ["e4", "e5", "Nf3", "Nc6", "Bc4", "Nf6", "Ng5", "d5", "exd5", "Nxd5", "Nxf7", "Kxf7", "Qf3+", "Ke6", "Nc3", "Nd4", "Bxd5+", "Kd6", "Qd3"],
     explanations: [
-      "Take the center and open lines for pieces.",
-      "Mirror the center and fight for space.",
-      "Attack e5 and develop the king knight.",
-      "Defend e5 and develop.",
-      "Target f7 and develop with initiative.",
-      "Attack e4 and develop.",
-      "Pressure f7 and hint at a quick attack.",
-      "Gain space and open lines, also hits pieces.",
-      "Accept the challenge and open lines.",
-      "Recapture and centralize a knight.",
-      "Sacrifice for initiative by dragging the king out and hitting key squares.",
-      "Accept the sacrifice and expose the king.",
-      "Check and aim at f7 and the exposed king.",
-      "Walk forward, risky but tries to escape immediate tactics.",
-      "Develop and add support to d5 and central play.",
-      "Jump to an outpost and hit key squares.",
-      "Same idea but with check to keep the king boxed in.",
-      "King steps, trying to escape the e-file checks.",
-      "Centralize the queen and keep pressure on the king.",
+      "Start with e4 and claim the center.",
+      "Black mirrors the center and keeps the game open.",
+      "Develop with tempo by attacking e5.",
+      "Defend e5 and develop normally.",
+      "Develop and point straight at f7.",
+      "Black develops, but the f7 square is now the target.",
+      "This is the Fried Liver setup.",
+      "Black challenges the center and opens lines.",
+      "White takes and keeps the position open.",
+      "Black recaptures in the usual way.",
+      "White sacrifices on f7 to drag the king out.",
+      "Black accepts, but the king is exposed and the d5-knight is pinned.",
+      "Queen check. The king has to keep moving.",
+      "This is Black's most resilient practical try from the transcript. The king stays ugly, but it does help defend d5.",
+      "This is the important improvement. White adds a third attacker to the pinned knight on d5.",
+      "Black counters by hitting the queen and c2, trying to distract White from the attack.",
+      "White ignores the queen hit because checking and removing the pinned defender matters more.",
+      "The king keeps walking, which shows Black still has not solved the king safety problem.",
+      "Centralize again. White keeps pressure on the king and stays ready to meet Black's material grabs with more checks."
     ]
   },
+
   {
     category: "Fried Liver Attack",
     id: "fried-liver-ke6-line-nd4-counterattack-ne4-mate",
@@ -495,24 +665,25 @@ export const friedLiverAttackLines = withOpeningFeedback([
     ]
   },
 
+
   {
     category: "Fried Liver Attack",
     id: "fried-liver-traxler-4-bc5-sideline",
-    name: "Traxler: 4...Bc5 sideline",
-    description: "Black countergambit, White chooses a safer retreat.",
+    name: "Traxler: take on f7 and evacuate",
+    description: "If Black plays 4...Bc5, do not force standard Fried Liver ideas. Take on f7+, retreat, and play a more normal attacking game.",
     moves: ["e4", "e5", "Nf3", "Nc6", "Bc4", "Nf6", "Ng5", "Bc5", "Bxf7+", "Ke7", "Bb3"],
     explanations: [
-      "Take the center and open lines for pieces.",
-      "Mirror the center and fight for space.",
-      "Attack e5 and develop the king knight.",
-      "Defend e5 and develop.",
-      "Target f7 and develop with initiative.",
-      "Attack e4 and develop.",
-      "Pressure f7 and hint at a quick attack.",
-      "Enter the Traxler counterattack, aiming for tactics on f2 and the king.",
-      "Force the king to move and keep the initiative.",
-      "King steps up, trying to survive.",
-      "Retreat and keep the bishop safe while staying active.",
+      "Start with e4 and claim the center.",
+      "Black mirrors the center and keeps the game open.",
+      "Develop with tempo by attacking e5.",
+      "Defend e5 and develop normally.",
+      "Develop and point at f7.",
+      "Black develops and allows sharp play.",
+      "White attacks f7, but the exact Fried Liver sacrifice only works against the usual ...d5 structure.",
+      "This is the Traxler counterattack. The transcript is right to warn that you should not mindlessly force the normal Fried Liver here.",
+      "Take on f7 with check and pull the king out before Black gets the full counterattack.",
+      "Black steps up and tries to use the active bishops and king to create tactics.",
+      "Evacuate the bishop. White keeps the extra pawn and should now play sound attacking chess instead of pretending every line is the same."
     ]
   },
 

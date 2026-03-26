@@ -4,18 +4,20 @@ import { withOpeningFeedback } from "./feedback";
 
 // SEO / page intro text for London System drills
 export const londonSEOText = `
-The London System starts with d4 and Bf4, getting the bishop outside the pawn chain before e3.
-Its appeal is not just that the setup is easy to repeat. The real value is that the structure gives
-White a reliable base while still allowing timely attacking plans when Black drifts.
+The London System starts with d4 and Bf4, but the point is not mindless setup repetition. The value
+of the opening is that it gives White a stable shell in many positions, which means you can spend
+less energy surviving the opening and more energy understanding the middlegame that follows.
 
-These drills focus on the patterns that actually matter in practical London games: meeting ...Bd6
-without reacting mechanically, using Ne5 as an outpost, supporting the center with c3 against ...c5,
-keeping the bishop active with Bc2 after ...c4, switching to c4 and Qb3 ideas against early ...Bf5,
-and grabbing more space with e4 against King's Indian setups.
+These drills focus on the practical London patterns that actually decide games: getting the bishop
+outside the pawn chain before e3, completing the setup with Nf3, Nbd2, c3, and Bd3 when the position
+allows it, retreating Bg3 against ...Bd6 and accepting hxg3 if Black helps open the h-file, dropping
+Bc2 after ...c4 so the bishop still points at the kingside, using Ne5 to provoke ...Bxe5 dxe5 and
+then bringing the queen toward h5, challenging early ...Bf5 with Bd3 so Black has to decide whether
+to help your queen develop, and grabbing more space with e4 against King's Indian setups.
 
-The goal is to make the London feel coached instead of memorized move by move. You are learning why
-Bf4 comes before e3, why e3 often comes before Nf3, and which plans become dangerous once Black
-underestimates the position.
+The goal is to make the London feel less like a canned setup and more like a coached plan. You are
+learning the ideal structure, the common exceptions, and the attacking ideas that appear once Black
+underestimates the kingside.
 `;
 
 export const londonLines = withOpeningFeedback([
@@ -24,27 +26,27 @@ export const londonLines = withOpeningFeedback([
   {
     category: "Classic London",
     id: "london-classic-solid-setup",
-    name: "London Classic: solid setup",
-    description: "Baseline London: bishop outside the pawn chain, e3 before Nf3, then choose between calm development and active plans.",
+    name: "London ideal setup: core shell",
+    description: "Start with d4, get the bishop out before e3, then build toward Nf3, Nbd2, c3, and Bd3 depending on Black's setup. The point is to reach a playable middlegame without wasting energy on move-order noise.",
     moves: ["d4", "d5", "Bf4", "Nf6", "e3", "e6", "Nf3", "Bd6", "Nbd2", "O-O"],
     explanations: [
       "Let's learn the London system! Claim central space with pawn to d4",
-      "Black mirrors the center and asks how you will support d4.",
-      "Get the bishop outside the pawn chain before e3 shuts the diagonal.",
-      "Black develops and starts contesting e4 and d5.",
-      "This is the standard London order: secure d4 first, then finish development behind it.",
-      "Black supports d5 and prepares natural development.",
-      "Develop only after e3 so your setup is harder to annoy with early pins.",
-      "Black offers the bishop trade to reduce the pressure from your best developed piece.",
-      "Nbd2 keeps the setup compact, reinforces e4 and Ne5 ideas, and leaves you flexible.",
-      "Black castles, and now the game usually turns on whether you stay solid or switch into an active plan."
+      "Black meets the center and asks what kind of Queen's Pawn structure you want.",
+      "Bf4 is the point of the London. Get the bishop outside the chain before e3 would lock it in.",
+      "Black develops and keeps an eye on e4.",
+      "Now e3 completes the first layer of the setup and opens the dark bishop and queen.",
+      "Black supports d5 and keeps normal development available.",
+      "Nf3 is part of the standard shell, but it works best after e3 has already taken the sting out of early pins.",
+      "Black offers the usual bishop trade, which is one of the main practical questions in London positions.",
+      "Nbd2 is the next standard piece. It backs up e4 and Ne5 and prepares the full London pyramid instead of chasing one-move threats.",
+      "Black castles, and now the opening phase is mostly done. From here the game is about plans, not memorizing more setup moves."
     ]
   },
 
   {
     id: "london-c3-nbd2",
-    name: "London with early c3 and Nbd2",
-    description: "The classic London triangle: c3 overprotects d4, helps meet ...c5, and keeps Ne5 and e4 ideas in reserve.",
+    name: "London shell with c3 and Nbd2",
+    description: "This is the standard pyramid version of the London. c3 locks down d4, Nbd2 backs up e4 and Ne5, and Bd3 is often the next natural square.",
     moves: ["d4", "d5", "Bf4", "Nf6", "e3", "e6", "Nf3", "Bd6", "c3", "O-O", "Nbd2"],
     explanations: [
       "Take space and make Black commit to a structure.",
@@ -57,7 +59,7 @@ export const londonLines = withOpeningFeedback([
       "Black challenges the bishop and asks whether you want to keep tension or trade.",
       "c3 is more than a setup move. It overprotects d4, slows down Black's counterplay, and prepares Bc2 if ...c4 comes.",
       "Black castles and reaches a normal Queen's Pawn structure.",
-      "Nbd2 connects the London setup to real play by supporting e4 and Ne5 without loosening the center."
+      "Nbd2 completes the core shell, supports Ne5 and e4, and usually means Bd3 is not far behind."
     ]
   },
 
@@ -163,16 +165,16 @@ export const londonLines = withOpeningFeedback([
       "Black attacks d4 and looks for early counterplay.",
       "Develop and keep options for c4 or e3 structures.",
       "Black develops and adds more pressure on the center.",
-      "Recapture cleanly, keep structure coherent, and open lines for your pieces.",
-      "Keep development consistent and the move order legal.",
-      "Keep development consistent and the move order legal."
+      "c3 completes the pawn pyramid and makes it harder for Black to shake your center loose in one move.",
+      "Black exchanges to relieve the pressure and stop White from keeping a broad center for free.",
+      "exd4 keeps the structure healthy, opens the e-file for later rook play, and preserves the usual London piece setup."
     ]
   },
 
   {
     id: "london-preserve-bishop-bg3",
-    name: "Preserve bishop vs ...Bd6",
-    description: "Bg3 is the simple way to keep the London bishop, but it is a strategic choice, not an automatic move.",
+    name: "Retreat vs ...Bd6 and keep the bishop",
+    description: "Bg3 is the standard retreat when you want to keep the London bishop. If Black later takes on g3, hxg3 is often acceptable because the h-file can help your attack.",
     moves: ["d4", "d5", "Bf4", "Nf6", "e3", "e6", "Nf3", "Bd6", "Bg3"],
     explanations: [
       "Claim the center first.",
@@ -183,7 +185,7 @@ export const londonLines = withOpeningFeedback([
       "Black supports d5 and opens the dark bishop.",
       "Develop and keep the position compact before choosing a plan.",
       "Black aims to trade off your most active minor piece.",
-      "Bg3 keeps the bishop pair pressure alive, but it also means you are choosing a quieter route than the more active Ne5 ideas."
+      "Bg3 keeps the bishop on the kingside diagonal. If Black later takes on g3, hxg3 is not a disaster. You often get an open h-file and more direct attacking chances."
     ]
   },
 
@@ -225,8 +227,8 @@ export const londonLines = withOpeningFeedback([
 
   {
     id: "london-early-ne5",
-    name: "London with early Ne5",
-    description: "Against ...Bd6, Ne5 is the ambitious choice. It keeps tension, claims an outpost, and points at tactical ideas on c6 and f7.",
+    name: "Ne5 plan vs ...Bd6",
+    description: "Ne5 is the teaching move. If Black grabs the knight with the bishop, dxe5 hits the f6 knight and often sets up Qh5.",
     moves: ["d4", "d5", "Bf4", "Nf6", "e3", "e6", "Nf3", "Bd6", "Ne5"],
     explanations: [
       "Take the center and claim space.",
@@ -237,7 +239,122 @@ export const londonLines = withOpeningFeedback([
       "Black supports d5 and prepares to develop pieces.",
       "Develop and keep your structure flexible.",
       "Black aims to trade off your active bishop.",
-      "Ne5 is the key teaching move here. Instead of reacting mechanically, you keep the tension and plant a knight that can support e4, kingside play, and tactical shots on c6 or f7."
+      "Ne5 is the main London jump. If Black answers with ...Bxe5, dxe5 attacks the f6 knight, and once that defender moves, Qh5 becomes a very real kingside threat."
+    ]
+  },
+
+  {
+    id: "london-ideal-setup-complete",
+    name: "Ideal London setup completed",
+    description: "One clean model setup: d4, Bf4, e3, Nf3, Nbd2, c3, and Bd3. This is the shell the rest of the middlegame plans grow out of.",
+    moves: ["d4", "d5", "Bf4", "Nf6", "e3", "e6", "Nf3", "c5", "Nbd2", "Nc6", "c3", "Bd6", "Bd3", "O-O"],
+    explanations: [
+      "Start with d4 and take central space.",
+      "Black meets the center and keeps the structure classical.",
+      "Get the bishop outside the pawn chain before anything else.",
+      "Black develops and keeps an eye on e4.",
+      "e3 supports d4 and opens your dark bishop and queen.",
+      "Black prepares normal development and keeps ...c5 in reserve.",
+      "Nf3 develops naturally and keeps the London shell compact.",
+      "Black now challenges the center the standard way.",
+      "Nbd2 supports e4 and Ne5 and prepares to finish the setup instead of reacting move by move.",
+      "Black develops and adds more pressure to d4.",
+      "c3 is the final pawn in the usual London pyramid. It overprotects d4 and prepares Bc2 if Black later pushes ...c4.",
+      "Black aims for the standard bishop trade.",
+      "Bd3 is the ideal attacking square. The bishop now looks straight at h7.",
+      "Black castles, and White has reached the full setup the London is built around."
+    ]
+  },
+
+  {
+    id: "london-bd6-bg3-hxg3",
+    name: "Keep the bishop and accept an open h-file",
+    description: "After ...Bd6, Bg3 keeps the bishop. If Black insists on taking, hxg3 is normal and the h-file can become an attacking asset.",
+    moves: ["d4", "d5", "Bf4", "Nf6", "e3", "e6", "Nf3", "Bd6", "Bg3", "Bxg3", "hxg3"],
+    explanations: [
+      "Start with d4 and claim space.",
+      "Black matches the center and keeps the structure symmetrical.",
+      "Bf4 gets your bishop outside the chain before e3.",
+      "Black develops and watches e4.",
+      "e3 supports d4 and opens the dark bishop and queen.",
+      "Black supports d5 and clears the path for the dark bishop.",
+      "Nf3 develops normally and keeps the setup compact.",
+      "Now Black asks whether you want to give up the London bishop.",
+      "Bg3 keeps the bishop on the kingside diagonal instead of trading on Black's terms.",
+      "If Black takes anyway, they help you more than they help themselves.",
+      "hxg3 opens the h-file, keeps a sound center, and gives your rook a clearer path toward the kingside."
+    ]
+  },
+
+  {
+    id: "london-bf5-bd3-qxd3",
+    name: "Challenge ...Bf5 with Bd3 and Qxd3",
+    description: "If Black takes over the key diagonal with ...Bf5, meet it with Bd3. Let Black trade first, then recapture with the queen.",
+    moves: ["d4", "d5", "Bf4", "Nf6", "e3", "Bf5", "Nf3", "e6", "Bd3", "Bxd3", "Qxd3"],
+    explanations: [
+      "Start with d4 and claim the center.",
+      "Black mirrors the center and keeps the structure balanced.",
+      "Get the bishop out before e3 would lock it in.",
+      "Black develops and keeps an eye on e4.",
+      "e3 supports d4 and opens your dark bishop and queen.",
+      "Black's bishop grabs the diagonal White often wants to use for kingside play.",
+      "Develop normally and keep the setup coherent.",
+      "Black supports d5 and finishes the basic shell.",
+      "Bd3 is the challenge. Put your bishop on the diagonal too and ask Black whether they really want to help your queen develop.",
+      "If Black trades, they reduce their own control over the kingside dark squares.",
+      "Qxd3 is exactly why White waits. The queen lands on an active square and the diagonal battle is already solved."
+    ]
+  },
+
+  {
+    id: "london-bb4-pin-c3",
+    name: "Ignore the ...Bb4 pin and finish the setup",
+    description: "If Black pins the d2 knight with ...Bb4, do not overreact. c3 kicks the bishop and lets you finish the normal London setup.",
+    moves: ["d4", "d5", "Bf4", "Nf6", "e3", "e6", "Nf3", "c6", "Nbd2", "Bb4", "c3", "Bd6", "Bd3"],
+    explanations: [
+      "Start with d4 and take central space.",
+      "Black mirrors the center and keeps things classical.",
+      "Bf4 comes first so the bishop is outside the chain.",
+      "Black develops and watches e4.",
+      "e3 supports d4 and opens the dark bishop and queen.",
+      "Black chooses a quiet supporting move instead of immediate central tension.",
+      "Nf3 develops and keeps the London shell intact.",
+      "Black builds a solid Slav-style center.",
+      "Nbd2 supports e4 and Ne5 and continues the normal London plan.",
+      "Black pins the d2 knight, hoping to distract White from finishing the setup.",
+      "c3 is the clean answer. It protects d4, questions the bishop, and keeps your own plan moving.",
+      "Black retreats, and the pin never became a real problem.",
+      "Bd3 completes the ideal attacking setup and puts the bishop where it belongs, aiming at h7."
+    ]
+  },
+
+  {
+    id: "london-ne5-qh5-attack",
+    name: "Ne5, dxe5, and Qh5 kingside attack",
+    description: "The basic London attack. After ...Bxe5 dxe5, the f6 knight gets chased and Qh5 starts asking direct questions around h7.",
+    moves: ["d4", "d5", "Bf4", "Nf6", "e3", "e6", "Nf3", "Bd6", "Nbd2", "O-O", "Bd3", "c5", "c3", "Nc6", "Ne5", "Bxe5", "dxe5", "Nd7", "Qh5", "g6", "Qh6"],
+    explanations: [
+      "Take space and keep a London structure available.",
+      "Black mirrors the center.",
+      "Get the bishop out before the e-pawn closes the diagonal.",
+      "Black develops and contests e4.",
+      "e3 supports d4 and completes the first layer of the setup.",
+      "Black opens the dark bishop and keeps the usual ...Bd6 trade available.",
+      "Nf3 develops normally and helps support e5 later.",
+      "Black chooses the standard bishop trade setup.",
+      "Nbd2 supports Ne5 and keeps the London shell compact.",
+      "Black castles and waits to see whether you stay quiet or turn active.",
+      "Bd3 is the ideal square for the bishop. It keeps pressure pointed at h7.",
+      "Black starts the standard counterplay with ...c5.",
+      "c3 completes the pawn pyramid and keeps d4 solid.",
+      "Black develops and adds more pressure to the center.",
+      "Ne5 is the trigger. White uses the outpost to ask whether Black really wants to give up the bishop pair and loosen the kingside.",
+      "Most players take right away, but that is exactly what White is hoping for.",
+      "dxe5 keeps a strong center and attacks the knight on f6, which is one of Black's main kingside defenders.",
+      "The knight has to move, and the kingside becomes easier to target.",
+      "Qh5 is the point. White is already threatening direct kingside ideas, especially around h7.",
+      "g6 is the most common practical defense, but it creates dark-square holes.",
+      "Qh6 keeps the queen on the kingside and makes Black defend accurately for a long time."
     ]
   },
 
@@ -297,8 +414,8 @@ export const londonLines = withOpeningFeedback([
 
   {
     id: "london-vs-qb6-no-c5",
-    name: "London vs early ...Qb6 without c5",
-    description: "Black often uses ...c5 then ...Qb6 to pressure b2 and d4. Nc3 is a direct defense and develops a piece.",
+    name: "London vs ...c5 and early ...Qb6",
+    description: "Black uses ...c5 and ...Qb6 to pressure b2 and d4 before your setup is fully settled. Nc3 is a direct answer because it develops and helps hold the center.",
     moves: ["d4", "d5", "Bf4", "Nf6", "e3", "c5", "Nc3", "Qb6"],
     explanations: [
       "Take the center and define the structure early.",
@@ -307,15 +424,15 @@ export const londonLines = withOpeningFeedback([
       "Black develops and fights for the center.",
       "Support d4 and open lines for development.",
       "Black plays ...c5 to hit d4 and open the diagonal for the queen.",
-      "Nc3 defends d5/e4 ideas and supports d5 and b5 squares while developing.",
+      "Nc3 develops, supports e4 ideas, and makes it harder for Black to treat d4 like a loose target.",
       "Now ...Qb6 is legal and adds pressure on b2 and d4."
     ]
   },
 
   {
     id: "london-h4-idea",
-    name: "London h-pawn launch after Ne5",
-    description: "Once Ne5 has done its job and Black's kingside defenders get shifted, h4 becomes a real attacking plan instead of a random pawn push.",
+    name: "Kingside rollout with h4 after Ne5",
+    description: "Once ...Bxe5 dxe5 has shifted Black's f6 defender and your bishop still points at the kingside, h4 is a real attacking move, not just a random pawn push.",
     moves: ["d4", "d5", "Bf4", "Nf6", "e3", "e6", "Nf3", "Bd6", "Ne5", "O-O", "Nd2", "c5", "c3", "Nc6", "Bd3", "Bxe5", "dxe5", "Nd7", "h4"],
     explanations: [
       "Claim space and define a stable structure.",
@@ -332,11 +449,11 @@ export const londonLines = withOpeningFeedback([
       "Black strikes at the center, which is their standard counterplay.",
       "c3 keeps d4 under control and gives your bishop a safe retreat to c2 if Black advances.",
       "Black develops and increases pressure on the center.",
-      "Bd3 points more force at the kingside and prepares a direct attack if Black loosens up.",
+      "Bd3 keeps the bishop aimed at h7, which is why the London attack can become dangerous so quickly.",
       "Black simplifies and hopes the tension disappears.",
       "Recapture with the pawn so the center stays strong and the f6 knight no longer helps defend the king.",
       "Black reroutes the knight, but the kingside has already lost one important defender.",
-      "Now h4 makes sense. The rook can join via the h-file and the attack becomes easier to justify than in a normal quiet London."
+      "Now h4 is exactly the point. Even if Black pushes on the queenside, White keeps rolling on the kingside where the real attack lives."
     ]
   },
 
@@ -362,8 +479,8 @@ export const londonLines = withOpeningFeedback([
 
   {
     id: "london-bishop-c2-vs-c4",
-    name: "London setup vs ...c4 with Bc2",
-    description: "When Black gains space with ...c4, Bc2 keeps the bishop alive on the same useful diagonal instead of letting the expansion bother you.",
+    name: "Bc2 retreat after ...c4",
+    description: "If Black gains space with ...c4, do not panic. Bc2 is the standard one-square retreat and the bishop still points where you want it, toward the kingside.",
     moves: ["d4", "d5", "Bf4", "Nf6", "e3", "e6", "Nf3", "Be7", "Bd3", "O-O", "O-O", "c5", "c3", "Nc6", "Nbd2", "c4", "Bc2"],
     explanations: [
       "Take central space and keep London development available.",
@@ -382,13 +499,13 @@ export const londonLines = withOpeningFeedback([
       "Black develops and keeps pressing around d4.",
       "Nbd2 backs up e4 and keeps pieces coordinated.",
       "Black gains space with ...c4 and tries to shove your bishop off the useful diagonal.",
-      "Bc2 is the standard London retreat. The bishop stays active and Black's space gain does not actually solve your main plans."
+      "Bc2 is the standard retreat. You only move the bishop back one square, and it still stares toward the kingside where many London attacks begin."
     ]
   },
 
   {
     id: "london-qh3-attack",
-    name: "London Qf3 attacking lift",
+    name: "London Qf3 lift toward h7",
     description: "Against a quieter ...Be7 setup, you can delay castling, plant Ne5, and lift the queen to f3 to ask direct questions around h7.",
     moves: ["d4", "d5", "Bf4", "Nf6", "e3", "e6", "Nf3", "Be7", "Bd3", "c5", "c3", "O-O", "Nbd2", "b6", "Ne5", "Bb7", "Qf3"],
     explanations: [
@@ -408,7 +525,7 @@ export const londonLines = withOpeningFeedback([
       "Black prepares to fianchetto or at least cover the queenside more carefully.",
       "Ne5 is the moment the London stops being a setup and starts becoming an attack.",
       "Black develops, but h7 and the dark squares are still the long-term concern.",
-      "Qf3 is the lift. It reinforces e4 pressure, lines up against f7 and h7, and makes Black think about kingside concessions."
+      "Qf3 is the lift. It reinforces e4 pressure, lines up against h7, and prepares the same kind of kingside pressure the simpler Qh5 lines aim for."
     ]
   },
 
