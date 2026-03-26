@@ -9,7 +9,7 @@ export const vantKruijsOpeningLines = withOpeningFeedback([
     moves: ["e3", "d5", "c3", "Nf6", "d4", "c5", "Qb3", "Nc6", "Nf3", "e6", "Be2", "Bd6", "O-O", "O-O", "Nbd2", "e5"],
     explanations: [
       "White starts with a slow flexible move, but it does not challenge the center yet.",
-      "Black claims central space immediately and makes White react.",
+      "Let's learn the Van't Kruijs opening! Let's start with d5.",
       "White prepares d4, but this is still a passive version of a queen pawn setup.",
       "Black develops naturally and keeps e4 under control.",
       "White finally builds a center, but it can still be challenged before it stabilizes.",

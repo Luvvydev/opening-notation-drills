@@ -1,11 +1,23 @@
 import { withOpeningFeedback } from "./feedback";
 
+export const kingsGambitSEOText = `
+The King's Gambit starts with 1. e4 e5 2. f4 and asks Black to defend accurately from move two.
+
+These drills cover the main student-facing patterns in your file:
+- Accepted King's Gambit lines where Black tries to hold the f4 pawn with ...g5 or counterstrike with ...d5
+- Forcing attacking ideas built around h4, open f-file pressure, queen checks, and fast development
+- Bishop's Gambit and declined trap structures where early queen moves and loose pins get punished
+
+Each drill explanation stays concrete:
+what the move attacks, what line it opens, which king-safety concession it creates, and why the tactic works.
+`;
+
 export const kingsGambitLines = withOpeningFeedback([
   {
     category: "King's Gambit",
     id: "kingsGambit-01-899b8126",
-    name: "Allgaier style queen check attack",
-    description: "Coach style: explains the point of each move and the main tactical ideas.",
+    name: "Accepted: ...f6 punished by queen checks",
+    description: "Transcript-backed forcing line where Black's ...f6 leaves the king exposed and White's queen checks keep the initiative.",
     moves: [
       "e4",
       "e5",
@@ -29,33 +41,33 @@ export const kingsGambitLines = withOpeningFeedback([
     ],
     explanations: [
       
-      "White advances a central pawn to e4 to claim space and define which files and diagonals will open.",
+      "Let's learn the King's Gambit!  If Black doesn't know all the tricks and traps we will be victorious! We begin with pawn to e4.",
       "Black advances a central pawn to e5 to claim space and define which files and diagonals will open.",
       "White plays f4, offering the pawn so Black's e pawn moves off e5, opening lines and the f file for a fast attack.",
       "Black captures on f4 to open files and change the structure; ask what new line just opened and who benefits from it.",
-      "White develops Nf3 to contest the center, hitting e5 or e4 and preparing quick castling.",
+      "White develops Nf3, covers h4 so Black cannot check there, and keeps d4 plus quick castling in reserve.",
       "Black pushes g5 to hold the f4 pawn and hit the knight later, but it also weakens f5 and the dark squares around the king.",
-      "White pushes a pawn to h4 to support a plan; check what weakness it creates and whether it helps development or attack.",
-      "Black plays f6 to support g5 and clamp down on e5, but it weakens e6 and opens lines if White can sacrifice to rip it open.",
+      "White's h4 undermines the g5-f4 pawn chain. The point is to make ...g5 less stable so White can still recover the gambit pawn with d4 and Bxf4 or open the h-file.",
+      "Black tries to hold everything with ...f6, but that is exactly the kind of move the transcript punishes: it weakens e6 and leaves the king stuck in the center.",
       "White captures on g5 with the knight, usually removing a key defender or converting initiative into material.",
       "Black captures on g5 to open files and change the structure; ask what new line just opened and who benefits from it.",
-      "White gives check with the queen, forcing a response and usually gaining a tempo for development or a follow up threat.",
+      "White jumps in with Qh5+ immediately because Black's own pawns on f6 and g5 have stripped away dark-square cover around the king.",
       "Black moves the king to e7, typically forced by checks; the priority becomes re coordinating pieces and finding safety.",
       "White gives check with the queen, forcing a response and usually gaining a tempo for development or a follow up threat.",
       "Black moves the king to e8, typically forced by checks; the priority becomes re coordinating pieces and finding safety.",
-      "White gives check with the queen, forcing a response and usually gaining a tempo for development or a follow up threat.",
+      "White repeats the queen check to drive the king onto e7, where it blocks its own pieces and cannot coordinate.",
       "Black moves the king to e7, typically forced by checks; the priority becomes re coordinating pieces and finding safety.",
-      "White gives check with the queen, forcing a response and usually gaining a tempo for development or a follow up threat.",
+      "Qe5+ centralizes the queen with tempo, keeps the king walking, and prepares Bc4 with one more forcing move.",
       "Black moves the king to f7, typically forced by checks; the priority becomes re coordinating pieces and finding safety.",
-      "White gives check with a bishop to win time; in open games this often comes with a pin or an attack on an undefended piece."
-    
+      "Bc4+ is the natural follow-up: develop a new attacker, check again, and keep the king from finding shelter."
     ]
-  },
+  }
+,
   {
     category: "King's Gambit",
     id: "kingsGambit-02-1c16d08e",
-    name: "King's Gambit attacking setup",
-    description: "Coach style: explains the point of each move and the main tactical ideas.",
+    name: "Accepted: ...d6 and ...Bg4 setup",
+    description: "Transcript-backed development line: Black stays solid with ...d6 and ...Bg4, and White regains the pawn without drama.",
     moves: [
       "e4",
       "e5",
@@ -82,10 +94,10 @@ export const kingsGambitLines = withOpeningFeedback([
       "White captures on f4 with the bishop, usually removing a key defender or converting initiative into material.",
       "Black captures on f3 with the bishop, usually removing a key defender or converting initiative into material.",
       "White captures on f3 with the queen, usually removing a key defender or converting initiative into material."
-    
     ]
-  },
-  {
+  }
+,
+{
     category: "King's Gambit",
     id: "kingsGambit-03-22395211",
     name: "Modern ...g4 chase line",
@@ -130,12 +142,13 @@ export const kingsGambitLines = withOpeningFeedback([
       "White captures on f4 with the knight, usually removing a key defender or converting initiative into material."
     
     ]
-  },
+  }
+,
   {
     category: "King's Gambit",
     id: "kingsGambit-04-017652b4",
-    name: "Allgaier style queen check attack",
-    description: "Coach style: explains the point of each move and the main tactical ideas.",
+    name: "Accepted: ...Nf6 runs into Qxg7+",
+    description: "Transcript-backed punishment line where Black's ...f6 and ...Nf6 leave the back rank and dark squares loose.",
     moves: [
       "e4",
       "e5",
@@ -174,14 +187,14 @@ export const kingsGambitLines = withOpeningFeedback([
       "White advances a central pawn to e5 to claim space and define which files and diagonals will open.",
       "Black develops the bishop to g7, choosing a diagonal that targets a weakness or supports a central break.",
       "White gives check with the queen, forcing a response and usually gaining a tempo for development or a follow up threat."
-    
     ]
-  },
+  }
+,
   {
     category: "King's Gambit",
     id: "kingsGambit-05-32f16c21",
-    name: "Allgaier style queen check attack",
-    description: "Coach style: explains the point of each move and the main tactical ideas.",
+    name: "Accepted: ...Kf7 drops the queen",
+    description: "Short forcing trap where Black's king walk leaves the queen on d8 undefended.",
     moves: [
       "e4",
       "e5",
@@ -216,14 +229,14 @@ export const kingsGambitLines = withOpeningFeedback([
       "White gives check with the queen, forcing a response and usually gaining a tempo for development or a follow up threat.",
       "Black moves the king to f7, typically forced by checks; the priority becomes re coordinating pieces and finding safety.",
       "White captures on d8 with the queen, usually removing a key defender or converting initiative into material."
-    
     ]
-  },
+  }
+,
   {
     category: "King's Gambit",
     id: "kingsGambit-06-ab502c92",
-    name: "Allgaier style queen check attack",
-    description: "Coach style: explains the point of each move and the main tactical ideas.",
+    name: "Accepted: ...Rg8 tactical cleanup",
+    description: "Longer forcing line where White keeps checking until the g8 rook falls.",
     moves: [
       "e4",
       "e5",
@@ -278,14 +291,14 @@ export const kingsGambitLines = withOpeningFeedback([
       "White gives check with a bishop to win time; in open games this often comes with a pin or an attack on an undefended piece.",
       "Black captures on e6 with the king, usually removing a key defender or converting initiative into material.",
       "White gives check with the queen, forcing a response and usually gaining a tempo for development or a follow up threat."
-    
     ]
-  },
+  }
+,
   {
     category: "King's Gambit",
     id: "kingsGambit-07-5b92c57a",
-    name: "Falkbeer counterattack structure",
-    description: "Coach style: explains the point of each move and the main tactical ideas.",
+    name: "Accepted with ...d5 counterstrike and ...Bd6",
+    description: "This is not a Falkbeer Countergambit. It is an accepted King's Gambit line where Black counterstrikes with ...d5 after taking on f4.",
     moves: [
       "e4",
       "e5",
@@ -324,14 +337,14 @@ export const kingsGambitLines = withOpeningFeedback([
       "White gives check with a bishop to win time; in open games this often comes with a pin or an attack on an undefended piece.",
       "Black develops the bishop to d7, choosing a diagonal that targets a weakness or supports a central break.",
       "White activates a rook to e1 to pressure an open file created by earlier trades."
-    
     ]
-  },
+  }
+,
   {
     category: "King's Gambit",
     id: "kingsGambit-08-22395163",
-    name: "Falkbeer counterattack structure",
-    description: "Coach style: explains the point of each move and the main tactical ideas.",
+    name: "Accepted with ...d5 counterstrike and ...Bc5",
+    description: "Accepted King's Gambit line where Black mixes the central ...d5 break with an active bishop post on c5.",
     moves: [
       "e4",
       "e5",
@@ -374,14 +387,14 @@ export const kingsGambitLines = withOpeningFeedback([
       "White gives check with a bishop to win time; in open games this often comes with a pin or an attack on an undefended piece.",
       "Black plays c6 to kick a bishop or support d5 later, but it can cost a tempo in a position where time is everything.",
       "White activates a rook to e1 to pressure an open file created by earlier trades."
-    
     ]
-  },
+  }
+,
   {
     category: "King's Gambit",
     id: "kingsGambit-09-89178ff9",
-    name: "Allgaier style queen check attack",
-    description: "Coach style: explains the point of each move and the main tactical ideas.",
+    name: "Accepted: White consolidates after the queen checks",
+    description: "Transcript-backed follow-up where White cashes in the attack into a safer plus by regaining material and finishing development.",
     moves: [
       "e4",
       "e5",
@@ -428,10 +441,10 @@ export const kingsGambitLines = withOpeningFeedback([
       "White develops the bishop to e2, choosing a diagonal that targets a weakness or supports a central break.",
       "Black develops the bishop to g7, choosing a diagonal that targets a weakness or supports a central break.",
       "White castles kingside to get the king safe and connect rooks; now you can think about central breaks instead of tactics on the back rank."
-    
     ]
-  },
-  {
+  }
+,
+{
     category: "King's Gambit",
     id: "kingsGambit-10-3ffce502",
     name: "Modern ...g4 chase line",
@@ -476,8 +489,9 @@ export const kingsGambitLines = withOpeningFeedback([
       "White plays Bb5 to pin a knight and increase pressure on e5 or c6, making defense of the center awkward."
     
     ]
-  },
-  {
+  }
+,
+{
     category: "King's Gambit",
     id: "kingsGambit-11-e618b761",
     name: "Modern ...g4 chase line",
@@ -530,8 +544,9 @@ export const kingsGambitLines = withOpeningFeedback([
       "White pushes a pawn to c3 to support a plan; check what weakness it creates and whether it helps development or attack."
     
     ]
-  },
-  {
+  }
+,
+{
     category: "King's Gambit",
     id: "kingsGambit-12-3a24a9e2",
     name: "Modern ...g4 chase line",
@@ -584,8 +599,9 @@ export const kingsGambitLines = withOpeningFeedback([
       "White moves the queen to f2 with a concrete task, either defending a pawn or creating a direct threat."
     
     ]
-  },
-  {
+  }
+,
+{
     category: "King's Gambit",
     id: "kingsGambit-13-512545cd",
     name: "King's Gambit attacking setup",
@@ -614,8 +630,9 @@ export const kingsGambitLines = withOpeningFeedback([
       "White plays Nc3 to add central control over d5 and e4 and to support a future d4 push or recapture."
     
     ]
-  },
-  {
+  }
+,
+{
     category: "King's Gambit",
     id: "kingsGambit-14-a5f5f500",
     name: "Modern ...g4 chase line",
@@ -664,8 +681,9 @@ export const kingsGambitLines = withOpeningFeedback([
       "White captures on f4 with the bishop, usually removing a key defender or converting initiative into material."
     
     ]
-  },
-  {
+  }
+,
+{
     category: "King's Gambit",
     id: "kingsGambit-15-9ce7614e",
     name: "Modern ...g4 chase line",
@@ -702,8 +720,9 @@ export const kingsGambitLines = withOpeningFeedback([
       "White captures on f4 with the bishop, usually removing a key defender or converting initiative into material."
     
     ]
-  },
-  {
+  }
+,
+{
     category: "King's Gambit",
     id: "kingsGambit-16-60fa99dd",
     name: "Modern ...g4 chase line",
@@ -764,8 +783,9 @@ export const kingsGambitLines = withOpeningFeedback([
       "White moves the king to c2, typically forced by checks; the priority becomes re coordinating pieces and finding safety."
     
     ]
-  },
-  {
+  }
+,
+{
     category: "King's Gambit",
     id: "kingsGambit-17-1c2e6c8c",
     name: "Modern ...g4 chase line",
@@ -814,12 +834,13 @@ export const kingsGambitLines = withOpeningFeedback([
       "White captures on f2 with the king, usually removing a key defender or converting initiative into material."
     
     ]
-  },
+  }
+,
   {
     category: "King's Gambit",
     id: "kingsGambit-18-af5d3b3f",
-    name: "Falkbeer counterattack structure",
-    description: "Coach style: explains the point of each move and the main tactical ideas.",
+    name: "Accepted with ...Nf6 and c5 space wedge",
+    description: "Accepted King's Gambit structure where White uses c4 and c5 for space after Black's ...Nf6 and ...c6 setup.",
     moves: [
       "e4",
       "e5",
@@ -850,10 +871,10 @@ export const kingsGambitLines = withOpeningFeedback([
       "White advances a central pawn to d4 to claim space and define which files and diagonals will open.",
       "Black captures on d5 to open files and change the structure; ask what new line just opened and who benefits from it.",
       "White advances a central pawn to c5 to claim space and define which files and diagonals will open."
-    
     ]
-  },
-  {
+  }
+,
+{
     category: "King's Gambit",
     id: "kingsGambit-19-32d8ddd5",
     name: "Modern ...g4 chase line",
@@ -898,8 +919,9 @@ export const kingsGambitLines = withOpeningFeedback([
       "White captures on f2 with the king, usually removing a key defender or converting initiative into material."
     
     ]
-  },
-  {
+  }
+,
+{
     category: "King's Gambit",
     id: "kingsGambit-20-24650b2e",
     name: "Modern ...g4 chase line",
@@ -940,8 +962,9 @@ export const kingsGambitLines = withOpeningFeedback([
       "White plays Nc3 to add central control over d5 and e4 and to support a future d4 push or recapture."
     
     ]
-  },
-  {
+  }
+,
+{
     category: "King's Gambit",
     id: "kingsGambit-21-6188e684",
     name: "Modern ...g4 chase line",
@@ -982,8 +1005,9 @@ export const kingsGambitLines = withOpeningFeedback([
       "White captures on f4 with the bishop, usually removing a key defender or converting initiative into material."
     
     ]
-  },
-  {
+  }
+,
+{
     category: "King's Gambit",
     id: "kingsGambit-22-9a7773f3",
     name: "Modern ...g4 chase line",
@@ -1015,6 +1039,184 @@ export const kingsGambitLines = withOpeningFeedback([
       "Black advances g4 to chase the f3 knight away from the center; the tradeoff is the g file and dark squares can become targets.",
       "White retreats to g1 as a last resort when chased; the goal is to re route to f3 or e2 without losing more material."
     
+    ]
+  }
+,
+  {
+    category: "King's Gambit",
+    id: "kingsGambit-23-c4b1d7a2",
+    name: "Morphy line: Ng5 sacrifice and Qxg4",
+    description: "Transcript-backed Morphy attacking idea: White gives up the knight to drag the king forward, then brings more pieces into the attack with tempo.",
+    moves: [
+      "e4",
+      "e5",
+      "f4",
+      "exf4",
+      "Nf3",
+      "g5",
+      "h4",
+      "g4",
+      "Ng5",
+      "h6",
+      "Nxf7",
+      "Kxf7",
+      "Qxg4",
+      "Qf6",
+      "Bc4+",
+      "Ke8",
+      "Nc3",
+      "c6"
+    ],
+    explanations: [
+      
+      "White starts with 1.e4 to claim space and open lines for rapid development.",
+      "Black mirrors with ...e5 and meets White in the center.",
+      "The King's Gambit offers the f-pawn to open the f-file and generate attacking chances against an exposed king.",
+      "Black accepts the gambit pawn, but now White has a clear target and open lines to work with.",
+      "This is one of the transcript's key points: Nf3 develops, guards h4 so there is no cheap ...Qh4+ idea, and prepares d4.",
+      "Black overprotects f4 and hints at ...g4, but every kingside pawn move makes future dark-square problems worse.",
+      "h4 is the standard undermining move. White attacks the pawn chain before Black can settle and still keeps d4 and Bxf4 in mind.",
+      "Black chases the knight, but the g-pawn now overextends and gives White concrete attacking targets.",
+      "Ng5 is the Morphy move from the transcript. White points at f7 and prepares to bring the queen to g4 if Black is careless.",
+      "...h6 looks natural because it questions the knight, but it creates the exact exposure Morphy wanted.",
+      "Nxf7 is the point: White sacrifices the knight to drag Black's king into the open while the rest of Black's army is still asleep.",
+      "Black takes the piece back, but the king is now on f7 with no development and no safe shelter.",
+      "Qxg4 wins back a pawn, attacks the weakened kingside, and keeps the initiative alive immediately.",
+      "Black covers g5 and tries to keep the position together, but the queen on f6 can itself become a tactical target.",
+      "Bc4+ develops with check and keeps Black from consolidating.",
+      "The king retreats, but Black is still losing time with the same piece while White keeps adding attackers.",
+      "This is another direct Morphy lesson from the transcript: bring a fresh piece into the attack while creating a real threat, here Nd5.",
+      "...c6 stops Nd5 for the moment, but it is another defensive tempo in an already cramped position."
+    ]
+  }
+,
+  {
+    category: "King's Gambit",
+    id: "kingsGambit-24-f1a6c9e4",
+    name: "Declined trap: ...Nd4 runs into Bxf7+",
+    description: "Transcript-backed declined King's Gambit trap where Black overuses the pin and gets hit by a bishop sacrifice on f7.",
+    moves: [
+      "e4",
+      "e5",
+      "f4",
+      "Nc6",
+      "Nf3",
+      "d6",
+      "Bc4",
+      "Bg4",
+      "O-O",
+      "Nd4",
+      "Bxf7+",
+      "Kxf7",
+      "Ng5+",
+      "Qxg5",
+      "fxg5+"
+    ],
+    explanations: [
+      
+      "White opens with e4 to claim the center and keep the game in open attacking channels.",
+      "Black answers symmetrically and keeps the fight central.",
+      "f4 is the King's Gambit: White undermines e5 and accepts structural risk in return for open lines and initiative.",
+      "Black declines the gambit by protecting e5 with the queen's knight.",
+      "Nf3 attacks e5 again, develops a piece, and, as the transcript notes, makes h4 available against early queen tricks.",
+      "Black reinforces e5 with ...d6 and tries to build a compact shell.",
+      "Bc4 is one of the transcript's main recommendations here because the bishop immediately targets f7.",
+      "Black pins the knight and hopes the pin will make White's kingside attack harder to organize.",
+      "White castles anyway. The rook belongs on f1, because the whole trap works off the open f-file.",
+      "This is the tempting mistake from the transcript: Black thinks the pin plus ...Nd4 creates pressure on f3 and c2.",
+      "Bxf7+ blows the position open. White gives up the bishop to expose the king and make the f-file matter right away.",
+      "Black has to take, but the king is now on f7 and already under fire.",
+      "Ng5+ is the follow-up the transcript stresses. White attacks with tempo and threatens to recover the sacrificed bishop with interest.",
+      "Black often thinks this solves everything by removing the checking knight and winning White's queen next.",
+      "fxg5+ is the hidden point. The f-pawn opens the f-file with check, Black's queen disappears, and White is left with a winning attack."
+    ]
+  }
+,
+  {
+    category: "King's Gambit",
+    id: "kingsGambit-25-6b8e2f11",
+    name: "Bishop's Gambit: Kf1 and quiet development",
+    description: "Transcript-backed Bishop's Gambit setup where White meets ...Qh4+ with Kf1, then wins time by developing and threatening to recover the gambit pawn.",
+    moves: [
+      "e4",
+      "e5",
+      "f4",
+      "exf4",
+      "Bc4",
+      "Qh4+",
+      "Kf1",
+      "Bc5",
+      "d4",
+      "Bb6",
+      "Nf3",
+      "Qe7",
+      "Nc3",
+      "Nf6",
+      "Qd3"
+    ],
+    explanations: [
+      
+      "White starts with 1.e4 and keeps the position open.",
+      "Black answers with ...e5 and meets White in the center.",
+      "f4 offers the pawn and opens the f-file for attacking play.",
+      "Black accepts the gambit pawn, hoping the extra pawn will survive.",
+      "This is the Bishop's Gambit. White develops straight at f7 and deliberately keeps the knight flexible for a moment.",
+      "Black jumps out with the queen check, a common practical try the transcript specifically discusses.",
+      "Kf1 is the key point. White uses the square the bishop vacated, stays safe enough, and keeps development rolling.",
+      "Black copies the old scholar-style idea, but the bishop on c5 is about to lose time.",
+      "d4 is the transcript move: it hits the bishop, breaks up Black's queen-and-bishop dream, and claims the center.",
+      "The bishop has to retreat, so White is already gaining tempi.",
+      "Nf3 now comes with tempo against the queen and also supports a later recovery of the f4 pawn.",
+      "Black tucks the queen away, but White keeps the lead in development.",
+      "Nc3 adds another piece, protects e4, and increases the threat of central expansion.",
+      "Black develops a knight, but the position is still easier for White because Black has spent time with the queen and bishop.",
+      "Qd3 is the calmer continuation from the transcript: White protects e4, keeps pressure on f4, and stays ready to recover the gambit pawn under good conditions."
+    ]
+  }
+,
+  {
+    category: "King's Gambit",
+    id: "kingsGambit-26-5d3a7c90",
+    name: "Bishop's Gambit: Bxf7+ and trapped queen idea",
+    description: "Transcript-backed Bishop's Gambit trap where Black clings to the pawn with ...Qg4 and White traps the queen with h3 and development.",
+    moves: [
+      "e4",
+      "e5",
+      "f4",
+      "exf4",
+      "Bc4",
+      "Qh4+",
+      "Kf1",
+      "Bc5",
+      "d4",
+      "Bb6",
+      "Nf3",
+      "Qg4",
+      "Bxf7+",
+      "Kf8",
+      "h3",
+      "Qg3",
+      "Nc3"
+    ],
+    explanations: [
+      
+      "White opens with e4 to keep the game tactical and direct.",
+      "Black mirrors with ...e5 and accepts an open fight.",
+      "f4 is the gambit offer that opens the f-file and asks Black to defend carefully.",
+      "Black takes the pawn, but that extra pawn can become a liability if Black wastes tempi to hold it.",
+      "White chooses the Bishop's Gambit, putting immediate pressure on f7.",
+      "The queen check is a common try, but the transcript shows why White should not fear it.",
+      "Kf1 is the standard square because the bishop on c4 has already cleared the path.",
+      "Black keeps pressing with the bishop, but that bishop will keep losing time.",
+      "d4 breaks the queen-and-bishop battery and claims the center in one move.",
+      "The bishop has to retreat again, which is exactly what White wants.",
+      "Nf3 develops with tempo and asks Black how the queen will justify her early adventure.",
+      "This is the greedy move from the transcript. Black tries to hang onto the f-pawn instead of catching up in development.",
+      "Bxf7+ is the standard shock tactic here. White opens lines around the king and makes Black solve king safety first.",
+      "Black declines the capture and steps to f8, but the queen is still not safe.",
+      "h3 is the unusual move the transcript highlights. White takes away the queen's routes and starts building a net.",
+      "The queen has almost no squares left, and g3 is one of the few available.",
+      "Nc3 ignores the bishop for the moment and continues the real plan: White threatens Ne2 next, when the queen on g3 will have nowhere good to go."
     ]
   }
 ]);

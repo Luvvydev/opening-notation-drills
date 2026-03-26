@@ -1,5 +1,17 @@
 import { withOpeningFeedback } from "./feedback";
 
+export const viennaGameSEOText = `
+The Vienna Game starts with 1. e4 e5 2. Nc3 and can branch into direct Qg4 tactics or slower kingside builds.
+
+These drills cover the practical student-facing ideas already in this file:
+- direct Qg4 trap lines against ...Bc5 and ...Qf6, where queen hunting and f7 pressure matter more than memorizing names
+- quieter Vienna Game setups with d3 and f4, where White builds a kingside attack without rushing the center
+- transcript-backed Vienna System plans with g3, Bg2, Nge2, O-O, h3, Kh2, and a fast f4 break
+- early ...d5 counterbreak lines where White recaptures bxc3, uses the b-file and long diagonal, and pressures e5 with Re1
+
+Each line explains the concrete point of the move: what gets pinned, what square is being prepared, which move-order detail matters, and where the attack is supposed to come from.
+`;
+
 export const viennaGameLines = withOpeningFeedback([
   {
     category: "Vienna Game",
@@ -22,7 +34,7 @@ export const viennaGameLines = withOpeningFeedback([
       "Bxf1"
     ],
     explanations: [
-      "Take space in the center so your pieces have room to develop and attack.",
+      "Let's learn the Vienna Game! Let's start with: pawn to e4.",
       "Black mirrors with a central pawn and keeps development flexible.",
       "Develop while defending e4. In the Vienna, Nc3 also keeps options like f4 or Qg4 open.",
       "Black develops and supports the e5 pawn, preparing ...Nf6 or ...Bc5.",
@@ -761,7 +773,7 @@ export const viennaGameLines = withOpeningFeedback([
       "...Nf6 develops and challenges e4.",
       "d3 keeps everything solid. You're aiming for a simple plan: develop, castle, then choose f4 or Nf3 setups.",
       "...Bb4 pins the knight and tries to provoke weaknesses or force you into awkward development.",
-      "Ne2 is the antidote: break the pin without compromising your structure, and keep c3 defended.",
+      "Ne2 is the antidote: break the pin without compromising your structure, and keep the f-pawn free for a later f4 break.",
       "...O-O finishes development for Black.",
       "O-O completes your own development. This line is about reaching a playable middlegame without tactics.",
       "Play O-O with a concrete purpose: create a threat, improve a piece, or stop your opponent's idea."
@@ -849,7 +861,7 @@ export const viennaGameLines = withOpeningFeedback([
       "...Nf6 develops and attacks e4.",
       "d3 keeps it solid and supports your center.",
       "...Bb4 pins the knight and pressures c3.",
-      "Ne2 breaks the pin and prepares to castle without losing the bishop pair.",
+      "Ne2 breaks the pin, keeps the bishop pair, and leaves the f-pawn free so f4 is still a real plan later.",
       "...d5 is the direct strike. Black tries to punish your slower d3 setup by taking space immediately.",
       "exd5 accepts the challenge and opens lines. If you ignore ...d5 you can get cramped.",
       "...Nxd5 recaptures with a piece, centralising the knight.",
@@ -955,4 +967,232 @@ export const viennaGameLines = withOpeningFeedback([
       "Play O-O-O with a concrete purpose: create a threat, improve a piece, or stop your opponent's idea."
     ]
   }
+,
+  {
+    category: "Vienna Game",
+    id: "vienna-game-20-e3f7c9b1",
+    name: "Vienna System: ...d6 lets Na4 hit the bishop pair",
+    description: "Transcript-backed g3 and Bg2 setup where ...d6 makes the c5 bishop easier to chase.",
+    moves: [
+      "e4",
+      "e5",
+      "Nc3",
+      "Nf6",
+      "g3",
+      "Bc5",
+      "Bg2",
+      "Nc6",
+      "Nge2",
+      "O-O",
+      "O-O",
+      "d6",
+      "Na4"
+    ],
+    explanations: [
+      "White starts the Vienna with Nc3 in reserve, keeping both g3 systems and f-pawn play available.",
+      "Black mirrors the center and asks White what kind of Vienna setup is coming.",
+      "Nc3 is the Vienna move. It supports e4 and keeps the f-pawn free for later kingside play.",
+      "...Nf6 develops with tempo against e4 before Black commits the bishop.",
+      "g3 announces the quieter Vienna System. White wants Bg2, Nge2, castling, and then a later f4 break.",
+      "...Bc5 is the normal Italian-style square, but it also means Black has to watch the bishop's retreat path.",
+      "Bg2 puts the bishop on the long diagonal and is one reason an early ...d5 break is no longer easy.",
+      "...Nc6 develops and keeps e5 protected.",
+      "Nge2 is the key setup detail from the transcript. White keeps the f-pawn free instead of blocking it with Nf3.",
+      "...O-O gets the king safe, but Black still has to solve the bishop placement carefully.",
+      "White castles and keeps the whole plan intact: slow setup first, then kingside expansion.",
+      "...d6 looks natural, but it shuts the bishop's easiest retreat and gives White a concrete target.",
+      "Na4 is the point. White hits the c5 bishop and makes Black give up the bishop pair or lose time retreating it awkwardly."
+    ]
+  },
+  {
+    category: "Vienna Game",
+    id: "vienna-game-21-b48d2e6f",
+    name: "Vienna System: h3, Kh2, and fast f4",
+    description: "Transcript-backed move-order trick where White prepares f4 before Black can break with ...d5.",
+    moves: [
+      "e4",
+      "e5",
+      "Nc3",
+      "Nf6",
+      "g3",
+      "Bc5",
+      "Bg2",
+      "Nc6",
+      "Nge2",
+      "O-O",
+      "O-O",
+      "a6",
+      "h3",
+      "d6",
+      "Kh2",
+      "Be6",
+      "f4"
+    ],
+    explanations: [
+      "White claims central space and leaves room for a flexible Vienna setup.",
+      "Black mirrors the center and keeps a standard e5 structure.",
+      "Nc3 defines the opening and keeps White's options broader than an immediate Nf3 setup.",
+      "...Nf6 pressures e4 and develops naturally.",
+      "g3 starts the Vienna System. White is aiming for a controlled build before the kingside pawn storm.",
+      "...Bc5 develops toward f2 and follows the familiar Italian pattern.",
+      "Bg2 places the bishop on the long diagonal where it will support queenside pressure if the center opens.",
+      "...Nc6 supports e5 and finishes Black's basic development.",
+      "Nge2 is important. White refuses to block the f-pawn because f4 is the main attacking break later.",
+      "...O-O secures the king before the middlegame plans start.",
+      "White also castles. The setup is complete enough that White can start thinking about pawn play.",
+      "...a6 is Black's usual fix. The idea is to prepare ...Ba7 and only then play ...d6.",
+      "h3 is the move-order trick from the transcript. White wants Kh2 and a very fast f4 before Black gets in ...d5.",
+      "...d6 is the normal follow-up, but it also means Black still has not challenged White in the center.",
+      "Kh2 steps off the g1-a7 diagonal and clears the way for the f-pawn to advance safely.",
+      "...Be6 is a normal developing move, but Black is one tempo short of the central counterbreak.",
+      "f4 is the whole point. White gets the kingside attack started before Black manages to hit back with ...d5."
+    ]
+  },
+  {
+    category: "Vienna Game",
+    id: "vienna-game-22-7af1d0c4",
+    name: "Vienna System trap: ...exf4 runs into d4",
+    description: "Transcript-backed tactical line where grabbing on f4 lets White hit back in the center.",
+    moves: [
+      "e4",
+      "e5",
+      "Nc3",
+      "Nf6",
+      "g3",
+      "Bc5",
+      "Bg2",
+      "Nc6",
+      "Nge2",
+      "O-O",
+      "O-O",
+      "a6",
+      "h3",
+      "d6",
+      "Kh2",
+      "Be6",
+      "f4",
+      "exf4",
+      "d4",
+      "fxg3+",
+      "Kg3",
+      "Nh5+",
+      "Kh2"
+    ],
+    explanations: [
+      "White starts from the same Vienna System shell: safe king, bishop on g2, and the f-pawn ready to move.",
+      "Black mirrors the center and keeps the usual e5 structure.",
+      "Nc3 supports e4 and keeps the opening in Vienna territory.",
+      "...Nf6 develops with pressure on e4.",
+      "g3 signals that White is building rather than forcing an immediate tactical fight.",
+      "...Bc5 follows the standard development path and keeps pressure on f2.",
+      "Bg2 puts White's bishop on the long diagonal, where it can become powerful if the center opens.",
+      "...Nc6 adds support to e5 and keeps Black flexible.",
+      "Nge2 keeps the f-pawn free, which is the key move-order detail in this whole system.",
+      "...O-O gets Black's king out of the center before the pawn storm starts.",
+      "White castles and is ready to play on the kingside.",
+      "...a6 prepares the bishop retreat to a7, which is Black's usual practical fix.",
+      "h3 is still required. White needs Kh2 in before opening the kingside with f4.",
+      "...d6 is solid, but it also means Black is still reacting instead of striking the center.",
+      "Kh2 makes the pawn break possible without allowing cheap checks on the long diagonal.",
+      "...Be6 develops, but Black is still a move short of the counterbreak the transcript warns about.",
+      "f4 starts the attack on schedule. White has won the move-order race and now asks Black to decide whether to grab or sit tight.",
+      "...exf4 is the greedy test. Black wins a pawn for the moment but gives White tactical play in return.",
+      "d4 is the transcript's key surprise. White opens the center immediately and attacks the bishop while Black's queenside pieces are still undeveloped.",
+      "...fxg3+ is Black's practical try: grab more material and throw in a check before White's center rolls forward.",
+      "Kg3 is the important recapture. White keeps the e2 knight at home so it can still support the d4 pawn.",
+      "...Nh5+ looks scary, but Black does not actually have enough pieces nearby to keep the attack going.",
+      "Kh2 is the calm finish from the transcript. White's king steps back and Black still has to deal with the center and the d5 fork ideas."
+    ]
+  },
+  {
+    category: "Vienna Game",
+    id: "vienna-game-23-c6a52f88",
+    name: "Vienna System vs ...d5: bxc3 and Re1 pressure",
+    description: "Transcript-backed early ...d5 line where White accepts doubled pawns for the b-file and pressure on e5.",
+    moves: [
+      "e4",
+      "e5",
+      "Nc3",
+      "Nf6",
+      "g3",
+      "d5",
+      "exd5",
+      "Nxd5",
+      "Bg2",
+      "Nxc3",
+      "bxc3",
+      "Nc6",
+      "Nf3",
+      "Be7",
+      "O-O",
+      "O-O",
+      "Re1",
+      "Re8",
+      "d4"
+    ],
+    explanations: [
+      "White opens with the Vienna move and keeps the structure flexible.",
+      "Black takes the center and keeps the game in open-e4 territory.",
+      "Nc3 defines the Vienna and leaves White ready for either a kingside setup or a central capture.",
+      "...Nf6 develops and adds pressure to e4 before Black strikes in the center.",
+      "g3 is the transcript's system move. White wants Bg2 and piece pressure instead of a direct pawn center right away.",
+      "...d5 is the immediate counterbreak. This is the right timing if Black wants to challenge White before Bg2 makes it harder.",
+      "White should take. Letting Black keep the full center would concede exactly what the transcript warns about.",
+      "...Nxd5 restores the pawn and places the knight actively in the middle.",
+      "Bg2 changes the character of the position. White's bishop now points toward the queenside rather than just the king.",
+      "...Nxc3 is the theoretical choice from the transcript. Black gives up the active knight to damage White's pawns before White gets organized.",
+      "bxc3 is the required recapture. White wants the extra central control and the half-open b-file, not a quiet queen recapture.",
+      "...Nc6 develops and keeps the e5 pawn defended for the moment.",
+      "Nf3 starts the pressure plan. White wants quick castling and then Re1 to ask how Black will really hold e5.",
+      "...Be7 is a solid developing move, but it does not solve the long-term e5 pressure by itself.",
+      "White castles and keeps development simple.",
+      "Black also castles, but White's pressure plan is now easier to execute than Black's counterplay.",
+      "Re1 is the recurring theme from the transcript. White lines up on e5 and forces Black to think about that pawn every move.",
+      "...Re8 is a common defensive reaction, but it ties Black to passive defense.",
+      "d4 is the payoff. White finally seizes the center once the pieces are ready and Black's e5 pawn is pinned to the rook behind it."
+    ]
+  },
+  {
+    category: "Vienna Game",
+    id: "vienna-game-24-f1248d73",
+    name: "Vienna System vs ...d5: ...Nb6 is passive",
+    description: "Transcript-backed sideline showing how White targets e5 when Black retreats instead of taking on c3.",
+    moves: [
+      "e4",
+      "e5",
+      "Nc3",
+      "Nf6",
+      "g3",
+      "d5",
+      "exd5",
+      "Nxd5",
+      "Bg2",
+      "Nb6",
+      "Nf3",
+      "Nc6",
+      "O-O",
+      "Be7",
+      "Re1",
+      "O-O"
+    ],
+    explanations: [
+      "White starts with the Vienna move and keeps a flexible center.",
+      "Black mirrors and keeps an open-game structure.",
+      "Nc3 defines the Vienna and prepares both g3 systems and direct central play.",
+      "...Nf6 develops with immediate pressure on e4.",
+      "g3 prepares the bishop fianchetto that the transcript builds the whole system around.",
+      "...d5 is the right moment for Black to hit the center before White finishes the setup.",
+      "White exchanges in the center so Black does not get a full pawn duo for free.",
+      "...Nxd5 restores the pawn and keeps the knight active.",
+      "Bg2 is consistent. White wants queenside pressure and long-diagonal influence in these early-...d5 lines.",
+      "...Nb6 is one of the passive retreats the transcript criticizes. Black keeps the knight but gives White time.",
+      "Nf3 improves the attack on e5 and prepares to castle.",
+      "...Nc6 finally reinforces e5, but Black is still slightly tied down.",
+      "White castles and removes king safety from the list of problems.",
+      "...Be7 is a normal developing move, though it still leaves the e5 question unresolved.",
+      "Re1 is the simple plan the transcript repeats. White asks Black to defend e5 without making a concession elsewhere.",
+      "...O-O finishes development, but White remains the easier side to play because the pressure against e5 is so straightforward."
+    ]
+  }
+
 ]);
