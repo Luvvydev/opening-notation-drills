@@ -37,7 +37,7 @@ service cloud.firestore {
       ])
       && (
         !exists(/databases/$(database)/documents/users/$(request.auth.uid)) ||
-        request.resource.data.diff(resource.data).changedKeys().hasAny([
+        request.resource.data.diff(resource.data).affectedKeys().hasAny([
           "membershipActive",
           "membershipTier",
           "stripeCustomerId",
@@ -210,41 +210,75 @@ service cloud.firestore {
 
     // ---------- DRILL LEADERBOARDS ----------
 
-    function isValidDrillLeaderboardWrite(uid) {
+    function isValidDrillLeaderboardBase(uid) {
+      return request.resource.data.uid == uid
+        && request.resource.data.username is string
+        && request.resource.data.username.size() >= 1
+        && request.resource.data.username.size() <= 24
+        && request.resource.data.score is int
+        && request.resource.data.score >= 0
+        && request.resource.data.updatedAt is timestamp
+        && request.resource.data.username == get(/databases/$(database)/documents/users/$(uid)).data.username;
+    }
+
+    function isValidDrillAllTimeWrite(uid) {
       return request.resource.data.keys().hasOnly([
         "uid", "username", "score", "updatedAt"
       ])
-      && request.resource.data.uid == uid
-      && request.resource.data.username is string
-      && request.resource.data.username.size() >= 1
-      && request.resource.data.username.size() <= 24
-      && request.resource.data.score is int
-      && request.resource.data.score >= 0
-      && request.resource.data.updatedAt is timestamp
-      && request.resource.data.username == get(/databases/$(database)/documents/users/$(uid)).data.username;
+      && isValidDrillLeaderboardBase(uid);
+    }
+
+    function isValidDrillDailyWrite(uid) {
+      return request.resource.data.keys().hasOnly([
+        "uid", "username", "score", "dayKey", "updatedAt"
+      ])
+      && isValidDrillLeaderboardBase(uid)
+      && request.resource.data.dayKey is string
+      && request.resource.data.dayKey.size() >= 8
+      && request.resource.data.dayKey.size() <= 16;
+    }
+
+    function isValidDrillWeeklyWrite(uid) {
+      return request.resource.data.keys().hasOnly([
+        "uid", "username", "score", "weekKey", "updatedAt"
+      ])
+      && isValidDrillLeaderboardBase(uid)
+      && request.resource.data.weekKey is string
+      && request.resource.data.weekKey.size() >= 6
+      && request.resource.data.weekKey.size() <= 16;
+    }
+
+    function isValidDrillMonthlyWrite(uid) {
+      return request.resource.data.keys().hasOnly([
+        "uid", "username", "score", "monthKey", "updatedAt"
+      ])
+      && isValidDrillLeaderboardBase(uid)
+      && request.resource.data.monthKey is string
+      && request.resource.data.monthKey.size() >= 6
+      && request.resource.data.monthKey.size() <= 16;
     }
 
     match /leaderboards_drill_daily/{uid} {
       allow read: if isMember(request.auth.uid);
-      allow create, update: if isMember(uid) && isValidDrillLeaderboardWrite(uid);
+      allow create, update: if isMember(uid) && isValidDrillDailyWrite(uid);
       allow delete: if false;
     }
 
     match /leaderboards_drill_weekly/{uid} {
       allow read: if isMember(request.auth.uid);
-      allow create, update: if isMember(uid) && isValidDrillLeaderboardWrite(uid);
+      allow create, update: if isMember(uid) && isValidDrillWeeklyWrite(uid);
       allow delete: if false;
     }
 
     match /leaderboards_drill_monthly/{uid} {
       allow read: if isMember(request.auth.uid);
-      allow create, update: if isMember(uid) && isValidDrillLeaderboardWrite(uid);
+      allow create, update: if isMember(uid) && isValidDrillMonthlyWrite(uid);
       allow delete: if false;
     }
 
     match /leaderboards_drill_alltime/{uid} {
       allow read: if isMember(request.auth.uid);
-      allow create, update: if isMember(uid) && isValidDrillLeaderboardWrite(uid);
+      allow create, update: if isMember(uid) && isValidDrillAllTimeWrite(uid);
       allow delete: if false;
     }
   }
