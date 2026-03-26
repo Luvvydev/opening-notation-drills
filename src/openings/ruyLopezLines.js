@@ -14,7 +14,7 @@ Each line is a concrete sequence you can practice until the moves feel automatic
 
 
 export const ruyLopezLines = withOpeningFeedback([
-  // Categories: Morphy Defense, Berlin Defense, Steinitz Defense, Classical (3...Bc5), Schliemann, Tactical sidelines
+  // Categories: Morphy Defense, Berlin Defense, Steinitz Defense, Bird Variation, Classical (3...Bc5), Schliemann, Tactical sidelines
 
   {
     category: "Steinitz Defense",
@@ -23,7 +23,7 @@ export const ruyLopezLines = withOpeningFeedback([
     description: "3...d6 with 4.d4 and Bxc6+. White trades queens and wins the e5 pawn.",
     moves: ["e4","e5","Nf3","Nc6","Bb5","d6","d4","a6","Bxc6+","bxc6","dxe5","dxe5","Qxd8+","Kxd8","Nxe5"],
     explanations: [
-      "Take the center and open lines for development.",
+      "Let's learn the Ruy Lopez! Master this course, and you'll have a significant advantage in every game you play. First things first: pawn to e4.",
       "Black mirrors and keeps equal central space.",
       "Develop and attack e5.",
       "Defend e5 and develop a piece.",
@@ -68,36 +68,36 @@ export const ruyLopezLines = withOpeningFeedback([
     ]
   },
 
-  {
-    category: "Steinitz Defense",
-    id: "ruy-steinitz-d4-exd4-nxd4-qd4-0-0-0",
-    name: "Steinitz: d4 strike and long castling plan",
-    description: "3...d6 4.d4 exd4 5.Nxd4 with active development and long castling.",
-    moves: ["e4","e5","Nf3","Nc6","Bb5","d6","d4","exd4","Nxd4","Bd7","Nc3","Nxd4","Bxd7+","Qxd7","Qxd4","Nf6","Bf4","Be7","O-O-O","O-O","e5"],
-    explanations: [
-      "Claim central space.",
-      "Match the center.",
-      "Develop and attack e5.",
-      "Develop and defend e5.",
-      "Ruy Lopez pressure on c6 and e5.",
-      "Defend e5 and keep a compact structure.",
-      "Immediate central break, forcing early decisions.",
-      "Take on d4 to relieve central pressure.",
-      "Recapture with development and central control.",
-      "Develop and challenge the pinned bishop indirectly.",
-      "Develop and support e4 and d5 squares.",
-      "Trade off the active knight and reduce White's central control.",
-      "Trade bishops with check to damage coordination.",
-      "Recapture and keep development going.",
-      "Trade queens to simplify while keeping a space edge.",
-      "Develop and hit e4, preparing ...Be7 and ...O-O.",
-      "Develop and pressure the center, also supports long castling.",
-      "Develop and prepare to castle.",
-      "Long castle and launch kingside play with rooks connected.",
-      "Castle and finish basic king safety.",
-      "Gain space and cramp Black's pieces, typical when queens are off."
-    ]
-  },
+{
+  category: "Steinitz Defense",
+  id: "ruy-steinitz-d4-exd4-nxd4-qd4-0-0-0",
+  name: "Steinitz: d4 strike and long castling plan",
+  description: "3...d6 4.d4 hits the center immediately, then White simplifies and uses the extra space for a queenside castling plan.",
+  moves: ["e4","e5","Nf3","Nc6","Bb5","d6","d4","exd4","Nxd4","Bd7","Nc3","Nxd4","Bxd7+","Qxd7","Qxd4","Nf6","Bf4","Be7","O-O-O","O-O","e5"],
+  explanations: [
+    "Take central space and open lines for development.",
+    "Black mirrors the center.",
+    "Develop and attack e5.",
+    "Defend e5 and develop.",
+    "Pressure the knight that supports e5 and keep the option of trading it.",
+    "Steinitz style. Black keeps e5 solid, but the setup can become cramped.",
+    "Strike in the center right away. This is the main transcript idea against ...d6.",
+    "Black relieves the tension before White can push further.",
+    "Recapture with a piece so development and central pressure stay together.",
+    "Black covers c6 and tries to untangle.",
+    "Develop and support the center, with queenside castling still available.",
+    "Black trades White's active knight to reduce central pressure.",
+    "Trade bishops with check before recapturing.",
+    "Black keeps the queen active and holds the center together.",
+    "Trade queens and head for a structure where White is easier to play.",
+    "Develop and contest e4.",
+    "Develop with tempo and line up queenside castling.",
+    "Finish development and prepare to castle.",
+    "Long castle clears the king and puts the rook on the d-file.",
+    "Black finishes king safety but still has less room.",
+    "This central break is the point. White gains space and makes Black's pieces work harder."
+  ]
+},
 
   {
     category: "Classical (3...Bc5)",
@@ -275,67 +275,67 @@ export const ruyLopezLines = withOpeningFeedback([
     ]
   },
 
-  {
-    category: "Morphy Defense",
-    id: "ruy-morphy-archangel-ng5-qh5",
-    name: "Morphy: Ng5 and Qh5 attack idea",
-    description: "Classic Morphy structure with e5 and an early queen sortie.",
-    moves: ["e4","e5","Nf3","Nc6","Bb5","a6","Ba4","Nf6","d4","exd4","O-O","Bc5","e5","Nd5","Bb3","Nb6","Ng5","O-O","Qh5"],
-    explanations: [
-      "Take space and open lines.",
-      "Match the center.",
-      "Develop and hit e5.",
-      "Develop and defend e5.",
-      "Ruy Lopez pressure.",
-      "Morphy: gain space and ask the bishop to choose.",
-      "Retreat and keep pressure on c6.",
-      "Develop and attack e4.",
-      "Central break and open lines.",
-      "Capture to reduce central pressure.",
-      "Castle and bring rook to e file.",
-      "Develop actively and pressure d4 and f2.",
-      "Advance and gain space, hitting pieces.",
-      "Centralize the knight and challenge e5.",
-      "Retreat bishop to keep pressure and avoid tactics.",
-      "Retreat knight to keep pressure and avoid being kicked.",
-      "Jump in with an attack idea on f7 and e6.",
-      "Castle for safety and defend f7.",
-      "Queen joins quickly aiming at f7 and h7 patterns."
-    ]
-  },
+{
+  category: "Morphy Defense",
+  id: "ruy-morphy-archangel-ng5-qh5",
+  name: "Morphy: Ng5 and Qh5 attack idea",
+  description: "After ...Bc5, White uses e5, Ng5, and Qh5 to stack threats against f7 and the kingside.",
+  moves: ["e4","e5","Nf3","Nc6","Bb5","a6","Ba4","Nf6","d4","exd4","O-O","Bc5","e5","Nd5","Bb3","Nb6","Ng5","O-O","Qh5"],
+  explanations: [
+    "Take central space and open lines.",
+    "Black matches the center.",
+    "Develop and hit e5.",
+    "Defend e5 and develop.",
+    "Pressure c6 and the e5 point.",
+    "Gain space and ask the bishop to choose.",
+    "Keep the bishop and maintain pressure on c6.",
+    "Develop and hit e4.",
+    "Open the center before Black settles.",
+    "Black reduces the central tension.",
+    "Castle first and leave the e-file useful for later tactics.",
+    "This is one of the common setups from the transcript. Black develops, but White gets targets.",
+    "One of the two main attacking patterns. Gain space and chase the knight.",
+    "The knight finds a central square, but Black still has to worry about f7.",
+    "Keep the bishop on the b3 to f7 diagonal.",
+    "Black steps away, but this costs time.",
+    "The second attacking pattern. Ng5 puts real pressure on f7.",
+    "Black castles, hoping king safety solves everything.",
+    "The queen joins immediately. White is now threatening around f7 and h7 at the same time."
+  ]
+},
 
-  {
-    category: "Morphy Defense",
-    id: "ruy-morphy-archangel-nde7-h6-nxf7",
-    name: "Morphy: Nde7 and Nxf7 sacrifice",
-    description: "Aggressive line where White sacrifices on f7 to open the king.",
-    moves: ["e4","e5","Nf3","Nc6","Bb5","a6","Ba4","Nf6","d4","exd4","O-O","Bc5","e5","Nd5","Bb3","Nde7","Ng5","O-O","Qh5","h6","Nxf7","Rxf7","Bxf7+"],
-    explanations: [
-      "Claim the center.",
-      "Match the center.",
-      "Develop and pressure e5.",
-      "Develop and defend e5.",
-      "Ruy Lopez pressure.",
-      "Morphy structure, gain space and tempo.",
-      "Keep the bishop active.",
-      "Develop and hit e4.",
-      "Central break.",
-      "Capture in the center.",
-      "Castle and activate rook.",
-      "Develop actively.",
-      "Advance and gain space.",
-      "Knight centralizes to hit e5 and c3.",
-      "Bishop retreat, keep pressure.",
-      "Knight retreats to a defensive square, covering key points.",
-      "Jump in to threaten tactics on f7.",
-      "Castle for safety.",
-      "Queen joins the attack on the kingside.",
-      "Push to kick the queen and create luft, but it can weaken g6.",
-      "Sacrifice to open lines and drag the king's pieces away.",
-      "Forced recapture to avoid losing material outright.",
-      "Check and pull the king into an exposed position."
-    ]
-  },
+{
+  category: "Morphy Defense",
+  id: "ruy-morphy-archangel-nde7-h6-nxf7",
+  name: "Morphy: Nde7 and Nxf7 sacrifice",
+  description: "When Black gives White time for Ng5 and Qh5, the sacrifice on f7 becomes a practical way to rip the king open.",
+  moves: ["e4","e5","Nf3","Nc6","Bb5","a6","Ba4","Nf6","d4","exd4","O-O","Bc5","e5","Nd5","Bb3","Nde7","Ng5","O-O","Qh5","h6","Nxf7","Rxf7","Bxf7+"],
+  explanations: [
+    "Take central space and open lines.",
+    "Black mirrors the center.",
+    "Develop and pressure e5.",
+    "Defend e5 and develop.",
+    "Pressure c6 and e5 indirectly.",
+    "Gain queenside space and ask the bishop to decide.",
+    "Keep the bishop active.",
+    "Develop and hit e4.",
+    "Open the center while White is ahead in activity.",
+    "Black reduces the tension.",
+    "Castle and keep the king safe before attacking.",
+    "Black develops, but White gets the attacking setup described in the transcript.",
+    "Gain space and kick the knight.",
+    "The knight centralizes, but Black is losing time.",
+    "Keep the bishop on the long diagonal toward f7.",
+    "Black tries to cover key squares and slow the attack.",
+    "Jump in and make f7 the center of the game.",
+    "Black castles into the attack anyway.",
+    "Qh5 adds direct pressure and makes the kingside very concrete.",
+    "This move tries to chase the queen, but it also loosens dark squares.",
+    "The sacrifice on f7 is the practical shot. White opens lines and drags defenders away from the king.",
+    "Black is forced to take or stay down material with the king exposed.",
+    "Keep the king in the open and continue the attack with tempo."
+  ]
+},
 
   {
     category: "Morphy Defense",
@@ -403,91 +403,119 @@ export const ruyLopezLines = withOpeningFeedback([
     ]
   },
 
-  {
-    category: "Schliemann",
-    id: "ruy-schliemann-f5-re1-d5-c6",
-    name: "Schliemann: f5 gambit structure",
-    description: "3...f5 (Schliemann) leads to sharp central play and forced tactics.",
-    moves: ["e4","e5","Nf3","Nc6","Bb5","f5","Re1","d5","Nxe5","dxe4","Nxc6","Qd5","Nc3","Qf5"],
-    explanations: [
-      "Claim the center.",
-      "Match the center.",
-      "Develop and attack e5.",
-      "Develop and defend e5.",
-      "Ruy Lopez pressure.",
-      "Schliemann gambit: challenge e4 directly and go for initiative.",
-      "Support e4 and keep pressure on the e file, also prepare to meet ...fxe4.",
-      "Break in the center, trying to open lines immediately.",
-      "Grab material and hit central squares, accepting risk.",
-      "Capture in the center and open lines against the white king.",
-      "Take on c6 and reduce Black's piece activity.",
-      "Centralize the queen and keep pressure on e5 and g2 ideas.",
-      "Develop and hit the queen, also support e4.",
-      "Retreat queen to keep pressure and avoid losing tempo."
-    ]
-  },
+{
+  category: "Steinitz Defense",
+  id: "ruy-steinitz-bd7-qd3-queen-trade-structure",
+  name: "Steinitz: Bd7 and Qd3 queen trade structure",
+  description: "3...d6 4.d4 Bd7 5.Nc3 builds the center, pressures e5, and reaches a favorable queenless structure.",
+  moves: ["e4","e5","Nf3","Nc6","Bb5","d6","d4","Bd7","Nc3","Nf6","Bxc6","Bxc6","Qd3","Be7","dxe5","dxe5","Nxe5","Qxd3","cxd3"],
+  explanations: [
+    "Take central space and open lines.",
+    "Black mirrors the center.",
+    "Develop and pressure e5.",
+    "Defend e5 and develop.",
+    "Pin the knight that supports e5.",
+    "The Steinitz setup keeps e5 protected, but White should challenge it before Black finishes development.",
+    "Strike in the center immediately.",
+    "Black meets the pressure by developing and covering c6.",
+    "Develop and add support to the center.",
+    "Black develops and eyes e4.",
+    "Trade on c6 to remove a defender and make Black's structure less flexible.",
+    "Black keeps the bishop pair but accepts the structural concession.",
+    "Qd3 increases pressure on e4 and e5 and also prepares a clean recapture if queens come off.",
+    "Black develops and prepares to castle.",
+    "Open the position while Black is still a little cramped.",
+    "Black recaptures and keeps central material balance.",
+    "This is the tactical point. White wins the e5 pawn because Black's pieces are tied down.",
+    "Trade queens when White already got what they wanted from the center.",
+    "Recapture with a pawn and reach a stable queenless structure that is easy to play."
+  ]
+},
+{
+  category: "Bird Variation",
+  id: "ruy-bird-bc4-bc5-bxf7-qh5",
+  name: "Bird: ...Bc5 met by Bxf7+ and Qh5+",
+  description: "After ...Nd4 and ...a6, White can reroute the bishop to c4 and punish a routine ...Bc5 setup.",
+  moves: ["e4","e5","Nf3","Nc6","Bb5","Nd4","Nxd4","exd4","O-O","a6","Bc4","Bc5","Bxf7+","Kxf7","Qh5+"],
+  explanations: [
+    "Take the center and open lines.",
+    "Black mirrors the center.",
+    "Develop and attack e5.",
+    "Defend e5 and develop.",
+    "Pressure the knight that supports e5.",
+    "Bird Variation. Black counters the bishop directly instead of defending e5.",
+    "Trade immediately because the bishop no longer keeps useful pressure on c6.",
+    "Black recaptures and gets a pawn in the center, but development becomes awkward.",
+    "Castle because White already developed the kingside and can start playing actively.",
+    "A common move from the transcript. Black tries to chase the bishop and finish development.",
+    "Reroute to c4. This recreates Italian-style pressure against f7.",
+    "It looks natural, but this setup is tactically loose.",
+    "Sacrifice on f7 to drag the king out and strip away cover.",
+    "Forced. If Black declines, they just stay down material.",
+    "This is the point. Qh5+ is a double attack, and White gets the piece back with Black's king still exposed."
+  ]
+},
 
-  {
-    category: "Tactical sidelines",
-    id: "ruy-steinitz-bd7-qd3-queen-trade-structure",
-    name: "Steinitz: Bd7 and Qd3 queen trade structure",
-    description: "3...d6 4.d4 Bd7 5.Nc3 with a queen trade and a stable pawn structure.",
-    moves: ["e4","e5","Nf3","Nc6","Bb5","d6","d4","Bd7","Nc3","Nf6","Bxc6","Bxc6","Qd3","Be7","dxe5","dxe5","Nxe5","Qxd3","cxd3"],
-    explanations: [
-      "Claim the center.",
-      "Match the center.",
-      "Develop and pressure e5.",
-      "Develop and defend e5.",
-      "Ruy Lopez pressure.",
-      "Steinitz defense, protect e5.",
-      "Break in the center.",
-      "Develop and challenge the bishop directly.",
-      "Develop and support central control.",
-      "Develop and prepare to castle.",
-      "Trade bishop for knight to weaken pawn structure and remove defender.",
-      "Recapture and keep bishop pair.",
-      "Queen supports e4 and prepares to recapture after exchanges.",
-      "Develop and prepare to castle.",
-      "Take on e5 and open lines.",
-      "Recapture and keep material balance.",
-      "Win the e5 pawn tactically.",
-      "Trade queens to simplify and reduce attack chances.",
-      "Recapture with a pawn, creating a solid central structure."
-    ]
-  },
+{
+  category: "Bird Variation",
+  id: "ruy-bird-bc4-b5-bxf7-qd5",
+  name: "Bird: ...b5 met by Bxf7+ and Qd5+",
+  description: "After rerouting the bishop to c4, White can punish an automatic ...b5 with the transcript's Bxf7+ and Qd5+ pattern.",
+  moves: ["e4","e5","Nf3","Nc6","Bb5","Nd4","Nxd4","exd4","O-O","a6","Bc4","b5","Bxf7+","Kxf7","Qh5+","g6","Qd5+"],
+  explanations: [
+    "Take the center and open lines.",
+    "Black mirrors the center.",
+    "Develop and attack e5.",
+    "Defend e5 and develop.",
+    "Pressure c6 and e5 indirectly.",
+    "Bird Variation. Black hits the bishop early.",
+    "Trade because keeping the bishop on b5 no longer does enough.",
+    "Black accepts the pawn structure and central space.",
+    "Castle before starting tactical play.",
+    "Black again tries to chase the bishop and complete development.",
+    "The bishop heads to c4, where f7 becomes a direct target.",
+    "This is the tempting move from the transcript. Black expects a quiet retreat.",
+    "Instead, White sacrifices on f7 immediately.",
+    "Forced king recapture.",
+    "Qh5+ is the key move, keeping the king exposed and forcing another concession.",
+    "Black blocks the check, but the kingside stays weak.",
+    "Now White checks again and attacks the rook in the corner at the same time. This is the transcript's main point."
+  ]
+},
 
-  {
-    category: "Tactical sidelines",
-    id: "ruy-classical-qa4-nge7-d5-queen-wins-a8",
-    name: "Classical: Qa4 and Qxa8 tactic",
-    description: "Long forcing line where Qa4 targets a8 and Black's queenside becomes loose.",
-    moves: ["e4","e5","Nf3","Nc6","Bb5","Bc5","c3","d6","d4","exd4","cxd4","Bb4+","Kf1","Bd7","Qa4","Nge7","d5","a6","dxc6","axd5","cxd7+","Qxd7","Qxa8+"],
-    explanations: [
-      "Open the center.",
-      "Mirror the center.",
-      "Develop and attack e5.",
-      "Develop and defend e5.",
-      "Ruy Lopez pressure.",
-      "Classical active bishop development.",
-      "Prepare d4 and stabilize the center.",
-      "Support the center and keep pieces flexible.",
-      "Break in the center.",
-      "Capture to reduce White's central space.",
-      "Recapture and build a pawn center.",
-      "Check to disrupt and win tempo.",
-      "Step out of check while keeping pieces on the board.",
-      "Develop and cover key squares.",
-      "Target the loose bishop and create tactical threats on a8.",
-      "Develop and prepare to castle, also cover c6 and d5 squares.",
-      "Advance pawn to gain space and create a passed pawn threat.",
-      "Kick the pawn chain and create targets.",
-      "Capture on c6, removing the knight and opening the b file.",
-      "Capture back to try to keep material balanced and open lines.",
-      "Pawn captures with check, forcing a response and opening the center.",
-      "Queen recaptures and tries to stabilize.",
-      "Win the rook on a8 with check."
-    ]
-  },
+
+{
+  category: "Tactical sidelines",
+  id: "ruy-classical-qa4-nge7-d5-queen-wins-a8",
+  name: "Classical: Qa4 and Qxa8 tactic",
+  description: "Long forcing line where Qa4 targets a8 and Black's queenside becomes loose.",
+  moves: ["e4","e5","Nf3","Nc6","Bb5","Bc5","c3","d6","d4","exd4","cxd4","Bb4+","Kf1","Bd7","Qa4","Nge7","d5","a6","dxc6","axb5","cxd7+","Qxd7","Qxa8+"],
+  explanations: [
+    "Open the center.",
+    "Mirror the center.",
+    "Develop and attack e5.",
+    "Develop and defend e5.",
+    "Ruy Lopez pressure.",
+    "Classical active bishop development.",
+    "Prepare d4 and stabilize the center.",
+    "Support the center and keep pieces flexible.",
+    "Break in the center.",
+    "Capture to reduce White's central space.",
+    "Recapture and build a pawn center.",
+    "Check to disrupt and win tempo.",
+    "Step out of check while keeping pieces on the board.",
+    "Develop and cover key squares.",
+    "Target the loose bishop and create tactical threats on a8.",
+    "Develop and prepare to castle, also cover c6 and d5 squares.",
+    "Advance pawn to gain space and create a passed pawn threat.",
+    "Kick the pawn chain and create targets.",
+    "Capture on c6, removing the knight and opening the b file.",
+    "Black takes the bishop on b5 to limit the queenside damage, but the a8 rook is still loose.",
+    "Pawn captures with check, forcing a response and opening the center.",
+    "Queen recaptures and tries to stabilize.",
+    "Win the rook on a8 with check."
+  ]
+},
 
   {
     category: "Tactical sidelines",
@@ -549,28 +577,80 @@ export const ruyLopezLines = withOpeningFeedback([
     ]
   },
 
-  {
-    category: "Tactical sidelines",
-    id: "ruy-morphy-open-nxe4-re1-core",
-    name: "Morphy: ...Nxe4 and Re1 pressure",
-    description: "Open Morphy with ...Nxe4 and the standard Re1 follow-up.",
-    moves: ["e4","e5","Nf3","Nc6","Bb5","a6","Ba4","Nf6","d4","exd4","O-O","Nxe4","Re1"],
-    explanations: [
-      "Claim central space.",
-      "Match the center.",
-      "Develop and hit e5.",
-      "Develop and defend e5.",
-      "Ruy Lopez pressure.",
-      "Gain queenside space and tempo on the bishop.",
-      "Retreat and keep pressure.",
-      "Develop and hit e4.",
-      "Central break and open lines.",
-      "Capture to reduce White's center.",
-      "Castle and activate rook.",
-      "Grab the e4 pawn, challenging White to prove compensation.",
-      "Hit the knight and e file immediately, the standard response."
-    ]
-  },
+{
+  category: "Morphy Defense",
+  id: "ruy-morphy-open-nxe4-re1-core",
+  name: "Morphy: ...Nxe4 and Re1 pressure",
+  description: "After White castles in the Open Morphy, ...Nxe4 can be met at once because the e-file is already working for White.",
+  moves: ["e4","e5","Nf3","Nc6","Bb5","a6","Ba4","Nf6","d4","exd4","O-O","Nxe4","Re1"],
+  explanations: [
+    "Claim central space.",
+    "Black matches the center.",
+    "Develop and hit e5.",
+    "Defend e5 and develop.",
+    "Pressure the knight that protects e5.",
+    "Gain queenside space and ask the bishop to retreat.",
+    "Keep the bishop and maintain the pin idea.",
+    "Develop and attack e4.",
+    "Challenge the center immediately.",
+    "Black captures to reduce White's central space.",
+    "Castle first. This is important because it leaves the e-file ready for rook play.",
+    "Black grabs the pawn, but that capture can be risky because the king's position is not fully secure.",
+    "Hit the knight and use the open e-file right away. This is the standard punishment theme from the transcript."
+  ]
+},
+{
+  category: "Morphy Defense",
+  id: "ruy-morphy-c3-h3-setup",
+  name: "Morphy: c3 and h3 setup",
+  description: "Closed Morphy structure built around Re1, c3, and h3 before the central d4 break.",
+  moves: ["e4","e5","Nf3","Nc6","Bb5","a6","Ba4","Nf6","O-O","Be7","Re1","b5","Bb3","d6","c3","O-O","h3"],
+  explanations: [
+    "Take the center and open lines.",
+    "Black mirrors the center.",
+    "Develop and attack e5.",
+    "Defend e5 and develop.",
+    "Pressure the knight that supports e5.",
+    "Gain queenside space and ask the bishop to choose.",
+    "Keep the bishop on the long diagonal.",
+    "Develop and attack e4.",
+    "Castle first so White can build the center safely.",
+    "Black chooses a solid square for the bishop.",
+    "Defend e4 and renew the threat against e5 if Black is careless.",
+    "Black gains space before White can play c3 and d4 with tempo.",
+    "Keep the bishop active. In the transcript this light-squared bishop is one of White's key pieces.",
+    "Support e5 and finish Black's basic setup.",
+    "This is the transcript's main multipurpose move. It prepares d4 and gives the bishop an escape if ...Ne5 comes.",
+    "Black castles and waits for White's center break.",
+    "Another transcript move. h3 stops ...Bg4 first, so White can play d4 next without the pin becoming annoying."
+  ]
+},
+
+{
+  category: "Morphy Defense",
+  id: "ruy-morphy-d6-c3-nxe4-bd5",
+  name: "Morphy: ...Nxe4 met by Bd5",
+  description: "After ...d6 and ...b5, c3 prepares d4. If Black greedily grabs e4, Bd5 hits too many targets at once.",
+  moves: ["e4","e5","Nf3","Nc6","Bb5","a6","Ba4","d6","O-O","b5","Bb3","Nf6","c3","Nxe4","Bd5"],
+  explanations: [
+    "Take the center and open lines.",
+    "Black mirrors the center.",
+    "Develop and pressure e5.",
+    "Defend e5 and develop.",
+    "Pressure the defender of e5.",
+    "Gain space and ask the bishop to choose.",
+    "Keep the bishop and stay flexible.",
+    "Black protects e5, but that also invites White to challenge the center quickly.",
+    "Castle first. This is useful anyway and keeps the rook ready for central play.",
+    "Black gains more space and chases the bishop again.",
+    "Keep the bishop on an active diagonal.",
+    "Black develops and attacks e4.",
+    "c3 is the transcript move. It prepares d4 and supports White's central expansion.",
+    "Black grabs the pawn and hopes White only has routine compensation.",
+    "Bd5 is the point. The bishop suddenly hits e4, c6, and f7, so the greedy capture becomes much harder to justify."
+  ]
+},
+
 
   {
     category: "Tactical sidelines",

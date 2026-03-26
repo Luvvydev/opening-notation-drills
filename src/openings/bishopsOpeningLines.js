@@ -8,7 +8,7 @@ export const bishopsOpeningLines = withOpeningFeedback([
     description: "Punish ...Nxe4 by opening the center, forcing tactical concessions, and winning the pawn back cleanly.",
     moves: ["e4", "e5", "Bc4", "Nf6", "d4", "Nxe4", "dxe5", "Bc5", "Qd5", "Bxf2+", "Kf1", "O-O", "Qxe4"],
     explanations: [
-      "Take central space and open lines for the queen and bishop.",
+      "Let's learn the Bishop's Opening! You'll pretty much always be winning in the first few moves. First step: pawn to e4.",
       "Black copies the central claim and keeps a classical structure.",
       "Develop the bishop to c4 so it points at f7 and supports central tactics.",
       "Black develops naturally and attacks e4 right away.",
@@ -306,13 +306,13 @@ export const bishopsOpeningLines = withOpeningFeedback([
       "Black retreats the knight, admitting the e4 outpost was temporary.",
       "Develop another piece and increase central control.",
       "Black matches development and covers e5 and d4.",
-      "Place the queen on h4 where it eyes h7 and supports kingside pressure.",
+      "Place the queen on h4 because this is the natural attacking square in these Keidansky structures. h7 and h-file ideas now become concrete.",
       "Black develops but also blocks coordination between rook and bishop.",
-      "Pin the knight and increase pressure on e7 and f6-related squares.",
+      "Pin the knight and keep adding force to the kingside. If Black drifts here, the attack tends to build by itself.",
       "Black castles, but White's pieces are already pointing that way.",
-      "Castle long and commit to a full kingside attack.",
+      "Castle long so both rooks can join the attack. This is the practical reason White centralizes the queen so early.",
       "Black tries to complete development and blunt the center.",
-      "Bring the bishop to the ideal attacking square where it supports h7 and the queen battery."
+      "Bd3 is the dream square from these transcript ideas: bishop to d3, queen on h4, then direct pressure before Black can untangle."
     ]
   },
   {
@@ -352,9 +352,9 @@ export const bishopsOpeningLines = withOpeningFeedback([
       "Black develops naturally and prepares to castle.",
       "Choose a quieter setup that keeps the center stable and supports future kingside play.",
       "Black develops the bishop to an active square.",
-      "Pin the knight and make Black think about kingside structure.",
+      "Pin the knight while Black's bishop sits on c5. That makes the pin more annoying because there is no easy ...Be7 neutralizer.",
       "Black supports e5 and frees the c8 bishop.",
-      "Jump into d5, using the outpost created by your restrained center.",
+      "Jump into d5 and make the pin concrete. If you trade on f6 later, Black's kingside structure pays for it.",
       "Black questions the bishop but also creates a hook on the kingside.",
       "Take on f6 to damage the pawn structure. This is the positional point of the line.",
       "Black recaptures and accepts long-term weakness around the king.",
@@ -483,6 +483,74 @@ export const bishopsOpeningLines = withOpeningFeedback([
       "Jump with check and attack the pinned or overloaded pieces around the king.",
       "Black's king flees, but the position is still collapsing.",
       "Take on e6 with check and keep the attack going with a winning material plus initiative balance."
+    ]
+  },
+  {
+    category: "Berlin Defense",
+    id: "bishops-opening-berlin-d3-re1-pressure",
+    name: "Berlin d3 setup with Re1 pressure",
+    description: "A solid Bishop's Opening answer to ...Nf6 where White castles early, kicks the pin, and makes the e5-pawn the center of the game.",
+    moves: ["e4", "e5", "Bc4", "Nf6", "d3", "d5", "Nf3", "Nc6", "O-O", "Bg4", "h3", "Bh5", "Re1"],
+    explanations: [
+      "Take the center and keep the bishop active on the long diagonal.",
+      "Black develops aggressively and attacks e4 at once.",
+      "Develop outside the pawn chain and keep pressure on f7 in the background.",
+      "The Berlin setup challenges e4 immediately and invites a choice.",
+      "Support e4 instead of entering the sharpest gambit lines right away.",
+      "Black grabs central space, but the e5-pawn can become hard to hold.",
+      "Develop and start asking how Black plans to defend e5.",
+      "Black adds support, but this also commits the queenside knight early.",
+      "Castle first. King safety matters because the next phase is direct pressure on e5.",
+      "Black uses the standard pin to slow your kingside play.",
+      "Kick the bishop and ask whether it really belongs on the h5-d1 diagonal.",
+      "The bishop retreats, but the pin is less convincing once the knight is free to move later.",
+      "Put the rook on e1 and make e5 the center of the position. This is the practical point of the whole setup."
+    ]
+  },
+  {
+    category: "Vienna Hybrid",
+    id: "bishops-opening-spielmann-ng5-counter",
+    name: "Spielmann counter with Ng5 and Qf3",
+    description: "White delays Nf3 until the f-pawn is out, then answers ...Ng4 with a faster attack and an immediate mate threat on f7.",
+    moves: ["e4", "e5", "Bc4", "Nc6", "Nc3", "Bc5", "d3", "d6", "f4", "Nf6", "Nf3", "Ng4", "Ng5", "Nf2", "Qf3"],
+    explanations: [
+      "Take the center and keep open attacking options.",
+      "Black mirrors and keeps the game in open channels.",
+      "Develop the bishop first and keep pressure on f7 from move two.",
+      "Black protects e5 and develops naturally.",
+      "Choose the queenside knight first so the f-pawn can advance before the kingside knight commits.",
+      "Black develops the bishop actively and also eyes f2 ideas.",
+      "Stay flexible and keep the option of a kingside pawn storm.",
+      "Black supports e5, but this also signals a slower setup White can attack.",
+      "This is the core Spielmann-style idea from the transcript: use f4 to claim space and prepare direct kingside play.",
+      "Black develops the knight and now starts eyeing jumps like ...Ng4.",
+      "Only now develop the knight. White has kept the aggressive pawn structure without blocking it.",
+      "Black jumps in, hoping pressure on f2 will be faster than White's attack on f7.",
+      "Counterattack immediately. The point is simple: your threat on f7 is stronger than Black's threat on f2.",
+      "Black grabs material and attacks rook and queen, but that actually helps White bring the queen into the attack.",
+      "Qf3 creates the direct threat of Qxf7# and shows why this setup is dangerous in practice."
+    ]
+  },
+  {
+    category: "Vienna Hybrid",
+    id: "bishops-opening-spielmann-f5-qh5",
+    name: "Immediate ...Ng4 met by f5 and Qh5",
+    description: "If Black jumps to g4 before White has Nf3 in, White cuts off the bishop, threatens to win the knight, and creates an immediate mate threat with Qh5.",
+    moves: ["e4", "e5", "Bc4", "Nc6", "Nc3", "Bc5", "d3", "Nf6", "f4", "Ng4", "f5", "Nf2", "Qh5"],
+    explanations: [
+      "Take central space and keep the opening flexible.",
+      "Black mirrors and keeps classical central control.",
+      "Develop the bishop actively toward f7.",
+      "Black develops and protects e5.",
+      "Again White keeps the kingside knight back so the f-pawn can move first.",
+      "Black develops the bishop and keeps both kingside and central ideas alive.",
+      "Stay flexible and prepare aggressive pawn play.",
+      "Black develops the knight and makes ...Ng4 available.",
+      "Push f4 before Nf3. That is the whole move-order point of this hybrid.",
+      "Black jumps at the first chance, trying to create threats on f2 before White is ready.",
+      "f5 is the key counter from the transcript. It cuts off the c7-h2 bishop from helping and makes Qxg4 a real idea.",
+      "Black still goes after f2, hoping the fork threat will be enough.",
+      "Qh5 answers everything with a direct mate threat on f7. Black is the one who has to solve problems now."
     ]
   }
 ]);
