@@ -15,6 +15,7 @@ import { getOrderedLineIds } from "../utils/lineIndex";
 import { pickNextPracticeLineId } from "./openingTrainer/practicePicker";
 import { getOpeningPuzzlePack, getOpeningPuzzleTagHints } from "./openingTrainer/openingPuzzleCatalog";
 import { preparePuzzle, moveMatchesUci, getLegalTargets, getSquarePieceColor } from "./openingTrainer/puzzleUtils";
+import { getCoachConfig } from "./openingTrainer/coachConfig";
 
 import { loadProgress, saveProgress, loadLearnProgress, saveLearnProgress, loadSettings, saveSettings, loadCustomLines, saveCustomLines, deleteCustomLineById, makeCustomId, ensureOpening, getLineStats, isCompleted, ensureLearnOpening, getLearnLineStats } from "./openingTrainer/otStorage";
 import OpeningTrainerCustomModal from "./openingTrainer/OpeningTrainerCustomModal";
@@ -3180,6 +3181,16 @@ truncateHeaderLabel = (value, max = 34) => {
   return str.length > max ? `${str.slice(0, max - 1).trim()}…` : str;
 };
 
+renderCoachAvatar = (mode) => {
+  const coach = getCoachConfig({ mode, openingKey: this.state.openingKey });
+
+  return (
+    <div className="ot-buddy ot-buddy-image" title={coach.title}>
+      <img className="ot-buddy-img" src={coach.src} alt={coach.alt} draggable="false" />
+    </div>
+  );
+};
+
 renderCoachBubble = (line) => {
   if (!line) return null;
 
@@ -3203,8 +3214,10 @@ renderCoachBubble = (line) => {
   return (
     <div className="ot-bubble">
       <div className="ot-bubble-row">
-        <div className="ot-buddy" title="Your drill buddy">♞</div>
-        <div className="ot-coach-text">{text}</div>
+        {this.renderCoachAvatar(mode)}
+        <div className="ot-coach-copy">
+          <div className="ot-coach-text">{text}</div>
+        </div>
       </div>
     </div>
   );
@@ -3385,8 +3398,10 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
 
       <div className="ot-bubble">
         <div className="ot-bubble-row">
-          <div className="ot-buddy" title="Your drill buddy">♞</div>
-          <div className="ot-coach-text">{text}</div>
+          {this.renderCoachAvatar(mode)}
+          <div className="ot-coach-copy">
+            <div className="ot-coach-text">{text}</div>
+          </div>
         </div>
       </div>
       {this.renderMoveFeedbackCard()}

@@ -220,6 +220,7 @@
 .ot-side {
   position: sticky;
   top: 12px;
+  min-width: 0;
 
   height: 100%;
 }
@@ -229,6 +230,7 @@
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.02);
   overflow: visible;
+  min-width: 0;
 
   height: 100%;
 
@@ -397,6 +399,7 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+  min-width: 0;
 
   flex: 1;
   min-height: 0;
@@ -850,6 +853,7 @@
 /* --- Coach area (big explanation region) --- */
 .ot-coach {
   flex: 1;
+  min-width: 0;
   min-height: 0;
   display: flex;
   flex-direction: column;
@@ -861,6 +865,7 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 10px;
+  min-width: 0;
 }
 
 .ot-coach-left {
@@ -874,6 +879,8 @@
 .ot-buddy {
   width: 34px;
   height: 34px;
+  min-width: 34px;
+  min-height: 34px;
   border-radius: 12px;
   display: inline-flex;
   align-items: center;
@@ -882,6 +889,7 @@
   background: rgba(255, 255, 255, 0.03);
   font-size: 16px;
   line-height: 1;
+  flex: 0 0 auto;
 }
 
 .ot-coach-title {
@@ -896,6 +904,8 @@
   border-radius: 12px;
   padding: 12px;
   position: relative;
+  display: flex;
+  min-width: 0;
 
   height: 92px;
   overflow: hidden;
@@ -906,6 +916,8 @@
   display: flex;
   gap: 10px;
   align-items: flex-start;
+  min-width: 0;
+  width: 100%;
 }
 
 .ot-bubble:before {
@@ -923,14 +935,25 @@
 }
 
 
+.ot-coach-copy {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+}
+
 .ot-coach-text {
   flex: 1;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   min-height: 0;
   font-size: 14px;
   line-height: 1.45;
   color: #e6eef8;
   overflow-y: auto;
-  word-break: break-word;
+  overflow-x: hidden;
+  white-space: pre-wrap;
   scrollbar-width: none;
   overflow-wrap: anywhere;
   word-break: break-word;
@@ -939,6 +962,23 @@
 .ot-coach-text::-webkit-scrollbar {
   width: 0;
   height: 0;
+}
+
+.ot-buddy-image {
+  padding: 0;
+  overflow: hidden;
+  border-color: rgba(var(--ot-accent-rgb), 0.28);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+.ot-buddy-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+  user-select: none;
+  -webkit-user-drag: none;
 }
 
 /* --- Bottom control dock (keeps controls out of the way) --- */
@@ -1435,6 +1475,8 @@
   border-radius: 14px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: rgba(255, 255, 255, 0.04);
+  min-width: 0;
+  max-width: 100%;
 }
 
 .ot-move-feedback.is-correct {
@@ -1452,6 +1494,7 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 10px;
+  min-width: 0;
 }
 
 .ot-move-feedback-head-left {
@@ -1494,6 +1537,8 @@
   gap: 8px;
   font-size: 11px;
   font-weight: 800;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .ot-move-feedback-best-wrap {
@@ -1593,6 +1638,7 @@
   margin-top: 10px;
   display: grid;
   gap: 10px;
+  min-width: 0;
 }
 
 .ot-move-feedback-section,
@@ -1601,6 +1647,7 @@
   border-radius: 12px;
   background: rgba(0, 0, 0, 0.14);
   border: 1px solid rgba(255, 255, 255, 0.08);
+  min-width: 0;
 }
 
 .ot-move-feedback-label {
@@ -1616,7 +1663,12 @@
   font-size: 13px;
   line-height: 1.45;
   color: #edf3fb;
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
+
 .ot-move-feedback-correct-copy {
   margin-top: 6px;
 }
