@@ -3182,7 +3182,7 @@ truncateHeaderLabel = (value, max = 34) => {
 };
 
 renderCoachAvatar = (mode) => {
-  const coach = getCoachConfig({ mode, openingKey: this.state.openingKey });
+  const coach = getCoachConfig({ mode, openingKey: this.state.openingKey, coachTheme: this.state.settings && this.state.settings.coachTheme });
 
   return (
     <div className="ot-buddy ot-buddy-image" title={coach.title}>

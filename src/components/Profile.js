@@ -61,7 +61,8 @@ function loadLocalSettings() {
     showConfetti: true,
     playSounds: true,
     boardTheme: DEFAULT_THEME,
-    pieceTheme: "default"
+    pieceTheme: "default",
+    coachTheme: "default"
   };
 
   try {
@@ -72,7 +73,8 @@ function loadLocalSettings() {
       showConfetti: parsed.showConfetti !== false,
       playSounds: parsed.playSounds !== false,
       boardTheme: parsed.boardTheme || DEFAULT_THEME,
-      pieceTheme: parsed.pieceTheme || "default"
+      pieceTheme: parsed.pieceTheme || "default",
+      coachTheme: parsed.coachTheme || "default"
     };
   } catch (_) {
     return defaults;
@@ -218,6 +220,7 @@ export default function Profile() {
   const [editingDisplayName, setEditingDisplayName] = useState(false);
   const [boardTheme, setBoardTheme] = useState(DEFAULT_THEME);
   const [pieceTheme, setPieceTheme] = useState("default");
+  const [coachTheme, setCoachTheme] = useState("default");
   const [secretUnlocked, setSecretUnlocked] = useState(false);
   const [avatarDataUrl, setAvatarDataUrl] = useState("");
   const [previewWidth, setPreviewWidth] = useState(320);
@@ -273,6 +276,7 @@ export default function Profile() {
     const s = loadLocalSettings();
     setBoardTheme(s.boardTheme || DEFAULT_THEME);
     setPieceTheme(s.pieceTheme || "default");
+    setCoachTheme(s.coachTheme || "default");
     setSecretUnlocked(loadSecretUnlocked());
     setAvatarDataUrl(loadAvatar());
   }, []);
@@ -367,6 +371,12 @@ export default function Profile() {
           setPieceTheme((cur) => (cur === remotePieceTheme ? cur : remotePieceTheme));
           saveLocalSettings({ pieceTheme: remotePieceTheme });
         }
+
+        const remoteCoachTheme = data && data.settings && data.settings.coachTheme;
+        if (remoteCoachTheme) {
+          setCoachTheme((cur) => (cur === remoteCoachTheme ? cur : remoteCoachTheme));
+          saveLocalSettings({ coachTheme: remoteCoachTheme });
+        }
       },
       () => {
         // ignore
@@ -406,7 +416,7 @@ export default function Profile() {
     setPieceTheme(next.pieceTheme || "default");
 
 
-    syncPublicProfile({ settings: { boardTheme: "purpleblack", pieceTheme: "alpha" } });
+    syncPublicProfile({ settings: { boardTheme: "purpleblack", pieceTheme: "alpha", coachTheme } });
 
     if (!user) return;
     try {
@@ -414,7 +424,7 @@ export default function Profile() {
       runTransaction(db, async (tx) => {
         tx.set(
           ref,
-          { settings: { boardTheme: "purpleblack", pieceTheme: "alpha" }, updatedAt: serverTimestamp() },
+          { settings: { boardTheme: "purpleblack", pieceTheme: "alpha", coachTheme }, updatedAt: serverTimestamp() },
           { merge: true }
         );
       });
@@ -646,7 +656,7 @@ async function syncPublicProfile(patch) {
               userData && userData.activityDays && typeof userData.activityDays === "object"
                 ? userData.activityDays
                 : {},
-            settings: { boardTheme: boardTheme || DEFAULT_THEME, pieceTheme: pieceTheme || "default" },
+            settings: { boardTheme: boardTheme || DEFAULT_THEME, pieceTheme: pieceTheme || "default", coachTheme: coachTheme || "default" },
             publicBadge:
               membershipTier === "lifetime"
                 ? "Lifetime Member"
@@ -675,7 +685,7 @@ const onChangeBoardTheme = async (nextTheme) => {
   const next = saveLocalSettings({ boardTheme: nextTheme });
   setBoardTheme(next.boardTheme || DEFAULT_THEME);
 
-  await syncPublicProfile({ settings: { boardTheme: nextTheme, pieceTheme } });
+  await syncPublicProfile({ settings: { boardTheme: nextTheme, pieceTheme, coachTheme } });
 
   if (!user) return;
   try {
@@ -683,7 +693,7 @@ const onChangeBoardTheme = async (nextTheme) => {
     await runTransaction(db, async (tx) => {
       tx.set(
         ref,
-        { settings: { boardTheme: nextTheme }, updatedAt: serverTimestamp() },
+        { settings: { boardTheme: nextTheme, pieceTheme, coachTheme }, updatedAt: serverTimestamp() },
         { merge: true }
       );
     });
@@ -696,7 +706,7 @@ const onChangePieceTheme = async (nextPieceTheme) => {
   const next = saveLocalSettings({ pieceTheme: nextPieceTheme });
   setPieceTheme(next.pieceTheme || "default");
 
-  await syncPublicProfile({ settings: { boardTheme, pieceTheme: nextPieceTheme } });
+  await syncPublicProfile({ settings: { boardTheme, pieceTheme: nextPieceTheme, coachTheme } });
 
   if (!user) return;
   try {
@@ -704,7 +714,29 @@ const onChangePieceTheme = async (nextPieceTheme) => {
     await runTransaction(db, async (tx) => {
       tx.set(
         ref,
-        { settings: { pieceTheme: nextPieceTheme }, updatedAt: serverTimestamp() },
+        { settings: { boardTheme, pieceTheme: nextPieceTheme, coachTheme }, updatedAt: serverTimestamp() },
+        { merge: true }
+      );
+    });
+  } catch (_) {
+    // ignore
+  }
+};
+
+
+const onChangeCoachTheme = async (nextCoachTheme) => {
+  const next = saveLocalSettings({ coachTheme: nextCoachTheme });
+  setCoachTheme(next.coachTheme || "default");
+
+  await syncPublicProfile({ settings: { boardTheme, pieceTheme, coachTheme: nextCoachTheme } });
+
+  if (!user) return;
+  try {
+    const ref = doc(db, "users", user.uid);
+    await runTransaction(db, async (tx) => {
+      tx.set(
+        ref,
+        { settings: { boardTheme, pieceTheme, coachTheme: nextCoachTheme }, updatedAt: serverTimestamp() },
         { merge: true }
       );
     });
@@ -996,6 +1028,20 @@ const onChangePieceTheme = async (nextPieceTheme) => {
                 >
                   <option value="default">Default</option>
                   <option value="alpha">High Contrast</option>
+                </select>
+              </div>
+            ) : null}
+
+            {secretUnlocked ? (
+              <div className="profile-setting-row">
+                <div className="profile-setting-label">Coach</div>
+                <select
+                  className="profile-select"
+                  value={coachTheme || "default"}
+                  onChange={(e) => onChangeCoachTheme(e.target.value)}
+                >
+                  <option value="default">Default</option>
+                  <option value="princess">Princess</option>
                 </select>
               </div>
             ) : null}

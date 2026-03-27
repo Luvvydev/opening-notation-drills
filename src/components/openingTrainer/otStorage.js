@@ -74,7 +74,9 @@ export function loadSettings(DEFAULT_THEME) {
   const defaults = {
     showConfetti: true,
     playSounds: true,
-    boardTheme: DEFAULT_THEME
+    boardTheme: DEFAULT_THEME,
+    pieceTheme: "default",
+    coachTheme: "default"
   };
   try {
     const raw = window.localStorage.getItem(SETTINGS_KEY);
@@ -85,7 +87,9 @@ export function loadSettings(DEFAULT_THEME) {
     return {
       showConfetti: parsed.showConfetti !== false,
       playSounds: parsed.playSounds !== false,
-      boardTheme: parsed.boardTheme || DEFAULT_THEME
+      boardTheme: parsed.boardTheme || DEFAULT_THEME,
+      pieceTheme: parsed.pieceTheme || "default",
+      coachTheme: parsed.coachTheme || "default"
     };
   } catch (_) {
     return defaults;

@@ -21,11 +21,34 @@ const MODE_COACHES = {
   }
 };
 
+const PRINCESS_MODE_COACHES = {
+  learn: {
+    src: "/coaches/princess-coach.svg",
+    alt: "Princess coach",
+    title: "Princess coach"
+  },
+  practice: {
+    src: "/coaches/princess-coach.svg",
+    alt: "Princess coach",
+    title: "Princess coach"
+  },
+  drill: {
+    src: "/coaches/princess-coach.svg",
+    alt: "Princess coach",
+    title: "Princess coach"
+  }
+};
+
 const OPENING_OVERRIDES = {};
 
-export function getCoachConfig({ mode, openingKey } = {}) {
+export function getCoachConfig({ mode, openingKey, coachTheme } = {}) {
   const normalizedMode = String(mode || "learn");
   const normalizedOpening = String(openingKey || "");
+  const normalizedCoachTheme = String(coachTheme || "default");
+
+  if (normalizedCoachTheme === "princess" && PRINCESS_MODE_COACHES[normalizedMode]) {
+    return PRINCESS_MODE_COACHES[normalizedMode];
+  }
 
   if (normalizedOpening && OPENING_OVERRIDES[normalizedOpening] && OPENING_OVERRIDES[normalizedOpening][normalizedMode]) {
     return OPENING_OVERRIDES[normalizedOpening][normalizedMode];
