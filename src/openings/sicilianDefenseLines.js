@@ -27,7 +27,7 @@ export const sicilianDefenseLines = withOpeningFeedback([
     category: "Open Sicilian",
     id: "sicilian-open-mainline-classical",
     name: "Open Sicilian: Classical setup",
-    description: "Mainline Open Sicilian: if White offers d4, take it immediately, then finish development with pressure on e4 and the c-file.",
+    description: "Mainline Open Sicilian: if White offers d4, take it immediately, then build pressure on e4 and look for the familiar ...e6 and ...d5 Sicilian structure.",
     moves: ["e4", "c5", "Nf3", "d6", "d4", "cxd4", "Nxd4", "Nf6", "Nc3", "Nc6", "Be3", "e6", "f3", "Be7", "Qd2", "O-O"],
     explanations: [
       "White starts with pawn to {{square e4}} and claims central space.",
@@ -35,24 +35,24 @@ export const sicilianDefenseLines = withOpeningFeedback([
       "Develop and prepare the central break with {{square d4}}.",
       "Support the {{square c5}} structure, keep {{square e5}} under control, and prepare ...N{{square f6}}.",
       "White offers the central trade that defines the Open Sicilian.",
-      "Take immediately. In Sicilian positions you do not let White keep both central pawns for free.",
+      "Always take. Trading the c-pawn for White's {{pawn d4 full}} is one of Black's main Sicilian jobs.",
       "White recaptures with development and central presence.",
-      "Develop and hit {{square e4}}, making White defend before they start a wing attack.",
+      "Develop and hit {{square e4}}. A big Sicilian theme is making White solve this pawn before they get a free attack.",
       "White covers {{square e4}} and adds another piece to the center.",
-      "Develop and add more pressure on {{square d4}} and {{square e5}} while keeping your setup flexible.",
+      "Develop and keep the position flexible. In many e6 Sicilians, a clean ...{{square d5}} break is the sign Black has solved the opening.",
       "White starts a standard English Attack shell.",
-      "Keep the center solid and open the dark bishop.",
+      "Keep the center solid, open the dark bishop, and prepare that later ...{{square d5}} break.",
       "White reinforces {{square e4}} and hints at {{square g4}} or long castling.",
       "Develop calmly. Black usually wants king safety before reacting to flank play.",
-      "White coordinates the queenside-castling plan.",
-      "Castle and finish the basic Sicilian setup."
+      "White coordinates the queenside castling plan.",
+      "Castle and finish the basic Sicilian setup. After this, Black can answer wing play with central breaks or c-file pressure."
     ]
   },
 
   {
     id: "sicilian-open-scheveningen",
     name: "Open Sicilian: Scheveningen structure",
-    description: "Open Sicilian with ...e6 and ...d6, flexible and solid but watch kingside attacks.",
+    description: "Open Sicilian with ...e6 and ...d6. The point is not just to sit solidly, but to hold the center together until ...d5 becomes possible.",
     moves: ["e4", "c5", "Nf3", "d6", "d4", "cxd4", "Nxd4", "Nf6", "Nc3", "e6", "Be3", "a6", "f3", "Be7", "Qd2", "O-O"],
     explanations: [
       "White takes space and sets up fast development.",
@@ -64,13 +64,13 @@ export const sicilianDefenseLines = withOpeningFeedback([
       "White recaptures with development.",
       "Pressure {{square e4}} and develop.",
       "Defend {{square e4}} and increase central control.",
-      "Build the Scheveningen pawn shape and open the dark bishop.",
+      "Build the Scheveningen shell. The structure is compact, but the long term goal is still active play with ...{{square d5}} when White allows it.",
       "Natural development and a common English Attack setup.",
-      "Useful luft and stops N{{square b5}} while preparing queenside play.",
+      "Useful luft, stops N{{square b5}}, and supports queenside play without committing the center too early.",
       "Reinforce {{square e4}} and support {{square g4}} in some lines.",
-      "Develop and prepare to castle.",
-      "Support long castle and coordinate pressure on the kingside.",
-      "Castle and connect rooks."
+      "Develop and prepare to castle. Black does not need to race White before the king is safe.",
+      "Support long castling and coordinate pressure on the kingside.",
+      "Castle and connect rooks. Once development is done, Black can look for ...{{square d5}} or c-file play depending on White's setup."
     ]
   },
 
@@ -252,7 +252,7 @@ export const sicilianDefenseLines = withOpeningFeedback([
   {
     id: "sicilian-grand-prix-basic",
     name: "Vs Grand Prix: 2.Nc3 and 3.f4",
-    description: "Grand Prix Attack: meet the wing setup with calm development, central control, and later counterplay against White's overextension.",
+    description: "Grand Prix Attack: meet the wing setup with calm development, central control, and the same ...e6, ...Ne7, and ...d5 Sicilian ideas whenever White gives you time.",
     moves: ["e4", "c5", "Nc3", "Nc6", "f4", "g6", "Nf3", "Bg7", "Bb5", "Nd4", "O-O", "e6", "d3", "Ne7", "Qe1", "O-O"],
     explanations: [
       "White takes space and prepares quick kingside play.",
@@ -260,17 +260,17 @@ export const sicilianDefenseLines = withOpeningFeedback([
       "White avoids Open Sicilian structures and keeps the center more closed.",
       "Develop and control key squares, especially {{square d4}} and {{square e5}}.",
       "Grand Prix. White wants a fast wing attack before Black is fully coordinated.",
-      "Build the bishop house and keep the kingside solid.",
+      "Build the bishop house first. In these anti-Sicilians, Black usually does better by staying solid than by panicking.",
       "White develops and keeps the attack flexible.",
       "Complete the fianchetto and keep long-range control of the center.",
-      "White develops actively, but the bishop can help Black gain time with central piece play.",
-      "Jump into the center and make White react. In anti-Sicilians, Black often improves by taking central squares instead of panicking on the wing.",
+      "White develops actively, but the bishop also gives Black a concrete target.",
+      "Jump into the center and make White react. Against wing attacks, taking central squares is usually the calmer answer.",
       "White castles and keeps attacking ideas alive.",
-      "Solidify the dark squares and keep ...{{square d5}} in reserve.",
+      "Solidify the dark squares and keep ...{{square d5}} in reserve. This is the same e6 Sicilian idea from the transcript.",
       "White supports the center and prepares the usual attacking maneuvers.",
-      "The knight is flexible on {{square e7}} here, helping with king safety and later ...{{square d5}} ideas.",
-      "White often wants Q{{square h4}} or Q{{square h4}}-{{square f2}} type pressure.",
-      "Castle and finish development before deciding how to strike back."
+      "The knight is flexible on {{square e7}} here. It helps cover {{square d5}}, keeps the bishop free, and prepares a later central break.",
+      "White often wants Q{{square h4}} or Q{{square f2}} pressure.",
+      "Castle and finish development before deciding how to strike back. Many Grand Prix attacks lose force if Black gets this setup cleanly."
     ]
   },
 
@@ -298,8 +298,6 @@ export const sicilianDefenseLines = withOpeningFeedback([
       "Complete fianchetto and pressure the diagonal."
     ]
   },
-
-
 
   {
     id: "sicilian-accelerated-dragon-d5-break",
@@ -334,21 +332,21 @@ export const sicilianDefenseLines = withOpeningFeedback([
     category: "Anti-Sicilian",
     id: "sicilian-bowdler-e6-d5-punish",
     name: "Vs Bowdler: ...e6 and ...d5 with tempo",
-    description: "Against 2.Bc4, block the bishop, prepare ...d5, and make that early bishop prove it belongs on c4.",
+    description: "Against 2.Bc4, shut down the usual {{square f7}} ideas with ...e6, then hit back with ...d5 and make that early bishop prove it belongs on c4.",
     moves: ["e4", "c5", "Bc4", "e6", "Nf3", "a6", "O-O", "Nf6", "Nc3", "d5", "exd5", "exd5", "Bb3", "Be7"],
     explanations: [
       "White takes space and keeps options open.",
       "Sicilian response, immediately contesting {{square d4}} and aiming for imbalance.",
-      "Bowdler Attack. White develops as if Black had played ...{{square e5}}, but the bishop can become a target once the center opens.",
-      "Block the bishop's diagonal right away and prepare a central strike with ...{{square d5}}.",
+      "Bowdler Attack. White develops as if Black had played ...{{square e5}}, but the bishop is much easier to question in Sicilian structures.",
+      "This is the clean answer from the transcript. Block the diagonal to {{square f7}} right away and prepare a central strike with ...{{square d5}}.",
       "White develops and prepares to castle.",
       "A useful Sicilian move that supports ...{{square b5}} later and gives Black queenside space.",
       "White castles before the center is clarified.",
       "Develop and pressure {{square e4}} while keeping ...{{square d5}} ready.",
-      "White develops naturally and keeps the {{bishop c4 full}}.",
-      "Strike in the center with tempo. The {{bishop c4 full}} now has to justify its early development.",
-      "White usually takes because leaving Black's {{pawn d5 full}} gives Black too much space.",
-      "Recapture toward the center, open lines, and keep the {{bishop c4 full}} under pressure.",
+      "White develops naturally and keeps the {{bishop c4 full}} in place.",
+      "Strike in the center with tempo. The whole point is to make the early bishop justify itself.",
+      "White usually takes because leaving Black's {{pawn d5 full}} would give Black too much space.",
+      "Recapture toward the center, open lines, and keep the bishop under pressure.",
       "The bishop retreats. That is the practical point of the whole idea.",
       "Finish development and enjoy the cleaner center and easier piece play."
     ]
@@ -366,15 +364,15 @@ export const sicilianDefenseLines = withOpeningFeedback([
       "Bowdler setup. The bishop looks active now, but it can become a target when the center opens.",
       "Start the bishop house. The fianchetto gives Black long-range control before any pawn break happens.",
       "White develops and prepares to castle.",
-      "Put the {{bishop g7 full}} before arguing about the center.",
+      "Put the {{bishop g7 full}} in place before arguing about the center.",
       "White castles and hopes the setup stays quiet.",
       "Develop the queenside knight first. If White ever trades it, the b-pawn recaptures and the rook gets a useful file later.",
       "White supports {{square e4}} and keeps the center closed for the moment.",
       "Because the c-pawn is still on {{square c5}}, Black uses the neighboring e-pawn to prepare the central break.",
       "White develops and adds another attacker to {{square d5}}.",
-      "The knight belongs on {{square e7}} here. It keeps the c-pawn flexible and adds one more piece to the {{square d5}} battle.",
+      "The knight belongs on {{square e7}} here. It keeps the c-pawn flexible and helps Black win the count around {{square d5}}.",
       "A useful rook move. White steps off tactics and hints at {{square e5}} ideas.",
-      "Strike now. White attacks {{square d5}} three times, but Black can match that count and open the center anyway.",
+      "Strike now. This is the recurring Sicilian payoff from the transcript: once the count works, open the center and challenge the bishop.",
       "White usually takes to avoid giving Black a free space advantage.",
       "Recapture toward the center and keep more space than White.",
       "The bishop retreats. That is the practical point of the whole setup.",
@@ -1226,6 +1224,32 @@ export const sicilianDefenseLines = withOpeningFeedback([
   ]
 },
 
+
+  {
+    category: "Closed Sicilian",
+    id: "sicilian-closed-bc4-e6-d5-break",
+    name: "Closed Sicilian: Bc4 met by ...e6 and ...d5",
+    description: "Against the early bishop setup, shut down the usual {{square f7}} ideas with ...e6, finish development, and use the familiar ...d5 break when the count works.",
+    moves: ["e4", "c5", "Nc3", "Nc6", "Bc4", "e6", "Nf3", "Be7", "O-O", "d6", "d3", "Nf6", "Re1", "O-O", "a3", "d5"],
+    explanations: [
+      "White avoids {{square d4}} and develops the bishop aggressively.",
+      "Sicilian. Keep {{square d4}} under control and do not rush your own center before development.",
+      "Closed move order. White keeps the center compact and hopes the bishop stays active.",
+      "Develop and contest {{square d4}} and {{square e5}}.",
+      "Early bishop setup. White is still hinting at the usual pressure toward {{square f7}}.",
+      "This is the key transcript rule. When White puts the bishop on {{square c4}}, ...{{square e6}} is the clean answer because it shuts the diagonal and prepares ...{{square d5}}.",
+      "White develops and keeps options open.",
+      "Develop naturally. Black does not need anything exotic here.",
+      "White castles and hopes to keep easy kingside play.",
+      "Support the center and prepare normal piece development.",
+      "White keeps the center closed for the moment.",
+      "Develop and add one more piece to the {{square d5}} battle.",
+      "Useful rook move. White waits to see how Black will challenge the center.",
+      "Castle first. Finish king safety before opening the middle.",
+      "A quiet move, but White still has not challenged Black's central plan.",
+      "Strike with ...{{square d5}}. This is the recurring Sicilian payoff: once the count works, open the center and make the early bishop justify itself."
+    ]
+  },
   {
     id: "sicilian-closed-mainline-g3-g6",
     name: "Closed Sicilian: g3 setup vs ...g6",
@@ -1261,18 +1285,18 @@ export const sicilianDefenseLines = withOpeningFeedback([
       "Sicilian structure. Black fights for {{square d4}} and keeps an imbalanced game from move one.",
       "Closed move order. White delays {{square d4}} and aims for a slower kingside build.",
       "Develop and control the key central squares.",
-      "White prepares a fianchetto and keeps the center closed for the moment.",
+      "White prepares a fianchetto and often wants {{square f4}} later.",
       "Because the c-pawn is still on {{square c5}}, Black uses the neighboring e-pawn to prepare a later central strike.",
       "The {{bishop g2 full}} adds one more attacker to {{square d5}} and supports White's usual Closed Sicilian plans.",
-      "The knight belongs on {{square e7}} here. It keeps the c-pawn flexible and adds another defender and attacker around {{square d5}}.",
+      "The knight belongs on {{square e7}} here. It keeps the c-pawn flexible and helps Black win the count around {{square d5}}.",
       "White supports {{square e4}} and finishes the basic shell.",
-      "Now Black can strike. White attacks {{square d5}} three times, but Black can match that count and challenge the center anyway.",
+      "Now Black can strike. This is the same beginner-friendly Sicilian plan from the transcript: once the count works, break in the center.",
       "White usually takes to avoid giving Black a free space advantage.",
       "Recapture toward the center and keep more central space than White.",
       "White develops and prepares to castle.",
       "Develop actively and keep pressure on {{square c2}}, {{square d5}}, and the dark squares.",
       "Castle and get the king safe before the middlegame plans start.",
-      "The bishop drops back to a useful square and keeps the whole position coordinated."
+      "The bishop drops back to a useful square and keeps the whole position coordinated. Black has clear, repeatable plans from here."
     ]
   },
 
@@ -1434,28 +1458,47 @@ export const sicilianDefenseLines = withOpeningFeedback([
   {
     id: "sicilian-qxd4-line-early-queen",
     name: "Sideline: early Qxd4 and ...Nc6 hit",
-    description: "White recaptures with the queen, Black develops with tempo and equalizes quickly.",
+    description: "White recaptures with the queen, Black develops with tempo, and White often ends up admitting the queen came out too early.",
     moves: ["e4", "c5", "Nf3", "d6", "d4", "cxd4", "Qxd4", "Nc6", "Bb5", "Bd7", "Bxc6", "Bxc6", "Nc3", "Nf6", "Bg5", "e6"],
     explanations: [
       "White takes space.",
-      "Sicilian counterplay.",
+      "Sicilian counterplay. Fight for {{square d4}} without surrendering your own central pawn.",
       "Develop and prepare {{square d4}}.",
-      "Solid support of the center.",
-      "Open the center.",
-      "Exchange and open lines.",
-      "Early queen recapture, but it can be hit with tempo.",
-      "Develop and attack the queen immediately.",
-      "Pin and keep pressure while avoiding queen harassment.",
-      "Break the pin and develop.",
-      "Trade to reduce black development and simplify.",
-      "Recapture, maintain structure and development.",
-      "Develop and keep the queen supported on {{square d4}} if needed.",
-      "Develop and hit {{square e4}}, also prepares ...{{square e6}}.",
-      "Develop and pin the knight, aiming for pressure on {{square d8}}/{{square a5}} lines.",
-      "Solidify the center and open the dark bishop."
+      "Solid support of the center and a flexible Sicilian move order.",
+      "White opens the center right away.",
+      "Exchange and open lines on Black's terms.",
+      "This is the early queen recapture the transcript warns about. White gets the pawn back, but the queen becomes the only developed piece on the board.",
+      "Develop with tempo and hit the queen immediately. This is why Qx{{square d4}} is usually the wrong practical choice.",
+      "White tries to reduce the harassment with a pin.",
+      "Break the pin and keep developing. Black is happy any time White spends more moves justifying the early queen.",
+      "White simplifies to reduce Black's lead in development.",
+      "Recapture, keep the bishop pair, and continue normal development.",
+      "White finally brings out another piece and supports the queen.",
+      "Develop and hit {{square e4}}. The same Sicilian theme returns again: make White solve real problems before they start attacking.",
+      "White develops and keeps a pin.",
+      "Solidify the center, open the dark bishop, and leave White with a queen that never really improved the position."
     ]
   },
 
+
+  {
+    id: "sicilian-open-bd3-knight-hanging",
+    name: "Open Sicilian: punish 5.Bd3 tunnel vision",
+    description: "A common practical mistake. White defends e4 with the bishop and forgets the knight on d4 is loose.",
+    moves: ["e4", "c5", "Nf3", "Nc6", "d4", "cxd4", "Nxd4", "Nf6", "Bd3", "Nxd4"],
+    explanations: [
+      "White claims the center and opens lines.",
+      "Sicilian. Fight for {{square d4}} from the side and keep the game imbalanced.",
+      "Develop and prepare {{square d4}}.",
+      "Develop and keep pressure on {{square d4}}.",
+      "White opens the center.",
+      "Trade the c-pawn for White's {{pawn d4 full}} and reach an open Sicilian structure.",
+      "White recaptures with development and central presence.",
+      "Hit {{square e4}} right away. One big Sicilian theme is making White solve this pawn before anything else.",
+      "This is the tunnel-vision mistake from the transcript. White sees the e-pawn problem and forgets the {{knight d4 full}} is still hanging.",
+      "Take the loose knight. Practical Sicilian lesson: when White rushes to patch one weakness, check what they just stopped defending."
+    ]
+  },
   {
     id: "sicilian-bg5-h6-bh4-nxe4-core",
     name: "Dragon: Bg5 and ...Nxe4 tactic core",

@@ -294,6 +294,7 @@ class OpeningTrainer extends Component {
     this._confettiTimer = null;
     this._streakToastTimer = null;
     this._shareStatusTimer = null;
+    this._transpositionNoticeTimer = null;
 
     const progress = loadProgress();
     const learnProgress = loadLearnProgress();
@@ -340,6 +341,7 @@ class OpeningTrainer extends Component {
       settingsOpen: false,
       lineMenuOpen: false,
       settings: settings,
+      transpositionNotice: null,
       customLines: customAll,
       customModalOpen: false,
       customName: "",
@@ -652,6 +654,7 @@ componentWillUnmount() {
     if (this._confettiTimer) clearTimeout(this._confettiTimer);
     if (this._streakToastTimer) clearTimeout(this._streakToastTimer);
     if (this._shareStatusTimer) clearTimeout(this._shareStatusTimer);
+    if (this._transpositionNoticeTimer) clearTimeout(this._transpositionNoticeTimer);
     window.removeEventListener("mousedown", this.onWindowClick);
     window.removeEventListener("keydown", this.onKeyDown);
     window.removeEventListener("resize", this._onResizeMobileLayout);
@@ -816,6 +819,25 @@ setShareStatus = (message, isError) => {
   this._shareStatusTimer = setTimeout(() => {
     this.setState({ shareStatus: "", shareStatusError: false });
   }, 2400);
+};
+
+clearTranspositionNotice = () => {
+  if (this._transpositionNoticeTimer) clearTimeout(this._transpositionNoticeTimer);
+  this._transpositionNoticeTimer = null;
+  this.setState({ transpositionNotice: null });
+};
+
+showTranspositionNotice = (notice) => {
+  if (this._transpositionNoticeTimer) clearTimeout(this._transpositionNoticeTimer);
+  this.setState({ transpositionNotice: notice || null });
+  if (!notice) {
+    this._transpositionNoticeTimer = null;
+    return;
+  }
+  this._transpositionNoticeTimer = setTimeout(() => {
+    this._transpositionNoticeTimer = null;
+    this.setState({ transpositionNotice: null });
+  }, 3200);
 };
 
 copyTextToClipboard = async (text, successMessage) => {
@@ -1113,6 +1135,14 @@ saveCustomModal = () => {
     const next = { ...(this.state.settings || {}) };
     next[key] = value;
     saveSettings(next);
+
+    if (key === "allowTranspositions" && !value) {
+      if (this._transpositionNoticeTimer) clearTimeout(this._transpositionNoticeTimer);
+      this._transpositionNoticeTimer = null;
+      this.setState({ settings: next, transpositionNotice: null });
+      return;
+    }
+
     this.setState({ settings: next });
   };
 
@@ -1353,7 +1383,8 @@ saveCustomModal = () => {
         modePanelVisible: true,
         helpUsed: false,
         learnRewardPending: false,
-        learnNextReady: false
+        learnNextReady: false,
+        transpositionNotice: null
       }),
       () => {
         this._countedSeenForRun = false;
@@ -1383,7 +1414,8 @@ saveCustomModal = () => {
         userHasPlayedThisLine: false,
         modePanelVisible: true,
         helpUsed: false,
-        drillRunDead: false
+        drillRunDead: false,
+        transpositionNotice: null
       },
       () => {
         const mode = this.state.gameMode || "learn";
@@ -1470,7 +1502,8 @@ nextLine = () => {
         helpUsed: false,
         learnRewardPending: false,
         learnNextReady: false,
-        drillRunDead: false
+        drillRunDead: false,
+        transpositionNotice: null
       },
       () => {
         this.resetLine(false);
@@ -1525,7 +1558,8 @@ nextLine = () => {
         helpUsed: false,
         learnRewardPending: false,
         learnNextReady: false,
-        drillRunDead: false
+        drillRunDead: false,
+        transpositionNotice: null
       },
       () => {
         this.resetLine(false);
@@ -1590,7 +1624,8 @@ if (!nextId) nextId = nextLines[0] ? nextLines[0].id : "";
         userHasPlayedThisLine: false,
         modePanelVisible: true,
         helpUsed: false,
-        drillRunDead: false
+        drillRunDead: false,
+        transpositionNotice: null
       },
       () => {
         this.resetLine(false);
@@ -1638,7 +1673,8 @@ if (!nextId) nextId = nextLines[0] ? nextLines[0].id : "";
         userHasPlayedThisLine: false,
         modePanelVisible: true,
         helpUsed: false,
-        drillRunDead: false
+        drillRunDead: false,
+        transpositionNotice: null
       },
       () => {
         this.resetLine(false);
@@ -2026,7 +2062,8 @@ onCompletedLine = () => {
     const isCapture = flags.includes("c") || flags.includes("e");
 
     if (playedSAN !== expected) {
-      const transpositionMatch = this.getTranspositionMatchForFen(this.game.fen(), this.state.stepIndex + 1);
+      const allowTranspositions = !!(this.state.settings && this.state.settings.allowTranspositions);
+      const transpositionMatch = allowTranspositions ? this.getTranspositionMatchForFen(this.game.fen(), this.state.stepIndex + 1) : null;
 
       if (transpositionMatch) {
         const matchedLine = this.getLines().find((entry) => entry && entry.id === transpositionMatch.lineId) || line;
@@ -2039,6 +2076,15 @@ onCompletedLine = () => {
           isCorrect: true
         });
         const nextLinePicker = this.state.linePicker === "random" ? "random" : transpositionMatch.lineId;
+        const previousLineId = line && line.id ? String(line.id) : "";
+        const nextLineId = transpositionMatch.lineId ? String(transpositionMatch.lineId) : "";
+        const nextLineNumber = nextLineId ? getLineNumberForLines(this.state.openingKey, this.getLines(), nextLineId) : null;
+        const showLineNotice = previousLineId && nextLineId && previousLineId !== nextLineId;
+        const transpositionNotice = showLineNotice
+          ? {
+              text: `You transposed into ${nextLineNumber ? `line #${nextLineNumber}` : "another line"}.`
+            }
+          : null;
 
         this.setState(
           {
@@ -2059,9 +2105,15 @@ onCompletedLine = () => {
             legalTargets: [],
             lastMove: { from: sourceSquare, to: targetSquare },
             userHasPlayedThisLine: true,
-            modePanelVisible: false
+            modePanelVisible: false,
+            transpositionNotice: transpositionNotice
           },
           () => {
+            if (showLineNotice) {
+              this.showTranspositionNotice(transpositionNotice);
+            } else if (this.state.transpositionNotice) {
+              this.clearTranspositionNotice();
+            }
             this.playSfx(isCapture ? "capture" : "moveSelf");
             this.playAutoMovesIfNeeded();
           }
@@ -3328,13 +3380,28 @@ renderCoachBubble = (line) => {
   const text = unlocked ? this.stripMovePrefix(raw) : raw;
 
   return (
-    <div className="ot-bubble">
-      <div className="ot-bubble-row">
-        {this.renderCoachAvatar(mode)}
-        <div className="ot-coach-copy">
-          <div className="ot-coach-text">{this.renderExplanationTokens(text)}</div>
+    <>
+      {this.renderTranspositionNotice()}
+      <div className="ot-bubble">
+        <div className="ot-bubble-row">
+          {this.renderCoachAvatar(mode)}
+          <div className="ot-coach-copy">
+            <div className="ot-coach-text">{this.renderExplanationTokens(text)}</div>
+          </div>
         </div>
       </div>
+    </>
+  );
+};
+
+renderTranspositionNotice = () => {
+  const notice = this.state.transpositionNotice;
+  if (!notice || !notice.text) return null;
+
+  return (
+    <div className="ot-transposition-notice" role="status" aria-live="polite">
+      <span className="ot-transposition-notice-label">Transposed</span>
+      <span className="ot-transposition-notice-text">{notice.text}</span>
     </div>
   );
 };
@@ -3404,7 +3471,7 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
               </div>
             </div>
           ) : null}
-        
+
       {!this.state.isMobile && this.state.mobileHeaderMenu ? (
         <div
           className="ot-desktop-pill-menu"
@@ -3511,6 +3578,8 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
 
 </div>
       </div>
+
+      {this.renderTranspositionNotice()}
 
       <div className="ot-bubble">
         <div className="ot-bubble-row">
@@ -4762,6 +4831,15 @@ render() {
                     <span>Play Sounds</span>
                   </label>
 
+                        <label className="ot-settings-row">
+                          <input
+                            type="checkbox"
+                            checked={!!(this.state.settings && this.state.settings.allowTranspositions)}
+                            onChange={(e) => this.setSetting("allowTranspositions", !!e.target.checked)}
+                          />
+                          <span>Transpose lines</span>
+                        </label>
+
                   <div className="ot-settings-title" style={{ marginTop: "12px" }}>Board Theme</div>
 
                   <label className="ot-settings-row">
@@ -4933,6 +5011,15 @@ render() {
                             onChange={(e) => this.setSetting("playSounds", !!e.target.checked)}
                           />
                           <span>Play Sounds</span>
+                        </label>
+
+                        <label className="ot-settings-row">
+                          <input
+                            type="checkbox"
+                            checked={!!(this.state.settings && this.state.settings.allowTranspositions)}
+                            onChange={(e) => this.setSetting("allowTranspositions", !!e.target.checked)}
+                          />
+                          <span>Transpose lines</span>
                         </label>
 
                         <div className="ot-settings-title" style={{ marginTop: "12px" }}>Board Theme</div>

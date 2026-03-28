@@ -74,6 +74,7 @@ export function loadSettings(DEFAULT_THEME) {
   const defaults = {
     showConfetti: true,
     playSounds: true,
+    allowTranspositions: false,
     boardTheme: DEFAULT_THEME,
     pieceTheme: "default",
     coachTheme: "default"
@@ -87,6 +88,7 @@ export function loadSettings(DEFAULT_THEME) {
     return {
       showConfetti: parsed.showConfetti !== false,
       playSounds: parsed.playSounds !== false,
+      allowTranspositions: parsed.allowTranspositions === true,
       boardTheme: parsed.boardTheme || DEFAULT_THEME,
       pieceTheme: parsed.pieceTheme || "default",
       coachTheme: parsed.coachTheme || "default"

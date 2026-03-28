@@ -964,6 +964,33 @@
   height: 0;
 }
 
+.ot-transposition-notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 10px 0;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(126, 196, 255, 0.22);
+  background: rgba(126, 196, 255, 0.08);
+  color: #d7ecff;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.ot-transposition-notice-label {
+  flex: 0 0 auto;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #9fd2ff;
+}
+
+.ot-transposition-notice-text {
+  min-width: 0;
+  color: #d7ecff;
+}
+
 .ot-inline-token {
   display: inline-flex;
   align-items: center;
