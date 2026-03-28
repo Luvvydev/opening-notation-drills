@@ -949,7 +949,7 @@
   min-width: 0;
   min-height: 0;
   font-size: 14px;
-  line-height: 1.45;
+  line-height: 1.56;
   color: #e6eef8;
   overflow-y: auto;
   overflow-x: hidden;
@@ -965,40 +965,105 @@
 }
 
 .ot-inline-token {
-  display: inline;
-  padding: 0 2px;
-  margin: 0;
-  border: 0;
-  border-radius: 6px;
-  background: transparent;
-  color: #a9ddff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: baseline;
+  margin: 0 3px 0 1px;
+  padding: 2px 8px;
+  min-height: 24px;
+  border: 1px solid rgba(var(--ot-accent-rgb, 152, 103, 255), 0.34);
+  border-radius: 8px;
+  background: linear-gradient(
+    180deg,
+    rgba(var(--ot-accent-rgb, 152, 103, 255), 0.18),
+    rgba(var(--ot-accent-rgb, 152, 103, 255), 0.10)
+  );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 1px 2px rgba(0, 0, 0, 0.16);
+  color: #f4f7fc;
   cursor: pointer;
   font: inherit;
-  line-height: inherit;
-  text-decoration: underline dotted rgba(169, 221, 255, 0.55);
-  text-underline-offset: 2px;
+  font-weight: 900;
+  line-height: 1.15;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    background 120ms ease,
+    border-color 120ms ease,
+    box-shadow 120ms ease,
+    transform 120ms ease,
+    opacity 120ms ease;
 }
 
 .ot-inline-token:hover {
-  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(var(--ot-accent-rgb, 152, 103, 255), 0.52);
+  background: linear-gradient(
+    180deg,
+    rgba(var(--ot-accent-rgb, 152, 103, 255), 0.24),
+    rgba(var(--ot-accent-rgb, 152, 103, 255), 0.14)
+  );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 4px 12px rgba(0, 0, 0, 0.18);
+  transform: translateY(-1px);
+}
+
+.ot-inline-token:active {
+  transform: translateY(0);
 }
 
 .ot-inline-token:focus-visible {
-  outline: 2px solid rgba(169, 221, 255, 0.8);
-  outline-offset: 1px;
+  outline: 2px solid rgba(var(--ot-accent-rgb, 152, 103, 255), 0.72);
+  outline-offset: 2px;
 }
 
 .ot-inline-token-piece {
-  color: #d6c1ff;
-  text-decoration-color: rgba(214, 193, 255, 0.55);
+  border-color: rgba(214, 193, 255, 0.28);
+  background: linear-gradient(
+    180deg,
+    rgba(214, 193, 255, 0.16),
+    rgba(214, 193, 255, 0.08)
+  );
+  color: #f3ebff;
 }
 
 .ot-inline-token-piece:hover {
-  background: rgba(214, 193, 255, 0.08);
+  border-color: rgba(214, 193, 255, 0.42);
+  background: linear-gradient(
+    180deg,
+    rgba(214, 193, 255, 0.22),
+    rgba(214, 193, 255, 0.12)
+  );
 }
 
 .ot-inline-token.is-active {
-  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(var(--ot-accent-rgb, 152, 103, 255), 0.62);
+  background: linear-gradient(
+    180deg,
+    rgba(var(--ot-accent-rgb, 152, 103, 255), 0.28),
+    rgba(var(--ot-accent-rgb, 152, 103, 255), 0.18)
+  );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 0 0 1px rgba(var(--ot-accent-rgb, 152, 103, 255), 0.18),
+    0 0 0 4px rgba(var(--ot-accent-rgb, 152, 103, 255), 0.10);
+}
+
+@media (max-width: 640px) {
+  .ot-inline-token {
+    margin: 1px 3px 1px 1px;
+    padding: 3px 8px;
+    min-height: 26px;
+    border-radius: 9px;
+    color: #1f1633;
+  }
+
+  .ot-inline-token-piece {
+    color: #24163d;
+  }
 }
 
 .ot-buddy-image {
