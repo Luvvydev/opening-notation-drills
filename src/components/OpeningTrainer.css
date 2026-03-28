@@ -964,6 +964,43 @@
   height: 0;
 }
 
+.ot-inline-token {
+  display: inline;
+  padding: 0 2px;
+  margin: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #a9ddff;
+  cursor: pointer;
+  font: inherit;
+  line-height: inherit;
+  text-decoration: underline dotted rgba(169, 221, 255, 0.55);
+  text-underline-offset: 2px;
+}
+
+.ot-inline-token:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.ot-inline-token:focus-visible {
+  outline: 2px solid rgba(169, 221, 255, 0.8);
+  outline-offset: 1px;
+}
+
+.ot-inline-token-piece {
+  color: #d6c1ff;
+  text-decoration-color: rgba(214, 193, 255, 0.55);
+}
+
+.ot-inline-token-piece:hover {
+  background: rgba(214, 193, 255, 0.08);
+}
+
+.ot-inline-token.is-active {
+  background: rgba(255, 255, 255, 0.08);
+}
+
 .ot-buddy-image {
   padding: 0;
   overflow: hidden;

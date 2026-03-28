@@ -8,14 +8,14 @@ export const vantKruijsOpeningLines = withOpeningFeedback([
     description: "Black ignores the cosmetic queenside pressure, develops cleanly, and reaches the ideal anti-system central break with ...e5.",
     moves: ["e3", "d5", "c3", "Nf6", "d4", "c5", "Qb3", "Nc6", "Nf3", "e6", "Be2", "Bd6", "O-O", "O-O", "Nbd2", "e5"],
     explanations: [
-      "White starts with a flexible move, but it does not contest the center yet.",
-      "Let's learn the Van't Kruij! We start with d5",
-      "White prepares d4, but this is still a passive version of a queen pawn shell.",
-      "Black develops naturally, controls e4, and keeps both central breaks available.",
+      "White starts with pawn to {{square e3}}, a flexible move that does not fight for the center yet.",
+      "Let's learn the Van't Kruijs Opening! When White opens with {{square e3}}, answer with pawn to {{square d5}} and claim the center.",
+      "White prepares {{square d4}}, but this is still a passive version of a queen pawn shell.",
+      "Black develops naturally, controls {{square e4}}, and keeps both central breaks available.",
       "White finally builds a center, but it is not stable yet.",
       "Black challenges that center at once. Against slow system play, this is the clean practical reaction.",
-      "White points at b7 and tries to create side pressure before finishing development.",
-      "Black keeps developing and refuses to get distracted by ghost pressure on b7.",
+      "White points at {{square b7}} and tries to create side pressure before finishing development.",
+      "Black keeps developing and refuses to get distracted by ghost pressure on {{square b7}}.",
       "White develops toward castling and keeps the setup compact.",
       "Black supports the center and keeps the light-squared bishop flexible until the structure is clearer.",
       "White develops, but Black is still the side setting the terms of the position.",
@@ -23,7 +23,7 @@ export const vantKruijsOpeningLines = withOpeningFeedback([
       "White castles, but the setup is still short on active counterplay.",
       "Black castles too and removes tactical noise before striking in the center.",
       "White completes development, but the position has already given Black too much freedom.",
-      "Black plays ...e5 at the right moment and reaches the ideal version of this anti-system structure."
+      "Black plays ...{{square e5}} at the right moment and reaches the ideal version of this anti-system structure."
     ]
   },
   {
@@ -35,8 +35,8 @@ export const vantKruijsOpeningLines = withOpeningFeedback([
     explanations: [
       "White begins with the same restrained setup and hopes Black will drift.",
       "Black takes central space immediately.",
-      "White supports d4, but the position is still quiet and slightly passive.",
-      "Black develops and keeps both ...c5 and ...e5 available.",
+      "White supports {{square d4}}, but the position is still quiet and slightly passive.",
+      "Black develops and keeps both ...{{square c5}} and ...{{square e5}} available.",
       "White occupies the center.",
       "Black challenges it before White can settle into a free setup.",
       "White repeats the early queen move, trying to distract Black from central play.",
@@ -48,7 +48,7 @@ export const vantKruijsOpeningLines = withOpeningFeedback([
       "White castles and hopes the structure will hold.",
       "Black castles and completes the basic setup safely.",
       "White brings out the last minor piece but still has not challenged Black's plan.",
-      "Black finally breaks with ...e5 at the right moment.",
+      "Black finally breaks with ...{{square e5}} at the right moment.",
       "White captures to reduce the pressure in the center.",
       "Black recaptures with the knight, improves piece activity, and keeps control over the key central squares."
     ]
@@ -62,14 +62,14 @@ export const vantKruijsOpeningLines = withOpeningFeedback([
     explanations: [
       "White starts quietly and hopes to steer the game into a familiar structure.",
       "Black takes the center at once.",
-      "White supports d4, but the setup is still slower than a normal queen pawn opening.",
+      "White supports {{square d4}}, but the setup is still slower than a normal queen pawn opening.",
       "Black develops and prepares to challenge the center with pieces and pawns.",
       "White finally builds the center.",
-      "Black hits immediately with ...c5 and refuses to let White sit there uncontested.",
-      "White uses Qb3 again, aiming at b7 and trying to distract Black from the middle.",
+      "Black hits immediately with ...{{square c5}} and refuses to let White sit there uncontested.",
+      "White uses Q{{square b3}} again, aiming at {{square b7}} and trying to distract Black from the middle.",
       "Black develops and keeps ignoring side pressure.",
-      "White points the bishop toward the kingside and supports e4 ideas.",
-      "Black breaks with ...e5 before White is ready. That asks the right question immediately.",
+      "White points the bishop toward the kingside and supports {{square e4}} ideas.",
+      "Black breaks with ...{{square e5}} before White is ready. That asks the right question immediately.",
       "White captures because leaving the tension alone would concede central space.",
       "Black recaptures with a piece and improves central control at the same time.",
       "White retreats and admits the center did not hold.",
@@ -87,12 +87,12 @@ export const vantKruijsOpeningLines = withOpeningFeedback([
     explanations: [
       "White starts with the same slow setup.",
       "Black claims central space immediately.",
-      "White prepares d4 in Colle style.",
+      "White prepares {{square d4}} in Colle style.",
       "Black develops and keeps the center under control.",
       "White builds the center.",
-      "Black challenges it right away with ...c5.",
-      "White again places the queen on b3, trying to create side pressure.",
-      "Black develops and keeps the c5 pawn tactically supported.",
+      "Black challenges it right away with ...{{square c5}}.",
+      "White again places the {{queen b3 full}}, trying to create side pressure.",
+      "Black develops and keeps the {{square c5}} pawn tactically supported.",
       "White grabs the pawn, but this costs time and helps Black develop.",
       "Black calmly supports recovery of the pawn and opens lines for the bishop.",
       "White develops, but Black is about to win the pawn back under ideal conditions.",
@@ -100,7 +100,7 @@ export const vantKruijsOpeningLines = withOpeningFeedback([
       "White continues development, but Black's pieces are already more active.",
       "Black castles and reaches safety with no structural damage.",
       "White castles too, but the pawn grab solved none of White's opening problems.",
-      "Black takes more space with ...e5 and claims the better version of the structure."
+      "Black takes more space with ...{{square e5}} and claims the better version of the structure."
     ]
   },
   {
@@ -112,20 +112,20 @@ export const vantKruijsOpeningLines = withOpeningFeedback([
     explanations: [
       "White starts with the same restrained opening move.",
       "Black claims central space immediately.",
-      "White builds toward d4, but there is still no direct challenge.",
+      "White builds toward {{square d4}}, but there is still no direct challenge.",
       "Black develops and keeps the position simple.",
       "White puts a pawn in the center.",
       "Black strikes at it right away. That is the critical practical idea.",
-      "White points at b7 and hopes Black will waste time defending a side target.",
+      "White points at {{square b7}} and hopes Black will waste time defending a side target.",
       "Black supports the center first and keeps the structure intact.",
       "White develops normally.",
       "Black develops and keeps control of the dark squares.",
       "White completes another quiet move.",
       "Black develops actively and stays ahead in central influence.",
-      "White castles and hopes the queen on b3 still matters.",
+      "White castles and hopes the {{queen b3 full}} still matters.",
       "Black castles too and removes most tactical nonsense.",
       "White adds support on the d file.",
-      "Black calmly plays ...Qc7, covers b7, and keeps every important central plan available."
+      "Black calmly plays ...Q{{square c7}}, covers {{square b7}}, and keeps every important central plan available."
     ]
   },
   {
@@ -137,11 +137,11 @@ export const vantKruijsOpeningLines = withOpeningFeedback([
     explanations: [
       "White opens with the same slow structure and hopes to reach a comfortable setup.",
       "Black takes central space immediately.",
-      "White supports d4, but this is still very modest.",
+      "White supports {{square d4}}, but this is still very modest.",
       "Black develops and keeps all the important central breaks available.",
       "White occupies the center, but the structure is not secure yet.",
       "Black challenges the center before White can drift into a free middlegame.",
-      "White places the queen on b3 again, trying to create queenside pressure.",
+      "White places the {{queen b3 full}} again, trying to create queenside pressure.",
       "Black keeps developing and refuses to overreact.",
       "White develops, but there is still no direct threat.",
       "Black supports the center and prepares smooth piece play.",
@@ -150,7 +150,7 @@ export const vantKruijsOpeningLines = withOpeningFeedback([
       "White tries to complete development at last.",
       "Black castles and reaches full safety first.",
       "White keeps shuffling instead of challenging Black directly.",
-      "Black breaks with ...e5 once everything is ready and takes over the game."
+      "Black breaks with ...{{square e5}} once everything is ready and takes over the game."
     ]
   },
   {
@@ -162,11 +162,11 @@ export const vantKruijsOpeningLines = withOpeningFeedback([
     explanations: [
       "White begins with the same low-pressure setup.",
       "Black takes central space immediately.",
-      "White supports d4 and still aims for the same shell.",
+      "White supports {{square d4}} and still aims for the same shell.",
       "Black develops naturally and keeps the center under control.",
       "White builds the center.",
       "Black challenges it before White gets everything for free.",
-      "White repeats the early queen move and points at b7.",
+      "White repeats the early queen move and points at {{square b7}}.",
       "Black develops calmly and refuses to get provoked.",
       "White chooses a slightly different development order.",
       "Black supports the center and prepares full development.",
@@ -175,7 +175,7 @@ export const vantKruijsOpeningLines = withOpeningFeedback([
       "White keeps consolidating rather than testing Black directly.",
       "Black castles and removes tactical noise from the position.",
       "White castles and reaches the same passive shell.",
-      "Black breaks with ...e5 and gets the same good version of the position."
+      "Black breaks with ...{{square e5}} and gets the same good version of the position."
     ]
   },
   {
@@ -187,22 +187,22 @@ export const vantKruijsOpeningLines = withOpeningFeedback([
     explanations: [
       "White begins with the same restrained setup.",
       "Black takes central space at once.",
-      "White prepares d4 in typical system fashion.",
+      "White prepares {{square d4}} in typical system fashion.",
       "Black develops and keeps the center flexible.",
       "White occupies the center.",
-      "Black challenges that center immediately with ...c5.",
-      "White places the queen on b3 again, but this still does not solve White's development issues.",
+      "Black challenges that center immediately with ...{{square c5}}.",
+      "White places the {{queen b3 full}} again, but this still does not solve White's development issues.",
       "Black develops and keeps pressure on the middle of the board.",
       "White develops and keeps the usual shell intact.",
       "Black supports the center and prepares smooth piece play.",
       "White points the bishop toward the kingside and center.",
-      "Black mirrors with active development and keeps the e5 break ready.",
+      "Black mirrors with active development and keeps the {{square e5}} break ready.",
       "White castles and hopes the setup will finally function.",
       "Black castles too and completes the basic setup safely.",
       "White develops the last minor piece, but Black is now ready to challenge the center fully.",
-      "Black breaks with ...e5, the key move in this structure.",
+      "Black breaks with ...{{square e5}}, the key move in this structure.",
       "White grabs more space, but the center is now fixed and gives Black clear targets.",
-      "Black answers with ...c4, gains queenside space, shuts down the bishop, and proves White expanded too late."
+      "Black answers with ...{{square c4}}, gains queenside space, shuts down the bishop, and proves White expanded too late."
     ]
   },
   {
@@ -214,20 +214,20 @@ export const vantKruijsOpeningLines = withOpeningFeedback([
     explanations: [
       "White begins with the same slow first move.",
       "Black takes the center immediately.",
-      "White prepares d4, but still has not challenged Black's development.",
+      "White prepares {{square d4}}, but still has not challenged Black's development.",
       "Black develops and keeps the central breaks ready.",
       "White claims central space.",
       "Black hits the center before White can settle.",
-      "White uses Qb3 again, hoping for pressure on b7.",
+      "White uses Q{{square b3}} again, hoping for pressure on {{square b7}}.",
       "Black develops and ignores the distraction.",
-      "White puts the knight on h3, which is clumsy in this structure.",
+      "White puts the {{knight h3 full}}, which is clumsy in this structure.",
       "Black takes more central space because awkward development should be punished.",
       "White captures to relieve the pressure.",
       "Black recaptures with a knight and keeps the center and piece activity.",
       "White improves the knight, but it still lacks real influence.",
       "Black gains queenside space and makes White's coordination even worse.",
       "White steps back to hold the position together.",
-      "Black expands with ...g5 and starts hunting the misplaced knight directly."
+      "Black expands with ...{{square g5}} and starts hunting the misplaced knight directly."
     ]
   },
   {
@@ -239,12 +239,12 @@ export const vantKruijsOpeningLines = withOpeningFeedback([
     explanations: [
       "White starts with the same slow plan and still does not challenge the center.",
       "Black occupies the center immediately.",
-      "White supports d4 in standard system style.",
-      "Black develops and keeps control over e4.",
+      "White supports {{square d4}} in standard system style.",
+      "Black develops and keeps control over {{square e4}}.",
       "White claims central space.",
-      "Black strikes back immediately with ...c5 and asks White to justify the setup.",
-      "White again spends time on Qb3 instead of faster development.",
-      "Black continues naturally and keeps the c5 pressure intact.",
+      "Black strikes back immediately with ...{{square c5}} and asks White to justify the setup.",
+      "White again spends time on Q{{square b3}} instead of faster development.",
+      "Black continues naturally and keeps the {{square c5}} pressure intact.",
       "White develops quietly, but there is still no threat to solve.",
       "Black supports the center and prepares to complete development.",
       "White finally brings out the king knight.",
@@ -252,7 +252,7 @@ export const vantKruijsOpeningLines = withOpeningFeedback([
       "White castles and reaches a familiar shell.",
       "Black castles too and completes the safe setup.",
       "White finishes development, but Black has already reached the ideal version of the structure.",
-      "Black plays ...e5 and claims more central space at exactly the right moment."
+      "Black plays ...{{square e5}} and claims more central space at exactly the right moment."
     ]
   },
   {
@@ -264,8 +264,8 @@ export const vantKruijsOpeningLines = withOpeningFeedback([
     explanations: [
       "White begins with the same restrained setup and hopes Black will drift.",
       "Black takes central space immediately.",
-      "White supports d4, but the position is still quiet and slightly passive.",
-      "Black develops and keeps both ...c5 and ...e5 available.",
+      "White supports {{square d4}}, but the position is still quiet and slightly passive.",
+      "Black develops and keeps both ...{{square c5}} and ...{{square e5}} available.",
       "White occupies the center.",
       "Black challenges it before White can settle into a free setup.",
       "White repeats the early queen move, trying to distract Black from central play.",
@@ -277,11 +277,11 @@ export const vantKruijsOpeningLines = withOpeningFeedback([
       "White castles and hopes the structure will hold.",
       "Black castles and completes the basic setup safely.",
       "White brings out the last minor piece but still has not challenged Black's plan.",
-      "Black finally breaks with ...e5 at the right moment.",
+      "Black finally breaks with ...{{square e5}} at the right moment.",
       "White captures to reduce the pressure in the center.",
       "Black recaptures with the knight and keeps the initiative.",
       "White trades one more time, hoping to simplify into something harmless.",
-      "Black recaptures toward the center with the bishop, keeps an active piece on e5, and stays more comfortable."
+      "Black recaptures toward the center with the bishop, keeps an active piece on {{square e5}}, and stays more comfortable."
     ]
   }
 ]);

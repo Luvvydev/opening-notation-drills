@@ -12,27 +12,27 @@ If you keep reaching playable Scandinavian positions but forgetting when to play
 `;
 
 const QA5_INTRO = [
-  "White claims central space and opens lines right away.",
-  "Let's learn the Scandinavian Defense! Black challenges the center immediately instead of letting White build freely with pawn to d5.",
+  "White starts with pawn to {{square e4}} and claims central space.",
+  "Let's learn the Scandinavian Defense! When White plays {{square e4}}, answer with pawn to {{square d5}} and challenge the center immediately.",
   "White accepts the challenge and forces Black into an open Scandinavian structure.",
   "Black recaptures at once because removing White's e-pawn is the whole point of this defense.",
   "White develops with tempo and asks the queen to justify itself.",
-  "Qa5 is the classical retreat, keeping the queen active while often supporting ...c6 and a later retreat to c7 if White starts x-raying the queen."
+  "Q{{square a5}} is the classical retreat, keeping the queen active while often supporting ...{{square c6}} and a later retreat to {{square c7}} if White starts x-raying the queen."
 ];
 
 const D4_NF6 = [
   "White rebuilds the broad center and tries to turn space into initiative.",
-  "Black develops cleanly, keeps e4 and d5 break ideas under control, and often keeps queenside castling in reserve."
+  "Black develops cleanly, keeps {{square e4}} and {{square d5}} break ideas under control, and often keeps queenside castling in reserve."
 ];
 
 const NF3_BF5 = [
   "White develops toward castling and supports the center.",
-  "Black gets the light bishop outside the pawn chain before ...e6, which is one of the biggest positional wins in the Scandinavian."
+  "Black gets the light bishop outside the pawn chain before ...{{square e6}}, which is one of the biggest positional wins in the Scandinavian."
 ];
 
 const BD2_BG4 = [
-  "White develops, but the bishop on d2 often ends up doing defensive work instead of improving the center.",
-  "Black develops with tempo on the d1 diagonal, forcing White to solve concrete coordination problems before the center is really secure."
+  "White develops, but the {{bishop d2 full}} often ends up doing defensive work instead of improving the center.",
+  "Black develops with tempo on the {{square d1}} diagonal, forcing White to solve concrete coordination problems before the center is really secure."
 ];
 
 export const scandinavianDefenseLines = withOpeningFeedback([
@@ -45,15 +45,15 @@ export const scandinavianDefenseLines = withOpeningFeedback([
     explanations: [
       ...QA5_INTRO,
       "White develops the king knight first and keeps options open.",
-      "Black matches development and makes sure White does not get a free e5 push.",
-      "White points at f7 and tries to make the queen move look loose.",
+      "Black matches development and makes sure White does not get a free {{square e5}} push.",
+      "White points at {{square f7}} and tries to make the queen move look loose.",
       "Black develops naturally and adds more pressure to the central dark squares.",
-      "White supports e4 and opens the dark bishop, but the move order is a little slow.",
+      "White supports {{square e4}} and opens the dark bishop, but the move order is a little slow.",
       "Black pins the knight and starts building pressure against White's center and kingside dark squares.",
       "White breaks the pin from the queen side, but the bishop can become awkward here.",
-      "Black puts the queen on h5, eyeing h2 and coordinating with the bishop on g4.",
+      "Black puts the {{queen h5 full}}, eyeing {{square h2}} and coordinating with the {{bishop g4 full}}.",
       "White kicks the setup, but the pawn move also loosens dark squares and gives Black a concrete target.",
-      "Black jumps into d4 at the right moment, creating immediate threats and showing why White's setup cannot just develop on autopilot."
+      "Black jumps into {{square d4}} at the right moment, creating immediate threats and showing why White's setup cannot just develop on autopilot."
     ]
   },
   {
@@ -66,18 +66,18 @@ export const scandinavianDefenseLines = withOpeningFeedback([
       ...QA5_INTRO,
       ...D4_NF6,
       ...NF3_BF5,
-      "White develops, but the bishop on d2 can become a tactical liability on the b file.",
-      "Black supports the center and clears the dark bishop while preparing the queen swing to b6.",
+      "White develops, but the {{bishop d2 full}} can become a tactical liability on the b file.",
+      "Black supports the center and clears the dark bishop while preparing the queen swing to {{square b6}}.",
       "White centralizes the knight, but this often gives Black concrete targets instead of real discomfort.",
-      "Black hits b2 immediately; this queen move is not cosmetic, it is the point of the setup.",
-      "White removes the knight on f6 and tries to damage Black's structure before the queenside pressure becomes serious.",
-      "Black accepts doubled pawns because the g file opens, the bishop pair survives, and the queen still has access to b2.",
-      "White tries to cover the queenside, but c3 is too slow to solve the tactical problems completely.",
-      "Black grabs b2 and drags White into the trap.",
+      "Black hits {{square b2}} immediately; this queen move is not cosmetic, it is the point of the setup.",
+      "White removes the {{knight f6 full}} and tries to damage Black's structure before the queenside pressure becomes serious.",
+      "Black accepts doubled pawns because the g file opens, the bishop pair survives, and the queen still has access to {{square b2}}.",
+      "White tries to cover the queenside, but {{square c3}} is too slow to solve the tactical problems completely.",
+      "Black grabs {{square b2}} and drags White into the trap.",
       "White attacks the queen, but this rook move walks directly into the main tactical idea.",
-      "Black takes on b1 because the back-rank geometry is in Black's favor.",
+      "Black takes on {{square b1}} because the back-rank geometry is in Black's favor.",
       "White must recapture or simply lose the exchange for nothing.",
-      "Black finishes the sequence by taking on b1 and wins a full rook."
+      "Black finishes the sequence by taking on {{square b1}} and wins a full rook."
     ]
   },
   {
@@ -90,14 +90,14 @@ export const scandinavianDefenseLines = withOpeningFeedback([
       ...QA5_INTRO,
       ...D4_NF6,
       ...NF3_BF5,
-      "White develops, but the bishop placement still leaves b2 as a chronic target.",
-      "Black consolidates the center and prepares the queen invasion on b6.",
+      "White develops, but the bishop placement still leaves {{square b2}} as a chronic target.",
+      "Black consolidates the center and prepares the queen invasion on {{square b6}}.",
       "White centralizes, but the knight jump does not actually solve the queenside pressure.",
-      "Black hits b2 and forces White to react immediately.",
+      "Black hits {{square b2}} and forces White to react immediately.",
       "White damages Black's kingside structure and hopes the endgame will favor White later.",
       "Black accepts the structure because open files and concrete play matter more than appearance here.",
-      "White tries to cover the queenside, but c3 still leaves the b2 pawn loose.",
-      "Black wins b2 and reaches an extra-pawn game where White still has development, but Black has the clearer targets."
+      "White tries to cover the queenside, but {{square c3}} still leaves the {{square b2}} pawn loose.",
+      "Black wins {{square b2}} and reaches an extra-pawn game where White still has development, but Black has the clearer targets."
     ]
   },
   {
@@ -110,12 +110,12 @@ export const scandinavianDefenseLines = withOpeningFeedback([
       ...QA5_INTRO,
       ...D4_NF6,
       ...BD2_BG4,
-      "White chases the bishop, but f3 weakens dark squares and delays castling.",
-      "Black calmly retreats because provoking f3 was already useful.",
+      "White chases the bishop, but {{square f3}} weakens dark squares and delays castling.",
+      "Black calmly retreats because provoking {{square f3}} was already useful.",
       "White develops actively, but the center is no longer as stable as it looks.",
-      "Black shifts the queen to b6, where both b2 and d4 come under pressure.",
-      "White protects b2 directly, but that move leaves the center underdefended.",
-      "Black takes on d4 because the central pawn was the real target all along."
+      "Black shifts the queen to {{square b6}}, where both {{square b2}} and {{square d4}} come under pressure.",
+      "White protects {{square b2}} directly, but that move leaves the center underdefended.",
+      "Black takes on {{square d4}} because the central pawn was the real target all along."
     ]
   },
   {
@@ -128,16 +128,16 @@ export const scandinavianDefenseLines = withOpeningFeedback([
       ...QA5_INTRO,
       ...D4_NF6,
       ...NF3_BF5,
-      "White develops, but the bishop on d2 still blocks queenside coordination.",
+      "White develops, but the {{bishop d2 full}} still blocks queenside coordination.",
       "Black supports the center and opens the dark bishop while keeping queenside castling in reserve.",
-      "White develops actively and keeps pressure on f7.",
+      "White develops actively and keeps pressure on {{square f7}}.",
       "Black hits the bishop structure and asks White to clarify the queenside immediately.",
       "White gains space, but the pawn can also become a hook later.",
       "Black gives up the bishop pair to damage White's coordination and speed development.",
-      "White recaptures, but the bishop on c3 can become a target and the d4 pawn still needs support.",
+      "White recaptures, but the {{bishop c3 full}} can become a target and the {{square d4}} pawn still needs support.",
       "Black keeps pressure on both the center and the queenside.",
       "White castles and says the initiative should still favor White.",
-      "Black develops the last minor piece and increases pressure on d4.",
+      "Black develops the last minor piece and increases pressure on {{square d4}}.",
       "White gains space, but the center is now fixed and easier to attack.",
       "Black castles long and brings the rook straight to the d file, where the real fight will happen."
     ]
@@ -151,8 +151,8 @@ export const scandinavianDefenseLines = withOpeningFeedback([
     explanations: [
       ...QA5_INTRO,
       ...D4_NF6,
-      "White puts the bishop on an active square, but this can leave c2 and d4 a bit more sensitive.",
-      "Black develops naturally and increases pressure on d4.",
+      "White puts the bishop on an active square, but this can leave {{square c2}} and {{square d4}} a bit more sensitive.",
+      "Black develops naturally and increases pressure on {{square d4}}.",
       "White develops toward castling and supports the center.",
       "Black pins the knight and makes it harder for White to defend the center comfortably."
     ]
@@ -181,8 +181,8 @@ export const scandinavianDefenseLines = withOpeningFeedback([
       ...QA5_INTRO,
       ...D4_NF6,
       "White places the bishop actively, but it can cost time if Black starts poking at the setup.",
-      "Black develops the knight to its best square and piles pressure onto d4.",
-      "White keeps the f pawn flexible, but Ne2 is slower than normal development.",
+      "Black develops the knight to its best square and piles pressure onto {{square d4}}.",
+      "White keeps the f pawn flexible, but N{{square e2}} is slower than normal development.",
       "Black pins and develops at the same time, which is ideal in these Scandinavian structures.",
       "White chases the bishop, but the move weakens dark squares and delays castling.",
       "Black retreats to an active square and keeps the bishop outside the pawn chain, which is exactly what Black wants."
@@ -199,7 +199,7 @@ export const scandinavianDefenseLines = withOpeningFeedback([
       ...D4_NF6,
       ...BD2_BG4,
       "White develops toward castling and starts to untangle the pin.",
-      "Black centralizes the queen on f5, where it pressures c2 and supports further development.",
+      "Black centralizes the {{queen f5 full}}, where it pressures {{square c2}} and supports further development.",
       "White breaks the pin, but that costs another tempo.",
       "Black develops the knight and reaches an easy Scandinavian middlegame with pressure against the center."
     ]
@@ -212,14 +212,14 @@ export const scandinavianDefenseLines = withOpeningFeedback([
     moves: ["e4", "d5", "exd5", "Qxd5", "Nc3", "Qa5", "Bc4", "Nf6", "d3", "Bg4", "Nf3", "e6", "Bd2", "Qh5"],
     explanations: [
       ...QA5_INTRO,
-      "White develops the bishop aggressively and points straight at f7.",
+      "White develops the bishop aggressively and points straight at {{square f7}}.",
       "Black develops calmly and covers the key central and kingside squares.",
       "White supports the center and opens the dark bishop, but the move order is a touch slow.",
       "Black pins and develops, asking White to spend time on coordination.",
       "White develops naturally and prepares kingside castling.",
       "Black supports the center and opens the dark bishop without losing momentum.",
-      "White develops, but the bishop on d2 still has to babysit the queenside.",
-      "Black puts the queen on h5, where it pressures h2 and makes White's kingside harder to handle casually."
+      "White develops, but the {{bishop d2 full}} still has to babysit the queenside.",
+      "Black puts the {{queen h5 full}}, where it pressures {{square h2}} and makes White's kingside harder to handle casually."
     ]
   },
   {
@@ -234,13 +234,13 @@ export const scandinavianDefenseLines = withOpeningFeedback([
       "White develops aggressively and hopes to make the queenside queen position look silly.",
       "Black develops with a pin instead of retreating into passivity.",
       "White develops and aims to castle quickly.",
-      "Black adds another piece to the fight for d4 and prepares queenside castling.",
-      "White questions the bishop, but h3 also creates a hook and weakens dark squares.",
-      "Black keeps the queen active and preserves the pressure on h2.",
+      "Black adds another piece to the fight for {{square d4}} and prepares queenside castling.",
+      "White questions the bishop, but {{square h3}} also creates a hook and weakens dark squares.",
+      "Black keeps the queen active and preserves the pressure on {{square h2}}.",
       "White resolves the pin, but this costs another tempo.",
-      "Black castles long because the rook belongs on d8 in exactly these structures.",
+      "Black castles long because the rook belongs on {{square d8}} in exactly these structures.",
       "White develops and tries to finish coordination before the center opens.",
-      "Black strikes with ...e5 at the moment White's center is advanced but not fully stable.",
+      "Black strikes with ...{{square e5}} at the moment White's center is advanced but not fully stable.",
       "White pushes on, but the center is now fixed and can become a target instead of a strength.",
       "Black pins and pressures immediately, turning White's space advantage into something Black can attack."
     ]
@@ -256,16 +256,16 @@ export const scandinavianDefenseLines = withOpeningFeedback([
       ...D4_NF6,
       ...NF3_BF5,
       "White develops, but the bishop still does not solve Black's queenside pressure.",
-      "Black consolidates and prepares the queen swing to b6.",
+      "Black consolidates and prepares the queen swing to {{square b6}}.",
       "White centralizes the knight, hoping activity matters more than Black's concrete targets.",
-      "Black attacks b2 and asks a direct question.",
+      "Black attacks {{square b2}} and asks a direct question.",
       "White damages the kingside structure and hopes that long-term weaknesses will matter.",
       "Black accepts the structure because open files and active bishops are more important here.",
       "White improves the bishop, but the move is also slow.",
-      "Black develops the last knight and increases pressure on d4.",
+      "Black develops the last knight and increases pressure on {{square d4}}.",
       "White challenges the active bishop and tries to simplify.",
       "Black accepts the trade because the queenside castling plan is already ready.",
-      "White recaptures, but the queen on d3 can become a target once files open.",
+      "White recaptures, but the {{queen d3 full}} can become a target once files open.",
       "Black castles long and brings the rook straight to the d file."
     ]
   },
@@ -280,7 +280,7 @@ export const scandinavianDefenseLines = withOpeningFeedback([
       ...D4_NF6,
       ...BD2_BG4,
       "White develops toward castling and challenges the pin indirectly.",
-      "Black centralizes the queen to f5, where both pressure and trade ideas appear.",
+      "Black centralizes the queen to {{square f5}}, where both pressure and trade ideas appear.",
       "White offers a trade and hopes simplification will highlight Black's structural issues.",
       "Black removes a defender first to improve the queen-trade sequence.",
       "White must recapture to keep material balanced.",
@@ -297,12 +297,12 @@ export const scandinavianDefenseLines = withOpeningFeedback([
     moves: ["e4", "d5", "exd5", "Qxd5", "Nc3", "Qa5", "Bc4", "Nf6", "d3", "Bg4", "f3", "Bd7"],
     explanations: [
       ...QA5_INTRO,
-      "White develops actively and aims at f7.",
+      "White develops actively and aims at {{square f7}}.",
       "Black develops calmly and keeps the structure under control.",
       "White supports the center, but the move order is a little slow.",
       "Black pins and develops at the same time.",
-      "White kicks the bishop, but f3 is doing more than that. It blocks the diagonal to the queen and can support Qe2 and long castling later.",
-      "Black simply retreats; provoking f3 was already useful, but Black still has to respect White's typical Qe2, O-O-O, and kingside pawn storm ideas from here."
+      "White kicks the bishop, but {{square f3}} is doing more than that. It blocks the diagonal to the queen and can support Q{{square e2}} and long castling later.",
+      "Black simply retreats; provoking {{square f3}} was already useful, but Black still has to respect White's typical Q{{square e2}}, O-O-O, and kingside pawn storm ideas from here."
     ]
   },
   {
@@ -321,10 +321,10 @@ export const scandinavianDefenseLines = withOpeningFeedback([
       "Black stabilizes the center and opens the dark bishop.",
       "White castles and says the middlegame should now favor the side with more space.",
       "Black develops calmly and keeps the structure durable.",
-      "White develops and supports the center, but the pieces are still tied to protecting d4.",
+      "White develops and supports the center, but the pieces are still tied to protecting {{square d4}}.",
       "Black castles and completes king safety without any concessions.",
       "White centralizes a knight, but fixed central squares also give Black clearer targets.",
-      "Black moves the queen to a6, where it pressures the queenside and sidesteps direct attacks."
+      "Black moves the queen to {{square a6}}, where it pressures the queenside and sidesteps direct attacks."
     ]
   },
   {
@@ -336,9 +336,9 @@ export const scandinavianDefenseLines = withOpeningFeedback([
     explanations: [
       ...QA5_INTRO,
       ...D4_NF6,
-      "White develops aggressively and targets f7.",
+      "White develops aggressively and targets {{square f7}}.",
       "Black develops with a pin instead of wasting time on passive defense.",
-      "White chases the bishop, but f3 also hints at Qe2 and long castling with a kingside pawn storm.",
+      "White chases the bishop, but {{square f3}} also hints at Q{{square e2}} and long castling with a kingside pawn storm.",
       "Black calmly retreats because the bishop already provoked the concession Black wanted, though Black should remember that White's attacking plan is now very straightforward."
     ]
   },
@@ -351,8 +351,8 @@ export const scandinavianDefenseLines = withOpeningFeedback([
     explanations: [
       ...QA5_INTRO,
       "White develops the king knight first and keeps flexible options.",
-      "Black matches development and keeps e4 under control.",
-      "White develops the bishop actively and points at f7.",
+      "Black matches development and keeps {{square e4}} under control.",
+      "White develops the bishop actively and points at {{square f7}}.",
       "Black develops naturally and increases central control.",
       "White castles and says the initiative should matter now.",
       "Black pins the knight and reminds White that fast castling alone does not solve the central problems."
@@ -367,8 +367,8 @@ export const scandinavianDefenseLines = withOpeningFeedback([
     explanations: [
       ...QA5_INTRO,
       ...D4_NF6,
-      "White develops the bishop actively, often aiming for long-term pressure on c7 and e5.",
-      "Black mirrors with the most important Scandinavian positional idea: get the bishop out before ...e6 and make the structure easy to play."
+      "White develops the bishop actively, often aiming for long-term pressure on {{square c7}} and {{square e5}}.",
+      "Black mirrors with the most important Scandinavian positional idea: get the bishop out before ...{{square e6}} and make the structure easy to play."
     ]
   },
   {
@@ -382,11 +382,11 @@ export const scandinavianDefenseLines = withOpeningFeedback([
       ...D4_NF6,
       ...BD2_BG4,
       "White develops toward castling and hopes the pin can be managed later.",
-      "Black centralizes the queen to f5, where tactical ideas against d3 and c2 start to appear.",
+      "Black centralizes the queen to {{square f5}}, where tactical ideas against {{square d3}} and {{square c2}} start to appear.",
       "White blocks with the bishop, but this piece is now overloaded.",
       "Black removes the knight defender first to clear the tactical sequence.",
       "White recaptures, but that bishop has now abandoned a critical defensive task.",
-      "Black takes on d1 and wins the queen because the tactical geometry on the back rank now works perfectly.",
+      "Black takes on {{square d1}} and wins the queen because the tactical geometry on the back rank now works perfectly.",
       "White must recapture to avoid losing even more material.",
       "Black consolidates and opens the dark bishop, reaching a winning material advantage."
     ]
@@ -401,10 +401,10 @@ export const scandinavianDefenseLines = withOpeningFeedback([
       ...QA5_INTRO,
       ...D4_NF6,
       ...NF3_BF5,
-      "White develops aggressively and targets f7.",
+      "White develops aggressively and targets {{square f7}}.",
       "Black supports the center and opens the dark bishop without losing coordination.",
       "White castles and says the initiative should now favor White.",
-      "Black plays ...c6 to clamp d5, prepare ...Nbd7, keep Nb5 out, and give the queen a clean retreat to c7 if White lines up on the diagonal."
+      "Black plays ...{{square c6}} to clamp {{square d5}}, prepare ...Nb{{square d7}}, keep N{{square b5}} out, and give the queen a clean retreat to {{square c7}} if White lines up on the diagonal."
     ]
   },
   {
@@ -420,9 +420,9 @@ export const scandinavianDefenseLines = withOpeningFeedback([
       "White chases the bishop, but the move weakens dark squares and slows kingside development.",
       "Black retreats because the bishop already provoked a concession.",
       "White develops actively and hopes to use space before Black is fully coordinated.",
-      "Black improves the queen and attacks b2 and d4 from a stronger angle.",
+      "Black improves the queen and attacks {{square b2}} and {{square d4}} from a stronger angle.",
       "White keeps the knight flexible, but that also leaves the king in the center for longer.",
-      "Black consolidates with ...e6 and reaches the kind of stable Scandinavian position that is very easy to play."
+      "Black consolidates with ...{{square e6}} and reaches the kind of stable Scandinavian position that is very easy to play."
     ]
   },
   {
@@ -438,7 +438,7 @@ export const scandinavianDefenseLines = withOpeningFeedback([
       "White chooses a quieter bishop square, which also means the initiative claim is quieter.",
       "Black supports the center and opens the dark bishop while keeping the structure intact.",
       "White castles and reaches a normal shell.",
-      "Black locks down d5 with ...c6 and reaches one of the cleanest Scandinavian structures to handle."
+      "Black locks down {{square d5}} with ...{{square c6}} and reaches one of the cleanest Scandinavian structures to handle."
     ]
   },
   {
@@ -452,9 +452,9 @@ export const scandinavianDefenseLines = withOpeningFeedback([
       ...D4_NF6,
       ...BD2_BG4,
       "White develops toward castling and starts asking how Black will handle the pin.",
-      "Black centralizes the queen to f5 and keeps both pressure and trade ideas alive.",
+      "Black centralizes the queen to {{square f5}} and keeps both pressure and trade ideas alive.",
       "White blocks with the bishop, but the piece is now tied to defensive work.",
-      "Black exchanges on f3 first because White's kingside structure is the most practical target.",
+      "Black exchanges on {{square f3}} first because White's kingside structure is the most practical target.",
       "White recaptures, but the doubled f-pawns leave the king less comfortable and create long-term endgame issues.",
       "Black keeps the queens on and returns the queen to a safe square, ready to continue pressing against White's damaged structure."
     ]
@@ -469,16 +469,16 @@ export const scandinavianDefenseLines = withOpeningFeedback([
       ...QA5_INTRO,
       ...D4_NF6,
       ...NF3_BF5,
-      "White develops, but the bishop on d2 still has not solved Black's activity.",
+      "White develops, but the {{bishop d2 full}} still has not solved Black's activity.",
       "Black supports the center and prepares to complete development.",
-      "White develops actively and points at f7.",
+      "White develops actively and points at {{square f7}}.",
       "Black hits the bishop structure and asks White to clarify the queenside.",
       "White gains space, but the pawn can also become a target.",
       "Black gives up the bishop pair to damage White's coordination and simplify the position.",
-      "White recaptures, but the bishop on c3 is not always ideally placed.",
+      "White recaptures, but the {{bishop c3 full}} is not always ideally placed.",
       "Black keeps pressure on the queenside and center.",
       "White castles and finishes king safety.",
-      "Black develops and keeps a close eye on d4 and e5.",
+      "Black develops and keeps a close eye on {{square d4}} and {{square e5}}.",
       "White places the rook on the central file and prepares to support a future break.",
       "Black castles and reaches a healthy, fully coordinated Scandinavian middlegame."
     ]
@@ -493,10 +493,10 @@ export const scandinavianDefenseLines = withOpeningFeedback([
       ...QA5_INTRO,
       ...D4_NF6,
       ...NF3_BF5,
-      "White develops, but the bishop on d2 still leaves Black's queen route to b6 available.",
+      "White develops, but the {{bishop d2 full}} still leaves Black's queen route to {{square b6}} available.",
       "Black supports the center and clears the dark bishop, keeping the structure easy to handle.",
-      "White jumps into e5, attacking the queen and trying to turn development into initiative.",
-      "Black calmly shifts to b6, where the queen sidesteps the attack and often creates tactical pressure against d4 and b2 at the same time."
+      "White jumps into {{square e5}}, attacking the queen and trying to turn development into initiative.",
+      "Black calmly shifts to {{square b6}}, where the queen sidesteps the attack and often creates tactical pressure against {{square d4}} and {{square b2}} at the same time."
     ]
   },
   {
@@ -509,15 +509,15 @@ export const scandinavianDefenseLines = withOpeningFeedback([
       "White opens in the most direct way and asks Black to prove the defense works.",
       "Black strikes the center immediately and forces Scandinavian territory.",
       "White accepts the pawn and tests whether Black can recover it cleanly.",
-      "Black chooses the modern move order with ...Nf6, developing first and avoiding an early queen target.",
+      "Black chooses the modern move order with ...N{{square f6}}, developing first and avoiding an early queen target.",
       "White develops and looks like the extra pawn can still be held.",
-      "Black simply takes on d5 because the queen on d8 already protects the knight.",
+      "Black simply takes on {{square d5}} because the {{queen d8 full}} already protects the knight.",
       "White trades knights and hopes Black will still suffer from queen exposure later.",
-      "Black recaptures with the queen only now, when the c3 knight is gone and d5 is a comfortable square.",
+      "Black recaptures with the queen only now, when the {{square c3}} knight is gone and {{square d5}} is a comfortable square.",
       "White builds the center and tries to use the extra tempo from the queen move.",
       "Black develops naturally and starts hitting the center immediately.",
-      "White develops toward castling and reinforces d4.",
-      "Black develops with tempo and starts aiming at d4 and the kingside dark squares."
+      "White develops toward castling and reinforces {{square d4}}.",
+      "Black develops with tempo and starts aiming at {{square d4}} and the kingside dark squares."
     ]
   },
   {
@@ -530,17 +530,17 @@ export const scandinavianDefenseLines = withOpeningFeedback([
       "White opens in the most direct way and asks Black to prove the defense works.",
       "Black strikes the center immediately and forces Scandinavian territory.",
       "White accepts the pawn and tries to keep the extra material.",
-      "Black chooses the modern move order with ...Nf6, developing first and avoiding an early queen target.",
-      "White plays the critical c4 move, the only try that really stops Black from recovering on d5 right away.",
-      "Black answers with ...c6, attacking the advanced pawn and accepting a gambit structure if needed.",
-      "White takes on c6, but giving back the pawn also opens lines for Black's pieces.",
+      "Black chooses the modern move order with ...N{{square f6}}, developing first and avoiding an early queen target.",
+      "White plays the critical {{square c4}} move, the only try that really stops Black from recovering on {{square d5}} right away.",
+      "Black answers with ...{{square c6}}, attacking the advanced pawn and accepting a gambit structure if needed.",
+      "White takes on {{square c6}}, but giving back the pawn also opens lines for Black's pieces.",
       "Black recaptures with the knight, and suddenly both knights are active while White is still behind in development.",
       "White develops, but this move can be too natural for its own good in this structure.",
-      "Black strikes with ...e5, opening the bishop and preparing to drive White's pieces back.",
-      "White develops toward castling, but the knight on f3 becomes the real target.",
-      "Black pushes ...e4, gains space, and drives the knight away while White's queenside is still asleep.",
+      "Black strikes with ...{{square e5}}, opening the bishop and preparing to drive White's pieces back.",
+      "White develops toward castling, but the {{knight f3 full}} becomes the real target.",
+      "Black pushes ...{{square e4}}, gains space, and drives the knight away while White's queenside is still asleep.",
       "White jumps forward because the central retreat squares are no longer available.",
-      "Black develops with tempo, keeps the knight on g5 awkward, and makes the e4 wedge extremely unpleasant to challenge."
+      "Black develops with tempo, keeps the {{knight g5 full}} awkward, and makes the {{square e4}} wedge extremely unpleasant to challenge."
     ]
   },
   {
@@ -553,19 +553,19 @@ export const scandinavianDefenseLines = withOpeningFeedback([
       "White opens in the most direct way and asks Black to prove the defense works.",
       "Black strikes the center immediately and forces Scandinavian territory.",
       "White accepts the pawn and tries to test Black's move order.",
-      "Black chooses the modern move order with ...Nf6, developing first and avoiding an early queen target.",
-      "White develops and hopes the d5 pawn is still a long-term problem.",
+      "Black chooses the modern move order with ...N{{square f6}}, developing first and avoiding an early queen target.",
+      "White develops and hopes the {{square d5}} pawn is still a long-term problem.",
       "Black simply takes it back because the knight is already defended.",
       "White trades knights to force the queen out.",
-      "Black recaptures when the queen can actually sit on d5 comfortably.",
+      "Black recaptures when the queen can actually sit on {{square d5}} comfortably.",
       "White builds the center and tries to use development against the queen.",
-      "Black develops and increases pressure on d4.",
+      "Black develops and increases pressure on {{square d4}}.",
       "White supports the center and prepares normal development.",
-      "Black plays the strange-looking ...Nb4, ignoring rules of thumb because the concrete threat matters more.",
+      "Black plays the strange-looking ...N{{square b4}}, ignoring rules of thumb because the concrete threat matters more.",
       "White attacks the knight in the most natural way.",
-      "Black checks on e4, where the queen hits the king and also clears the way for a c2 fork.",
+      "Black checks on {{square e4}}, where the queen hits the king and also clears the way for a {{square c2}} fork.",
       "White blocks and tries to finish development.",
-      "Black jumps into c2 with check, and the fork on king and rook shows what ...Nb4 was really about."
+      "Black jumps into {{square c2}} with check, and the fork on king and rook shows what ...N{{square b4}} was really about."
     ]
   },
   {
@@ -578,9 +578,9 @@ export const scandinavianDefenseLines = withOpeningFeedback([
       "White grabs space and tries to shut down Black's most natural knight square.",
       "Black does not panic. The advanced pawn can become a target instead of a strength.",
       "White supports the center and hopes space will carry the position.",
-      "Black hits back with ...c5, making the e5 pawn harder to support cleanly.",
+      "Black hits back with ...{{square c5}}, making the {{square e5}} pawn harder to support cleanly.",
       "White reinforces the chain and claims more space.",
-      "Black develops naturally and keeps pressure on d4 and e5.",
+      "Black develops naturally and keeps pressure on {{square d4}} and {{square e5}}.",
       "White develops toward castling and tries to hold the center together.",
       "Black develops the bishop outside the pawn chain, which is the big difference from a normal French structure.",
       "White breaks the pin and keeps things solid.",
@@ -599,8 +599,8 @@ export const scandinavianDefenseLines = withOpeningFeedback([
       "White sidesteps the main lines and offers a gambit setup instead.",
       "Black accepts the pawn because the gambit only becomes dangerous if Black cooperates.",
       "White attacks at once and hopes for quick tactical play.",
-      "Black develops with the safe move. This is the important practical point, because flashy moves like ...h6 are what get Black in trouble.",
-      "White builds more pressure on e4 and tries to pull Black into a trap.",
+      "Black develops with the safe move. This is the important practical point, because flashy moves like ...{{square h6}} are what get Black in trouble.",
+      "White builds more pressure on {{square e4}} and tries to pull Black into a trap.",
       "Black keeps developing and covers the key squares instead of chasing the knight.",
       "White attacks the pawn again and tries to justify the gambit.",
       "Black gives the pawn back on Black's terms and removes one of White's attackers.",
@@ -618,9 +618,9 @@ export const scandinavianDefenseLines = withOpeningFeedback([
       "White opens in the most direct way and hopes early development will support the d-pawn.",
       "Black challenges the center immediately and makes White answer right away.",
       "White defends the pawn with a knight, but this also gives Black a useful target.",
-      "Black pushes past with ...d4, gaining space and driving the knight off a natural square.",
+      "Black pushes past with ...{{square d4}}, gaining space and driving the knight off a natural square.",
       "White retreats to keep the position together, but the knight is already awkward.",
-      "Black follows with ...e5, grabs more space, and shows why 2.Nc3 can actually help Black build the center."
+      "Black follows with ...{{square e5}}, grabs more space, and shows why 2.N{{square c3}} can actually help Black build the center."
     ]
 
   }

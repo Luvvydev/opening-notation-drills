@@ -354,6 +354,7 @@ class OpeningTrainer extends Component {
       hintFromSquare: null,
       solveArmed: false,
       selectedSquare: null,
+      coachHighlight: null,
       legalTargets: [],
       streakToastOpen: false,
       streakToastText: "",
@@ -604,6 +605,23 @@ this._countedSeenForRun = false;
       this.maybeRedirectForLockedOpening(this.state.openingKey);
       if ((this.state.gameMode || "learn") === "puzzles") {
         this.loadPuzzleForOpening(this.state.openingKey, { resetIndex: true });
+      }
+    }
+
+    if (this.state.coachHighlight) {
+      const coachContextChanged =
+        prevState.openingKey !== this.state.openingKey ||
+        prevState.lineId !== this.state.lineId ||
+        prevState.gameMode !== this.state.gameMode ||
+        prevState.stepIndex !== this.state.stepIndex ||
+        prevState.fen !== this.state.fen ||
+        prevState.viewFen !== this.state.viewFen ||
+        prevState.viewing !== this.state.viewing ||
+        prevState.boardRenderToken !== this.state.boardRenderToken;
+
+      if (coachContextChanged) {
+        this.setState({ coachHighlight: null });
+        return;
       }
     }
  
@@ -2260,6 +2278,104 @@ sanitizeExplanation = (text, expectedSan) => {
   return s;
 };
 
+parseSquareLabel = (label) => {
+  const match = String(label || "").match(/(?<=\{\{square )[a-h][1-8](?=\}\})/i);
+  return match ? match[0].toLowerCase() : null;
+};
+
+parsePieceLabel = (label) => {
+  const match = String(label || "").match(/(?<=\{\{)(king|queen|rook|bishop|knight|pawn) ([a-h][1-8])( full)?(?=\}\})/i);
+  if (!match) return null;
+
+  return {
+    role: String(match[1] || "").toLowerCase(),
+    square: String(match[2] || "").toLowerCase(),
+    full: !!match[3]
+  };
+};
+
+tokenizeExplanation = (text) => {
+  if (!text) return [];
+
+  return String(text)
+    .split(/(\{\{.+?\}\})/)
+    .filter((part) => part !== "")
+    .map((part) => {
+      const square = this.parseSquareLabel(part);
+      if (square) return { type: "square", square };
+
+      const piece = this.parsePieceLabel(part);
+      if (piece) return { type: "piece", ...piece };
+
+      return {
+        type: "text",
+        text: String(part)
+          .replace(/(\{\{|\}\})/g, "")
+          .replace(/( |^)[a-h][1-8]( |$)/g, (value) => value.toLowerCase())
+      };
+    });
+};
+
+getExplanationTokenText = (token) => {
+  if (!token) return "";
+  if (token.type === "square") return token.square;
+  if (token.type !== "piece") return token.text || "";
+
+  const roleShort = {
+    king: "K",
+    queen: "Q",
+    rook: "R",
+    bishop: "B",
+    knight: "N",
+    pawn: ""
+  };
+
+  if (token.full) return `${token.role} on ${token.square}`;
+  return `${roleShort[token.role] || ""}${token.square}`;
+};
+
+handleExplanationTokenClick = (token) => {
+  if (!token || (token.type !== "square" && token.type !== "piece")) return;
+
+  const nextSquare = token.square;
+  const nextKind = token.type === "piece" ? "piece" : "square";
+
+  this.setState((prev) => {
+    const current = prev.coachHighlight;
+    const isSame = current && current.square === nextSquare && current.kind === nextKind;
+    return { coachHighlight: isSame ? null : { square: nextSquare, kind: nextKind } };
+  });
+};
+
+renderExplanationTokens = (text) => {
+  const tokens = this.tokenizeExplanation(text);
+  if (!tokens.length) return text || "";
+
+  return tokens.map((token, index) => {
+    if (token.type === "text") {
+      return <React.Fragment key={`text-${index}`}>{token.text}</React.Fragment>;
+    }
+
+    const isActive =
+      this.state.coachHighlight &&
+      this.state.coachHighlight.square === token.square &&
+      this.state.coachHighlight.kind === token.type;
+    const className = `ot-inline-token ot-inline-token-${token.type}${isActive ? " is-active" : ""}`;
+
+    return (
+      <button
+        key={`${token.type}-${token.square}-${index}`}
+        type="button"
+        className={className}
+        onClick={() => this.handleExplanationTokenClick(token)}
+        title={token.type === "piece" ? `Highlight ${token.role} on ${token.square}` : `Highlight ${token.square}`}
+      >
+        {this.getExplanationTokenText(token)}
+      </button>
+    );
+  });
+};
+
 
 getFeedbackEntry = (line, index) => {
   if (!line || index == null || index < 0) return null;
@@ -3101,7 +3217,7 @@ renderMoveFeedbackCard = () => {
           </div>
           {!isWrong ? (
             <div className="ot-move-feedback-correct-copy">
-              <div className="ot-move-feedback-text">{feedback.text}</div>
+              <div className="ot-move-feedback-text">{this.renderExplanationTokens(feedback.text)}</div>
             </div>
           ) : null}
         </div>
@@ -3131,11 +3247,11 @@ renderMoveFeedbackCard = () => {
         <div className="ot-move-feedback-sections">
           <div className="ot-move-feedback-section">
             <div className="ot-move-feedback-label">Your move</div>
-            <div className="ot-move-feedback-text">{feedback.yourMove || feedback.text}</div>
+            <div className="ot-move-feedback-text">{this.renderExplanationTokens(feedback.yourMove || feedback.text)}</div>
           </div>
           <div className="ot-move-feedback-section">
             <div className="ot-move-feedback-label">What it missed</div>
-            <div className="ot-move-feedback-text">{feedback.missed || feedback.text}</div>
+            <div className="ot-move-feedback-text">{this.renderExplanationTokens(feedback.missed || feedback.text)}</div>
           </div>
         </div>
       ) : null}
@@ -3143,7 +3259,7 @@ renderMoveFeedbackCard = () => {
       {expanded && feedback.why ? (
         <div className="ot-move-feedback-why">
           <div className="ot-move-feedback-label">Why</div>
-          <div className="ot-move-feedback-text">{feedback.why}</div>
+          <div className="ot-move-feedback-text">{this.renderExplanationTokens(feedback.why)}</div>
         </div>
       ) : null}
 
@@ -3216,7 +3332,7 @@ renderCoachBubble = (line) => {
       <div className="ot-bubble-row">
         {this.renderCoachAvatar(mode)}
         <div className="ot-coach-copy">
-          <div className="ot-coach-text">{text}</div>
+          <div className="ot-coach-text">{this.renderExplanationTokens(text)}</div>
         </div>
       </div>
     </div>
@@ -3400,7 +3516,7 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
         <div className="ot-bubble-row">
           {this.renderCoachAvatar(mode)}
           <div className="ot-coach-copy">
-            <div className="ot-coach-text">{text}</div>
+            <div className="ot-coach-text">{this.renderExplanationTokens(text)}</div>
           </div>
         </div>
       </div>
@@ -3844,6 +3960,29 @@ render() {
           backgroundRepeat: existing.backgroundRepeat ? existing.backgroundRepeat + ", no-repeat" : "no-repeat",
           backgroundPosition: existing.backgroundPosition ? existing.backgroundPosition + ", center" : "center",
           backgroundSize: existing.backgroundSize ? existing.backgroundSize + ", 100% 100%" : "100% 100%"
+        };
+      }
+    }
+
+    if (this.state.coachHighlight && this.state.coachHighlight.square) {
+      const highlightSquare = this.state.coachHighlight.square;
+      const existing = squareStyles[highlightSquare] || {};
+
+      if (this.state.coachHighlight.kind === "piece") {
+        const pieceGlow = "radial-gradient(circle at center, rgba(178, 132, 255, 0.52) 0 24%, rgba(178, 132, 255, 0.18) 25 54%, rgba(0,0,0,0) 55%)";
+        squareStyles[highlightSquare] = {
+          ...existing,
+          backgroundImage: existing.backgroundImage ? `${existing.backgroundImage}, ${pieceGlow}` : pieceGlow,
+          backgroundRepeat: existing.backgroundRepeat ? `${existing.backgroundRepeat}, no-repeat` : "no-repeat",
+          backgroundPosition: existing.backgroundPosition ? `${existing.backgroundPosition}, center` : "center",
+          backgroundSize: existing.backgroundSize ? `${existing.backgroundSize}, 100% 100%` : "100% 100%",
+          boxShadow: "inset 0 0 0 3px rgba(196, 157, 255, 0.95), 0 0 18px rgba(149, 102, 255, 0.18)"
+        };
+      } else {
+        squareStyles[highlightSquare] = {
+          ...existing,
+          boxShadow: "inset 0 0 0 3px rgba(126, 220, 255, 0.95), 0 0 18px rgba(91, 204, 255, 0.16)",
+          backgroundColor: existing.backgroundColor || "rgba(91, 204, 255, 0.18)"
         };
       }
     }

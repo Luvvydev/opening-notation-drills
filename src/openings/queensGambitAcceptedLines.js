@@ -30,27 +30,27 @@ export const queensGambitAcceptedLines = withOpeningFeedback([
       "Qxb5+"
     ],
     "explanations": [
-      "Let's learn the Queen's Gambit! Start with the queen's pawn to d4!",
+      "Let's learn the Queen's Gambit Accepted! Start with pawn to {{square d4}} and prepare to challenge Black's center with {{square c4}}.",
       "Black answers in the center and gives the gambit real meaning.",
-      "c4 challenges d5 from the side and invites Black to either defend cleanly or create targets.",
+      "{{square c4}} challenges {{square d5}} from the side and invites Black to either defend cleanly or create targets.",
       "If Black accepts, White should think center first and pawn recovery second.",
-      "e4 is the key QGA idea from the transcript. White takes central space immediately and makes the extra c-pawn harder to justify.",
+      "{{square e4}} is the key QGA idea from the transcript. White takes central space immediately and makes the extra c-pawn harder to justify.",
       "Black tries to keep the pawn with a broad queenside chain, but that costs time and loosens pieces.",
-      "a4 attacks the base of the pawn chain before Black finishes development.",
-      "c6 looks solid, but it leaves Black tied to a passive pawn-holding setup.",
-      "White opens the a-file by force and starts stripping away the pawns that defend c4.",
-      "Black keeps material for the moment, but the b5 pawn and a8 rook are now part of the problem.",
-      "Nc3 develops with tempo by attacking the overextended b5 pawn.",
-      "Bd7 is a practical defense, but Black is still behind in development and tied to the queenside.",
-      "d5 grabs more space and keeps Black cramped while the queenside is still loose.",
+      "{{square a4}} attacks the base of the pawn chain before Black finishes development.",
+      "{{square c6}} looks solid, but it leaves Black tied to a passive pawn-holding setup.",
+      "White opens the a-file by force and starts stripping away the pawns that defend {{square c4}}.",
+      "Black keeps material for the moment, but the {{square b5}} pawn and {{square a8}} rook are now part of the problem.",
+      "N{{square c3}} develops with tempo by attacking the overextended {{square b5}} pawn.",
+      "B{{square d7}} is a practical defense, but Black is still behind in development and tied to the queenside.",
+      "{{square d5}} grabs more space and keeps Black cramped while the queenside is still loose.",
       "Black has to challenge the center before White's space advantage becomes permanent.",
       "White gives up the advanced pawn on favorable terms to open lines and fix Black's structure.",
       "Black recaptures, but the doubled e-pawns and open lines leave long term targets.",
-      "Now Nxb5 works because the b5 pawn is overloaded and the queenside defenders are stretched.",
-      "Black has to take back, but the bishop leaves d7 and the queenside remains exposed.",
-      "Qh5+ adds a direct king-side threat while the bishop on b5 is still loose.",
-      "Black blocks the check, but g6 weakens the dark squares and does nothing to solve the bishop problem.",
-      "Qxb5+ wins the bishop back with check. White has recovered material and kept the easier position."
+      "Now Nx{{square b5}} works because the {{square b5}} pawn is overloaded and the queenside defenders are stretched.",
+      "Black has to take back, but the bishop leaves {{square d7}} and the queenside remains exposed.",
+      "Q{{square h5}}+ adds a direct king-side threat while the {{bishop b5 full}} is still loose.",
+      "Black blocks the check, but {{square g6}} weakens the dark squares and does nothing to solve the bishop problem.",
+      "Qx{{square b5}}+ wins the bishop back with check. White has recovered material and kept the easier position."
     ]
   },
   {
@@ -84,21 +84,21 @@ export const queensGambitAcceptedLines = withOpeningFeedback([
       "Mirrors White's central control.",
       "Queen's Gambit offer to challenge Black's center.",
       "Accepting the gambit but giving up center control.",
-      "White establishes a strong pawn center (e4, d4).",
+      "White establishes a strong pawn center ({{square e4}}, {{square d4}}).",
       "Black immediately challenges the center, creating tactical possibilities.",
-      "Develops knight while attacking e5 pawn.",
+      "Develops knight while attacking {{square e5}} pawn.",
       "Black takes the pawn but opens the e-file for White.",
       "White recovers the gambit pawn with active piece development.",
       "Black tries to challenge White's center and gain space.",
       "White occupies a strong central outpost, threatening multiple ideas.",
-      "Black develops bishop, attacking White's strong bishop on c4.",
+      "Black develops bishop, attacking White's strong {{bishop c4 full}}.",
       "Forces a structural weakness: if ...fxe6, the f-file opens and kingside weakens.",
       "Black recaptures, creating a doubled pawn and weakening the kingside.",
-      "Check! Targeting the weak g6 square and exposed dark squares.",
+      "Check! Targeting the weak {{square g6}} square and exposed dark squares.",
       "Forced: the only legal move blocks but critically weakens dark squares.",
       "Sacrifices the knight to destroy Black's pawn shield and expose the king.",
       "Forced recapture, opening the h-file completely.",
-      "White wins the rook as the h8 rook is trapped and unprotected."
+      "White wins the rook as the {{square h8}} rook is trapped and unprotected."
     ]
   },
   {
@@ -120,17 +120,17 @@ export const queensGambitAcceptedLines = withOpeningFeedback([
       "Rxa8"
     ],
     "explanations": [
-      "d4 claims central space and prepares to challenge Black's structure.",
+      "{{square d4}} claims central space and prepares to challenge Black's structure.",
       "Black matches the center for now.",
-      "c4 is the gambit offer and asks Black whether the c4 pawn is really worth the trouble.",
-      "Black accepts, but now every pawn move used to keep c4 can become a hook for White.",
-      "e4 is the clean QGA reaction. Take the center first and punish the pawn later.",
-      "Black tries to hold c4 with a pawn chain instead of catching up in development.",
-      "a4 is the direct antidote. White attacks the base of that chain immediately.",
-      "...a6 is the mistake the transcript highlights: it seems natural, but it leaves the rook trapped behind the pawn wall.",
+      "{{square c4}} is the gambit offer and asks Black whether the {{square c4}} pawn is really worth the trouble.",
+      "Black accepts, but now every pawn move used to keep {{square c4}} can become a hook for White.",
+      "{{square e4}} is the clean QGA reaction. Take the center first and punish the pawn later.",
+      "Black tries to hold {{square c4}} with a pawn chain instead of catching up in development.",
+      "{{square a4}} is the direct antidote. White attacks the base of that chain immediately.",
+      "...{{square a6}} is the mistake the transcript highlights: it seems natural, but it leaves the rook trapped behind the pawn wall.",
       "axb5 forces the a-file open.",
-      "Black recaptures and keeps the pawn chain, but now the rook on a8 is hanging behind it.",
-      "Rxa8 simply wins the rook. Black spent too many moves trying to keep one extra pawn."
+      "Black recaptures and keeps the pawn chain, but now the {{rook a8 full}} is hanging behind it.",
+      "Rx{{square a8}} simply wins the rook. Black spent too many moves trying to keep one extra pawn."
     ]
   },
   {
@@ -165,15 +165,15 @@ export const queensGambitAcceptedLines = withOpeningFeedback([
       "White builds a strong pawn center.",
       "Black prepares to develop the kingside bishop.",
       "White recovers the pawn with active piece development.",
-      "Black develops knight, attacking e4 pawn.",
-      "White develops knight, reinforcing the e4 pawn.",
+      "Black develops knight, attacking {{square e4}} pawn.",
+      "White develops knight, reinforcing the {{square e4}} pawn.",
       "Black develops bishop, preparing to castle.",
-      "White gains space and attacks the knight on f6.",
+      "White gains space and attacks the {{knight f6 full}}.",
       "Black retreats the knight to a central square.",
-      "White's queen targets the weak g7 pawn and prevents castling.",
+      "White's queen targets the weak {{square g7}} pawn and prevents castling.",
       "Black castles kingside despite the pressure.",
-      "White develops bishop with tempo, attacking the g7 pawn.",
-      "Black defends g7 but weakens dark squares around the king.",
+      "White develops bishop with tempo, attacking the {{square g7}} pawn.",
+      "Black defends {{square g7}} but weakens dark squares around the king.",
       "White captures the bishop, removing a key defender and winning material."
     ]
   },
@@ -206,7 +206,7 @@ export const queensGambitAcceptedLines = withOpeningFeedback([
       "Accepts the pawn but gives up center control.",
       "White builds a strong pawn center.",
       "Black immediately challenges White's center.",
-      "White develops knight, attacking e5 pawn.",
+      "White develops knight, attacking {{square e5}} pawn.",
       "Black pins the knight to the queen, creating tactical possibilities.",
       "White recovers the pawn, developing with tempo.",
       "Black captures in the center but opens the e-file.",
@@ -250,17 +250,17 @@ export const queensGambitAcceptedLines = withOpeningFeedback([
       "Accepts the pawn but gives up center control.",
       "White builds a strong pawn center.",
       "Black immediately challenges White's center.",
-      "White develops knight, attacking e5 pawn.",
+      "White develops knight, attacking {{square e5}} pawn.",
       "Black captures, opening the center.",
       "White recovers the pawn with active development.",
-      "Black develops knight, attacking d4 square.",
+      "Black develops knight, attacking {{square d4}} square.",
       "White castles to safety and connects rooks.",
       "Black pins the knight, creating pressure.",
-      "White attacks f7 and b7 simultaneously, creating double threats.",
-      "Black defends f7 but blocks the d7 square.",
+      "White attacks {{square f7}} and {{square b7}} simultaneously, creating double threats.",
+      "Black defends {{square f7}} but blocks the {{square d7}} square.",
       "Sacrifice to expose Black's king and queen position.",
-      "Black must capture with the queen, now exposed on f7.",
-      "White wins a pawn and attacks the rook on a8.",
+      "Black must capture with the queen, now exposed on {{square f7}}.",
+      "White wins a pawn and attacks the {{rook a8 full}}.",
       "Black moves rook to a safer square.",
       "Check! Wins the knight and maintains initiative."
     ]
@@ -296,16 +296,16 @@ export const queensGambitAcceptedLines = withOpeningFeedback([
       "Accepts the pawn but gives up center control.",
       "White builds a strong pawn center.",
       "Black immediately challenges White's center.",
-      "White develops knight, attacking e5 pawn.",
+      "White develops knight, attacking {{square e5}} pawn.",
       "Black captures, opening the center.",
       "White recovers the pawn with active development.",
-      "Black develops knight, attacking d4 square.",
+      "Black develops knight, attacking {{square d4}} square.",
       "White castles to safety.",
       "Black pins the knight, creating pressure.",
-      "White attacks f7 and b7 simultaneously.",
+      "White attacks {{square f7}} and {{square b7}} simultaneously.",
       "Black captures the knight, but removes the pin.",
       "Sacrifice to expose the king's position.",
-      "King must move to e7, blocking the bishop's escape.",
+      "King must move to {{square e7}}, blocking the bishop's escape.",
       "Checkmate! King cannot move and is attacked by queen and bishop."
     ]
   },
@@ -330,15 +330,15 @@ export const queensGambitAcceptedLines = withOpeningFeedback([
     "explanations": [
       "White starts with the queen's pawn and aims for central control.",
       "Black occupies the center.",
-      "c4 offers the gambit and asks Black to justify taking away from the center.",
+      "{{square c4}} offers the gambit and asks Black to justify taking away from the center.",
       "Black accepts and temporarily wins a pawn, but development now matters more than material.",
-      "e4 is again the point: White gets a broad center before spending time on recovery.",
-      "Black tries to keep the extra pawn with ...b5.",
-      "a4 undermines the queenside chain right away.",
-      "Black captures on a4, but this opens the queen's path with tempo.",
-      "Qxa4+ recovers one pawn immediately and checks at the same time, so Black cannot consolidate.",
-      "Bd7 is forced to answer the check.",
-      "Qxc4 wins the gambit pawn back. White has the healthier center and cleaner development."
+      "{{square e4}} is again the point: White gets a broad center before spending time on recovery.",
+      "Black tries to keep the extra pawn with ...{{square b5}}.",
+      "{{square a4}} undermines the queenside chain right away.",
+      "Black captures on {{square a4}}, but this opens the queen's path with tempo.",
+      "Qx{{square a4}}+ recovers one pawn immediately and checks at the same time, so Black cannot consolidate.",
+      "B{{square d7}} is forced to answer the check.",
+      "Qx{{square c4}} wins the gambit pawn back. White has the healthier center and cleaner development."
     ]
   },
   {
@@ -360,17 +360,17 @@ export const queensGambitAcceptedLines = withOpeningFeedback([
       "Qxf3"
     ],
     "explanations": [
-      "d4 claims the center.",
+      "{{square d4}} claims the center.",
       "Black answers in the center.",
-      "c4 is the gambit offer and challenges d5 from the side.",
+      "{{square c4}} is the gambit offer and challenges {{square d5}} from the side.",
       "Black accepts, so White will answer with fast central play.",
-      "e4 grabs central space before chasing the pawn.",
+      "{{square e4}} grabs central space before chasing the pawn.",
       "Black strikes back at the center right away.",
-      "Nf3 develops and puts pressure on e5.",
-      "Bg4 pins the knight and tries to use White's queen on d1 as a target.",
-      "Bxc4 gets the pawn back with development.",
-      "Bxf3 gives up the bishop pair to remove one defender of the center.",
-      "Qxf3 recaptures cleanly. White keeps the center and finishes the opening with easier piece play."
+      "N{{square f3}} develops and puts pressure on {{square e5}}.",
+      "B{{square g4}} pins the knight and tries to use White's {{queen d1 full}} as a target.",
+      "Bx{{square c4}} gets the pawn back with development.",
+      "Bx{{square f3}} gives up the bishop pair to remove one defender of the center.",
+      "Qx{{square f3}} recaptures cleanly. White keeps the center and finishes the opening with easier piece play."
     ]
   },
   {
@@ -398,23 +398,23 @@ export const queensGambitAcceptedLines = withOpeningFeedback([
       "Nc7+"
     ],
     "explanations": [
-      "d4 claims the center.",
+      "{{square d4}} claims the center.",
       "Black mirrors it.",
-      "c4 offers the gambit and invites Black to prove the extra pawn is worth the time spent defending it.",
+      "{{square c4}} offers the gambit and invites Black to prove the extra pawn is worth the time spent defending it.",
       "Black accepts and steps away from central tension.",
-      "e4 builds the center first, exactly as the transcript recommends.",
-      "Black hangs on to c4 with ...b5.",
-      "a4 attacks the base of the chain before Black can settle.",
-      "...c6 reinforces b5, but it also locks Black into a pawn-holding scheme.",
+      "{{square e4}} builds the center first, exactly as the transcript recommends.",
+      "Black hangs on to {{square c4}} with ...{{square b5}}.",
+      "{{square a4}} attacks the base of the chain before Black can settle.",
+      "...{{square c6}} reinforces {{square b5}}, but it also locks Black into a pawn-holding scheme.",
       "axb5 opens lines and keeps undermining the queenside structure.",
       "Black recaptures and stays material up for the moment.",
-      "Nc3 develops with tempo against b5 and prepares tactical jumps.",
-      "...b4 looks active, but it gives the knight the exact square it wants.",
-      "Nb5 heads for c7 and takes aim at the weak dark squares and back-rank pieces.",
-      "...a6 tries to chase the knight again, but Black is still playing only pawn moves.",
-      "Bf4 adds one more attacker and makes the c7 fork much harder to stop.",
-      "Bb7 develops, but it is too slow against the tactical threat.",
-      "Nc7+ forks king and rook. This is the kind of punishment that happens when Black keeps defending the pawn instead of developing."
+      "N{{square c3}} develops with tempo against {{square b5}} and prepares tactical jumps.",
+      "...{{square b4}} looks active, but it gives the knight the exact square it wants.",
+      "N{{square b5}} heads for {{square c7}} and takes aim at the weak dark squares and back-rank pieces.",
+      "...{{square a6}} tries to chase the knight again, but Black is still playing only pawn moves.",
+      "B{{square f4}} adds one more attacker and makes the {{square c7}} fork much harder to stop.",
+      "B{{square b7}} develops, but it is too slow against the tactical threat.",
+      "N{{square c7}}+ forks king and rook. This is the kind of punishment that happens when Black keeps defending the pawn instead of developing."
     ]
   },
   {
@@ -444,25 +444,25 @@ export const queensGambitAcceptedLines = withOpeningFeedback([
       "e5"
     ],
     "explanations": [
-      "d4 takes central space from move one.",
+      "{{square d4}} takes central space from move one.",
       "Black matches it.",
-      "c4 is the gambit offer and starts the fight over the center.",
+      "{{square c4}} is the gambit offer and starts the fight over the center.",
       "Black accepts, which means White should answer with activity, not passive pawn chasing.",
-      "e4 grabs the center while Black still has not developed.",
+      "{{square e4}} grabs the center while Black still has not developed.",
       "Black keeps trying to hold the pawn with queenside moves.",
-      "a4 attacks the chain immediately.",
-      "...c6 reinforces b5 but fixes Black into a passive setup.",
+      "{{square a4}} attacks the chain immediately.",
+      "...{{square c6}} reinforces {{square b5}} but fixes Black into a passive setup.",
       "axb5 opens the a-file and loosens the queenside further.",
       "Black keeps the pawn, but the structure is getting harder and harder to defend.",
-      "Nc3 develops with tempo and keeps pressure on b5.",
-      "Bd7 is a defensive move. Black still has little real development.",
-      "d5 uses the central space advantage. White gains room while Black is busy guarding pawns.",
-      "...a6 prepares another pawn push, but still does not solve the development problem.",
-      "Nf3 adds a piece and keeps the center protected.",
-      "...e6 is forced because Black has to fight the advanced d-pawn somehow.",
-      "d6 is the squeeze. The passed pawn cuts across Black's position and keeps several pieces tied down.",
-      "Qb6 attacks the pawn directly because Black has no easy way to challenge it with pieces.",
-      "e5 gains even more space and makes Black's kingside development awkward too."
+      "N{{square c3}} develops with tempo and keeps pressure on {{square b5}}.",
+      "B{{square d7}} is a defensive move. Black still has little real development.",
+      "{{square d5}} uses the central space advantage. White gains room while Black is busy guarding pawns.",
+      "...{{square a6}} prepares another pawn push, but still does not solve the development problem.",
+      "N{{square f3}} adds a piece and keeps the center protected.",
+      "...{{square e6}} is forced because Black has to fight the advanced d-pawn somehow.",
+      "{{square d6}} is the squeeze. The passed pawn cuts across Black's position and keeps several pieces tied down.",
+      "Q{{square b6}} attacks the pawn directly because Black has no easy way to challenge it with pieces.",
+      "{{square e5}} gains even more space and makes Black's kingside development awkward too."
     ]
   },
   {
@@ -496,17 +496,17 @@ export const queensGambitAcceptedLines = withOpeningFeedback([
       "Accepts the pawn but gives up center control.",
       "White builds a strong pawn center.",
       "Black immediately challenges White's center.",
-      "White develops knight, attacking e5 pawn.",
+      "White develops knight, attacking {{square e5}} pawn.",
       "Black captures, opening the center.",
       "White recovers the pawn with active development.",
-      "Black develops knight, attacking d4 square.",
+      "Black develops knight, attacking {{square d4}} square.",
       "White castles to safety.",
       "Black develops bishop, attacking White's strong bishop.",
       "White develops knight, reinforcing the center.",
       "Black develops knight to natural square.",
-      "White attacks f7 and b7 simultaneously.",
+      "White attacks {{square f7}} and {{square b7}} simultaneously.",
       "Black captures the bishop, simplifying.",
-      "White recaptures with knight, maintaining pressure on d5 and e5 squares."
+      "White recaptures with knight, maintaining pressure on {{square d5}} and {{square e5}} squares."
     ]
   },
   {
@@ -542,7 +542,7 @@ export const queensGambitAcceptedLines = withOpeningFeedback([
       "Accepts the pawn but gives up center control.",
       "White builds a strong pawn center.",
       "Black immediately challenges White's center.",
-      "White develops knight, attacking e5 pawn.",
+      "White develops knight, attacking {{square e5}} pawn.",
       "Black captures, opening the center.",
       "White recovers the pawn with active development.",
       "Black challenges White's center further.",
@@ -550,11 +550,11 @@ export const queensGambitAcceptedLines = withOpeningFeedback([
       "Black develops bishop, attacking White's bishop.",
       "White captures, forcing structural weakness.",
       "Black recaptures, creating doubled pawns.",
-      "Check! Attacking weak g6 square.",
+      "Check! Attacking weak {{square g6}} square.",
       "Black blocks, weakening dark squares.",
       "Sacrifice to destroy Black's pawn structure.",
       "Black develops knight, attacking the queen.",
-      "White retreats queen to safe square while maintaining pressure on e6 pawn."
+      "White retreats queen to safe square while maintaining pressure on {{square e6}} pawn."
     ]
   },
   {
@@ -584,21 +584,21 @@ export const queensGambitAcceptedLines = withOpeningFeedback([
     "explanations": [
       "White starts with central space.",
       "Black matches the center.",
-      "c4 is the gambit offer and asks Black to prove the extra pawn is safe.",
+      "{{square c4}} is the gambit offer and asks Black to prove the extra pawn is safe.",
       "Black accepts and gives White a target on the queenside.",
-      "e4 follows the transcript's plan: claim the center before worrying about recovery.",
-      "Black tries to keep c4 with another queenside pawn move.",
-      "a4 hits the base of the chain at once.",
-      "...c6 looks like a tidy defense, but it traps the rook on a8 behind its own pawns.",
+      "{{square e4}} follows the transcript's plan: claim the center before worrying about recovery.",
+      "Black tries to keep {{square c4}} with another queenside pawn move.",
+      "{{square a4}} hits the base of the chain at once.",
+      "...{{square c6}} looks like a tidy defense, but it traps the {{rook a8 full}} behind its own pawns.",
       "axb5 opens the a-file by force.",
       "Black recaptures and keeps the pawn chain for one move longer.",
-      "Nc3 develops with tempo and keeps pressure on b5.",
-      "...a6 defends b5, but now the tactical cost is bigger than the pawn gain.",
-      "Nxb5 removes the key defender and clears the a-file further.",
+      "N{{square c3}} develops with tempo and keeps pressure on {{square b5}}.",
+      "...{{square a6}} defends {{square b5}}, but now the tactical cost is bigger than the pawn gain.",
+      "Nx{{square b5}} removes the key defender and clears the a-file further.",
       "Black has to take the knight or lose the pawn chain completely.",
-      "Rxa8 wins the rook. White gives up a knight but gets major material and keeps the initiative.",
-      "Bb7 attacks the rook and tries to use the open diagonal.",
-      "Ra2 keeps the rook alive and ready to swing across if needed."
+      "Rx{{square a8}} wins the rook. White gives up a knight but gets major material and keeps the initiative.",
+      "B{{square b7}} attacks the rook and tries to use the open diagonal.",
+      "R{{square a2}} keeps the rook alive and ready to swing across if needed."
     ]
   },
   {
@@ -624,19 +624,19 @@ export const queensGambitAcceptedLines = withOpeningFeedback([
       "O-O"
     ],
     "explanations": [
-      "d4 claims space in the center.",
+      "{{square d4}} claims space in the center.",
       "Black answers in kind.",
-      "c4 offers the gambit and asks Black to decide between central stability and extra material.",
+      "{{square c4}} offers the gambit and asks Black to decide between central stability and extra material.",
       "Black accepts, so White should answer with central play.",
-      "e4 is the main mission after the accepted gambit: take the center and make Black prove the pawn matters.",
+      "{{square e4}} is the main mission after the accepted gambit: take the center and make Black prove the pawn matters.",
       "Black prepares to develop while still hoping White's center can be challenged later.",
-      "Bxc4 calmly wins the pawn back with development.",
-      "Black hits e4 and asks White to justify the center.",
-      "Nc3 reinforces e4 and develops with tempo.",
-      "Bb4 adds a pin, but Black still has not solved White's central space.",
-      "e5 gains more room and kicks the knight away from the center.",
-      "Nd5 is the best square, but the knight can still become a future target.",
-      "Ne2 breaks the pin cleanly and keeps c3 and e4 protected.",
+      "Bx{{square c4}} calmly wins the pawn back with development.",
+      "Black hits {{square e4}} and asks White to justify the center.",
+      "N{{square c3}} reinforces {{square e4}} and develops with tempo.",
+      "B{{square b4}} adds a pin, but Black still has not solved White's central space.",
+      "{{square e5}} gains more room and kicks the knight away from the center.",
+      "N{{square d5}} is the best square, but the knight can still become a future target.",
+      "N{{square e2}} breaks the pin cleanly and keeps {{square c3}} and {{square e4}} protected.",
       "Black castles and finally gets the king safe.",
       "White castles too. The center is still White's main asset, which is the exact payoff the transcript emphasizes after QGA."
     ]
@@ -664,21 +664,21 @@ export const queensGambitAcceptedLines = withOpeningFeedback([
       "Nxc4"
     ],
     "explanations": [
-      "d4 claims central space.",
+      "{{square d4}} claims central space.",
       "Black answers in the center.",
-      "c4 offers the gambit and asks Black to justify taking away from the center.",
+      "{{square c4}} offers the gambit and asks Black to justify taking away from the center.",
       "Black accepts, so White answers by taking space, not by panicking over the pawn.",
-      "e4 builds the broad center that the transcript emphasizes.",
+      "{{square e4}} builds the broad center that the transcript emphasizes.",
       "Black challenges it immediately.",
-      "Nf3 develops while attacking e5.",
+      "N{{square f3}} develops while attacking {{square e5}}.",
       "Black captures in the center to reduce White's pawn mass.",
-      "Bxc4 recovers the gambit pawn with a piece, not another pawn move.",
-      "Nc6 develops and pressures d4.",
+      "Bx{{square c4}} recovers the gambit pawn with a piece, not another pawn move.",
+      "N{{square c6}} develops and pressures {{square d4}}.",
       "White castles and keeps development smooth.",
-      "Be6 questions the active bishop.",
+      "B{{square e6}} questions the active bishop.",
       "Nbd2 adds support and keeps recapture options ready.",
       "Black trades the bishop to simplify.",
-      "Nxc4 restores the balance with active pieces and a healthy center."
+      "Nx{{square c4}} restores the balance with active pieces and a healthy center."
     ]
   },
   {
@@ -700,17 +700,17 @@ export const queensGambitAcceptedLines = withOpeningFeedback([
       "Ra3"
     ],
     "explanations": [
-      "d4 starts the fight for the center.",
+      "{{square d4}} starts the fight for the center.",
       "Black occupies central space.",
-      "c4 challenges the d5 pawn from the side and invites Black to either defend or accept the pawn.",
+      "{{square c4}} challenges the {{square d5}} pawn from the side and invites Black to either defend or accept the pawn.",
       "Black accepts and gives White a queenside target.",
-      "e3 is the simpler recovery setup. White frees the bishop and keeps development easy.",
+      "{{square e3}} is the simpler recovery setup. White frees the bishop and keeps development easy.",
       "Black tries to hang on to the extra pawn with a broad pawn chain.",
-      "a4 undermines the chain before Black can finish development.",
-      "...c6 looks safe, but it leaves the rook boxed in behind the pawn wall.",
+      "{{square a4}} undermines the chain before Black can finish development.",
+      "...{{square c6}} looks safe, but it leaves the rook boxed in behind the pawn wall.",
       "axb5 opens the file White wanted.",
       "Black recaptures and still clings to the extra pawn.",
-      "Ra3 is the practical rook lift from the transcript's theme. The rook attacks a8 directly and Black's pawn-holding plan falls apart."
+      "R{{square a3}} is the practical rook lift from the transcript's theme. The rook attacks {{square a8}} directly and Black's pawn-holding plan falls apart."
     ]
   }
 ]
