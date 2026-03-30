@@ -1190,7 +1190,9 @@
 
 @media (max-width: 550px) {
   .ot-bubble {
-    height: 108px;
+    min-height: 108px;
+    height: auto;
+    overflow: visible;
   }
 }
 
