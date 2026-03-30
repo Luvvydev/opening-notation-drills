@@ -3464,7 +3464,7 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
   const lineMenuLabel = ((mode === "learn" || mode === "drill") && currentLineNumber) ? `#${currentLineNumber}` : "Lines";
   const prestigeSummary = this.getOpeningPrestigeSummary();
   const prestigeCount = getOpeningPrestigeCount(this.state.progress, this.state.openingKey);
-  const showPrestigeChip = !prestigeSummary.isComplete || !this.state.userHasPlayedThisLine || this.state.completed;
+  const showPrestigeChip = (prestigeSummary.isComplete || prestigeCount > 0) && (!this.state.userHasPlayedThisLine || this.state.completed);
 
   return (
     <div className="ot-coach" style={{ position: "relative" }}>
@@ -3502,7 +3502,7 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
         </div>
 
         <div className="ot-card-head-right">
-          {showPrestigeChip ? this.renderPrestigeChip({ count: prestigeCount, isReady: prestigeSummary.isComplete }) : null}
+          {showPrestigeChip ? this.renderPrestigeChip({ count: prestigeCount, isReady: prestigeSummary.isComplete, compact: true }) : null}
           <span className="ot-mini-count">
             {doneYourMoves}/{totalYourMoves}
           </span>
@@ -3729,19 +3729,20 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
     return { progress, learnProgress, nextId, summary };
   };
 
-  renderPrestigeChip = ({ count = 0, isReady = false } = {}) => {
+  renderPrestigeChip = ({ count = 0, isReady = false, compact = false } = {}) => {
     const prestigeCount = Math.max(0, Number(count) || 0);
     const ready = !!isReady;
     if (!prestigeCount && !ready) return null;
 
     const hasRank = prestigeCount > 0;
-    const chipClassName = "ot-prestige-chip" + (ready ? " is-ready" : "") + (hasRank ? " has-rank" : "");
+    const chipClassName = "ot-prestige-chip" + (ready ? " is-ready" : "") + (hasRank ? " has-rank" : "") + (compact ? " is-compact" : "");
+    const chipTitle = hasRank ? `Prestige ${toRomanNumeral(prestigeCount)}` : ready ? "Prestige ready" : "Prestige";
 
     return (
-      <span className={chipClassName}>
+      <span className={chipClassName} title={chipTitle}>
         <span className="ot-prestige-chip-icon">✦</span>
         <span className="ot-prestige-chip-copy">
-          <span className="ot-prestige-chip-label">{hasRank ? "Prestige" : "Ready"}</span>
+          {compact ? null : <span className="ot-prestige-chip-label">{hasRank ? "Prestige" : "Ready"}</span>}
           {hasRank ? <span className="ot-prestige-chip-rank">{toRomanNumeral(prestigeCount)}</span> : null}
         </span>
       </span>
@@ -4736,7 +4737,7 @@ render() {
                     <div className="ot-mobile-mini-count">
                       {doneYourMoves}/{totalYourMoves}
                     </div>
-                    {this.getOpeningPrestigeSummary().isComplete ? (
+                    {this.getOpeningPrestigeSummary().isComplete && (!this.state.userHasPlayedThisLine || this.state.completed) ? (
                       <button
                         type="button"
                         className="ot-icon-btn ot-mobile-prestige-action"

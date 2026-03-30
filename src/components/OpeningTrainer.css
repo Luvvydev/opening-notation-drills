@@ -3024,6 +3024,20 @@
   letter-spacing: 0.08em;
 }
 
+.ot-prestige-chip.is-compact {
+  gap: 6px;
+  padding: 4px 4px 4px 4px;
+}
+
+.ot-prestige-chip.is-compact .ot-prestige-chip-copy {
+  gap: 0;
+}
+
+.ot-prestige-chip.is-compact .ot-prestige-chip-rank {
+  min-width: 24px;
+  padding: 4px 7px;
+}
+
 .ot-prestige-card {
   margin-top: 14px;
   padding: 14px;
