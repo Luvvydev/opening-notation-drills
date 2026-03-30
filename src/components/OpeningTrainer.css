@@ -907,8 +907,9 @@
   display: flex;
   min-width: 0;
 
-  height: 92px;
-  overflow: hidden;
+  min-height: 92px;
+  height: auto;
+  overflow: visible;
 }
 
 .ot-bubble-row {

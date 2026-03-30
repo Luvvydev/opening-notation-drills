@@ -22,6 +22,7 @@ import { danishGambitLines } from "./danishGambitLines";
 import { petrovDefenseLines } from "./petrovDefenseLines";
 import { scandinavianDefenseLines, scandinavianDefenseSEOText } from "./scandinavianDefenseLines";
 import { vantKruijsOpeningLines } from "./vantKruijsOpeningLines";
+import { badOpeningPunishmentDrillsLines, badOpeningPunishmentDrillsSEOText } from "./badOpeningPunishmentDrillsLines";
 
 export const OPENING_CATALOG = [
   {
@@ -345,6 +346,21 @@ export const OPENING_CATALOG = [
     "An anti-system for Black against White's slow e3, c3, d4, and Qb3 setup. Take the center early, finish development, and punish their wasted tempo.",
   lines: vantKruijsOpeningLines,
   accent: "slate",
+  badge: "New",
+  access: "signup",
+  earlyAccessUntil: null,
+  position: "start",
+  orientation: "black",
+  playerColor: "b"
+},
+{
+  key: "badOpeningPunishment",
+  title: "Punishing Bad Openings",
+  description:
+    "This drill shows why opening principles alone are not enough, and teaches you how to turn lazy development, weak commitments, and delayed king safety into positions your opponents can no longer hold together.",
+  lines: badOpeningPunishmentDrillsLines,
+  seoText: badOpeningPunishmentDrillsSEOText,
+  accent: "violet",
   badge: "New",
   access: "signup",
   earlyAccessUntil: null,

@@ -4921,7 +4921,7 @@ render() {
 <option value="bishopsOpening">Bishop's Opening</option>
 <option value="scandinavianDefense">Scandinavian Defense</option>
 <option value="vantKruijs">Van't Kruijs Opening</option>
-
+<option value="badOpeningPunishment">Bad Opening Punishment Drills</option>
 </select>
             </div>
 <BoardErrorBoundary onReset={this.resetBoardRender}>
