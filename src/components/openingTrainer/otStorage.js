@@ -68,6 +68,12 @@ export function saveProgress(progress) {
   } catch (_) {
     // ignore
   }
+
+  try {
+    window.dispatchEvent(new Event("progress:updated"));
+  } catch (_) {
+    // ignore
+  }
 }
 
 export function loadSettings(DEFAULT_THEME) {
@@ -115,7 +121,9 @@ export function ensureOpening(progress, openingKey) {
       completedToday: 0,
       todayKey: todayKey(),
       totalCompleted: 0,
-      totalClean: 0
+      totalClean: 0,
+      prestigeCount: 0,
+      lastPrestigedAt: null
     };
   }
   const o = progress.openings[openingKey];
@@ -125,6 +133,8 @@ export function ensureOpening(progress, openingKey) {
     o.completedToday = 0;
     o.streak = 0;
   }
+  if (typeof o.prestigeCount !== "number") o.prestigeCount = 0;
+  if (!("lastPrestigedAt" in o)) o.lastPrestigedAt = null;
 }
 
 export function getLineStats(progress, openingKey, lineId) {
@@ -147,6 +157,102 @@ export function getLineStats(progress, openingKey, lineId) {
     if (!("lastFailedAt" in bucket[lineId])) bucket[lineId].lastFailedAt = null;
   }
   return bucket[lineId];
+}
+
+export function getOpeningPrestigeCount(progress, openingKey) {
+  if (!progress || !openingKey) return 0;
+  const opening = progress.openings && progress.openings[openingKey];
+  return Math.max(0, Number(opening && opening.prestigeCount) || 0);
+}
+
+export function getOpeningCompletionSummary(progress, learnProgress, openingKey, lines) {
+  const safeLines = Array.isArray(lines) ? lines : [];
+  const progressLines = (progress && progress.lines && progress.lines[openingKey]) || {};
+  const learnLines =
+    (learnProgress &&
+      learnProgress.openings &&
+      learnProgress.openings[openingKey] &&
+      learnProgress.openings[openingKey].lines) ||
+    {};
+
+  let completed = 0;
+
+  for (let i = 0; i < safeLines.length; i += 1) {
+    const line = safeLines[i];
+    const lineId = line && line.id;
+    if (!lineId) continue;
+
+    const progressStats = progressLines[lineId] || {};
+    const learnStats = learnLines[lineId] || {};
+
+    if (isCompleted(progressStats) || isCompleted(learnStats)) {
+      completed += 1;
+    }
+  }
+
+  const total = safeLines.length;
+
+  return {
+    completed,
+    total,
+    remaining: Math.max(0, total - completed),
+    isComplete: total > 0 && completed >= total,
+    prestigeCount: getOpeningPrestigeCount(progress, openingKey)
+  };
+}
+
+export function prestigeOpeningCourse(progress, learnProgress, openingKey, lines) {
+  if (!progress || !learnProgress || !openingKey) {
+    return {
+      progress,
+      learnProgress,
+      prestigeCount: 0
+    };
+  }
+
+  ensureOpening(progress, openingKey);
+  ensureLearnOpening(learnProgress, openingKey);
+
+  const safeLines = Array.isArray(lines) ? lines : [];
+  const courseIds = new Set(
+    safeLines
+      .map((line) => String((line && line.id) || "").trim())
+      .filter(Boolean)
+  );
+
+  const progressBucket = {
+    ...((progress.lines && progress.lines[openingKey]) || {})
+  };
+  Object.keys(progressBucket).forEach((lineId) => {
+    if (courseIds.has(String(lineId))) delete progressBucket[lineId];
+  });
+  progress.lines[openingKey] = progressBucket;
+
+  const learnBucket = {
+    ...((learnProgress.openings[openingKey] && learnProgress.openings[openingKey].lines) || {})
+  };
+  Object.keys(learnBucket).forEach((lineId) => {
+    if (courseIds.has(String(lineId))) delete learnBucket[lineId];
+  });
+  learnProgress.openings[openingKey].lines = learnBucket;
+
+  const now = Date.now();
+  const opening = progress.openings[openingKey];
+  opening.prestigeCount = (Number(opening.prestigeCount) || 0) + 1;
+  opening.lastPrestigedAt = now;
+  opening.lastPlayedAt = now;
+  opening.completedToday = 0;
+  opening.streak = 0;
+  opening.todayKey = todayKey();
+
+  learnProgress.openings[openingKey].lastPlayedAt = now;
+  learnProgress.openings[openingKey].lastPrestigedAt = now;
+
+  return {
+    progress,
+    learnProgress,
+    prestigeCount: opening.prestigeCount
+  };
 }
 
 export function loadLearnProgress() {
@@ -175,9 +281,10 @@ export function saveLearnProgress(progress) {
 export function ensureLearnOpening(progress, openingKey) {
   if (!progress.openings) progress.openings = {};
   if (!progress.openings[openingKey]) {
-    progress.openings[openingKey] = { lines: {}, lastPlayedAt: null };
+    progress.openings[openingKey] = { lines: {}, lastPlayedAt: null, lastPrestigedAt: null };
   }
   if (!progress.openings[openingKey].lines) progress.openings[openingKey].lines = {};
+  if (!("lastPrestigedAt" in progress.openings[openingKey])) progress.openings[openingKey].lastPrestigedAt = null;
 }
 
 export function getLearnLineStats(progress, openingKey, lineId) {

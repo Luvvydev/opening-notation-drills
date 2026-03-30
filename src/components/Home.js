@@ -180,6 +180,45 @@ function _isCompleted(stats) {
   return (stats && stats.timesClean >= 1) || false;
 }
 
+function _getOpeningPrestigeCount(progress, openingKey) {
+  const opening = progress && progress.openings && progress.openings[openingKey];
+  return Math.max(0, Number(opening && opening.prestigeCount) || 0);
+}
+
+function _toRomanNumeral(value) {
+  const n = Math.max(0, Math.floor(Number(value) || 0));
+  if (!n) return "0";
+
+  const table = [
+    [1000, "M"],
+    [900, "CM"],
+    [500, "D"],
+    [400, "CD"],
+    [100, "C"],
+    [90, "XC"],
+    [50, "L"],
+    [40, "XL"],
+    [10, "X"],
+    [9, "IX"],
+    [5, "V"],
+    [4, "IV"],
+    [1, "I"]
+  ];
+
+  let remaining = n;
+  let out = "";
+
+  for (let i = 0; i < table.length; i += 1) {
+    const [amount, label] = table[i];
+    while (remaining >= amount) {
+      out += label;
+      remaining -= amount;
+    }
+  }
+
+  return out || String(n);
+}
+
 function _deriveCompletedCount(progress, learnProgress, openingKey, lines) {
   const total = (lines && lines.length) || 0;
   const statsMap = (progress && progress.lines && progress.lines[openingKey]) || {};
@@ -538,6 +577,8 @@ renderHeroCarousel = (slides) => {
     const stats =
       this.state.perOpening[o.key] || { completed: 0, total: (o.lines && o.lines.length) || 0 };
     const pct = stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0;
+    const prestigeCount = _getOpeningPrestigeCount(this.state.progress, o.key);
+    const prestigeReady = stats.total > 0 && stats.completed >= stats.total;
 
     return (
       <div
@@ -573,7 +614,19 @@ renderHeroCarousel = (slides) => {
         <div className="home-course-main">
           <div className="home-course-top">
             <div className="home-course-title">{o.title}</div>
-            {o.badge ? <div className="home-course-badge">{o.badge}</div> : null}
+            <div className="home-course-badges">
+              {prestigeCount > 0 ? (
+                <div className="home-course-prestige-badge" aria-label={`Prestige ${_toRomanNumeral(prestigeCount)}`}>
+                  <span className="home-course-prestige-badge-icon">✦</span>
+                  <span className="home-course-prestige-badge-copy">
+                    <span className="home-course-prestige-badge-label">Prestige</span>
+                    <span className="home-course-prestige-badge-rank">{_toRomanNumeral(prestigeCount)}</span>
+                  </span>
+                </div>
+              ) : null}
+              {prestigeReady ? <div className="home-course-badge home-course-badge-prestige">Prestige ready</div> : null}
+              {o.badge ? <div className="home-course-badge">{o.badge}</div> : null}
+            </div>
           </div>
 
           <div className="home-course-desc">{o.description}</div>

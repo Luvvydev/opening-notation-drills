@@ -17,7 +17,7 @@ import { getOpeningPuzzlePack, getOpeningPuzzleTagHints } from "./openingTrainer
 import { preparePuzzle, moveMatchesUci, getLegalTargets, getSquarePieceColor } from "./openingTrainer/puzzleUtils";
 import { getCoachConfig } from "./openingTrainer/coachConfig";
 
-import { loadProgress, saveProgress, loadLearnProgress, saveLearnProgress, loadSettings, saveSettings, loadCustomLines, saveCustomLines, deleteCustomLineById, makeCustomId, ensureOpening, getLineStats, isCompleted, ensureLearnOpening, getLearnLineStats } from "./openingTrainer/otStorage";
+import { loadProgress, saveProgress, loadLearnProgress, saveLearnProgress, loadSettings, saveSettings, loadCustomLines, saveCustomLines, deleteCustomLineById, makeCustomId, ensureOpening, getLineStats, isCompleted, ensureLearnOpening, getLearnLineStats, getOpeningPrestigeCount, getOpeningCompletionSummary, prestigeOpeningCourse } from "./openingTrainer/otStorage";
 import OpeningTrainerCustomModal from "./openingTrainer/OpeningTrainerCustomModal";
 import OpeningTrainerConfetti from "./openingTrainer/OpeningTrainerConfetti";
 import { db } from "../firebase";
@@ -59,6 +59,40 @@ class BoardErrorBoundary extends Component {
 
 
 const OPENING_SETS = CATALOG_OPENING_SETS;
+
+function toRomanNumeral(value) {
+  const n = Math.max(0, Math.floor(Number(value) || 0));
+  if (!n) return "0";
+
+  const table = [
+    [1000, "M"],
+    [900, "CM"],
+    [500, "D"],
+    [400, "CD"],
+    [100, "C"],
+    [90, "XC"],
+    [50, "L"],
+    [40, "XL"],
+    [10, "X"],
+    [9, "IX"],
+    [5, "V"],
+    [4, "IV"],
+    [1, "I"]
+  ];
+
+  let remaining = n;
+  let out = "";
+
+  for (let i = 0; i < table.length; i += 1) {
+    const [amount, label] = table[i];
+    while (remaining >= amount) {
+      out += label;
+      remaining -= amount;
+    }
+  }
+
+  return out || String(n);
+}
 
 // ---- Logged-out free drills limiter ----
 const FREE_DRILLS_KEY = "chessdrills_free_drills_v1";
@@ -371,6 +405,7 @@ class OpeningTrainer extends Component {
       learnNextReady: false,
       feedbackPreview: null,
       feedbackPreviewPosition: "before",
+      prestigeJustUnlocked: false,
       puzzlePackSize: 0,
       puzzleIndex: 0,
       puzzleRawId: "",
@@ -1415,7 +1450,8 @@ saveCustomModal = () => {
         modePanelVisible: true,
         helpUsed: false,
         drillRunDead: false,
-        transpositionNotice: null
+        transpositionNotice: null,
+        prestigeJustUnlocked: false
       },
       () => {
         const mode = this.state.gameMode || "learn";
@@ -1625,7 +1661,8 @@ if (!nextId) nextId = nextLines[0] ? nextLines[0].id : "";
         modePanelVisible: true,
         helpUsed: false,
         drillRunDead: false,
-        transpositionNotice: null
+        transpositionNotice: null,
+        prestigeJustUnlocked: false
       },
       () => {
         this.resetLine(false);
@@ -1750,6 +1787,7 @@ if (!nextId) nextId = nextLines[0] ? nextLines[0].id : "";
 
     saveProgress(progress);
     this.setState({ progress });
+    return progress;
   };
 
   bumpLearnSeen = () => {
@@ -1805,6 +1843,7 @@ if (!nextId) nextId = nextLines[0] ? nextLines[0].id : "";
 
     saveLearnProgress(learnProgress);
     this.setState({ learnProgress });
+    return learnProgress;
   };
 
   bumpSeenForMode = () => {
@@ -1829,12 +1868,10 @@ if (!nextId) nextId = nextLines[0] ? nextLines[0].id : "";
 
   bumpCompletedForMode = (wasClean) => {
     const mode = this.state.gameMode || "learn";
-    if (mode === "drill") return;
     if (mode === "learn") {
-      this.bumpLearnCompleted(wasClean);
-    } else {
-      this.bumpCompleted(wasClean);
+      return { progress: this.state.progress, learnProgress: this.bumpLearnCompleted(wasClean) || this.state.learnProgress };
     }
+    return { progress: this.bumpCompleted(wasClean) || this.state.progress, learnProgress: this.state.learnProgress };
   };
 
 
@@ -1896,7 +1933,12 @@ onCompletedLine = () => {
     ? !this.state.mistakeUnlocked
     : !this.state.mistakeUnlocked && !this.state.helpUsed;
 
-  this.bumpCompletedForMode(wasClean);
+  const prestigeWasReady = this.getOpeningPrestigeSummary().isComplete;
+  const completionState = this.bumpCompletedForMode(wasClean) || {};
+  const nextProgressForPrestige = completionState.progress || this.state.progress;
+  const nextLearnProgressForPrestige = completionState.learnProgress || this.state.learnProgress;
+  const prestigeIsReady = this.getOpeningPrestigeSummaryFor(nextProgressForPrestige, nextLearnProgressForPrestige, this.state.openingKey).isComplete;
+  const prestigeJustUnlocked = !prestigeWasReady && prestigeIsReady;
 
   const hasPaidAccess = !!(this.props.user && this.props.membershipActive === true);
 
@@ -1920,12 +1962,12 @@ onCompletedLine = () => {
 
   if (mode === "practice" && !wasClean) {
     // Practice still advances, but unclean completions will be prioritized again soon.
-    this.setState({ modePanelVisible: true });
+    this.setState({ modePanelVisible: true, prestigeJustUnlocked });
   }
 
   if (mode === "learn" && !wasClean) {
     // Learn repeats until clean completion.
-    this.setState({ learnForceRepeat: true, modePanelVisible: true });
+    this.setState({ learnForceRepeat: true, modePanelVisible: true, prestigeJustUnlocked: false });
 
     if (this._autoNextTimer) clearTimeout(this._autoNextTimer);
     this._autoNextTimer = setTimeout(() => {
@@ -1974,10 +2016,11 @@ onCompletedLine = () => {
       drillStreak: nextStreak,
       drillBestAllTime: nextBest,
       drillRunDead: false,
-      modePanelVisible: true
+      modePanelVisible: true,
+      prestigeJustUnlocked
     });
   } else {
-    this.setState({ modePanelVisible: true });
+    this.setState({ modePanelVisible: true, prestigeJustUnlocked });
   }
 
   // Confetti + Learn reward gating for Next
@@ -3419,6 +3462,9 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
   const openingDisplayName = this.getOpeningDisplayName();
   const currentLineNumber = getLineNumberForLines(this.state.openingKey, this.getLines(), this.state.lineId);
   const lineMenuLabel = ((mode === "learn" || mode === "drill") && currentLineNumber) ? `#${currentLineNumber}` : "Lines";
+  const prestigeSummary = this.getOpeningPrestigeSummary();
+  const prestigeCount = getOpeningPrestigeCount(this.state.progress, this.state.openingKey);
+  const showPrestigeChip = !prestigeSummary.isComplete || !this.state.userHasPlayedThisLine || this.state.completed;
 
   return (
     <div className="ot-coach" style={{ position: "relative" }}>
@@ -3456,6 +3502,7 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
         </div>
 
         <div className="ot-card-head-right">
+          {showPrestigeChip ? this.renderPrestigeChip({ count: prestigeCount, isReady: prestigeSummary.isComplete }) : null}
           <span className="ot-mini-count">
             {doneYourMoves}/{totalYourMoves}
           </span>
@@ -3590,9 +3637,159 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
         </div>
       </div>
       {this.renderMoveFeedbackCard()}
+      {this.renderPrestigeCard()}
     </div>
   );
 };
+  getPrestigeCourseLines = () => {
+    const set = OPENING_SETS[this.state.openingKey];
+    return (set && Array.isArray(set.lines)) ? set.lines : [];
+  };
+
+  getOpeningPrestigeSummaryFor = (progress, learnProgress, openingKey = this.state.openingKey) => {
+    const set = OPENING_SETS[openingKey] || OPENING_SETS.london;
+    const lines = (set && Array.isArray(set.lines)) ? set.lines : [];
+    return getOpeningCompletionSummary(progress, learnProgress, openingKey, lines);
+  };
+
+  getOpeningPrestigeSummary = () => {
+    return this.getOpeningPrestigeSummaryFor(this.state.progress, this.state.learnProgress, this.state.openingKey);
+  };
+
+  prestigeCurrentOpening = () => {
+    const openingKey = this.state.openingKey;
+    const courseLines = this.getPrestigeCourseLines();
+    const summary = getOpeningCompletionSummary(this.state.progress, this.state.learnProgress, openingKey, courseLines);
+    if (!summary.isComplete) return;
+
+    const progress = {
+      ...this.state.progress,
+      lines: { ...(this.state.progress && this.state.progress.lines) },
+      openings: { ...(this.state.progress && this.state.progress.openings) }
+    };
+    const learnProgress = {
+      ...this.state.learnProgress,
+      openings: { ...((this.state.learnProgress && this.state.learnProgress.openings) || {}) }
+    };
+
+    prestigeOpeningCourse(progress, learnProgress, openingKey, courseLines);
+
+    saveProgress(progress);
+    saveLearnProgress(learnProgress);
+
+    const nextId = pickNextOrderedLearnLineId({
+      openingKey,
+      lines: courseLines,
+      learnProgress
+    }) || pickDefaultLearnLineId(openingKey, courseLines);
+
+    this.setState(
+      {
+        progress,
+        learnProgress,
+        gameMode: "learn",
+        linePicker: "random",
+        lineId: nextId,
+        sessionLineId: null,
+        practiceForceRepeat: false,
+        prevPracticeLineId: null,
+        prevLearnLineId: null,
+        learnRecentLineIds: [],
+        learnForceRepeat: false,
+        learnRewardPending: false,
+        learnNextReady: false,
+        userHasPlayedThisLine: false,
+        helpUsed: false,
+        mistakeUnlocked: false,
+        lastMistake: null,
+        lastMoveFeedback: null,
+        feedbackExpanded: false,
+        completed: false,
+        confettiActive: false,
+        wrongAttempt: null,
+        showHint: false,
+        solveArmed: false,
+        hintFromSquare: null,
+        selectedSquare: null,
+        coachHighlight: null,
+        legalTargets: [],
+        viewing: false,
+        viewIndex: 0,
+        lastMove: null,
+        modePanelVisible: true,
+        transpositionNotice: null,
+        prestigeJustUnlocked: false
+      },
+      () => {
+        this.resetLine(false);
+        this.playAutoMovesIfNeeded();
+      }
+    );
+
+    return { progress, learnProgress, nextId, summary };
+  };
+
+  renderPrestigeChip = ({ count = 0, isReady = false } = {}) => {
+    const prestigeCount = Math.max(0, Number(count) || 0);
+    const ready = !!isReady;
+    if (!prestigeCount && !ready) return null;
+
+    const hasRank = prestigeCount > 0;
+    const chipClassName = "ot-prestige-chip" + (ready ? " is-ready" : "") + (hasRank ? " has-rank" : "");
+
+    return (
+      <span className={chipClassName}>
+        <span className="ot-prestige-chip-icon">✦</span>
+        <span className="ot-prestige-chip-copy">
+          <span className="ot-prestige-chip-label">{hasRank ? "Prestige" : "Ready"}</span>
+          {hasRank ? <span className="ot-prestige-chip-rank">{toRomanNumeral(prestigeCount)}</span> : null}
+        </span>
+      </span>
+    );
+  };
+
+  renderPrestigeCard = () => {
+    const summary = this.getOpeningPrestigeSummary();
+    const prestigeCount = getOpeningPrestigeCount(this.state.progress, this.state.openingKey);
+    const openingName = this.getOpeningDisplayName();
+    const justUnlocked = !!this.state.prestigeJustUnlocked && summary.isComplete;
+    const showPrestigeCard = !this.state.userHasPlayedThisLine || this.state.completed;
+
+    if (!summary.isComplete || !showPrestigeCard) return null;
+
+    const prestigeLabel = `Prestige ${toRomanNumeral(prestigeCount)}`;
+    const statusText = justUnlocked
+      ? `${openingName} is fully cleared. ${summary.completed}/${summary.total} official lines are done, and prestige is now unlocked.`
+      : `${openingName} is fully cleared. ${summary.completed}/${summary.total} official lines are done.`;
+
+    return (
+      <div className={"ot-prestige-card" + (summary.isComplete ? " is-ready" : "")}> 
+        <div className="ot-prestige-card-top">
+          <div>
+            <div className="ot-prestige-eyebrow">Opening completion</div>
+            <div className="ot-prestige-title">
+              {summary.isComplete ? `Prestige available for ${openingName}` : prestigeLabel}
+            </div>
+          </div>
+          {prestigeCount > 0 ? this.renderPrestigeChip({ count: prestigeCount, isReady: true }) : null}
+        </div>
+
+        <div className="ot-prestige-copy">{statusText}</div>
+
+        {summary.isComplete ? (
+          <div className="ot-prestige-actions">
+            <div className="ot-prestige-note">
+              Prestiging keeps your prestige count and resets the official opening course so you can run it again from the start.
+            </div>
+            <button className="ot-button ot-button-small ot-prestige-btn" type="button" onClick={this.prestigeCurrentOpening}>
+              Prestige opening
+            </button>
+          </div>
+        ) : null}
+      </div>
+    );
+  };
+
   setGameMode = (nextMode) => {
     const mode = nextMode || "learn";
 
@@ -3662,7 +3859,8 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
         completed: false,
         lastMove: null,
         selectedSquare: null,
-        legalTargets: []
+        legalTargets: [],
+        prestigeJustUnlocked: false
       },
       () => {
         if (mode === "puzzles") {
@@ -4534,8 +4732,21 @@ render() {
                     </div>
                   </div>
 
-                  <div className="ot-mobile-mini-count">
-                    {doneYourMoves}/{totalYourMoves}
+                  <div className="ot-mobile-topbar-right">
+                    <div className="ot-mobile-mini-count">
+                      {doneYourMoves}/{totalYourMoves}
+                    </div>
+                    {this.getOpeningPrestigeSummary().isComplete ? (
+                      <button
+                        type="button"
+                        className="ot-icon-btn ot-mobile-prestige-action"
+                        onClick={this.prestigeCurrentOpening}
+                        title={`Prestige ${this.getOpeningDisplayName()}`}
+                        aria-label={`Prestige ${this.getOpeningDisplayName()}`}
+                      >
+                        <span className="ot-mobile-prestige-action-icon">✦</span>
+                      </button>
+                    ) : null}
                   </div>
                 </div>
 

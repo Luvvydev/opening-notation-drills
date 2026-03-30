@@ -611,7 +611,9 @@
 .ot-card-head-right {
   display: inline-flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .ot-mini-count {
@@ -2948,5 +2950,211 @@
 
   .ot-container .topnav {
     padding-bottom: 10px;
+  }
+}
+
+
+.ot-prestige-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 30px;
+  padding: 4px 5px 4px 4px;
+  border-radius: 999px;
+  border: 1px solid rgba(250, 204, 21, 0.16);
+  background:
+    radial-gradient(circle at top left, rgba(250, 204, 21, 0.12), transparent 56%),
+    linear-gradient(135deg, rgba(24, 27, 34, 0.96), rgba(41, 32, 57, 0.92));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.08),
+    0 8px 20px rgba(0,0,0,0.16);
+  color: #f8fafc;
+}
+
+.ot-prestige-chip.is-ready {
+  border-color: rgba(250, 204, 21, 0.26);
+  background:
+    radial-gradient(circle at top left, rgba(250, 204, 21, 0.18), transparent 56%),
+    linear-gradient(135deg, rgba(32, 27, 19, 0.96), rgba(58, 39, 72, 0.92));
+  color: #fff7d6;
+}
+
+.ot-prestige-chip-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(250, 204, 21, 0.98), rgba(245, 158, 11, 0.9));
+  color: #17120b;
+  font-size: 10px;
+  line-height: 1;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.35),
+    0 4px 10px rgba(245, 158, 11, 0.24);
+}
+
+.ot-prestige-chip-copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.ot-prestige-chip-label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(248, 250, 252, 0.74);
+}
+
+.ot-prestige-chip-rank {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: #fff7d6;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.ot-prestige-card {
+  margin-top: 14px;
+  padding: 14px;
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.03));
+}
+
+.ot-prestige-card.is-ready {
+  border-color: rgba(168, 85, 247, 0.45);
+  background: linear-gradient(180deg, rgba(168, 85, 247, 0.16), rgba(255,255,255,0.04));
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.22);
+}
+
+.ot-prestige-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ot-prestige-eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.58);
+}
+
+.ot-prestige-title {
+  margin-top: 4px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.ot-prestige-copy {
+  margin-top: 10px;
+  color: rgba(255,255,255,0.8);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.ot-prestige-actions {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ot-prestige-note {
+  flex: 1;
+  color: rgba(255,255,255,0.62);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.ot-prestige-btn {
+  flex-shrink: 0;
+}
+
+.ot-mobile-topbar-right {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.ot-mobile-prestige-action {
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  border: 1px solid rgba(250, 204, 21, 0.22);
+  background:
+    radial-gradient(circle at top left, rgba(250, 204, 21, 0.18), transparent 58%),
+    linear-gradient(135deg, rgba(31, 24, 16, 0.98), rgba(47, 33, 62, 0.92));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.12),
+    0 8px 18px rgba(0,0,0,0.18);
+}
+
+.ot-mobile-prestige-action:hover {
+  border-color: rgba(250, 204, 21, 0.34);
+  transform: translateY(-1px);
+}
+
+.ot-mobile-prestige-action:active {
+  transform: translateY(0);
+}
+
+.ot-mobile-prestige-action-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(250, 204, 21, 0.98), rgba(245, 158, 11, 0.92));
+  color: #17120b;
+  font-size: 10px;
+  line-height: 1;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.35),
+    0 4px 10px rgba(245, 158, 11, 0.24);
+}
+
+@media (max-width: 560px) {
+  .ot-mobile-topbar-right {
+    gap: 6px;
+  }
+
+  .ot-mobile-prestige-action {
+    width: 32px;
+    height: 32px;
+    border-radius: 11px;
+  }
+
+  .ot-prestige-card-top,
+  .ot-prestige-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .ot-prestige-chip.has-rank .ot-prestige-chip-label {
+    display: none;
+  }
+
+  .ot-prestige-btn,
+  .ot-prestige-chip {
+    align-self: flex-start;
   }
 }
