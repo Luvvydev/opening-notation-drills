@@ -229,6 +229,44 @@ function pickNextOrderedLearnLineId({ openingKey, lines, learnProgress, currentL
   return ids[0];
 }
 
+function shouldStartLearnFromIntro(openingKey, lines, progress, learnProgress) {
+  const safeLines = Array.isArray(lines) ? lines.filter(Boolean) : [];
+  if (!safeLines.length) return true;
+
+  const progressLines = (progress && progress.lines && progress.lines[openingKey]) || {};
+  const learnLines =
+    (learnProgress &&
+      learnProgress.openings &&
+      learnProgress.openings[openingKey] &&
+      learnProgress.openings[openingKey].lines) ||
+    {};
+
+  for (let i = 0; i < safeLines.length; i += 1) {
+    const line = safeLines[i];
+    const lineId = String((line && line.id) || "");
+    if (!lineId) continue;
+
+    const practiceStats = progressLines[lineId] || {};
+    const learnStats = learnLines[lineId] || {};
+
+    const hasPracticeProgress =
+      (Number(practiceStats.timesSeen) || 0) > 0 ||
+      (Number(practiceStats.timesCompleted) || 0) > 0 ||
+      (Number(practiceStats.timesClean) || 0) > 0 ||
+      (Number(practiceStats.timesFailed) || 0) > 0;
+
+    const hasLearnProgress =
+      (Number(learnStats.timesSeen) || 0) > 0 ||
+      (Number(learnStats.timesCompleted) || 0) > 0 ||
+      (Number(learnStats.timesClean) || 0) > 0 ||
+      (Number(learnStats.timesFailed) || 0) > 0;
+
+    if (hasPracticeProgress || hasLearnProgress) return false;
+  }
+
+  return true;
+}
+
 function normalizeFenKey(fen) {
   const raw = String(fen || "").trim();
   if (!raw || raw === "start") return "start";
@@ -333,12 +371,16 @@ class OpeningTrainer extends Component {
     const progress = loadProgress();
     const learnProgress = loadLearnProgress();
     const settings = loadSettings(DEFAULT_THEME);
-    const firstId = pickNextOrderedLearnLineId({
-      openingKey: firstSetKey,
-      lines: firstLines,
-      learnProgress,
-      preferredId: sharedCustomLine ? sharedCustomLine.id : null
-    }) || pickDefaultLearnLineId(firstSetKey, firstLines, sharedCustomLine ? sharedCustomLine.id : null);
+    const shouldStartFromIntro = !sharedCustomLine && shouldStartLearnFromIntro(firstSetKey, firstLines, progress, learnProgress);
+    const firstId = sharedCustomLine
+      ? pickDefaultLearnLineId(firstSetKey, firstLines, sharedCustomLine.id)
+      : shouldStartFromIntro
+        ? pickDefaultLearnLineId(firstSetKey, firstLines)
+        : pickNextOrderedLearnLineId({
+            openingKey: firstSetKey,
+            lines: firstLines,
+            learnProgress
+          });
 
     const drillStats = this.loadDrillStats();
 
@@ -370,6 +412,7 @@ class OpeningTrainer extends Component {
       wrongAttempt: null,
       progress: progress,
       learnProgress: learnProgress,
+      learnStartFromIntroPending: shouldStartFromIntro,
       learnForceRepeat: false,
       showHint: false,
       settingsOpen: false,
@@ -1558,9 +1601,13 @@ nextLine = () => {
     const orderedIds = getOrderedLineIdsForLines(openingKey, lines);
     const shouldAdvancePastCurrent = _reason === "next_button" || _reason === "mode_continue" || _reason === "mode_reselect";
 
+    const shouldStartFromIntro = !!this.state.learnStartFromIntroPending;
+
     let nextId = "";
-    if (this.state.learnForceRepeat && this.state.lineId) {
+    if (this.state.learnForceRepeat && this.state.lineId && !shouldAdvancePastCurrent) {
       nextId = String(this.state.lineId);
+    } else if (shouldStartFromIntro) {
+      nextId = pickDefaultLearnLineId(openingKey, lines);
     } else {
       nextId = pickNextOrderedLearnLineId({
         openingKey,
@@ -1579,6 +1626,7 @@ nextLine = () => {
         lineId: safeNextId,
         sessionLineId: safeNextId,
         linePicker: "random",
+        learnStartFromIntroPending: false,
         learnForceRepeat: false,
         prevLearnLineId: this.state.lineId,
         learnRecentLineIds: [],
@@ -1615,7 +1663,8 @@ nextLine = () => {
     if (this.maybeRedirectForLockedOpening(nextKey)) return;
     const nextSet = OPENING_SETS[nextKey] || OPENING_SETS.london;
     const nextLines = nextSet.lines || [];
-    
+    const shouldStartFromIntro = shouldStartLearnFromIntro(nextKey, nextLines, this.state.progress, this.state.learnProgress);
+
 const orderedIdsRaw = getOrderedLineIds(nextKey);
 const orderedIds = (orderedIdsRaw && orderedIdsRaw.length) ? orderedIdsRaw : nextLines.map((l) => l.id);
 
@@ -1631,11 +1680,13 @@ if (this.state.linePicker === "random" && this.state.gameMode === "practice") {
     forceRepeatLineId: null
   }) || "";
 } else if (this.state.linePicker === "random" && this.state.gameMode === "learn") {
-  nextId = pickNextOrderedLearnLineId({
-    openingKey: nextKey,
-    lines: nextLines,
-    learnProgress: this.state.learnProgress
-  }) || "";
+  nextId = shouldStartFromIntro
+    ? pickDefaultLearnLineId(nextKey, nextLines)
+    : pickNextOrderedLearnLineId({
+        openingKey: nextKey,
+        lines: nextLines,
+        learnProgress: this.state.learnProgress
+      });
 } else {
   nextId = pickRandomLineId(nextLines, null) || "";
 }
@@ -1647,6 +1698,7 @@ if (!nextId) nextId = nextLines[0] ? nextLines[0].id : "";
         openingKey: nextKey,
         lineId: nextId,
         linePicker: "random",
+        learnStartFromIntroPending: shouldStartFromIntro,
         prevPracticeLineId: null,
         prevLearnLineId: null,
         learnRecentLineIds: [],
@@ -2028,7 +2080,11 @@ onCompletedLine = () => {
 
   // Next is a Learn only reward, reset it on every completion
   if (mode === "learn") {
-    this.setState({ learnNextReady: false, learnRewardPending: wasClean });
+    this.setState({
+      learnNextReady: false,
+      learnRewardPending: wasClean,
+      learnForceRepeat: wasClean ? false : this.state.learnForceRepeat
+    });
   }
 
   if (wantsConfetti) {
@@ -3677,11 +3733,7 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
     saveProgress(progress);
     saveLearnProgress(learnProgress);
 
-    const nextId = pickNextOrderedLearnLineId({
-      openingKey,
-      lines: courseLines,
-      learnProgress
-    }) || pickDefaultLearnLineId(openingKey, courseLines);
+    const nextId = pickDefaultLearnLineId(openingKey, courseLines);
 
     this.setState(
       {
@@ -3695,6 +3747,7 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
         prevPracticeLineId: null,
         prevLearnLineId: null,
         learnRecentLineIds: [],
+        learnStartFromIntroPending: false,
         learnForceRepeat: false,
         learnRewardPending: false,
         learnNextReady: false,
