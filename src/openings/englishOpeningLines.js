@@ -1,5 +1,20 @@
 import { withOpeningFeedback } from "./feedback";
 
+// SEO / page intro text for English Opening drills
+export const englishOpeningSEOText = `
+The English Opening (1. c4) is the ultimate hypermodern system. Instead of occupying the center immediately with pawns, we control it from the flanks and invite the opponent to overextend.
+
+The "North Star" of your strategy is the {{square d5}} square. Every move you make—from the c4 pawn to the "Hypermodern Sniper" on g2—is designed to exert maximum pressure on that single point.
+
+These drills cover the core English structures:
+- The d5 Battle: Coordination between Nc3 and Bg2 to make the d5 break a mistake for Black.
+- The Botvinnik System: Creating an unbreakable "clamp" on d5 with c4, Nc3, and e4.
+- Symmetrical Struggles: How to break the symmetry and out-maneuver your opponent in closed positions.
+- Reversed Sicilians: Using your extra tempo to turn Black's favorite defense against them.
+
+Don't rush the center. Control the flanks, pressure d5, and wait for the perfect moment to strike!
+`;
+
 export const englishOpeningLines = withOpeningFeedback([
   {
     "category": "English Opening",
@@ -8,9 +23,9 @@ export const englishOpeningLines = withOpeningFeedback([
     "description": "Early e4 push against Nf6",
     "moves": ["c4", "Nf6", "Nc3", "e6", "e4", "Bb4", "e5", "Bxc3", "bxc3", "Ne4", "Qg4", "Ng5", "h4"],
     "explanations": [
-      "Let's learn the English Opening! Start with pawn to {{square c4}} and fight for the center from the flank.",
+      "Let's learn the English Opening! White starts with {{square c4}} to control {{square d5}} with a flank pawn.",
       "Black responds with the knight to {{square f6}}, preparing to control the center and develop pieces.",
-      "We develop our queenside knight, supporting the center and preparing to control key squares.",
+      "The Support Beam! We develop the queenside knight to add pressure to the {{square d5}} 'North Star'.",
       "Black plays {{square e6}}, supporting a future {{square d5}} break and preparing bishop development.",
       "We strike in the center with {{square e4}}, establishing a strong pawn presence and challenging Black's setup.",
       "Black pins our knight with B{{square b4}}, creating immediate tension and threatening to double our pawns.",
@@ -20,7 +35,32 @@ export const englishOpeningLines = withOpeningFeedback([
       "Black's knight moves to {{square e4}}, occupying a central outpost and attacking our weakened pawn structure.",
       "We develop the queen aggressively to {{square g4}}, attacking the {{square g7}} pawn and threatening the {{knight e4 full}}.",
       "Black retreats the knight to {{square g5}}, avoiding capture but moving to a less stable square.",
-      "We're winning that knight, By pushing {{square h4}}, we attack the {{knight g5 full}} which has limited retreat squares"
+      "We're winning that knight! By pushing {{square h4}}, we attack the {{knight g5 full}} which has limited retreat squares."
+    ]
+  },
+
+  {
+    "category": "English Opening",
+    "id": "english-botvinnik-clamp",
+    "name": "Botvinnik System: The d5 Clamp",
+    "description": "The ultimate hypermodern setup. Use c4, Nc3, and e4 to create an unbreakable grip on the center.",
+    "moves": ["c4", "e5", "Nc3", "Nc6", "g3", "g6", "Bg2", "Bg7", "e4", "d6", "Nge2", "Nf6", "O-O", "O-O", "d3"],
+    "explanations": [
+      "Let's learn the English Opening! White takes control of d5.",
+      "Black answers with the Reversed Sicilian.",
+      "The Support Beam joins the fight.",
+      "Black develops.",
+      "Preparing the Sniper Nest.",
+      "Black prepares their house.",
+      "The Hypermodern Sniper is in position on {{square g2}}!",
+      "Black completes the fianchetto.",
+      "The Botvinnik Clamp! We play {{square e4}}, creating a massive pawn triangle that makes the {{square d5}} square ours forever.",
+      "Black solidifies their structure.",
+      "The Pro Knight! We develop to {{square e2}} so we don't block our sniper on g2. This knight can jump to f4 later to add even more pressure.",
+      "Black develops normally.",
+      "Castle to safety.",
+      "Black castles.",
+      "Solidify! We protect our clamp and prepare for a slow, positional squeeze. White has total control of the 'North Star'!"
     ]
   },
   {

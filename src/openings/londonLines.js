@@ -4,20 +4,17 @@ import { withOpeningFeedback } from "./feedback";
 
 // SEO / page intro text for London System drills
 export const londonSEOText = `
-The London System starts with d4 and Bf4, but the point is not mindless setup repetition. The value
-of the opening is that it gives White a stable shell in many positions, which means you can spend
-less energy surviving the opening and more energy understanding the middlegame that follows.
+The London System (1. d4 followed by Bf4) is "The Tank" of chess openings. It's incredibly solid, works against almost anything, and relies on a powerful pawn pyramid rather than memorizing thousands of variations.
 
-These drills focus on the practical London patterns that actually decide games: getting the bishop
-outside the pawn chain before e3, completing the setup with Nf3, Nbd2, c3, and Bd3 when the position
-allows it, retreating Bg3 against ...Bd6 and accepting hxg3 if Black helps open the h-file, dropping
-Bc2 after ...c4 so the bishop still points at the kingside, using Ne5 to provoke ...Bxe5 dxe5 and
-then bringing the queen toward h5, challenging early ...Bf5 with Bd3 so Black has to decide whether
-to help your queen develop, and grabbing more space with e4 against King's Indian setups.
+Your goal is to build the "London Pyramid" (c3-d4-e3), plant a dominant "Anchor Knight" on e5, and use your "Golden Bishop" on d3 to laser-beam the opponent's kingside.
 
-The goal is to make the London feel less like a canned setup and more like a coached plan. You are
-learning the ideal structure, the common exceptions, and the attacking ideas that appear once Black
-underestimates the kingside.
+These drills cover the core London logic:
+- The "C5? C3!" Mantra: How to respond to the most common challenge to your center.
+- The Anchor Knight: Using e5 as a springboard for a crushing kingside attack.
+- Handling Bishop Trades: What to do when Black tries to trade off your Golden Bishop.
+- Aggressive Alternatives: When to skip the pyramid and launch a direct pawn storm with Nc3 and h4 against King's Indian setups.
+
+Build the tank, control the center, and crush the kingside—that's the London way!
 `;
 
 export const londonLines = withOpeningFeedback([
@@ -26,20 +23,44 @@ export const londonLines = withOpeningFeedback([
   {
     category: "Classic London",
     id: "london-classic-solid-setup",
-    name: "London ideal setup: core shell",
-    description: "Start with d4, get the bishop out before e3, then build toward Nf3, Nbd2, c3, and Bd3 depending on Black's setup. The point is to reach a playable middlegame without wasting energy on move-order noise.",
-    moves: ["d4", "d5", "Bf4", "Nf6", "e3", "e6", "Nf3", "Bd6", "Nbd2", "O-O"],
+    name: "The London Pyramid: Ideal setup",
+    description: "Build the c3-d4-e3 pyramid and prepare the Golden Bishop for the attack.",
+    moves: ["d4", "d5", "Bf4", "Nf6", "e3", "e6", "Nf3", "Bd6", "Bg3", "O-O", "Bd3", "c5", "c3"],
     explanations: [
-      "Let's learn the London System! Start with pawn to {{square d4}} and build a solid setup before the attack starts.",
-      "Black meets the center and asks what kind of Queen's Pawn structure you want.",
-      "B{{square f4}} is the point of the London. Committing the bishop early is flexible, as we don't know for sure where our knights are going yet.",
-      "Black develops and keeps an eye on {{square e4}}.",
-      "Now {{square e3}} completes one side of what we call a 'pyramid' on this side of the board.",
-      "Black supports {{square d5}} and keeps normal development available.",
-      "N{{square f3}} is part of the standard shell, but it works best after {{square e3}} has already taken the sting out of early pins.",
-      "Black offers the usual bishop trade, which is one of the main practical questions in London positions.",
-      "Nb{{square d2}} is the next standard piece. It backs up {{square e4}} and N{{square e5}} and prepares the full London pyramid.",
-      "Black castles, and now the opening phase is mostly done. From here the game is about plans."
+      "Let's learn the London System! White starts with the queen's pawn. {{square d4}}",
+      "Black mirrors and asks what kind of Queen's Pawn structure you want.",
+      "The London Bishop! We develop our star piece early and flexibly.",
+      "Black develops their best defender.",
+      "Solidify! We build the first half of our pyramid and open the path for the other bishop.",
+      "Black supports their center and prepares development.",
+      "Developing the knight toward its future home on e5.",
+      "Black challenges our star bishop! They want to trade it off.",
+      "The Retreat: We drop the bishop back. If they take, we open the h-file for our rook! A great tradeoff.",
+      "Black castles to safety.",
+      "The Golden Bishop! We put our best attacker on its most aggressive square, eyeing h7.",
+      "Black strikes back! The classic challenge to our center.",
+      "The 'C5? C3!' Rule: Every time they play c5, we answer with c3 to maintain our rock-solid pyramid. The tank is complete!"
+    ]
+  },
+
+  {
+    category: "Aggressive Plans",
+    id: "london-vs-g6-aggressive",
+    name: "Jobava London: Crushing the kingside fianchetto",
+    description: "Against ...g6 setups, skip the slow pyramid! Play Nc3, Qd2, and launch a pawn storm with h4.",
+    moves: ["d4", "Nf6", "Nc3", "g6", "Bf4", "Bg7", "Qd2", "d6", "O-O-O", "O-O", "h4"],
+    explanations: [
+      "White takes the center.",
+      "Black responds with the hypermodern approach.",
+      "The Shift! Against ...g6, we play Nc3. We aren't building a pyramid today; we're launching a tank attack.",
+      "Black prepares the bishop house.",
+      "The London Bishop still joins the party, but with a more aggressive mission.",
+      "Black completes the fianchetto. That bishop is their pride and joy—we're going to trade it.",
+      "Battery! We prepare Bh6 to remove that powerful defender.",
+      "Black solidifies their center.",
+      "Castle Long! We put our king on the other side so we can launch our pawns without fear.",
+      "Black castles to safety—or so they think.",
+      "CHARGE! We launch the h-pawn. Our goal is h5, ripping open the kingside and delivering mate. This is how you WIN with the London!"
     ]
   },
 
@@ -49,8 +70,8 @@ export const londonLines = withOpeningFeedback([
     description: "This is the standard pyramid version of the London. c3 locks down d4, Nbd2 backs up e4 and Ne5, and Bd3 is often the next natural square.",
     moves: ["d4", "d5", "Bf4", "Nf6", "e3", "e6", "Nf3", "Bd6", "c3", "O-O", "Nbd2"],
     explanations: [
-      "Take space and make Black commit to a structure.",
-      "Black mirrors the center and keeps the position balanced for now.",
+      "White claims the center and prepares the London shell.",
+      "Let's learn the London System! Black mirrors and asks what kind of Queen's Pawn structure you want.",
       "Develop the bishop before locking the chain with {{square e3}}.",
       "Black develops and contests the key central squares.",
       "Support {{square d4}} and keep the London shell intact.",

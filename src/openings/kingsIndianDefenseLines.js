@@ -1,5 +1,18 @@
 import { withOpeningFeedback } from "./feedback";
 
+export const kingsIndianSEOText = `
+The King's Indian Defense (1. d4 Nf6 2. c4 g6) is the ultimate hypermodern defense. Instead of fighting for the center with pawns early on, we let White build a massive, scary-looking center so we can systematically tear it down later.
+
+Your star piece is the "King's Indian Bishop" on {{square g7}}, which laser-beams across the board once the center opens up.
+
+These drills cover the core King's Indian battles:
+- The Classical Variation: Handling White's massive pawn center with thematic breaks like ...e5 and ...d5.
+- The Sämisch and Four Pawns Attack: Surviving White's most aggressive attempts to crush us before we can coordinate.
+- Tactical Counterstrikes: How to use your superior coordination and the open lines to launch a devastating kingside attack.
+
+Don't fear the space. In the King's Indian, White's big center is just a big target!
+`;
+
 export const kingsIndianDefenseLines = withOpeningFeedback([
   {
     "category": "King's Indian Defense",
@@ -99,34 +112,34 @@ export const kingsIndianDefenseLines = withOpeningFeedback([
       "Qc5"
     ],
     "explanations": [
-      "White establishes central control with the queen's pawn opening.",
-      "Black develops the knight to its natural square, attacking central squares.",
-      "White expands on the queenside, supporting {{square d4}} and gaining space.",
-      "Black prepares the King's Indian formation with the fianchetto.",
-      "White develops the knight to support the {{square e4}} advance.",
-      "Black completes the fianchetto, placing the bishop on the critical diagonal.",
-      "White establishes the classical pawn center with {{square d4}} and {{square e4}}.",
-      "Black supports the {{square e5}} break, typical King's Indian structure.",
-      "White develops the knight, preparing kingside castling.",
-      "Black castles before starting any real counterplay. In this opening, getting the king safe comes first.",
-      "White develops the bishop quietly, preparing to castle kingside.",
-      "Once the king is safe, Black does not need more waiting moves. ...{{square e5}} is the standard strike at White's center.",
-      "White castles to safety before the tension escalates.",
-      "Black resolves the central tension in their favor.",
-      "White recaptures with the knight, controlling central squares.",
-      "Black places the rook on the e-file, supporting the center fight and future kingside play.",
-      "White strengthens the {{square e4}} pawn but weakens kingside dark squares.",
-      "Black prepares the second central hit with ...{{square d5}} instead of letting White keep the whole center for free.",
-      "White develops the bishop to defend {{square d4}} and control dark squares.",
-      "Black follows through with ...{{square d5}} and challenges White's center again before White can settle.",
-      "White captures to relieve pressure but gives up the center.",
-      "Black recaptures with the knight, occupying a strong central square.",
-      "White retreats the bishop, avoiding exchange but becoming passive.",
-      "Black's knight jumps forward and starts turning central pressure into kingside threats.",
-      "White develops the bishop with tempo, attacking {{square f7}}.",
-      "Black's queen enters the game with a double attack on {{square g2}} and {{square c5}}.",
-      "White's bishop blocks the queen's attack on {{square g2}}.",
-      "Black's queen retreats to a safe square with an attack on the bishop."
+      "White takes the center.",
+      "Let's learn the King's Indian Defense! We play ...N{{square f6}} to stop {{square e4}} temporarily and prepare our kingside fianchetto.",
+      "White grabs more space. This is exactly what we want: let White build a massive center so we can tear it down later.",
+      "Prepare the bishop house. We're going to put our bishop on {{square g7}} to laser-beam down the long diagonal.",
+      "White develops and supports the {{square e4}} advance.",
+      "Complete the fianchetto. Our bishop on {{square g7}} is the pride and joy of the King's Indian.",
+      "White establishes the classical pawn center with {{square d4}} and {{square e4}}. It looks scary, but it's a target.",
+      "Play ...{{square d6}} to stop White from pushing {{square e5}} and kicking our knight.",
+      "White develops naturally, preparing to castle.",
+      "Castle! In the King's Indian, we tuck our king away safely before starting any fireworks in the center.",
+      "White develops quietly, preparing to castle.",
+      "Strike! This is the thematic break of the King's Indian. We hit White's proud center with ...{{square e5}}.",
+      "White castles, ignoring the tension for now.",
+      "Release the tension! We trade on {{square d4}} to open the e-file and activate our pieces.",
+      "White recaptures, centralizing the knight.",
+      "Put the rook on the half-open e-file, eyeing White's center and preparing future kingside play.",
+      "White solidifies {{square e4}} with f3, but this weakens their dark squares slightly.",
+      "Prepare the second central break! We play ...{{square c6}} to support ...{{square d5}}.",
+      "White develops the bishop, aiming at our queenside.",
+      "Boom! The second strike. We play ...{{square d5}} to blow up whatever is left of White's center.",
+      "White captures to relieve the pressure.",
+      "Recapture with the knight! Now our pieces are springing to life in the center.",
+      "White retreats the bishop to a safer square.",
+      "Jump into the attack! The knight lands on {{square f4}}, an incredibly annoying square for White.",
+      "White develops the bishop, aiming at {{square f7}}.",
+      "Bring the queen out! ...Q{{square g5}} creates a double attack, threatening mate on {{square g2}}.",
+      "White blocks the mate threat with the bishop.",
+      "Slide the queen to {{square c5}}, attacking the loose bishop on {{square c4}}. The initiative is fully ours!"
     ]
   },
   {

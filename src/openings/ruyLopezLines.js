@@ -4,13 +4,16 @@ import { withOpeningFeedback } from "./feedback";
 
 // SEO / page intro text for Ruy Lopez drills
 export const ruyLopezSEOText = `
-The Ruy Lopez (Spanish Opening) starts with 1.e4 e5 2.Nf3 Nc6 3.Bb5.
-The opening is about central control and clear piece jobs, not memorizing endless variations.
+The Ruy Lopez (Spanish Opening: 1. e4 e5 2. Nf3 Nc6 3. Bb5) is known as the "Spanish Torture" for a reason. White doesn't just attack; they build a deep, positional squeeze that can last the entire game.
 
-White usually pressures e5, puts a rook on e1, prepares c3 and d4, and only trades on c6 when the e-pawn is secure.
-From there, White often uses the center and extra space to build a kingside attack while Black looks for queenside counterplay.
+The goal isn't necessarily to take on c6 immediately—it's to pressure the defender of {{square e5}} and prepare a massive central expansion with c3 and d4.
 
-These drills focus on the move orders and plans that make those middlegames easier to understand.
+These drills cover the royalty of openings:
+- The Morphy Defense (3... a6): Asking the bishop a question and choosing between the Exchange or the Main Line.
+- The Berlin Defense: Handling the "Berlin Wall" with solid development and endgame precision.
+- Long-term Maneuvers: The classic Ruy Lopez plan of Nbd2-f1-g3 and placing the rook on e1 to support the center.
+
+The Ruy Lopez is about clear piece jobs and patience. Every move is a step toward a dominant center and a crushing kingside attack!
 `;
 
 
@@ -24,21 +27,21 @@ export const ruyLopezLines = withOpeningFeedback([
     description: "3...d6 with 4.d4 and Bxc6+. White trades queens and wins the e5 pawn.",
     moves: ["e4","e5","Nf3","Nc6","Bb5","d6","d4","a6","Bxc6+","bxc6","dxe5","dxe5","Qxd8+","Kxd8","Nxe5"],
     explanations: [
-      "Let's learn the Ruy Lopez! Start with pawn to {{square e4}} and build toward quick development and long term pressure.",
-      "Black mirrors and keeps equal central space.",
-      "Develop and attack {{square e5}}.",
-      "Defend {{square e5}} and develop a piece.",
-      "Pin the knight and pressure {{square e5}} indirectly.",
-      "Steinitz style: protect {{square e5}} and build a solid center.",
-      "Hit the center immediately and open the position.",
-      "Kick the bishop and gain queenside space.",
-      "Trade the knight structure and remove the defender of {{square e5}}.",
-      "Recapture and accept doubled pawns for the bishop pair and open files.",
-      "Take the pawn and force Black to recapture, opening lines.",
-      "Recapture and keep central presence.",
-      "Trade queens into an endgame where {{square e5}} is harder to hold.",
-      "Forced king recapture, queens are off.",
-      "Win the loose {{square e5}} pawn and centralize a knight."
+      "Let's learn the Ruy Lopez! White claims the center and prepares for an open game.",
+      "Black mirrors, keeping the center balanced.",
+      "Develop and attack {{square e5}}. The standard Spanish setup.",
+      "Black develops a knight to defend. This is the main road of open games.",
+      "The Ruy Lopez! We put the bishop on an active diagonal, pressuring the defender of {{square e5}}.",
+      "The Steinitz Defense. Black chooses a solid but cramped structure to hold the center.",
+      "Strike in the center immediately! We've already got our pieces ready for this break.",
+      "Black asks our bishop a question. 'Are you going to take or stay?'",
+      "We take! We trade our bishop for the knight to damage Black's pawn structure.",
+      "Black recaptures, but now they have doubled c-pawns. This is the structural tradeoff.",
+      "Release the tension. We trade on {{square e5}} to clarify the center.",
+      "Black recaptures, but their center is already looking loose.",
+      "Trade queens! We drag the king into the open and move into a winning endgame.",
+      "Forced king move. Black has lost the right to castle and their king is stuck in the middle.",
+      "Win the pawn! Our knight lands on {{square e5}} with a huge advantage. White is winning here!"
     ]
   },
 
@@ -49,23 +52,23 @@ export const ruyLopezLines = withOpeningFeedback([
     description: "Similar structure, but Black pins with ...Bg4 and recaptures with the rook after Qxd8+.",
     moves: ["e4","e5","Nf3","Nc6","Bb5","d6","d4","a6","Bxc6+","bxc6","dxe5","Bg4","O-O","dxe5","Qxd8+","Rxd8","Nxe5"],
     explanations: [
-      "Claim the center and open lines.",
-      "Mirror the center.",
-      "Develop and pressure {{square e5}}.",
-      "Defend {{square e5}} and develop.",
-      "Pin pressure on {{square c6}} and {{square e5}}.",
-      "Solid defense of {{square e5}}.",
-      "Challenge the center right away.",
-      "Ask the bishop to decide and gain space.",
-      "Trade on {{square c6}} to weaken Black's pawn structure.",
-      "Recapture and open the b file.",
-      "Take on {{square e5}} and force Black to respond.",
-      "Develop with tempo, pinning and adding pressure to the center.",
-      "Castle for king safety and connect rooks.",
-      "Recapture and restore material balance.",
-      "Trade queens to simplify and make {{square e5}} a target.",
-      "Rook recaptures to keep the king safer and activate a rook.",
-      "Take the {{square e5}} pawn and centralize."
+      "Taking the center.",
+      "Meeting the challenge.",
+      "Developing and attacking.",
+      "Defending and developing.",
+      "The Ruy Lopez! Pinning the knight to pressure the center.",
+      "Solid defense, but it gives White an easy plan for expansion.",
+      "Strike now! We challenge the d6-e5 structure directly.",
+      "Black kicks the bishop, hoping for a retreat.",
+      "Trade on {{square c6}}. We're happy to give up the bishop pair for a better pawn structure.",
+      "Black recaptures, opening the b-file for their rook later.",
+      "Open the center! We force Black to resolve the tension.",
+      "Black pins our knight, trying to create counterplay.",
+      "Castle! We secure our king and activate the rook. The f1-e1-d1 route is coming.",
+      "Black recaptures, but the center is wide open.",
+      "Trade queens and simplify. We're heading for an endgame where Black's doubled pawns are a liability.",
+      "Black recaptures with the rook, activating a piece but leaving the king in the center.",
+      "Grab the pawn! Our knight is centralized and dominant. White has a clear advantage."
     ]
   },
 

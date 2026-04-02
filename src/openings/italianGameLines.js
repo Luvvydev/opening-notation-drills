@@ -1,67 +1,80 @@
 import { withOpeningFeedback } from "./feedback";
 
+export const italianGameSEOText = `
+The Italian Game (1. e4 e5 2. Nf3 Nc6 3. Bc4) is one of the oldest and most fundamental openings in chess. It focuses on three things: rapid development, total central control, and immediate pressure on the weakest point in Black's camp: the {{square f7}} pawn.
+
+The star of the show is the "Italian Bishop" on {{square c4}}, which laser-beams the king before Black can even castle.
+
+These drills cover the core Italian battles:
+- The Giuoco Piano (Quiet Game): Using c3 and d4 to build a massive pawn center and overwhelm Black with activity.
+- The Two Knights Defense: Sharp tactical races where White targets f7 and Black counterstrikes in the center.
+- Tactical Fireworks: Forcing lines where a single misstep by Black leads to a direct mating attack or a winning material advantage.
+
+Don't just develop—develop with a purpose. Every move should prepare the central strike or increase the pressure on the king!
+`;
+
 export const italianGameLines = withOpeningFeedback([
   {
     "category": "Italian Game",
     "id": "italian-01",
-    "name": "French Attack Transposition",
-    "description": "e4 e5 opening transposing to French structure",
+    "name": "French Defense Transposition (Tarrasch/Classical style)",
+    "description": "Black answers 1.e4 with e6, leading to French Defense structures that require solid central play.",
     "moves": ["e4", "e6", "d4", "d5", "Nc3", "Nf6", "e5", "Nfd7", "f4", "c5", "Nf3", "Nc6", "Be3", "cxd4", "Nxd4", "Bc5", "Qd2", "O-O"],
     "explanations": [
       "Let's learn the Italian Game! Start with pawn to {{square e4}} and build toward quick development and pressure on {{square f7}}.",
-      "French Defense - Black prepares to challenge the center with ...{{square d5}}.",
-      "White reinforces the center and prepares to establish a strong pawn duo.",
-      "Black immediately challenges White's central pawn structure.",
-      "White develops the knight to support the central pawns and attack {{square d5}}.",
-      "Black develops the knight, attacking the {{square e4}} pawn and preparing kingside castling.",
-      "White advances the pawn, gaining space and attacking the knight.",
-      "The knight retreats to a defensive square while supporting the {{square c5}} break.",
-      "White secures the {{square e5}} pawn and prepares a potential kingside expansion.",
-      "Black strikes at the center, attacking the {{square d4}} pawn and White's pawn chain.",
-      "White develops the knight to its natural square, controlling key central squares.",
-      "Black develops the knight, increasing pressure on the {{square d4}} pawn.",
-      "White develops the bishop to support the {{square d4}} pawn and prepare queenside castling.",
-      "Black captures on {{square d4}}, forcing the recapture and opening the c-file.",
-      "White recaptures with the knight, centralizing the piece and controlling key squares.",
-      "Black develops the bishop actively, attacking the knight and pinning it against the queen.",
-      "White develops the queen to connect the rooks and prepare queenside castling.",
-      "Black castles to safety, completing kingside development and securing the king."
+      "French Defense! We're no longer in a symmetrical game; we're in a fight for the center.",
+      "White claims full control. We build the dream center.",
+      "Black strikes back immediately, challenging our d4 pawn.",
+      "Develop and defend! We support our center while bringing a piece into the game.",
+      "Black pressures e4 and prepares to develop their kingside.",
+      "The space wedge! We push forward, cramping Black's position and kicking the knight.",
+      "The knight retreats, but it's already eyeing the c5 break.",
+      "Solidify! We support our e5 pawn and prepare for a kingside attack.",
+      "Black strikes at the base of our chain! The classic French counter-attack.",
+      "Develop naturally and keep the center under control.",
+      "Black adds more pressure to d4. The tension is rising!",
+      "Develop the bishop and support the center. We're getting ready for queenside castling.",
+      "Trade! Black tries to clear out the center.",
+      "Recapture and centralize. Our knight is a monster on d4!",
+      "Black develops their 'good' bishop and pins our knight. A very active defense.",
+      "Connect the rooks and prepare to castle long. White is ready for a big attack.",
+      "Black castles to safety. Now it's a race between our kingside attack and Black's queenside pressure!"
     ]
   },
   {
     "category": "Italian Game",
     "id": "italian-02",
-    "name": "Italian Center Attack - Main Tactical Line",
-    "description": "Main tactical line in the c3 and d4 center attack after Black grabs on e4 and c3.",
+    "name": "Italian Center Attack - The Main Line Blast",
+    "description": "The classic center attack with c3 and d4. White sacrifices material for a devastating lead in development and an open e-file.",
     "moves": ["e4", "e5", "Nf3", "Nc6", "Bc4", "Bc5", "c3", "Nf6", "d4", "exd4", "cxd4", "Bb4+", "Nc3", "Nxe4", "O-O", "Nxc3", "bxc3", "Bxc3", "Ba3", "Bxa1", "Re1+", "Ne7", "Bxe7", "Qxe7", "Rxe7+", "Kxe7", "Qxa1"],
     "explanations": [
-      "White establishes central control with the king's pawn opening.",
-      "Black mirrors the move, contesting the center immediately.",
-      "White develops the knight to attack the {{square e5}} pawn and control central squares.",
-      "Black develops the knight to defend the {{square e5}} pawn and maintain central influence.",
-      "White's bishop takes up an aggressive post on the {{square f7}}-hitting diagonal.",
-      "Black develops the bishop symmetrically, creating the Italian Game structure.",
-      "Prepare {{square d4}}. This is the core Italian center attack, hitting both the bishop and the {{square e5}} pawn.",
-      "Black develops the knight with tempo by attacking the {{square e4}} pawn.",
-      "Strike in the center with tempo on the bishop and the {{square e5}} pawn.",
-      "Black takes in the center, but White gets open lines and rapid development.",
-      "White recaptures with the c-pawn to keep the center mobile and open the c-file.",
-      "Best defensive resource. Black checks first so White cannot just keep rolling the center.",
-      "White blocks the check while developing a piece to its natural square.",
-      "Black grabs {{square e4}} because the knight is pinned, but that also turns the e-file into White's attacking highway.",
-      "Do not defend passively. Castling unpins the knight and keeps the initiative.",
-      "Greedy but common. Black removes the knight and hits the queen, yet loses time while White's attack grows.",
-      "White recaptures, opens the b-file, and gains another tempo on the bishop.",
-      "Black takes a second pawn, but the bishop drifts far away from the king.",
-      "Key attacking move. White develops with tempo and cuts off Black's king from easy safety.",
-      "Black captures the rook, winning material but fatally delaying development.",
-      "Use the open e-file immediately while Black is still stuck in the center.",
-      "Forced block. The knight steps in, but stays pinned and overloaded.",
-      "White removes the defender while keeping the queen pinned behind it.",
-      "Black must recapture, but the queen remains pinned to the king.",
-      "The pin pays off. White wins the queen and keeps the attack.",
-      "The king is forced to recapture, losing the right to castle.",
-      "White's queen captures the bishop, regaining material with a dominant position."
+      "White claims the center. Standard and strong.",
+      "Let's learn the Italian Game! Black mirrors. Symmetrical but not for long.",
+      "Develop the knight and attack e5. We're forcing Black to react.",
+      "Black defends and develops. The stage is set.",
+      "The Italian Bishop! We take aim at the weakest square: {{square f7}}.",
+      "The Giuoco Piano. Black develops their own bishop, mirroring our pressure.",
+      "Prepare the strike! We play c3 to support a future d4 push.",
+      "Black develops and hits e4. They're playing for counter-activity.",
+      "Boom! The central strike. We attack the bishop and the center simultaneously.",
+      "Black takes, but they're opening lines for our pieces.",
+      "Recapture with the pawn. We keep our central dominance.",
+      "Check! Black uses their best defensive resource to slow us down.",
+      "Develop and block. We're ignoring the pin and focusing on development.",
+      "Greed! Black takes on e4, but they're walking into a firestorm.",
+      "Castle and unpin! We're ignoring the material and opening the e-file for our rook.",
+      "Black keeps taking material, but they're losing precious time.",
+      "Recapture. Every piece of ours is now active and ready to strike.",
+      "Black grabs a second pawn and a rook, but their pieces are far away while ours are attacking their king.",
+      "The crusher! We develop with tempo and cut the king off from castling. The king is trapped in the center!",
+      "Black captures the rook, but they're fatally behind in development.",
+      "Check! The 'Highway' is open. The rook on e1 is a monster.",
+      "Forced block. The knight is pinned and overloaded. It's almost over.",
+      "Remove the defender! We trade our bishop for the key defender of the king.",
+      "Black must take back, but their queen is now pinned to the king.",
+      "The payoff! We win the queen and maintain a winning attack.",
+      "The king is dragged into the open, losing all rights to safety.",
+      "Regain material and dominate. White has a queen for a rook and bishop, and Black's king is still a target. A tactical masterpiece!"
     ]
   },
   {

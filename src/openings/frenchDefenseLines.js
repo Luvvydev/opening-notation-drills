@@ -1,15 +1,16 @@
 import { withOpeningFeedback } from "./feedback";
 
 export const frenchDefenseSEOText = `
-The French Defense starts with 1. e4 e6 and fights for the center with ...d5 while keeping Black solid.
+The French Defense (1. e4 e6) is a counter-attacking opening. You let White build a big center, and then you immediately try to tear it down with ...d5 and ...c5.
 
-These drills cover the main student-facing structures in this file:
-- Advance Variation plans with ...c5, ...Qb6, ...Nf5, and the practical ...Bd7 / ...Rc8 ideas
-- Tarrasch Variation pressure lines, including the Kf1 Greek gift trap and the ...f6 tactical response
-- Exchange and Fort Knox / Rubinstein setups where development plans matter more than memorizing one move order
-- Winawer and Classical structures with pins, central breaks, and concrete tactical races
+A big theme in the French is the "Bad French Bishop" on c8, which gets blocked by your own e6 pawn. A lot of your plans will revolve around finding a job for that bishop or trading it off.
 
-Each line explains the actual target, break, or tactical point so the move reasons stay tied to the board.
+These drills cover the main structures you'll face:
+- Advance Variation (3. e5): The center is locked. Your job is to attack the base of White's pawn chain (d4) with ...c5, ...Nc6, ...Qb6, and ...Nge7-f5.
+- Tarrasch Variation (3. Nd2): White keeps the c-pawn free to support the center. You can counter with an immediate ...c5 or play solidly with ...Nf6.
+- Winawer Variation (3. Nc3 Bb4): You pin White's knight and often trade your good dark-squared bishop to damage White's pawn structure, leading to complex, imbalanced games.
+
+The goal of these explanations is to act as your coach, telling you exactly what each move is trying to accomplish so you understand the "why" behind the theory.
 `;
 
 export const frenchDefenseLines = withOpeningFeedback([
@@ -17,7 +18,7 @@ export const frenchDefenseLines = withOpeningFeedback([
     "category": "French Defense",
     "id": "french-01",
     "name": "Tarrasch Variation: ...Bb4+ and ...Qxd4",
-    "description": "Open-center Tarrasch line with queen activity and a check on the diagonal.",
+    "description": "An open-center Tarrasch line where Black grabs a central pawn and relies on active piece play.",
     "moves": [
       "e4",
       "e6",
@@ -37,29 +38,29 @@ export const frenchDefenseLines = withOpeningFeedback([
       "Nc6"
     ],
     "explanations": [
-      "White starts with pawn to {{square e4}} and grabs central space.",
-      "Let's learn the French Defense! When White plays {{square e4}}, answer with pawn to {{square e6}} and get ready to challenge the center with ...{{square d5}}.",
-      "White reinforces the center and supports the {{square e4}} pawn.",
-      "Black immediately challenges White's central pawn structure.",
-      "Tarrasch Variation - White develops the knight without blocking the c-pawn, which keeps {{square c3}} available later.",
-      "Black attacks the {{square d4}} pawn, forcing White to make a decision in the center.",
-      "White supports the {{square d4}} pawn, preparing to maintain central control.",
-      "Black captures on {{square d4}}, forcing the recapture to open the center.",
-      "White recaptures, maintaining a central pawn majority.",
-      "Black captures the {{square e4}} pawn, exchanging central pawns.",
-      "White recaptures with the knight, developing a piece while maintaining structure.",
-      "The check develops with tempo and asks White to solve the pin before finishing development.",
-      "White blocks the check with the bishop, developing a piece and breaking the pin.",
-      "Black grabs the {{square d4}} pawn and relies on queen activity before White can organize a clean lead in development.",
-      "Q{{square a4}}+ checks the king and hits the loose bishop at the same time, so White gets active play for the pawn.",
-      "Black blocks the check with the knight while developing a piece to its natural square."
+      "White takes the center with the king's pawn.",
+      "Let's learn the French Defense! We play {{square e6}} to prepare our strike in the center with ...{{square d5}}, keeping our position super solid.",
+      "White grabs full control of the center.",
+      "Strike immediately! We challenge White's central dominance right away.",
+      "The Tarrasch Variation. White develops the knight to {{square d2}} instead of {{square c3}} so they can still use their c-pawn to support the center.",
+      "Attack the center again! We play {{square c5}} to blow up White's setup before they get comfortable.",
+      "White supports their d4 pawn. This is exactly why they put the knight on d2.",
+      "Trade! We start clearing out the center.",
+      "White recaptures, trying to keep their central structure intact.",
+      "Trade again! We're simplifying the position and isolating White's pieces.",
+      "White recaptures with the knight, keeping it active.",
+      "Check! We develop our bishop with tempo, forcing White to react.",
+      "White blocks the check and offers a bishop trade.",
+      "Grab the central pawn! We win a pawn, but we're bringing our queen out early, so we have to be careful.",
+      "White counter-attacks! The queen forks our king and our loose bishop on {{square b4}}.",
+      "Block the check and develop the knight. We defend everything and keep our extra pawn, but the position is sharp!"
     ]
   },
   {
     "category": "French Defense",
     "id": "french-02",
     "name": "Advance Variation: Qb6 pressure on d4 and b2",
-    "description": "Advance French with ...Qb6 and the standard attack on the base of White's pawn chain.",
+    "description": "The classic Advance French setup where Black piles relentless pressure on the d4 pawn.",
     "moves": [
       "e4",
       "e6",
@@ -83,26 +84,26 @@ export const frenchDefenseLines = withOpeningFeedback([
       "Be7"
     ],
     "explanations": [
-      "White claims space in the center with the king's pawn.",
-      "French Defense - Black prepares to challenge White's center with ...{{square d5}}.",
-      "White reinforces the center with the d-pawn.",
-      "Black immediately stakes a claim in the center.",
-      "Advance Variation - White gains space, but the advanced chain gives Black clear targets on {{square d4}} and {{square e5}}.",
-      "Black strikes with the standard ...{{square c5}} break, attacking the base of the pawn chain instead of the head.",
-      "White supports the {{square d4}} pawn, maintaining the central stronghold.",
-      "...Q{{square b6}} is a typical French move: it pressures {{square d4}} indirectly and also hits {{square b2}} at once.",
-      "Knight develops to its natural square, controlling central squares.",
-      "Black develops the knight to support the ...{{square c5}} advance and control {{square d4}}.",
-      "Bishop develops modestly, preparing kingside castling.",
-      "Black captures on {{square d4}}, opening the c-file and challenging the center.",
-      "White recaptures, maintaining the pawn center.",
-      "The knight heads for {{square f5}} because the {{square f6}} square is no longer available in this structure.",
-      "White castles kingside, bringing the king to safety.",
-      "From {{square f5}} the knight increases the pressure on {{square d4}} and makes it harder for White to coordinate comfortably.",
-      "Bishop develops to {{square e3}}, supporting the {{square d4}} pawn and controlling the center.",
-      "Black grabs {{square b2}} when the tactic works, but the queen can still become a target if White develops quickly.",
-      "White develops the knight, preparing to attack the queen and defend the {{square c3}} square.",
-      "B{{square e7}} is a calm finish to development after the queenside pawn grab."
+      "White claims space in the center.",
+      "The French Defense. We prepare to fight for the center.",
+      "White builds the big pawn center.",
+      "Challenge the center right away with ...{{square d5}}.",
+      "The Advance Variation. White locks the center and gains space. Our goal now is to attack the base of their pawn chain: the {{square d4}} pawn.",
+      "Strike at the base! We immediately attack {{square d4}} with ...{{square c5}}.",
+      "White defends the base of their chain.",
+      "Bring the queen out! ...Q{{square b6}} adds another attacker to {{square d4}} and also eyes the b2 pawn.",
+      "White develops and adds a defender to {{square d4}}.",
+      "Develop the knight and add a third attacker to {{square d4}}!",
+      "White develops the bishop, preparing to castle.",
+      "Release the tension. We trade pawns to open the c-file for our rook later.",
+      "White recaptures, keeping their center alive.",
+      "The knight reroute! Since {{square f6}} is blocked, the knight goes to {{square e7}} on its way to {{square f5}} to attack {{square d4}} again.",
+      "White castles and gets the king to safety.",
+      "The knight lands on {{square f5}}! Now we have four pieces attacking {{square d4}}. The pressure is immense.",
+      "White plays Be3 to defend {{square d4}}, but they leave the {{square b2}} pawn undefended.",
+      "Grab the free pawn! We take on {{square b2}}, attacking White's rook and winning material.",
+      "White develops the knight and defends the rook.",
+      "Develop the dark-squared bishop. We've won a pawn and now we just need to get our king to safety."
     ]
   },
   {

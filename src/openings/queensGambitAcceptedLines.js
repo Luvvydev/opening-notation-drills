@@ -1,63 +1,57 @@
 import { withOpeningFeedback } from "./feedback";
 
+// SEO / page intro text for QGA drills
+export const queensGambitAcceptedSEOText = `
+The Queen's Gambit Accepted (1. d4 d5 2. c4 dxc4) is not a real gambit—it's a deflection! White offers a "wing pawn" (the c-pawn) to remove Black's only central pawn. 
+
+Black can't actually keep the extra pawn without falling into direct tactical disasters. Your goal as White is to take the full center with e3 or e4 and prove that Black's development is too slow to matter.
+
+These drills cover the core QGA lessons:
+- The "Overhold" Trap: Using a4 and Qf3 to win the a8 rook if Black tries to defend the pawn with ...b5 and ...c6.
+- Central Dominance: Building the dream pawn duo (d4 and e4) and using active piece play to recover the pawn with interest.
+- Practical Punishment: Forcing lines where Black's queen adventures or slow development lead to immediate checkmating attacks.
+
+Don't panic about the pawn. Take the center, finish your development, and the pawn will usually fall back into your lap!
+`;
+
 export const queensGambitAcceptedLines = withOpeningFeedback([
   {
     "category": "Queen's Gambit Accepted",
     "id": "queens-gambit-accepted-01",
-    "name": "e4 center and queenside undermine",
-    "description": "Accepted pawn, then White takes the center first and punishes Black for overholding on the queenside.",
+    "name": "The 'Overhold' Trap: winning the a8 rook",
+    "description": "If Black tries to keep the pawn with ...b5 and ...c6, White uses a4 and the powerful Qf3 to trap the rook.",
     "moves": [
       "d4",
       "d5",
       "c4",
       "dxc4",
-      "e4",
+      "e3",
       "b5",
       "a4",
       "c6",
       "axb5",
       "cxb5",
-      "Nc3",
-      "Bd7",
-      "d5",
-      "e6",
-      "dxe6",
-      "fxe6",
-      "Nxb5",
-      "Bxb5",
-      "Qh5+",
-      "g6",
-      "Qxb5+"
+      "Qf3"
     ],
     "explanations": [
-      "Let's learn the Queen's Gambit Accepted! Start with pawn to {{square d4}} and prepare to challenge Black's center with {{square c4}}.",
-      "Black answers in the center and gives the gambit real meaning.",
-      "{{square c4}} challenges {{square d5}} from the side and invites Black to either defend cleanly or create targets.",
-      "If Black accepts, White should think center first and pawn recovery second.",
-      "{{square e4}} is the key QGA idea from the transcript. White takes central space immediately and makes the extra c-pawn harder to justify.",
-      "Black tries to keep the pawn with a broad queenside chain, but that costs time and loosens pieces.",
-      "{{square a4}} attacks the base of the pawn chain before Black finishes development.",
-      "{{square c6}} looks solid, but it leaves Black tied to a passive pawn-holding setup.",
-      "White opens the a-file by force and starts stripping away the pawns that defend {{square c4}}.",
-      "Black keeps material for the moment, but the {{square b5}} pawn and {{square a8}} rook are now part of the problem.",
-      "N{{square c3}} develops with tempo by attacking the overextended {{square b5}} pawn.",
-      "B{{square d7}} is a practical defense, but Black is still behind in development and tied to the queenside.",
-      "{{square d5}} grabs more space and keeps Black cramped while the queenside is still loose.",
-      "Black has to challenge the center before White's space advantage becomes permanent.",
-      "White gives up the advanced pawn on favorable terms to open lines and fix Black's structure.",
-      "Black recaptures, but the doubled e-pawns and open lines leave long term targets.",
-      "Now Nx{{square b5}} works because the {{square b5}} pawn is overloaded and the queenside defenders are stretched.",
-      "Black has to take back, but the bishop leaves {{square d7}} and the queenside remains exposed.",
-      "Q{{square h5}}+ adds a direct king-side threat while the {{bishop b5 full}} is still loose.",
-      "Black blocks the check, but {{square g6}} weakens the dark squares and does nothing to solve the bishop problem.",
-      "Qx{{square b5}}+ wins the bishop back with check. White has recovered material and kept the easier position."
+      "Let's learn the Queen's Gambit Accepted! White starts with the queen's pawn.",
+      "Black meets us in the center.",
+      "The Gambit! We offer a wing pawn to deflect Black's central control.",
+      "Accepted. Black takes the pawn, but they've given up their stake in the center.",
+      "The Rule: play e3 first to open the bishop's path to recovery.",
+      "Greed! Black tries to hold onto the extra pawn instead of developing.",
+      "The antidote! We attack the base of the pawn chain immediately.",
+      "Black doubles down on the defense, creating a very shaky pawn structure.",
+      "Trade! We open the a-file by force.",
+      "Black recaptures, thinking they've saved the pawn chain.",
+      "BOOM! The punchline. The queen jumps to {{square f3}}, attacking the trapped {{rook a8 full}} through the gap in the pawns. White wins major material!"
     ]
   },
   {
     "category": "Queen's Gambit Accepted",
     "id": "queens-gambit-accepted-02",
-    "name": "Early ...e5, attack on h8 rook",
-    "description": "A forcing tactical line where White's queen infiltrates to win the rook.",
+    "name": "Full Center Control: The e4 Blast",
+    "description": "White takes the full center immediately and uses the space to launch a direct attack.",
     "moves": [
       "d4",
       "d5",
@@ -67,38 +61,18 @@ export const queensGambitAcceptedLines = withOpeningFeedback([
       "e5",
       "Nf3",
       "exd4",
-      "Bxc4",
-      "c5",
-      "Ne5",
-      "Be6",
-      "Bxe6",
-      "fxe6",
-      "Qh5+",
-      "g6",
-      "Nxg6",
-      "hxg6",
-      "Qxh8"
+      "Bxc4"
     ],
     "explanations": [
-      "Standard central pawn opening.",
-      "Mirrors White's central control.",
-      "Queen's Gambit offer to challenge Black's center.",
-      "Accepting the gambit but giving up center control.",
-      "White establishes a strong pawn center ({{square e4}}, {{square d4}}).",
-      "Black immediately challenges the center, creating tactical possibilities.",
-      "Develops knight while attacking {{square e5}} pawn.",
-      "Black takes the pawn but opens the e-file for White.",
-      "White recovers the gambit pawn with active piece development.",
-      "Black tries to challenge White's center and gain space.",
-      "White occupies a strong central outpost, threatening multiple ideas.",
-      "Black develops bishop, attacking White's strong {{bishop c4 full}}.",
-      "Forces a structural weakness: if ...fxe6, the f-file opens and kingside weakens.",
-      "Black recaptures, creating a doubled pawn and weakening the kingside.",
-      "Check! Targeting the weak {{square g6}} square and exposed dark squares.",
-      "Forced: the only legal move blocks but critically weakens dark squares.",
-      "Sacrifices the knight to destroy Black's pawn shield and expose the king.",
-      "Forced recapture, opening the h-file completely.",
-      "White wins the rook as the {{square h8}} rook is trapped and unprotected."
+      "White claims the center.",
+      "Black responds symmetrically.",
+      "The Gambit offer.",
+      "Accepted. Black accepts the challenge.",
+      "The Center Blast! Since the d-pawn is gone, we take the whole center right now.",
+      "Black counter-strikes! This is the most aggressive way to challenge White's space.",
+      "Develop and attack! We pressure {{square e5}} and keep our development lead.",
+      "Black takes more material, but they're opening lines for our army.",
+      "Recapture with development! We've won our pawn back and we have a massive lead in development. White is doing great!"
     ]
   },
   {

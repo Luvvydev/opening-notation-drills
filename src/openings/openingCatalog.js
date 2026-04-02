@@ -1,27 +1,27 @@
-import { londonLines } from "./londonLines";
-import { sicilianDefenseLines } from "./sicilianDefenseLines";
-import { ruyLopezLines } from "./ruyLopezLines";
-import { friedLiverAttackLines } from "./friedLiverAttackLines";
-import { staffordGambitLines } from "./staffordGambitLines";
+import { londonLines, londonSEOText } from "./londonLines";
+import { sicilianDefenseLines, sicilianSEOText } from "./sicilianDefenseLines";
+import { ruyLopezLines, ruyLopezSEOText } from "./ruyLopezLines";
+import { friedLiverAttackLines, friedLiverSEOText } from "./friedLiverAttackLines";
+import { staffordGambitLines, staffordGambitSEOText } from "./staffordGambitLines";
 import { caroKannLines, caroKannSEOText } from "./caroKannLines";
-import { queensGambitAcceptedLines } from "./queensGambitAcceptedLines";
-import { queensGambitDeclinedLines } from "./queensGambitDeclinedLines";
-import { italianGameLines } from "./italianGameLines";
-import { kingsIndianDefenseLines } from "./kingsIndianDefenseLines";
-import { frenchDefenseLines } from "./frenchDefenseLines";
+import { queensGambitAcceptedLines, queensGambitAcceptedSEOText } from "./queensGambitAcceptedLines";
+import { queensGambitDeclinedLines, queensGambitDeclinedSEOText } from "./queensGambitDeclinedLines";
+import { italianGameLines, italianGameSEOText } from "./italianGameLines";
+import { kingsIndianDefenseLines, kingsIndianSEOText } from "./kingsIndianDefenseLines";
+import { frenchDefenseLines, frenchDefenseSEOText } from "./frenchDefenseLines";
 import { englundGambitLines } from "./englundGambitLines";
-import { englishOpeningLines } from "./englishOpeningLines";
+import { englishOpeningLines, englishOpeningSEOText } from "./englishOpeningLines";
 import { scotchGameLines } from "./scotchGameLines";
 import { viennaGambitLines } from "./viennaGambitLines";
 import { viennaGambitCounterLines } from "./viennaGambitCounterLines";
 import { rousseauGambitLines } from "./rousseauGambitLines";
 import { bishopsOpeningLines } from "./bishopsOpeningLines";
-import { viennaGameLines } from "./viennaGameLines";
-import { kingsGambitLines } from "./kingsGambitLines";
+import { viennaGameLines, viennaGameSEOText } from "./viennaGameLines";
+import { kingsGambitLines, kingsGambitSEOText } from "./kingsGambitLines";
 import { danishGambitLines } from "./danishGambitLines";
-import { petrovDefenseLines } from "./petrovDefenseLines";
+import { petrovDefenseLines, petrovDefenseSEOText } from "./petrovDefenseLines";
 import { scandinavianDefenseLines, scandinavianDefenseSEOText } from "./scandinavianDefenseLines";
-import { vantKruijsOpeningLines } from "./vantKruijsOpeningLines";
+import { vantKruijsOpeningLines, vantKruijsOpeningSEOText } from "./vantKruijsOpeningLines";
 import { badOpeningPunishmentDrillsLines, badOpeningPunishmentDrillsSEOText } from "./badOpeningPunishmentDrillsLines";
 
 export const OPENING_CATALOG = [
@@ -30,6 +30,7 @@ export const OPENING_CATALOG = [
     title: "London",
     description:
       "Want easy wins? Easy to learn, hard to stop, and absolutely miserable to face if you don't know the antidote!",
+    seoText: londonSEOText,
     lines: londonLines,
     accent: "gold",
     badge: null,
@@ -44,6 +45,7 @@ export const OPENING_CATALOG = [
     title: "Sicilian Defense",
     description:
       "A savage answer to 1.e4 where Black refuses to play safe, creates instant imbalance, and fights for the win from move one.",
+    seoText: sicilianSEOText,
     lines: sicilianDefenseLines,
     accent: "purple",
     badge: null,
@@ -58,6 +60,7 @@ export const OPENING_CATALOG = [
     title: "Ruy Lopez",
     description:
       "A legendary opening packed with pressure, hidden venom, and long term ideas that will squeeze opponents to death.",
+    seoText: ruyLopezSEOText,
     lines: ruyLopezLines,
     accent: "blue",
     badge: null,
@@ -72,6 +75,7 @@ export const OPENING_CATALOG = [
     title: "Fried Liver Attack",
     description:
       "A brutal king hunt where White sacrifices fast, attacks immediately, and punishes bad defense with pure tactical violence.",
+    seoText: friedLiverSEOText,
     lines: friedLiverAttackLines,
     accent: "red",
     badge: null,
@@ -86,6 +90,7 @@ export const OPENING_CATALOG = [
     title: "Stafford Gambit",
     description:
       "A filthy trap opening where Black gives up a pawn, explodes into development, and turns one careless move into a disaster.",
+    seoText: staffordGambitSEOText,
     lines: staffordGambitLines,
     accent: "green",
     badge: null,
@@ -115,6 +120,7 @@ export const OPENING_CATALOG = [
     title: "Queen’s Gambit Accepted",
     description:
       "A greedy opening choice that invites White to take over the center, build pressure fast, and punish Black for grabbing material too early.",
+    seoText: queensGambitAcceptedSEOText,
     lines: queensGambitAcceptedLines,
     accent: "pink",
     badge: null,
@@ -129,6 +135,7 @@ export const OPENING_CATALOG = [
     title: "Queen’s Gambit Declined",
     description:
       "A cold blooded defensive system where Black stays rock solid, absorbs pressure, and slowly strangles White’s ambitions.",
+    seoText: queensGambitDeclinedSEOText,
     lines: queensGambitDeclinedLines,
     accent: "rose",
     badge: null,
@@ -143,6 +150,7 @@ export const OPENING_CATALOG = [
     title: "Italian Game",
     description:
       "A classic attacking opening where White develops naturally, targets f7 immediately, and gets dangerous positions without needing insane theory.",
+    seoText: italianGameSEOText,
     lines: italianGameLines,
     accent: "teal",
     badge: null,
@@ -157,6 +165,7 @@ export const OPENING_CATALOG = [
     title: "King's Indian Defense",
     description:
       "A ferocious defense where Black gives White space on purpose, then comes storming back with pawn breaks, pressure, and kingside attacks.",
+    seoText: kingsIndianSEOText,
     lines: kingsIndianDefenseLines,
     accent: "indigo",
     badge: null,
@@ -171,6 +180,7 @@ export const OPENING_CATALOG = [
     title: "French Defense",
     description:
       "A stubborn, fighting defense where Black builds a hard center, challenges White’s structure, and turns the game into a strategic knife fight.",
+    seoText: frenchDefenseSEOText,
     lines: frenchDefenseLines,
     accent: "slate",
     badge: null,
@@ -198,6 +208,7 @@ export const OPENING_CATALOG = [
     key: "english",
     title: "English Opening",
     description: "A slippery, dangerous opening where White stays flexible, controls the game quietly, and can twist the position into whatever kind of battle they want.",
+    seoText: englishOpeningSEOText,
     lines: englishOpeningLines,
     accent: "cyan",
     badge: null,
@@ -227,6 +238,7 @@ export const OPENING_CATALOG = [
   title: "Vienna Gambit",
   description:
     "A vicious attacking opening where White throws the f-pawn forward, grabs the initiative, and forces Black to survive a storm of tactics.",
+  seoText: viennaGameSEOText,
   lines: viennaGambitLines,
   accent: "gold",
   badge: null,
@@ -241,6 +253,7 @@ export const OPENING_CATALOG = [
   title: "Vienna Gambit Counter",
   description:
     "The critical battlefield of the Vienna, where Black strikes back in the center and every accurate move matters if you want to avoid getting blown off the board.",
+  seoText: viennaGameSEOText,
   lines: viennaGambitCounterLines,
   accent: "slate",
   badge: null,
@@ -286,6 +299,7 @@ export const OPENING_CATALOG = [
   title: "Vienna Game",
   description:
     "A dangerous e4 system that looks simple at first, but hides traps, attacking chances, and flexible plans that can catch opponents off guard fast.",
+  seoText: viennaGameSEOText,
   lines: viennaGameLines,
   accent: "gold",
   badge: null,
@@ -301,8 +315,8 @@ export const OPENING_CATALOG = [
   title: "King's Gambit",
   description:
     "One of the most aggressive openings in chess, where White sacrifices a pawn immediately and dares Black to survive the attack.",
-  lines: kingsGambitLines,
-  accent: "rose",
+  seoText: kingsGambitSEOText,
+  lines: kingsGambitLines,  accent: "rose",
   badge: null,
   access: "signup",
   earlyAccessUntil: null,
@@ -344,6 +358,7 @@ export const OPENING_CATALOG = [
   title: "Van't Kruijs",
   description:
     "An anti-system for Black against White's slow e3, c3, d4, and Qb3 setup. Take the center early, finish development, and punish their wasted tempo.",
+  seoText: vantKruijsOpeningSEOText,
   lines: vantKruijsOpeningLines,
   accent: "slate",
   badge: null,
@@ -373,6 +388,7 @@ export const OPENING_CATALOG = [
   title: "Petrov Defense",
   description:
     "A deceptively solid opening where Black neutralizes White early, stays organized, and punishes overextension with cold precision.",
+  seoText: petrovDefenseSEOText,
   lines: petrovDefenseLines,
   accent: "slate",
   badge: null,

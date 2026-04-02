@@ -1,23 +1,27 @@
 import { withOpeningFeedback } from "./feedback";
 
+// SEO / page intro text for Scandinavian Defense drills
 export const scandinavianDefenseSEOText = `
-The Scandinavian Defense is one of the most practical answers to 1.e4 because Black challenges the center on move one and forces the game into Scandinavian territory.
-It gives Black direct play, clear piece development, and a lot of practical chances when White plays natural moves without understanding the tactical details.
+The Scandinavian Defense (1. e4 d5) is the ultimate "Queen Provocation" opening. We ignore the beginner rule of "don't bring your queen out early" and instead use her to force White into uncomfortable territory from move three.
 
-This page is built for players who want real Scandinavian move orders, not vague opening advice.
-The drills cover the classical 2...Qxd5 and ...Qa5 setups, the important ...Bf5, ...Bg4, ...Qb6, and ...Qf5 ideas, and the modern 2...Nf6 move order where Black delays the queen and recovers the pawn more cleanly.
+Your goal is to establish the "Caro-Kann Shell" (pawns on c6 and e6) and follow the "Golden Rule": **never play e6 until your light-squared bishop is free.**
 
-It also includes common practical sidelines like the advance 2.e5 setup, the Tennison Gambit, and the tricky modern 3.c4 gambit structure.
-If you keep reaching playable Scandinavian positions but forgetting when to play ...Qa5, ...c6, ...Qb6, ...Bg4, or ...Nf6, these lines are here to make the ideas automatic and explain what each move is trying to do.
+These drills cover the core Scandinavian paths:
+- Classical Qa5: Establishing an unbreakable wall and using the queen as a long-range attacker.
+- Modern Qd6: The aggressive alternative where we often castle long and launch a direct center attack.
+- The Solid Shell: Mastering the c6-e6 structure that makes Black's position virtually impossible to crack.
+- Punishing Gambits: How to stay calm and collect material against sidelines like the Tennison.
+
+Let them chase the queen—they're just walking into your trap!
 `;
 
 const QA5_INTRO = [
   "White starts with pawn to {{square e4}} and claims central space.",
-  "Let's learn the Scandinavian Defense! When White plays {{square e4}}, answer with pawn to {{square d5}} and challenge the center immediately.",
-  "White accepts the challenge and forces Black into an open Scandinavian structure.",
-  "Black recaptures at once because removing White's e-pawn is the whole point of this defense.",
-  "White develops with tempo and asks the queen to justify itself.",
-  "Q{{square a5}} is the classical retreat, keeping the queen active while often supporting ...{{square c6}} and a later retreat to {{square c7}} if White starts x-raying the queen."
+  "Let's learn the Scandinavian Defense! We strike the center immediately with 1... d5.",
+  "White accepts. Most beginners fear bringing their queen out early, but we welcome it!",
+  "Black recaptures. Yes, White will attack our queen, but we use those 'tempos' to build a solid wall.",
+  "White develops with an attack. This is the trade: they get a knight move, we get our queen to a powerful outpost.",
+  "Q{{square a5}} is the classical 'safe' square. We force White to react to our queen before they can start their own plan."
 ];
 
 const D4_NF6 = [

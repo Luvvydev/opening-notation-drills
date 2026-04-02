@@ -6,9 +6,70 @@ export const viennaGambitLines = withOpeningFeedback([
   
   {
     category: "Vienna Gambit",
+    id: "vienna-gambit-accepted",
+    name: "Vienna Gambit: The Accepted Trap",
+    description: "When Black accepts the gambit, we punish them immediately by kicking their knight back to g8.",
+    moves: ["e4", "e5", "Nc3", "Nf6", "f4", "exf4", "e5", "Ng8", "Nf3", "d6", "d4"],
+    explanations: [
+      "Let's learn the Vienna Gambit! White starts with e4.",
+      "Black responds symmetrically.",
+      "The Vienna Knight! We delay Nf3 to keep the f-pawn flexible.",
+      "Black develops their best defender.",
+      "The Gambit! We offer the f-pawn to deflect the knight and open the f-file.",
+      "The Mistake! Black accepts the pawn, but they're about to lose precious time.",
+      "The Punishment! We push e5, and the knight has no forward squares. It's forced all the way back to the start!",
+      "Black admits the mistake and retreats. White has won massive time for free.",
+      "The Golden Rule! We play Nf3 to stop any ...Qh4+ ideas and prepare to build the center.",
+      "Black tries to strike back before we get too comfortable.",
+      "Solidify! We build our dream pawn center. White is dominating development and space. This is why you don't take the Vienna Gambit!"
+    ]
+  },
 
+  {
     id: "vienna-gambit-01-bd8b935b",
-    name: "Nh5 blunder punished",
+    name: "Accepted: Nh5 blunder punished",
+    description: "If Black tries to keep the knight active with Nh5, we win the piece immediately.",
+    moves: ["e4", "e5", "Nc3", "Nf6", "f4", "exf4", "e5", "Nh5", "Qxh5"],
+    explanations: [
+      "White claims the center.",
+      "Let's learn the Vienna Gambit! Black responds.",
+      "The Vienna Knight.",
+      "Black develops.",
+      "The Gambit offer.",
+      "Accepted.",
+      "The Punishment! Kicking the knight.",
+      "Black tries to be tricky and jumps to the edge.",
+      "BOOM! We simply win the knight. Black's attempt to avoid the retreat was a fatal blunder!"
+    ]
+  },
+
+  {
+    id: "vienna-gambit-mainline",
+    name: "Vienna Gambit: The Main Line (3... d5)",
+    description: "The only 'good' way for Black to meet the gambit. A sharp battle for central control.",
+    moves: ["e4", "e5", "Nc3", "Nf6", "f4", "d5", "fxe5", "Nxe4", "Nf3", "Be7", "d4", "O-O", "Bd3"],
+    explanations: [
+      "White takes the center.",
+      "Let's learn the Vienna Gambit! Black responds.",
+      "The Vienna Knight.",
+      "Black develops.",
+      "The Gambit offer.",
+      "The Correct Answer! Black strikes back in the center immediately.",
+      "Trade! We remove the e5 defender.",
+      "Black occupies the central outpost.",
+      "The Gotham Rule! We play Nf3 to stop the queen check and support our center.",
+      "Black develops calmly.",
+      "Solidify! We build our center and challenge the knight.",
+      "Black castles to safety.",
+      "The Golden Bishop! We put our best attacker on its favorite square, aiming directly at h7. White has a great game!"
+    ]
+  },
+
+  {
+    category: "Vienna Gambit",
+
+    id: "vienna-gambit-01-bd8b935b-original",
+    name: "Nh5 blunder punished (Legacy)",
     description: "Coach style: explains the point of each move and the main tactical ideas.",
     moves: ["e4", "e5", "Nc3", "Nf6", "f4", "exf4", "e5", "Nh5", "Qxh5"],
     explanations: ["Let's learn the Vienna Gambit! Start with pawn to {{square e4}} and build toward sharp central play with the knight coming to {{square c3}}.", "Black matches your central claim and keeps everything flexible.", "support {{square e4}} and keep the f-pawn free for {{square f4}} without blocking N{{square f3}}.", "Black develops while hitting {{square e4}}, forcing you to show how you will defend the center.", "Vienna Gambit: offer a pawn to gain time, open files, and attack before Black is settled.", "Black grabs the pawn. Your job is to get quick development and targets, not to win the pawn back slowly.", "Space grab with tempo: kick the {{square f6}} knight and try to make Black waste a move while you open the center.", "Black tries to hang onto {{square f4}} and chase your queen later, but this often walks into tactics on {{square h5}}.", "Punish the knight jump: win the piece and instantly remove Black's idea of holding the {{square f4}} pawn."]

@@ -1,15 +1,17 @@
 import { withOpeningFeedback } from "./feedback";
 
+// SEO / page intro text for Vienna Game drills
 export const viennaGameSEOText = `
-The Vienna Game starts with 1. e4 e5 2. Nc3 and can branch into direct Qg4 tactics or slower kingside builds.
+The Vienna Game (1. e4 e5 2. Nc3) is an "Improved King's Gambit." By developing the knight to Nc3 first, we protect our center and keep our options flexible before launching the f4 pawn storm.
 
-These drills cover the practical student-facing ideas already in this file:
-- direct Qg4 trap lines against ...Bc5 and ...Qf6, where queen hunting and f7 pressure matter more than memorizing names
-- quieter Vienna Game setups with d3 and f4, where White builds a kingside attack without rushing the center
-- transcript-backed Vienna System plans with g3, Bg2, Nge2, O-O, h3, Kh2, and a fast f4 break
-- early ...d5 counterbreak lines where White recaptures bxc3, uses the b-file and long diagonal, and pressures e5 with Re1
+Your goal is to use the extra coordination to trap over-aggressive opponents or build a crushing kingside attack.
 
-Each line explains the concrete point of the move: what gets pinned, what square is being prepared, which move-order detail matters, and where the attack is supposed to come from.
+These drills cover the core Vienna structures:
+- The Qg4 Traps: Punishing early queen moves and greedy pawn grabs with direct tactical shots.
+- The Vienna System: A slow, controlled build with g3 and Bg2 that prepares a devastating f4 break.
+- Central Counterstrikes: How to meet Black's d5 break with superior piece coordination and structural damage.
+
+Stay flexible, protect the center, and strike when the moment is right!
 `;
 
 export const viennaGameLines = withOpeningFeedback([
@@ -34,19 +36,19 @@ export const viennaGameLines = withOpeningFeedback([
       "Bxf1"
     ],
     explanations: [
-      "Let's learn the Vienna Game! Start with pawn to {{square e4}} and develop the knight to {{square c3}} for flexible attacking play.",
-      "Black mirrors with a central pawn and keeps development flexible.",
-      "Develop while defending {{square e4}}. In the Vienna, N{{square c3}} also keeps options like {{square f4}} or Q{{square g4}} open.",
-      "Black develops and supports the {{square e5}} pawn, preparing ...N{{square f6}} or ...B{{square c5}}.",
-      "Develop with tempo: B{{square c4}} immediately eyes {{square f7}}, the weakest point in Black's camp early.",
-      "Black matches with ...B{{square c5}}, aiming at {{square f2}} and racing development.",
-      "Q{{square g4}} is the Vienna Game attack. You hit {{square g7}} and {{square f7}} and ask Black to show a defense right now.",
-      "...Q{{square f6}} is a common defense: it covers {{square f7}} and keeps ...{{square d6}} in reserve, but the queen can become a tactical target.",
-      "N{{square d5}} jumps with tempo. It attacks {{square c7}} and {{square f6}} and makes Black's {{queen f6 full}} feel cramped.",
-      "Black goes pawn hunting with check. This is greedy and pulls the queen away from defense.",
-      "K{{square d1}} is the practical move: step out of checks and keep pieces available. You are not trying to castle here, you are trying to punish the queen.",
-      "...Q{{square f1}}+ is a last check. Black is basically admitting the queen has no safe retreat squares.",
-      "Bx{{square f1}} wins the queen. The whole point of the line is that the queen runs out of squares after ...Qx{{square f2}}+."
+      "Let's learn the Vienna Game! White starts with e4.",
+      "Black mirrors.",
+      "The Vienna Knight! We develop to {{square c3}} first to protect our center and keep our f-pawn flexible.",
+      "Black develops naturally.",
+      "Develop with tempo: B{{square c4}} immediately eyes the weak {{square f7}} square.",
+      "Black matches with their own bishop.",
+      "The Vienna Attack! Q{{square g4}} hits {{square g7}} and {{square f7}}, forcing Black to react immediately.",
+      "Black defends with the queen, but she's walking into a trap.",
+      "Jump forward! N{{square d5}} hits the queen and threatens forks on {{square c7}}.",
+      "Greed! Black takes on f2 with check, pulling the queen away from safety.",
+      "Step aside. We don't fear the check because Black has no follow-up.",
+      "Desperation! The queen has nowhere else to go.",
+      "The payoff! We win the queen cleanly. This is why you don't chase pawns against the Vienna!"
     ]
   },
 

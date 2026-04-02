@@ -1,15 +1,17 @@
 import { withOpeningFeedback } from "./feedback";
 
 export const kingsGambitSEOText = `
-The King's Gambit starts with 1. e4 e5 2. f4 and asks Black to defend accurately from move two.
+The King's Gambit (1. e4 e5 2. f4) is the ultimate "Romantic" opening. We sacrifice a pawn on move two to achieve three things: total central control, a rapid lead in development, and a "highway" for our rook on the open f-file.
 
-These drills cover the main student-facing patterns in your file:
-- Accepted King's Gambit lines where Black tries to hold the f4 pawn with ...g5 or counterstrike with ...d5
-- Forcing attacking ideas built around h4, open f-file pressure, queen checks, and fast development
-- Bishop's Gambit and declined trap structures where early queen moves and loose pins get punished
+The goal isn't to win the pawn back—it's to checkmate the king before Black can coordinate. Your primary target is almost always the weak {{square f7}} square.
 
-Each drill explanation stays concrete:
-what the move attacks, what line it opens, which king-safety concession it creates, and why the tactic works.
+These drills cover the soul of the gambit:
+- Accepted Lines: Punishing greedy defense like ...g5 and ...f6, and handling the direct central counterstrike ...d5.
+- The Bishop's Gambit: Why we don't fear ...Qh4+ and how the king finds a home on {{square f1}}.
+- The Knight's Gambit: Using the "Golden Rule" (3. Nf3) to prevent checks and launch a crushing attack.
+- Declined Traps: How to punish Black for being too solid or overusing pins.
+
+Every move in the King's Gambit should be a threat. Don't fear the material—focus on the attack!
 `;
 
 export const kingsGambitLines = withOpeningFeedback([
@@ -17,7 +19,7 @@ export const kingsGambitLines = withOpeningFeedback([
     category: "King's Gambit",
     id: "kingsGambit-01-899b8126",
     name: "Accepted: ...f6 punished by queen checks",
-    description: "Transcript-backed forcing line where Black's ...f6 leaves the king exposed and White's queen checks keep the initiative.",
+    description: "Black tries to hold the pawn with ...f6, but this opens the 'corridor of death' for the king. White wins with a brutal series of queen checks.",
     moves: [
       "e4",
       "e5",
@@ -40,34 +42,32 @@ export const kingsGambitLines = withOpeningFeedback([
       "Bc4+"
     ],
     explanations: [
-      
-      "Let's learn the King's Gambit! Start with pawn to {{square e4}} and get ready for fast attacking play.",
-      "Black advances a central pawn to {{square e5}} to claim space and define which files and diagonals will open.",
-      "White plays {{square f4}}, offering the pawn so Black's e pawn moves off {{square e5}}, opening lines and the f file for a fast attack.",
-      "Black captures on {{square f4}} to open files and change the structure; ask what new line just opened and who benefits from it.",
-      "White develops N{{square f3}}, covers {{square h4}} so Black cannot check there, and keeps {{square d4}} plus quick castling in reserve.",
-      "Black pushes {{square g5}} to hold the {{square f4}} pawn and hit the knight later, but it also weakens {{square f5}} and the dark squares around the king.",
-      "White's {{square h4}} undermines the {{square g5}}-{{square f4}} pawn chain. The point is to make ...{{square g5}} less stable so White can still recover the gambit pawn with {{square d4}} and Bx{{square f4}} or open the h-file.",
-      "Black tries to hold everything with ...{{square f6}}, but that is exactly the kind of move the transcript punishes: it weakens {{square e6}} and leaves the king stuck in the center.",
-      "White captures on {{square g5}} with the knight, usually removing a key defender or converting initiative into material.",
-      "Black captures on {{square g5}} to open files and change the structure; ask what new line just opened and who benefits from it.",
-      "White jumps in with Q{{square h5}}+ immediately because Black's own pawns on {{square f6}} and {{square g5}} have stripped away dark-square cover around the king.",
-      "Black moves the king to {{square e7}}, typically forced by checks; the priority becomes re coordinating pieces and finding safety.",
-      "White gives check with the queen, forcing a response and usually gaining a tempo for development or a follow up threat.",
-      "Black moves the king to {{square e8}}, typically forced by checks; the priority becomes re coordinating pieces and finding safety.",
-      "White repeats the queen check to drive the king onto {{square e7}}, where it blocks its own pieces and cannot coordinate.",
-      "Black moves the king to {{square e7}}, typically forced by checks; the priority becomes re coordinating pieces and finding safety.",
-      "Q{{square e5}}+ centralizes the queen with tempo, keeps the king walking, and prepares B{{square c4}} with one more forcing move.",
-      "Black moves the king to {{square f7}}, typically forced by checks; the priority becomes re coordinating pieces and finding safety.",
-      "B{{square c4}}+ is the natural follow-up: develop a new attacker, check again, and keep the king from finding shelter."
+      "Let's learn the King's Gambit! White claims the center. The attack begins!",
+      "Black answers symmetrically, but we're about to change that.",
+      "The King's Gambit! We offer the f-pawn to deflect Black's central control and open the f-file for our rook.",
+      "Black accepts! Now the f-file is a highway for our future attack.",
+      "The Golden Rule of the King's Gambit: develop the knight to prevent the devastating ...Qh4+ check.",
+      "Black tries to support their extra pawn, but they're creating big weaknesses on the kingside.",
+      "White immediately undermines the pawn chain. We want to rip open the kingside before Black can develop.",
+      "The losing move! Black tries to hold everything with ...{{square f6}}, but this creates a 'corridor of death' straight to their king.",
+      "Sacrifice! We give up the knight to rip open the dark squares around the king.",
+      "Black takes, but their king is now completely exposed.",
+      "Boom! The queen enters the attack with check. Black's kingside is a disaster zone.",
+      "Black's king is forced to step into the center. No safety here!",
+      "Recapture with check! We're winning back material while keeping the pressure at 100%.",
+      "The king tries to hide, but the queen won't let him rest.",
+      "Check again! We're driving the king back into the open where he blocks his own pieces.",
+      "Forced. The king is walking into a nightmare.",
+      "Check! The queen is a monster in the center of the board.",
+      "Black's king is now a nomad, wandering the board with no shelter.",
+      "Bring in the reserves! The bishop develops with check, targeting the weak {{square f7}} square. The game is over."
     ]
-  }
-,
+  },
   {
     category: "King's Gambit",
     id: "kingsGambit-02-1c16d08e",
     name: "Accepted: ...d6 and ...Bg4 setup",
-    description: "Transcript-backed development line: Black stays solid with ...d6 and ...Bg4, and White regains the pawn without drama.",
+    description: "A more solid try for Black, but White simply completes development and regains the pawn with a superior center.",
     moves: [
       "e4",
       "e5",
@@ -82,26 +82,24 @@ export const kingsGambitLines = withOpeningFeedback([
       "Qxf3"
     ],
     explanations: [
-      
-      "White advances a central pawn to {{square e4}} to claim space and define which files and diagonals will open.",
-      "Black advances a central pawn to {{square e5}} to claim space and define which files and diagonals will open.",
-      "White plays {{square f4}}, offering the pawn so Black's e pawn moves off {{square e5}}, opening lines and the f file for a fast attack.",
-      "Black captures on {{square f4}} to open files and change the structure; ask what new line just opened and who benefits from it.",
-      "White develops N{{square f3}} to contest the center, hitting {{square e5}} or {{square e4}} and preparing quick castling.",
-      "Black plays {{square d6}} to reinforce {{square e5}} and limit White's {{square e5}} jumps, trying to survive the opening with a solid center.",
-      "White advances a central pawn to {{square d4}} to claim space and define which files and diagonals will open.",
-      "Black develops the bishop to {{square g4}}, choosing a diagonal that targets a weakness or supports a central break.",
-      "White captures on {{square f4}} with the bishop, usually removing a key defender or converting initiative into material.",
-      "Black captures on {{square f3}} with the bishop, usually removing a key defender or converting initiative into material.",
-      "White captures on {{square f3}} with the queen, usually removing a key defender or converting initiative into material."
+      "The classic opening move.",
+      "Black meets us in the center.",
+      "King's Gambit! We're trading a flank pawn for a central one and an open file.",
+      "Accepted. Black is a pawn up, but we have the initiative.",
+      "Develop the knight to guard against the queen check. Safety first!",
+      "Fischer's Defense. Black prepares to hold the kingside solid.",
+      "Take full control! We build the dream pawn center with pawns on {{square e4}} and {{square d4}}.",
+      "Black pins the knight, trying to reduce our attacking power.",
+      "Develop the bishop and win our pawn back! We've achieved our goal: a massive center and active pieces.",
+      "Black trades off their bishop to damage our structure, but they're losing time.",
+      "Recapture with the queen. White has a lead in development and a perfect center. The attack continues!"
     ]
-  }
-,
-{
+  },
+  {
     category: "King's Gambit",
     id: "kingsGambit-03-22395211",
     name: "Modern ...g4 chase line",
-    description: "Coach style: explains the point of each move and the main tactical ideas.",
+    description: "Black aggressively chases the knight, leading to a sharp tactical battle where White targets the f4 and f7 weaknesses.",
     moves: [
       "e4",
       "e5",
@@ -122,28 +120,25 @@ export const kingsGambitLines = withOpeningFeedback([
       "Nxf4"
     ],
     explanations: [
-      
-      "White advances a central pawn to {{square e4}} to claim space and define which files and diagonals will open.",
-      "Black advances a central pawn to {{square e5}} to claim space and define which files and diagonals will open.",
-      "White plays {{square f4}}, offering the pawn so Black's e pawn moves off {{square e5}}, opening lines and the f file for a fast attack.",
-      "Black captures on {{square f4}} to open files and change the structure; ask what new line just opened and who benefits from it.",
-      "White develops N{{square f3}} to contest the center, hitting {{square e5}} or {{square e4}} and preparing quick castling.",
-      "Black pushes {{square g5}} to hold the {{square f4}} pawn and hit the knight later, but it also weakens {{square f5}} and the dark squares around the king.",
-      "White pushes a pawn to {{square h4}} to support a plan; check what weakness it creates and whether it helps development or attack.",
-      "Black advances {{square g4}} to chase the {{square f3}} knight away from the center; the tradeoff is the g file and dark squares can become targets.",
-      "White jumps to {{square e5}} aiming at {{square f7}} and {{square c6}} and forcing Black to decide whether to chase the knight or allow threats.",
-      "Black plays {{square h5}} to either support the {{square g4}} pawn chain or gain space, but it can also become a hook for White to open the h file.",
-      "White develops B{{square c4}} to point at {{square f7}} and to support quick checks; in open games this bishop is often the main attacking piece.",
-      "Black places the {{knight h6 full}} to improve central influence and set up the next tactic or break.",
-      "White advances a central pawn to {{square d4}} to claim space and define which files and diagonals will open.",
-      "Black plays {{square d6}} to reinforce {{square e5}} and limit White's {{square e5}} jumps, trying to survive the opening with a solid center.",
-      "White places the {{knight d3 full}} to improve central influence and set up the next tactic or break.",
-      "Black develops the bishop to {{square g7}}, choosing a diagonal that targets a weakness or supports a central break.",
-      "White captures on {{square f4}} with the knight, usually removing a key defender or converting initiative into material."
-    
+      "Claiming the center.",
+      "Central response.",
+      "The Gambit offer.",
+      "Accepted! The f-file is now open for our business.",
+      "Prevention! We stop the queen check and prepare to develop.",
+      "Black overextends their pawns to hold onto the material.",
+      "Undermine! We attack the base of the pawn chain immediately.",
+      "Black chases our knight away, but they've left huge holes in their position.",
+      "Jump forward! Our knight lands on a powerful outpost, eyeing {{square f7}} and {{square g4}}.",
+      "Black tries to stabilize, but their kingside is looking very airy.",
+      "Develop the 'King's Gambit Bishop' to its best square, aiming directly at the weak {{square f7}} point.",
+      "Black develops a defender for {{square f7}}.",
+      "Grab the center! We now have the space and the pieces ready for a breakthrough.",
+      "Black tries to kick our knight, but we're happy to relocate.",
+      "The knight moves to {{square d3}}, where it defends {{square e5}} and prepares to jump back into the action.",
+      "Black fianchettos, but they're still behind in the race to coordinate.",
+      "Recapture the pawn! White has a fantastic position with active pieces and a clear target on f7."
     ]
-  }
-,
+  },
   {
     category: "King's Gambit",
     id: "kingsGambit-04-017652b4",
@@ -170,11 +165,11 @@ export const kingsGambitLines = withOpeningFeedback([
     ],
     explanations: [
       
-      "White advances a central pawn to {{square e4}} to claim space and define which files and diagonals will open.",
-      "Black advances a central pawn to {{square e5}} to claim space and define which files and diagonals will open.",
-      "White plays {{square f4}}, offering the pawn so Black's e pawn moves off {{square e5}}, opening lines and the f file for a fast attack.",
-      "Black captures on {{square f4}} to open files and change the structure; ask what new line just opened and who benefits from it.",
-      "White develops N{{square f3}} to contest the center, hitting {{square e5}} or {{square e4}} and preparing quick castling.",
+      "White takes the center and prepares the attack.",
+      "Black mirrors, but the symmetry won't last long.",
+      "The King's Gambit! We offer a pawn to open the f-file highway.",
+      "Accepted. Black accepts the challenge and the material.",
+      "The Golden Rule: stop the queen check and start development.",
       "Black pushes {{square g5}} to hold the {{square f4}} pawn and hit the knight later, but it also weakens {{square f5}} and the dark squares around the king.",
       "White pushes a pawn to {{square h4}} to support a plan; check what weakness it creates and whether it helps development or attack.",
       "Black plays {{square f6}} to support {{square g5}} and clamp down on {{square e5}}, but it weakens {{square e6}} and opens lines if White can sacrifice to rip it open.",
@@ -214,11 +209,11 @@ export const kingsGambitLines = withOpeningFeedback([
     ],
     explanations: [
       
-      "White advances a central pawn to {{square e4}} to claim space and define which files and diagonals will open.",
-      "Black advances a central pawn to {{square e5}} to claim space and define which files and diagonals will open.",
-      "White plays {{square f4}}, offering the pawn so Black's e pawn moves off {{square e5}}, opening lines and the f file for a fast attack.",
-      "Black captures on {{square f4}} to open files and change the structure; ask what new line just opened and who benefits from it.",
-      "White develops N{{square f3}} to contest the center, hitting {{square e5}} or {{square e4}} and preparing quick castling.",
+      "White takes the center and prepares the attack.",
+      "Black mirrors, but the symmetry won't last long.",
+      "The King's Gambit! We offer a pawn to open the f-file highway.",
+      "Accepted. Black accepts the challenge and the material.",
+      "The Golden Rule: stop the queen check and start development.",
       "Black pushes {{square g5}} to hold the {{square f4}} pawn and hit the knight later, but it also weakens {{square f5}} and the dark squares around the king.",
       "White pushes a pawn to {{square h4}} to support a plan; check what weakness it creates and whether it helps development or attack.",
       "Black plays {{square f6}} to support {{square g5}} and clamp down on {{square e5}}, but it weakens {{square e6}} and opens lines if White can sacrifice to rip it open.",
@@ -266,11 +261,11 @@ export const kingsGambitLines = withOpeningFeedback([
     ],
     explanations: [
       
-      "White advances a central pawn to {{square e4}} to claim space and define which files and diagonals will open.",
-      "Black advances a central pawn to {{square e5}} to claim space and define which files and diagonals will open.",
-      "White plays {{square f4}}, offering the pawn so Black's e pawn moves off {{square e5}}, opening lines and the f file for a fast attack.",
-      "Black captures on {{square f4}} to open files and change the structure; ask what new line just opened and who benefits from it.",
-      "White develops N{{square f3}} to contest the center, hitting {{square e5}} or {{square e4}} and preparing quick castling.",
+      "White takes the center and prepares the attack.",
+      "Black mirrors, but the symmetry won't last long.",
+      "The King's Gambit! We offer a pawn to open the f-file highway.",
+      "Accepted. Black accepts the challenge and the material.",
+      "The Golden Rule: stop the queen check and start development.",
       "Black pushes {{square g5}} to hold the {{square f4}} pawn and hit the knight later, but it also weakens {{square f5}} and the dark squares around the king.",
       "White pushes a pawn to {{square h4}} to support a plan; check what weakness it creates and whether it helps development or attack.",
       "Black plays {{square f6}} to support {{square g5}} and clamp down on {{square e5}}, but it weakens {{square e6}} and opens lines if White can sacrifice to rip it open.",
@@ -320,11 +315,11 @@ export const kingsGambitLines = withOpeningFeedback([
     ],
     explanations: [
       
-      "White advances a central pawn to {{square e4}} to claim space and define which files and diagonals will open.",
-      "Black advances a central pawn to {{square e5}} to claim space and define which files and diagonals will open.",
-      "White plays {{square f4}}, offering the pawn so Black's e pawn moves off {{square e5}}, opening lines and the f file for a fast attack.",
-      "Black captures on {{square f4}} to open files and change the structure; ask what new line just opened and who benefits from it.",
-      "White develops N{{square f3}} to contest the center, hitting {{square e5}} or {{square e4}} and preparing quick castling.",
+      "White takes the center and prepares the attack.",
+      "Black mirrors, but the symmetry won't last long.",
+      "The King's Gambit! We offer a pawn to open the f-file highway.",
+      "Accepted. Black accepts the challenge and the material.",
+      "The Golden Rule: stop the queen check and start development.",
       "Black strikes with {{square d5}} in the center, aiming to trade off White's attacking momentum by opening lines for development and the queen.",
       "White captures on {{square d5}} to open files and change the structure; ask what new line just opened and who benefits from it.",
       "Black captures on {{square d5}} with the queen, usually removing a key defender or converting initiative into material.",
@@ -368,11 +363,11 @@ export const kingsGambitLines = withOpeningFeedback([
     ],
     explanations: [
       
-      "White advances a central pawn to {{square e4}} to claim space and define which files and diagonals will open.",
-      "Black advances a central pawn to {{square e5}} to claim space and define which files and diagonals will open.",
-      "White plays {{square f4}}, offering the pawn so Black's e pawn moves off {{square e5}}, opening lines and the f file for a fast attack.",
-      "Black captures on {{square f4}} to open files and change the structure; ask what new line just opened and who benefits from it.",
-      "White develops N{{square f3}} to contest the center, hitting {{square e5}} or {{square e4}} and preparing quick castling.",
+      "White takes the center and prepares the attack.",
+      "Black mirrors, but the symmetry won't last long.",
+      "The King's Gambit! We offer a pawn to open the f-file highway.",
+      "Accepted. Black accepts the challenge and the material.",
+      "The Golden Rule: stop the queen check and start development.",
       "Black strikes with {{square d5}} in the center, aiming to trade off White's attacking momentum by opening lines for development and the queen.",
       "White captures on {{square d5}} to open files and change the structure; ask what new line just opened and who benefits from it.",
       "Black captures on {{square d5}} with the queen, usually removing a key defender or converting initiative into material.",
@@ -420,11 +415,11 @@ export const kingsGambitLines = withOpeningFeedback([
     ],
     explanations: [
       
-      "White advances a central pawn to {{square e4}} to claim space and define which files and diagonals will open.",
-      "Black advances a central pawn to {{square e5}} to claim space and define which files and diagonals will open.",
-      "White plays {{square f4}}, offering the pawn so Black's e pawn moves off {{square e5}}, opening lines and the f file for a fast attack.",
-      "Black captures on {{square f4}} to open files and change the structure; ask what new line just opened and who benefits from it.",
-      "White develops N{{square f3}} to contest the center, hitting {{square e5}} or {{square e4}} and preparing quick castling.",
+      "White takes the center and prepares the attack.",
+      "Black mirrors, but the symmetry won't last long.",
+      "The King's Gambit! We offer a pawn to open the f-file highway.",
+      "Accepted. Black accepts the challenge and the material.",
+      "The Golden Rule: stop the queen check and start development.",
       "Black pushes {{square g5}} to hold the {{square f4}} pawn and hit the knight later, but it also weakens {{square f5}} and the dark squares around the king.",
       "White pushes a pawn to {{square h4}} to support a plan; check what weakness it creates and whether it helps development or attack.",
       "Black plays {{square f6}} to support {{square g5}} and clamp down on {{square e5}}, but it weakens {{square e6}} and opens lines if White can sacrifice to rip it open.",
@@ -470,11 +465,11 @@ export const kingsGambitLines = withOpeningFeedback([
     ],
     explanations: [
       
-      "White advances a central pawn to {{square e4}} to claim space and define which files and diagonals will open.",
-      "Black advances a central pawn to {{square e5}} to claim space and define which files and diagonals will open.",
-      "White plays {{square f4}}, offering the pawn so Black's e pawn moves off {{square e5}}, opening lines and the f file for a fast attack.",
-      "Black captures on {{square f4}} to open files and change the structure; ask what new line just opened and who benefits from it.",
-      "White develops N{{square f3}} to contest the center, hitting {{square e5}} or {{square e4}} and preparing quick castling.",
+      "White takes the center and prepares the attack.",
+      "Black mirrors, but the symmetry won't last long.",
+      "The King's Gambit! We offer a pawn to open the f-file highway.",
+      "Accepted. Black accepts the challenge and the material.",
+      "The Golden Rule: stop the queen check and start development.",
       "Black pushes {{square g5}} to hold the {{square f4}} pawn and hit the knight later, but it also weakens {{square f5}} and the dark squares around the king.",
       "White pushes a pawn to {{square h4}} to support a plan; check what weakness it creates and whether it helps development or attack.",
       "Black advances {{square g4}} to chase the {{square f3}} knight away from the center; the tradeoff is the g file and dark squares can become targets.",
@@ -521,11 +516,11 @@ export const kingsGambitLines = withOpeningFeedback([
     ],
     explanations: [
       
-      "White advances a central pawn to {{square e4}} to claim space and define which files and diagonals will open.",
-      "Black advances a central pawn to {{square e5}} to claim space and define which files and diagonals will open.",
-      "White plays {{square f4}}, offering the pawn so Black's e pawn moves off {{square e5}}, opening lines and the f file for a fast attack.",
-      "Black captures on {{square f4}} to open files and change the structure; ask what new line just opened and who benefits from it.",
-      "White develops N{{square f3}} to contest the center, hitting {{square e5}} or {{square e4}} and preparing quick castling.",
+      "White takes the center and prepares the attack.",
+      "Black mirrors, but the symmetry won't last long.",
+      "The King's Gambit! We offer a pawn to open the f-file highway.",
+      "Accepted. Black accepts the challenge and the material.",
+      "The Golden Rule: stop the queen check and start development.",
       "Black pushes {{square g5}} to hold the {{square f4}} pawn and hit the knight later, but it also weakens {{square f5}} and the dark squares around the king.",
       "White pushes a pawn to {{square h4}} to support a plan; check what weakness it creates and whether it helps development or attack.",
       "Black advances {{square g4}} to chase the {{square f3}} knight away from the center; the tradeoff is the g file and dark squares can become targets.",
@@ -576,11 +571,11 @@ export const kingsGambitLines = withOpeningFeedback([
     ],
     explanations: [
       
-      "White advances a central pawn to {{square e4}} to claim space and define which files and diagonals will open.",
-      "Black advances a central pawn to {{square e5}} to claim space and define which files and diagonals will open.",
-      "White plays {{square f4}}, offering the pawn so Black's e pawn moves off {{square e5}}, opening lines and the f file for a fast attack.",
-      "Black captures on {{square f4}} to open files and change the structure; ask what new line just opened and who benefits from it.",
-      "White develops N{{square f3}} to contest the center, hitting {{square e5}} or {{square e4}} and preparing quick castling.",
+      "White takes the center and prepares the attack.",
+      "Black mirrors, but the symmetry won't last long.",
+      "The King's Gambit! We offer a pawn to open the f-file highway.",
+      "Accepted. Black accepts the challenge and the material.",
+      "The Golden Rule: stop the queen check and start development.",
       "Black pushes {{square g5}} to hold the {{square f4}} pawn and hit the knight later, but it also weakens {{square f5}} and the dark squares around the king.",
       "White pushes a pawn to {{square h4}} to support a plan; check what weakness it creates and whether it helps development or attack.",
       "Black advances {{square g4}} to chase the {{square f3}} knight away from the center; the tradeoff is the g file and dark squares can become targets.",
@@ -619,11 +614,11 @@ export const kingsGambitLines = withOpeningFeedback([
     ],
     explanations: [
       
-      "White advances a central pawn to {{square e4}} to claim space and define which files and diagonals will open.",
-      "Black advances a central pawn to {{square e5}} to claim space and define which files and diagonals will open.",
-      "White plays {{square f4}}, offering the pawn so Black's e pawn moves off {{square e5}}, opening lines and the f file for a fast attack.",
-      "Black captures on {{square f4}} to open files and change the structure; ask what new line just opened and who benefits from it.",
-      "White develops N{{square f3}} to contest the center, hitting {{square e5}} or {{square e4}} and preparing quick castling.",
+      "White takes the center and prepares the attack.",
+      "Black mirrors, but the symmetry won't last long.",
+      "The King's Gambit! We offer a pawn to open the f-file highway.",
+      "Accepted. Black accepts the challenge and the material.",
+      "The Golden Rule: stop the queen check and start development.",
       "Black plays {{square d6}} to reinforce {{square e5}} and limit White's {{square e5}} jumps, trying to survive the opening with a solid center.",
       "White advances a central pawn to {{square d4}} to claim space and define which files and diagonals will open.",
       "Black develops N{{square f6}} to contest the center, hitting {{square e5}} or {{square e4}} and preparing quick castling.",
@@ -660,11 +655,11 @@ export const kingsGambitLines = withOpeningFeedback([
     ],
     explanations: [
       
-      "White advances a central pawn to {{square e4}} to claim space and define which files and diagonals will open.",
-      "Black advances a central pawn to {{square e5}} to claim space and define which files and diagonals will open.",
-      "White plays {{square f4}}, offering the pawn so Black's e pawn moves off {{square e5}}, opening lines and the f file for a fast attack.",
-      "Black captures on {{square f4}} to open files and change the structure; ask what new line just opened and who benefits from it.",
-      "White develops N{{square f3}} to contest the center, hitting {{square e5}} or {{square e4}} and preparing quick castling.",
+      "White takes the center and prepares the attack.",
+      "Black mirrors, but the symmetry won't last long.",
+      "The King's Gambit! We offer a pawn to open the f-file highway.",
+      "Accepted. Black accepts the challenge and the material.",
+      "The Golden Rule: stop the queen check and start development.",
       "Black pushes {{square g5}} to hold the {{square f4}} pawn and hit the knight later, but it also weakens {{square f5}} and the dark squares around the king.",
       "White pushes a pawn to {{square h4}} to support a plan; check what weakness it creates and whether it helps development or attack.",
       "Black advances {{square g4}} to chase the {{square f3}} knight away from the center; the tradeoff is the g file and dark squares can become targets.",
@@ -705,11 +700,11 @@ export const kingsGambitLines = withOpeningFeedback([
     ],
     explanations: [
       
-      "White advances a central pawn to {{square e4}} to claim space and define which files and diagonals will open.",
-      "Black advances a central pawn to {{square e5}} to claim space and define which files and diagonals will open.",
-      "White plays {{square f4}}, offering the pawn so Black's e pawn moves off {{square e5}}, opening lines and the f file for a fast attack.",
-      "Black captures on {{square f4}} to open files and change the structure; ask what new line just opened and who benefits from it.",
-      "White develops N{{square f3}} to contest the center, hitting {{square e5}} or {{square e4}} and preparing quick castling.",
+      "White takes the center and prepares the attack.",
+      "Black mirrors, but the symmetry won't last long.",
+      "The King's Gambit! We offer a pawn to open the f-file highway.",
+      "Accepted. Black accepts the challenge and the material.",
+      "The Golden Rule: stop the queen check and start development.",
       "Black pushes {{square g5}} to hold the {{square f4}} pawn and hit the knight later, but it also weakens {{square f5}} and the dark squares around the king.",
       "White pushes a pawn to {{square h4}} to support a plan; check what weakness it creates and whether it helps development or attack.",
       "Black advances {{square g4}} to chase the {{square f3}} knight away from the center; the tradeoff is the g file and dark squares can become targets.",
@@ -756,11 +751,11 @@ export const kingsGambitLines = withOpeningFeedback([
     ],
     explanations: [
       
-      "White advances a central pawn to {{square e4}} to claim space and define which files and diagonals will open.",
-      "Black advances a central pawn to {{square e5}} to claim space and define which files and diagonals will open.",
-      "White plays {{square f4}}, offering the pawn so Black's e pawn moves off {{square e5}}, opening lines and the f file for a fast attack.",
-      "Black captures on {{square f4}} to open files and change the structure; ask what new line just opened and who benefits from it.",
-      "White develops N{{square f3}} to contest the center, hitting {{square e5}} or {{square e4}} and preparing quick castling.",
+      "White takes the center and prepares the attack.",
+      "Black mirrors, but the symmetry won't last long.",
+      "The King's Gambit! We offer a pawn to open the f-file highway.",
+      "Accepted. Black accepts the challenge and the material.",
+      "The Golden Rule: stop the queen check and start development.",
       "Black pushes {{square g5}} to hold the {{square f4}} pawn and hit the knight later, but it also weakens {{square f5}} and the dark squares around the king.",
       "White pushes a pawn to {{square h4}} to support a plan; check what weakness it creates and whether it helps development or attack.",
       "Black advances {{square g4}} to chase the {{square f3}} knight away from the center; the tradeoff is the g file and dark squares can become targets.",
@@ -813,11 +808,11 @@ export const kingsGambitLines = withOpeningFeedback([
     ],
     explanations: [
       
-      "White advances a central pawn to {{square e4}} to claim space and define which files and diagonals will open.",
-      "Black advances a central pawn to {{square e5}} to claim space and define which files and diagonals will open.",
-      "White plays {{square f4}}, offering the pawn so Black's e pawn moves off {{square e5}}, opening lines and the f file for a fast attack.",
-      "Black captures on {{square f4}} to open files and change the structure; ask what new line just opened and who benefits from it.",
-      "White develops N{{square f3}} to contest the center, hitting {{square e5}} or {{square e4}} and preparing quick castling.",
+      "White takes the center and prepares the attack.",
+      "Black mirrors, but the symmetry won't last long.",
+      "The King's Gambit! We offer a pawn to open the f-file highway.",
+      "Accepted. Black accepts the challenge and the material.",
+      "The Golden Rule: stop the queen check and start development.",
       "Black pushes {{square g5}} to hold the {{square f4}} pawn and hit the knight later, but it also weakens {{square f5}} and the dark squares around the king.",
       "White pushes a pawn to {{square h4}} to support a plan; check what weakness it creates and whether it helps development or attack.",
       "Black advances {{square g4}} to chase the {{square f3}} knight away from the center; the tradeoff is the g file and dark squares can become targets.",
@@ -858,11 +853,11 @@ export const kingsGambitLines = withOpeningFeedback([
     ],
     explanations: [
       
-      "White advances a central pawn to {{square e4}} to claim space and define which files and diagonals will open.",
-      "Black advances a central pawn to {{square e5}} to claim space and define which files and diagonals will open.",
-      "White plays {{square f4}}, offering the pawn so Black's e pawn moves off {{square e5}}, opening lines and the f file for a fast attack.",
-      "Black captures on {{square f4}} to open files and change the structure; ask what new line just opened and who benefits from it.",
-      "White develops N{{square f3}} to contest the center, hitting {{square e5}} or {{square e4}} and preparing quick castling.",
+      "White takes the center and prepares the attack.",
+      "Black mirrors, but the symmetry won't last long.",
+      "The King's Gambit! We offer a pawn to open the f-file highway.",
+      "Accepted. Black accepts the challenge and the material.",
+      "The Golden Rule: stop the queen check and start development.",
       "Black strikes with {{square d5}} in the center, aiming to trade off White's attacking momentum by opening lines for development and the queen.",
       "White captures on {{square d5}} to open files and change the structure; ask what new line just opened and who benefits from it.",
       "Black develops N{{square f6}} to contest the center, hitting {{square e5}} or {{square e4}} and preparing quick castling.",
@@ -900,11 +895,11 @@ export const kingsGambitLines = withOpeningFeedback([
     ],
     explanations: [
       
-      "White advances a central pawn to {{square e4}} to claim space and define which files and diagonals will open.",
-      "Black advances a central pawn to {{square e5}} to claim space and define which files and diagonals will open.",
-      "White plays {{square f4}}, offering the pawn so Black's e pawn moves off {{square e5}}, opening lines and the f file for a fast attack.",
-      "Black captures on {{square f4}} to open files and change the structure; ask what new line just opened and who benefits from it.",
-      "White develops N{{square f3}} to contest the center, hitting {{square e5}} or {{square e4}} and preparing quick castling.",
+      "White takes the center and prepares the attack.",
+      "Black mirrors, but the symmetry won't last long.",
+      "The King's Gambit! We offer a pawn to open the f-file highway.",
+      "Accepted. Black accepts the challenge and the material.",
+      "The Golden Rule: stop the queen check and start development.",
       "Black pushes {{square g5}} to hold the {{square f4}} pawn and hit the knight later, but it also weakens {{square f5}} and the dark squares around the king.",
       "White pushes a pawn to {{square h4}} to support a plan; check what weakness it creates and whether it helps development or attack.",
       "Black advances {{square g4}} to chase the {{square f3}} knight away from the center; the tradeoff is the g file and dark squares can become targets.",
@@ -945,11 +940,11 @@ export const kingsGambitLines = withOpeningFeedback([
     ],
     explanations: [
       
-      "White advances a central pawn to {{square e4}} to claim space and define which files and diagonals will open.",
-      "Black advances a central pawn to {{square e5}} to claim space and define which files and diagonals will open.",
-      "White plays {{square f4}}, offering the pawn so Black's e pawn moves off {{square e5}}, opening lines and the f file for a fast attack.",
-      "Black captures on {{square f4}} to open files and change the structure; ask what new line just opened and who benefits from it.",
-      "White develops N{{square f3}} to contest the center, hitting {{square e5}} or {{square e4}} and preparing quick castling.",
+      "White takes the center and prepares the attack.",
+      "Black mirrors, but the symmetry won't last long.",
+      "The King's Gambit! We offer a pawn to open the f-file highway.",
+      "Accepted. Black accepts the challenge and the material.",
+      "The Golden Rule: stop the queen check and start development.",
       "Black pushes {{square g5}} to hold the {{square f4}} pawn and hit the knight later, but it also weakens {{square f5}} and the dark squares around the king.",
       "White pushes a pawn to {{square h4}} to support a plan; check what weakness it creates and whether it helps development or attack.",
       "Black advances {{square g4}} to chase the {{square f3}} knight away from the center; the tradeoff is the g file and dark squares can become targets.",
@@ -988,11 +983,11 @@ export const kingsGambitLines = withOpeningFeedback([
     ],
     explanations: [
       
-      "White advances a central pawn to {{square e4}} to claim space and define which files and diagonals will open.",
-      "Black advances a central pawn to {{square e5}} to claim space and define which files and diagonals will open.",
-      "White plays {{square f4}}, offering the pawn so Black's e pawn moves off {{square e5}}, opening lines and the f file for a fast attack.",
-      "Black captures on {{square f4}} to open files and change the structure; ask what new line just opened and who benefits from it.",
-      "White develops N{{square f3}} to contest the center, hitting {{square e5}} or {{square e4}} and preparing quick castling.",
+      "White takes the center and prepares the attack.",
+      "Black mirrors, but the symmetry won't last long.",
+      "The King's Gambit! We offer a pawn to open the f-file highway.",
+      "Accepted. Black accepts the challenge and the material.",
+      "The Golden Rule: stop the queen check and start development.",
       "Black pushes {{square g5}} to hold the {{square f4}} pawn and hit the knight later, but it also weakens {{square f5}} and the dark squares around the king.",
       "White pushes a pawn to {{square h4}} to support a plan; check what weakness it creates and whether it helps development or attack.",
       "Black advances {{square g4}} to chase the {{square f3}} knight away from the center; the tradeoff is the g file and dark squares can become targets.",
@@ -1027,11 +1022,11 @@ export const kingsGambitLines = withOpeningFeedback([
     ],
     explanations: [
       
-      "White advances a central pawn to {{square e4}} to claim space and define which files and diagonals will open.",
-      "Black advances a central pawn to {{square e5}} to claim space and define which files and diagonals will open.",
-      "White plays {{square f4}}, offering the pawn so Black's e pawn moves off {{square e5}}, opening lines and the f file for a fast attack.",
-      "Black captures on {{square f4}} to open files and change the structure; ask what new line just opened and who benefits from it.",
-      "White develops N{{square f3}} to contest the center, hitting {{square e5}} or {{square e4}} and preparing quick castling.",
+      "White takes the center and prepares the attack.",
+      "Black mirrors, but the symmetry won't last long.",
+      "The King's Gambit! We offer a pawn to open the f-file highway.",
+      "Accepted. Black accepts the challenge and the material.",
+      "The Golden Rule: stop the queen check and start development.",
       "Black plays {{square d6}} to reinforce {{square e5}} and limit White's {{square e5}} jumps, trying to survive the opening with a solid center.",
       "White advances a central pawn to {{square d4}} to claim space and define which files and diagonals will open.",
       "Black pushes {{square g5}} to hold the {{square f4}} pawn and hit the knight later, but it also weakens {{square f5}} and the dark squares around the king.",
@@ -1046,7 +1041,7 @@ export const kingsGambitLines = withOpeningFeedback([
     category: "King's Gambit",
     id: "kingsGambit-23-c4b1d7a2",
     name: "Morphy line: Ng5 sacrifice and Qxg4",
-    description: "Transcript-backed Morphy attacking idea: White gives up the knight to drag the king forward, then brings more pieces into the attack with tempo.",
+    description: "The soul of Romantic chess: White sacrifices a knight to drag the king into the open, then launches a devastating attack with every piece.",
     moves: [
       "e4",
       "e5",
@@ -1068,33 +1063,31 @@ export const kingsGambitLines = withOpeningFeedback([
       "c6"
     ],
     explanations: [
-      
-      "White starts with 1.{{square e4}} to claim space and open lines for rapid development.",
-      "Black mirrors with ...{{square e5}} and meets White in the center.",
-      "The King's Gambit offers the f-pawn to open the f-file and generate attacking chances against an exposed king.",
-      "Black accepts the gambit pawn, but now White has a clear target and open lines to work with.",
-      "This is one of the transcript's key points: N{{square f3}} develops, guards {{square h4}} so there is no cheap ...Q{{square h4}}+ idea, and prepares {{square d4}}.",
-      "Black overprotects {{square f4}} and hints at ...{{square g4}}, but every kingside pawn move makes future dark-square problems worse.",
-      "{{square h4}} is the standard undermining move. White attacks the pawn chain before Black can settle and still keeps {{square d4}} and Bx{{square f4}} in mind.",
-      "Black chases the knight, but the g-pawn now overextends and gives White concrete attacking targets.",
-      "N{{square g5}} is the Morphy move from the transcript. White points at {{square f7}} and prepares to bring the queen to {{square g4}} if Black is careless.",
-      "...{{square h6}} looks natural because it questions the knight, but it creates the exact exposure Morphy wanted.",
-      "Nx{{square f7}} is the point: White sacrifices the knight to drag Black's king into the open while the rest of Black's army is still asleep.",
-      "Black takes the piece back, but the king is now on {{square f7}} with no development and no safe shelter.",
-      "Qx{{square g4}} wins back a pawn, attacks the weakened kingside, and keeps the initiative alive immediately.",
-      "Black covers {{square g5}} and tries to keep the position together, but the {{queen f6 full}} can itself become a tactical target.",
-      "B{{square c4}}+ develops with check and keeps Black from consolidating.",
-      "The king retreats, but Black is still losing time with the same piece while White keeps adding attackers.",
-      "This is another direct Morphy lesson from the transcript: bring a fresh piece into the attack while creating a real threat, here N{{square d5}}.",
-      "...{{square c6}} stops N{{square d5}} for the moment, but it is another defensive tempo in an already cramped position."
+      "White claims the center.",
+      "Black meets us halfway.",
+      "The King's Gambit! We're here for a fight, not a long endgame.",
+      "Accepted. Black thinks the pawn is worth the risk.",
+      "The Golden Rule: stop the queen check and prepare the attack.",
+      "Black holds the pawn, but their kingside is starting to look like Swiss cheese.",
+      "Undermine! We force Black to make a decision.",
+      "Black chases the knight, but they're walking into a trap.",
+      "The Morphy move! We land on a provocative square, inviting Black to attack us.",
+      "Black takes the bait! They think they're winning a piece.",
+      "The Allgaier Sacrifice! We give up the knight to drag Black's king onto the {{square f7}} square where he has no shelter.",
+      "Black accepts the material, but their king is now a target for our entire army.",
+      "Recapture with the queen. We've regained one pawn and opened the path for our bishops.",
+      "Black tries to defend, but their position is crumbling.",
+      "Check! The bishop enters the game with a vengeance, targeting the exposed king.",
+      "The king is forced to retreat, losing even more time.",
+      "Bring in more attackers! We develop the knight and prepare to jump into the center.",
+      "Black tries to stop our knight, but they're playing defense while we're playing for checkmate. This is the King's Gambit!"
     ]
-  }
-,
+  },
   {
     category: "King's Gambit",
     id: "kingsGambit-24-f1a6c9e4",
     name: "Declined trap: ...Nd4 runs into Bxf7+",
-    description: "Transcript-backed declined King's Gambit trap where Black overuses the pin and gets hit by a bishop sacrifice on f7.",
+    description: "Black tries to be solid and use a pin, but White ignores the material and goes straight for the throat with a classic f7 sacrifice.",
     moves: [
       "e4",
       "e5",
@@ -1113,30 +1106,28 @@ export const kingsGambitLines = withOpeningFeedback([
       "fxg5+"
     ],
     explanations: [
-      
-      "White opens with {{square e4}} to claim the center and keep the game in open attacking channels.",
-      "Black answers symmetrically and keeps the fight central.",
-      "{{square f4}} is the King's Gambit: White undermines {{square e5}} and accepts structural risk in return for open lines and initiative.",
-      "Black declines the gambit by protecting {{square e5}} with the queen's knight.",
-      "N{{square f3}} attacks {{square e5}} again, develops a piece, and, as the transcript notes, makes {{square h4}} available against early queen tricks.",
-      "Black reinforces {{square e5}} with ...{{square d6}} and tries to build a compact shell.",
-      "B{{square c4}} is one of the transcript's main recommendations here because the bishop immediately targets {{square f7}}.",
-      "Black pins the knight and hopes the pin will make White's kingside attack harder to organize.",
-      "White castles anyway. The rook belongs on {{square f1}}, because the whole trap works off the open f-file.",
-      "This is the tempting mistake from the transcript: Black thinks the pin plus ...N{{square d4}} creates pressure on {{square f3}} and {{square c2}}.",
-      "Bx{{square f7}}+ blows the position open. White gives up the bishop to expose the king and make the f-file matter right away.",
-      "Black has to take, but the king is now on {{square f7}} and already under fire.",
-      "N{{square g5}}+ is the follow-up the transcript stresses. White attacks with tempo and threatens to recover the sacrificed bishop with interest.",
-      "Black often thinks this solves everything by removing the checking knight and winning White's queen next.",
-      "fx{{square g5}}+ is the hidden point. The f-pawn opens the f-file with check, Black's queen disappears, and White is left with a winning attack."
+      "The starting move.",
+      "Symmetrical response.",
+      "The King's Gambit! We're challenging the center immediately.",
+      "Declined. Black develops a knight to keep the position solid.",
+      "Develop and attack! We pressure {{square e5}} and guard the {{square h4}} square.",
+      "Black reinforces the center, creating a very compact structure.",
+      "Develop the bishop! It's already laser-focused on the weakest square: {{square f7}}.",
+      "Black pins our knight, thinking they've neutralized our attack.",
+      "Castle anyway! We don't fear the pin because our rook is now active on the open f-file.",
+      "The mistake! Black thinks they're winning material by adding pressure to our pinned knight.",
+      "Sacrifice! We ignore the knight and rip open the king's defenses. The {{square f7}} square is the target!",
+      "Forced. Black has to take, but now their king is a sitting duck.",
+      "Counter-attack! We jump in with the knight, attacking the king and the loose bishop on {{square g4}}.",
+      "Black thinks they've won a piece and stopped the attack.",
+      "The Discovery! We take back with the f-pawn, opening our rook's 'highway' with a discovered check. Black's queen is gone and the king is mate. Romantic chess at its finest!"
     ]
-  }
-,
+  },
   {
     category: "King's Gambit",
     id: "kingsGambit-25-6b8e2f11",
     name: "Bishop's Gambit: Kf1 and quiet development",
-    description: "Transcript-backed Bishop's Gambit setup where White meets ...Qh4+ with Kf1, then wins time by developing and threatening to recover the gambit pawn.",
+    description: "In the Bishop's Gambit, we invite Black to check us on h4. We move the king to f1, but we gain a massive lead in development and control of the center.",
     moves: [
       "e4",
       "e5",
@@ -1155,30 +1146,28 @@ export const kingsGambitLines = withOpeningFeedback([
       "Qd3"
     ],
     explanations: [
-      
-      "White starts with 1.{{square e4}} and keeps the position open.",
-      "Black answers with ...{{square e5}} and meets White in the center.",
-      "{{square f4}} offers the pawn and opens the f-file for attacking play.",
-      "Black accepts the gambit pawn, hoping the extra pawn will survive.",
-      "This is the Bishop's Gambit. White develops straight at {{square f7}} and deliberately keeps the knight flexible for a moment.",
-      "Black jumps out with the queen check, a common practical try the transcript specifically discusses.",
-      "K{{square f1}} is the key point. White uses the square the bishop vacated, stays safe enough, and keeps development rolling.",
-      "Black copies the old scholar-style idea, but the {{bishop c5 full}} is about to lose time.",
-      "{{square d4}} is the transcript move: it hits the bishop, breaks up Black's queen-and-bishop dream, and claims the center.",
-      "The bishop has to retreat, so White is already gaining tempi.",
-      "N{{square f3}} now comes with tempo against the queen and also supports a later recovery of the {{square f4}} pawn.",
-      "Black tucks the queen away, but White keeps the lead in development.",
-      "N{{square c3}} adds another piece, protects {{square e4}}, and increases the threat of central expansion.",
-      "Black develops a knight, but the position is still easier for White because Black has spent time with the queen and bishop.",
-      "Q{{square d3}} is the calmer continuation from the transcript: White protects {{square e4}}, keeps pressure on {{square f4}}, and stays ready to recover the gambit pawn under good conditions."
+      "The attack starts.",
+      "Black mirrors.",
+      "The King's Gambit! We're ready for an open game.",
+      "Accepted. Black takes the pawn and the challenge.",
+      "The Bishop's Gambit! We develop the bishop first, targeting {{square f7}} and leaving the knight flexible.",
+      "Black jumps out with the check, thinking they've won the right to castle.",
+      "The key move: K{{square f1}}! We don't mind losing castling rights because our king is safe behind our pawns, and Black's queen is now a target for our development.",
+      "Black tries to attack our weak spot, but we're ready.",
+      "Boom! We hit the bishop and take full control of the center in one move.",
+      "Black is forced to retreat, losing time while we gain space.",
+      "Develop with tempo! We hit the queen and prepare to win our pawn back.",
+      "Black's queen has to run away. She's already losing the battle of the clocks.",
+      "Bring out the reserves! We develop the knight and defend our center.",
+      "Black tries to catch up in development, but they're already behind.",
+      "Solidify! We protect our center and prepare to launch the final attack. White is clearly better here!"
     ]
-  }
-,
+  },
   {
     category: "King's Gambit",
     id: "kingsGambit-26-5d3a7c90",
     name: "Bishop's Gambit: Bxf7+ and trapped queen idea",
-    description: "Transcript-backed Bishop's Gambit trap where Black clings to the pawn with ...Qg4 and White traps the queen with h3 and development.",
+    description: "Black gets greedy and tries to hold the pawn with their queen, leading to a classic trap where White sacrifices a bishop to net the queen.",
     moves: [
       "e4",
       "e5",
@@ -1199,24 +1188,23 @@ export const kingsGambitLines = withOpeningFeedback([
       "Nc3"
     ],
     explanations: [
-      
-      "White opens with {{square e4}} to keep the game tactical and direct.",
-      "Black mirrors with ...{{square e5}} and accepts an open fight.",
-      "{{square f4}} is the gambit offer that opens the f-file and asks Black to defend carefully.",
-      "Black takes the pawn, but that extra pawn can become a liability if Black wastes tempi to hold it.",
-      "White chooses the Bishop's Gambit, putting immediate pressure on {{square f7}}.",
-      "The queen check is a common try, but the transcript shows why White should not fear it.",
-      "K{{square f1}} is the standard square because the {{bishop c4 full}} has already cleared the path.",
-      "Black keeps pressing with the bishop, but that bishop will keep losing time.",
-      "{{square d4}} breaks the queen-and-bishop battery and claims the center in one move.",
-      "The bishop has to retreat again, which is exactly what White wants.",
-      "N{{square f3}} develops with tempo and asks Black how the queen will justify her early adventure.",
-      "This is the greedy move from the transcript. Black tries to hang onto the f-pawn instead of catching up in development.",
-      "Bx{{square f7}}+ is the standard shock tactic here. White opens lines around the king and makes Black solve king safety first.",
-      "Black declines the capture and steps to {{square f8}}, but the queen is still not safe.",
-      "{{square h3}} is the unusual move the transcript highlights. White takes away the queen's routes and starts building a net.",
-      "The queen has almost no squares left, and {{square g3}} is one of the few available.",
-      "N{{square c3}} ignores the bishop for the moment and continues the real plan: White threatens N{{square e2}} next, when the {{queen g3 full}} will have nowhere good to go."
+      "Starting moves.",
+      "Black meets us.",
+      "The Gambit offer.",
+      "Accepted. Let the games begin!",
+      "The Bishop's Gambit setup.",
+      "The common check.",
+      "Step to {{square f1}}. We're completely safe.",
+      "Black tries to scholar-mate us, but it's too late for that.",
+      "Central dominance! We hit the bishop and gain space.",
+      "Retreat. White is already winning the development race.",
+      "Develop with tempo! We kick the queen.",
+      "Greed! Black tries to hold onto the extra pawn with their queen instead of developing. This is a fatal mistake.",
+      "The Sacrifice! We rip open the king's position. Black can't take the bishop because of a discovered check on their queen!",
+      "The king is forced to move, losing all coordination.",
+      "Trapping time! We restrict the queen's squares even further.",
+      "The queen is almost out of breath. She's stuck in a cage of our pieces.",
+      "Ignore the bishop and continue the real plan! We're about to play Ne2 and the queen will have nowhere left to go. A masterpiece of coordination!"
     ]
   }
 ]);

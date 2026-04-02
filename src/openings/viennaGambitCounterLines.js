@@ -6,6 +6,22 @@ export const viennaGambitCounterLines = withOpeningFeedback([
   
   {
     category: "Vienna Gambit Counter",
+    id: "vienna-counter-mainline",
+    name: "Vienna Counter: The d5 Strike",
+    description: "The coach's recommendation for Black: strike back in the center immediately and exploit White's kingside weaknesses.",
+    moves: ["e4", "e5", "Nc3", "Nf6", "f4", "d5"],
+    explanations: [
+      "White starts with e4.",
+      "Let's learn the Vienna Gambit Counter! We respond symmetrically.",
+      "The Vienna Knight! White delays development to keep the f-pawn flexible.",
+      "Black develops naturally, attacking e4.",
+      "The Gambit! White offers a pawn to rip open the f-file.",
+      "The Counter-Punch! We ignore the pawn and strike the center immediately with 3... d5. This is the only 'good' way to play against the Vienna Gambit!"
+    ]
+  },
+
+  {
+    category: "Vienna Gambit Counter",
 
     id: "vienna-counter-01-cb43922c",
     name: "Solid ...d6 setup",
