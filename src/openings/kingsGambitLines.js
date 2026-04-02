@@ -46,7 +46,7 @@ export const kingsGambitLines = withOpeningFeedback([
       "Black answers symmetrically, but we're about to change that.",
       "The King's Gambit! We offer the f-pawn to deflect Black's central control and open the f-file for our rook.",
       "Black accepts! Now the f-file is a highway for our future attack.",
-      "The Golden Rule of the King's Gambit: develop the knight to prevent the devastating ...Qh4+ check.",
+      "The Golden Rule of the King's Gambit: develop the knight to prevent the devastating ...Q{{square h4}}+ check.",
       "Black tries to support their extra pawn, but they're creating big weaknesses on the kingside.",
       "White immediately undermines the pawn chain. We want to rip open the kingside before Black can develop.",
       "The losing move! Black tries to hold everything with ...{{square f6}}, but this creates a 'corridor of death' straight to their king.",
@@ -136,7 +136,7 @@ export const kingsGambitLines = withOpeningFeedback([
       "Black tries to kick our knight, but we're happy to relocate.",
       "The knight moves to {{square d3}}, where it defends {{square e5}} and prepares to jump back into the action.",
       "Black fianchettos, but they're still behind in the race to coordinate.",
-      "Recapture the pawn! White has a fantastic position with active pieces and a clear target on f7."
+      "Recapture the pawn! White has a fantastic position with active pieces and a clear target on {{square f7}}."
     ]
   },
   {
@@ -1204,7 +1204,7 @@ export const kingsGambitLines = withOpeningFeedback([
       "The king is forced to move, losing all coordination.",
       "Trapping time! We restrict the queen's squares even further.",
       "The queen is almost out of breath. She's stuck in a cage of our pieces.",
-      "Ignore the bishop and continue the real plan! We're about to play Ne2 and the queen will have nowhere left to go. A masterpiece of coordination!"
+      "Ignore the bishop and continue the real plan! We're about to play N{{square e2}} and the queen will have nowhere left to go. A masterpiece of coordination!"
     ]
   }
 ]);

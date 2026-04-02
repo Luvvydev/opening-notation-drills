@@ -13,13 +13,13 @@ export const viennaGambitLines = withOpeningFeedback([
     explanations: [
       "Let's learn the Vienna Gambit! White starts with {{square e4}}.",
       "Black responds symmetrically.",
-      "The Vienna Knight! We delay Nf3 to keep the f-pawn flexible.",
+      "The Vienna Knight! We delay N{{square f3}} to keep the f-pawn flexible.",
       "Black develops their best defender.",
       "The Gambit! We offer the f-pawn to deflect the knight and open the f-file.",
       "The Mistake! Black accepts the pawn, but they're about to lose precious time.",
-      "The Punishment! We push e5, and the knight has no forward squares. It's forced all the way back to the start!",
+      "The Punishment! We push {{square e5}}, and the knight has no forward squares. It's forced all the way back to the start!",
       "Black admits the mistake and retreats. White has won massive time for free.",
-      "The Golden Rule! We play Nf3 to stop any ...Qh4+ ideas and prepare to build the center.",
+      "The Golden Rule! We play N{{square f3}} to stop any ...Q{{square h4}}+ ideas and prepare to build the center.",
       "Black tries to strike back before we get too comfortable.",
       "Solidify! We build our dream pawn center. White is dominating development and space. This is why you don't take the Vienna Gambit!"
     ]
@@ -55,13 +55,13 @@ export const viennaGambitLines = withOpeningFeedback([
       "Black develops.",
       "The Gambit offer.",
       "The Correct Answer! Black strikes back in the center immediately.",
-      "Trade! We remove the e5 defender.",
+      "Trade! We remove the {{square e5}} defender.",
       "Black occupies the central outpost.",
-      "The Gotham Rule! We play Nf3 to stop the queen check and support our center.",
+      "The Gotham Rule! We play N{{square f3}} to stop the queen check and support our center.",
       "Black develops calmly.",
       "Solidify! We build our center and challenge the knight.",
       "Black castles to safety.",
-      "The Golden Bishop! We put our best attacker on its favorite square, aiming directly at h7. White has a great game!"
+      "The Golden Bishop! We put our best attacker on its favorite square, aiming directly at {{square h7}}. White has a great game!"
     ]
   },
 

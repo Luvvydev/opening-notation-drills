@@ -14,9 +14,9 @@ export const viennaGambitCounterLines = withOpeningFeedback([
       "White starts with {{square e4}}.",
       "Let's learn the Vienna Gambit Counter! We respond symmetrically. {{square e5}}",
       "The Vienna Knight! White delays development to keep the f-pawn flexible.",
-      "Black develops naturally, attacking e4.",
+      "Black develops naturally, attacking {{square e4}}.",
       "The Gambit! White offers a pawn to rip open the f-file.",
-      "The Counter-Punch! We ignore the pawn and strike the center immediately with 3... d5. This is the only 'good' way to play against the Vienna Gambit!"
+      "The Counter-Punch! We ignore the pawn and strike the center immediately with 3... {{square d5}}. This is the only 'good' way to play against the Vienna Gambit!"
     ]
   },
 

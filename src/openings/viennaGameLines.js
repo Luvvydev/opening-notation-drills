@@ -45,7 +45,7 @@ export const viennaGameLines = withOpeningFeedback([
       "The Vienna Attack! Q{{square g4}} hits {{square g7}} and {{square f7}}, forcing Black to react immediately.",
       "Black defends with the queen, but she's walking into a trap.",
       "Jump forward! N{{square d5}} hits the queen and threatens forks on {{square c7}}.",
-      "Greed! Black takes on f2 with check, pulling the queen away from safety.",
+      "Greed! Black takes on {{square f2}} with check, pulling the queen away from safety.",
       "Step aside. We don't fear the check because Black has no follow-up.",
       "Desperation! The queen has nowhere else to go.",
       "The payoff! We win the queen cleanly. This is why you don't chase pawns against the Vienna!"

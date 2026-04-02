@@ -33,13 +33,13 @@ export const londonLines = withOpeningFeedback([
       "Black develops their best defender.",
       "Solidify! We build the first half of our pyramid and open the path for the other bishop.",
       "Black supports their center and prepares development.",
-      "Developing the knight toward its future home on e5.",
+      "Developing the knight toward its future home on {{square e5}}.",
       "Black challenges our star bishop! They want to trade it off.",
       "The Retreat: We drop the bishop back. If they take, we open the h-file for our rook! A great tradeoff.",
       "Black castles to safety.",
-      "The Golden Bishop! We put our best attacker on its most aggressive square, eyeing h7.",
+      "The Golden Bishop! We put our best attacker on its most aggressive square, eyeing {{square h7}}.",
       "Black strikes back! The classic challenge to our center.",
-      "The 'C5? C3!' Rule: Every time they play c5, we answer with c3 to maintain our rock-solid pyramid. The tank is complete!"
+      "The 'C5? C3!' Rule: Every time they play {{square c5}}, we answer with {{square c3}} to maintain our rock-solid pyramid. The tank is complete!"
     ]
   },
 
@@ -52,15 +52,15 @@ export const londonLines = withOpeningFeedback([
     explanations: [
       "White takes the center.",
       "Black responds with the hypermodern approach.",
-      "The Shift! Against ...g6, we play Nc3. We aren't building a pyramid today; we're launching a tank attack.",
+      "The Shift! Against ...{{square g6}}, we play N{{square c3}}. We aren't building a pyramid today; we're launching a tank attack.",
       "Black prepares the bishop house.",
       "The London Bishop still joins the party, but with a more aggressive mission.",
       "Black completes the fianchetto. That bishop is their pride and joy—we're going to trade it.",
-      "Battery! We prepare Bh6 to remove that powerful defender.",
+      "Battery! We prepare B{{square h6}} to remove that powerful defender.",
       "Black solidifies their center.",
       "Castle Long! We put our king on the other side so we can launch our pawns without fear.",
       "Black castles to safety—or so they think.",
-      "CHARGE! We launch the h-pawn. Our goal is h5, ripping open the kingside and delivering mate. This is how you WIN with the London!"
+      "CHARGE! We launch the h-pawn. Our goal is {{square h5}}, ripping open the kingside and delivering mate. This is how you WIN with the London!"
     ]
   },
 
@@ -80,7 +80,7 @@ export const londonLines = withOpeningFeedback([
       "Black challenges the bishop and asks whether you want to keep tension or trade.",
       "{{square c3}} completes the pyramid! It overprotects {{square d4}}, slows down Black's counterplay, and prepares B{{square c2}} if ...{{square c4}} comes.",
       "Black castles and reaches a normal Queen's Pawn structure.",
-      "Nb{{square d2}} completes the core shell. We are now controlling the e4 and e5 squares quite well with our pawns and pieces."
+      "Nb{{square d2}} completes the core shell. We are now controlling the {{square e4}} and {{square e5}} squares quite well with our pawns and pieces."
     ]
   },
 
@@ -113,8 +113,8 @@ export const londonLines = withOpeningFeedback([
       "Develop the bishop before committing to {{square e3}}.",
       "Black develops and eyes {{square e4}} and {{square d5}} squares.",
       "Reinforce {{square d4}} and keep the structure stable.",
-      "When you see {{square c5}}, think 'c3'! c5? c3! Say that a million times to yourself.",
-      "When you see {{square c5}}, think 'c3'! c5? c3! Say that a million times to yourself. {{square c3}} completes the pyramid and kills Black's counterplay in the center.",
+      "When you see {{square c5}}, think '{{square c3}}'! {{square c5}}? {{square c3}}! Say that a million times to yourself.",
+      "When you see {{square c5}}, think '{{square c3}}'! {{square c5}}? {{square c3}}! Say that a million times to yourself. {{square c3}} completes the pyramid and kills Black's counterplay in the center.",
       "Black adds more pressure on {{square d4}} and increases central control.",
       "Nb{{square d2}} is flexible here. It keeps our options open and protects our central structure."
     ]
@@ -132,7 +132,7 @@ export const londonLines = withOpeningFeedback([
       "Black develops and starts looking at {{square e4}} and {{square d5}}.",
       "Stabilize {{square d4}} and open lines for the bishop and queen.",
       "Black strikes at {{square d4}} early, typical counterplay versus London setups.",
-      "c5? c3! Support {{square d4}} immediately.",
+      "{{square c5}}? {{square c3}}! Support {{square d4}} immediately.",
       "Black attacks {{square b2}} and leans on {{square d4}}, hoping for a simple target game.",
       "Q{{square b3}} is the most common way to meet this. You don't want to take their queen; you actually want them to take you so you get an open a-file for your rook!"
     ]
@@ -566,7 +566,7 @@ export const londonLines = withOpeningFeedback([
       "Black finally supports the dark squares, but White already has the bigger center.",
       "Q{{square d2}} connects rooks, supports queenside castling, and prepares to trade the fianchettoed bishop with B{{square h6}}.",
       "Black castles into the side we are about to attack.",
-      "Castle long! The plan is simple: if they castle, h4 and h5 are coming to blow them off the board."
+      "Castle long! The plan is simple: if they castle, {{square h4}} and {{square h5}} are coming to blow them off the board."
     ]
   },
 
