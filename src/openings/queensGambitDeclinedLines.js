@@ -39,7 +39,7 @@ export const queensGambitDeclinedLines = withOpeningFeedback([
     ],
     "explanations": [
       "White starts with the queen's pawn.",
-      "Let's learn the Queen's Gambit Declined! Black builds a solid center.",
+      "Let's learn the Queen's Gambit Declined! Black builds a solid center.{{square d5}}",
       "The Gambit! We challenge the center from the flank.",
       "Declined. Black supports d5 and prepares to develop.",
       "Develop the knight and increase pressure on the center.",

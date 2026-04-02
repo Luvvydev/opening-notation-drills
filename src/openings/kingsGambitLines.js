@@ -42,7 +42,7 @@ export const kingsGambitLines = withOpeningFeedback([
       "Bc4+"
     ],
     explanations: [
-      "Let's learn the King's Gambit! White claims the center. The attack begins!",
+      "Let's learn the King's Gambit! White claims the center. The attack begins! {{square e4}}",
       "Black answers symmetrically, but we're about to change that.",
       "The King's Gambit! We offer the f-pawn to deflect Black's central control and open the f-file for our rook.",
       "Black accepts! Now the f-file is a highway for our future attack.",

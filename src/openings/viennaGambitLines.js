@@ -11,7 +11,7 @@ export const viennaGambitLines = withOpeningFeedback([
     description: "When Black accepts the gambit, we punish them immediately by kicking their knight back to g8.",
     moves: ["e4", "e5", "Nc3", "Nf6", "f4", "exf4", "e5", "Ng8", "Nf3", "d6", "d4"],
     explanations: [
-      "Let's learn the Vienna Gambit! White starts with e4.",
+      "Let's learn the Vienna Gambit! White starts with {{square e4}}.",
       "Black responds symmetrically.",
       "The Vienna Knight! We delay Nf3 to keep the f-pawn flexible.",
       "Black develops their best defender.",

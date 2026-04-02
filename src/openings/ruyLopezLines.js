@@ -27,7 +27,7 @@ export const ruyLopezLines = withOpeningFeedback([
     description: "3...d6 with 4.d4 and Bxc6+. White trades queens and wins the e5 pawn.",
     moves: ["e4","e5","Nf3","Nc6","Bb5","d6","d4","a6","Bxc6+","bxc6","dxe5","dxe5","Qxd8+","Kxd8","Nxe5"],
     explanations: [
-      "Let's learn the Ruy Lopez! White claims the center and prepares for an open game.",
+      "Let's learn the Ruy Lopez! White claims the center and prepares for an open game. {{square e4}}",
       "Black mirrors, keeping the center balanced.",
       "Develop and attack {{square e5}}. The standard Spanish setup.",
       "Black develops a knight to defend. This is the main road of open games.",

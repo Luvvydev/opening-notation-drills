@@ -34,7 +34,7 @@ export const queensGambitAcceptedLines = withOpeningFeedback([
       "Qf3"
     ],
     "explanations": [
-      "Let's learn the Queen's Gambit Accepted! White starts with the queen's pawn.",
+      "Let's learn the Queen's Gambit Accepted! White starts with the queen's pawn.{{square d4}}",
       "Black meets us in the center.",
       "The Gambit! We offer a wing pawn to deflect Black's central control.",
       "Accepted. Black takes the pawn, but they've given up their stake in the center.",

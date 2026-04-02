@@ -17,7 +17,7 @@ Let them chase the queen—they're just walking into your trap!
 
 const QA5_INTRO = [
   "White starts with pawn to {{square e4}} and claims central space.",
-  "Let's learn the Scandinavian Defense! We strike the center immediately with 1... d5.",
+  "Let's learn the Scandinavian Defense! We strike the center immediately with 1... {{square d5}}.",
   "White accepts. Most beginners fear bringing their queen out early, but we welcome it!",
   "Black recaptures. Yes, White will attack our queen, but we use those 'tempos' to build a solid wall.",
   "White develops with an attack. This is the trade: they get a knight move, we get our queen to a powerful outpost.",

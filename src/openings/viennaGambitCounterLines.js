@@ -11,8 +11,8 @@ export const viennaGambitCounterLines = withOpeningFeedback([
     description: "The coach's recommendation for Black: strike back in the center immediately and exploit White's kingside weaknesses.",
     moves: ["e4", "e5", "Nc3", "Nf6", "f4", "d5"],
     explanations: [
-      "White starts with e4.",
-      "Let's learn the Vienna Gambit Counter! We respond symmetrically.",
+      "White starts with {{square e4}}.",
+      "Let's learn the Vienna Gambit Counter! We respond symmetrically. {{square e5}}",
       "The Vienna Knight! White delays development to keep the f-pawn flexible.",
       "Black develops naturally, attacking e4.",
       "The Gambit! White offers a pawn to rip open the f-file.",

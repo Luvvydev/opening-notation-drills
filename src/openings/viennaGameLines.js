@@ -36,7 +36,7 @@ export const viennaGameLines = withOpeningFeedback([
       "Bxf1"
     ],
     explanations: [
-      "Let's learn the Vienna Game! White starts with e4.",
+      "Let's learn the Vienna Game! White starts with {{square e4}}.",
       "Black mirrors.",
       "The Vienna Knight! We develop to {{square c3}} first to protect our center and keep our f-pawn flexible.",
       "Black develops naturally.",
