@@ -32,14 +32,14 @@ export const londonLines = withOpeningFeedback([
     explanations: [
       "Let's learn the London System! Start with pawn to {{square d4}} and build a solid setup before the attack starts.",
       "Black meets the center and asks what kind of Queen's Pawn structure you want.",
-      "B{{square f4}} is the point of the London. Get the bishop outside the chain before {{square e3}} would lock it in.",
+      "B{{square f4}} is the point of the London. Committing the bishop early is flexible, as we don't know for sure where our knights are going yet.",
       "Black develops and keeps an eye on {{square e4}}.",
-      "Now {{square e3}} completes the first layer of the setup and opens the dark bishop and queen.",
+      "Now {{square e3}} completes one side of what we call a 'pyramid' on this side of the board.",
       "Black supports {{square d5}} and keeps normal development available.",
       "N{{square f3}} is part of the standard shell, but it works best after {{square e3}} has already taken the sting out of early pins.",
       "Black offers the usual bishop trade, which is one of the main practical questions in London positions.",
-      "Nb{{square d2}} is the next standard piece. It backs up {{square e4}} and N{{square e5}} and prepares the full London pyramid instead of chasing one-move threats.",
-      "Black castles, and now the opening phase is mostly done. From here the game is about plans, not memorizing more setup moves."
+      "Nb{{square d2}} is the next standard piece. It backs up {{square e4}} and N{{square e5}} and prepares the full London pyramid.",
+      "Black castles, and now the opening phase is mostly done. From here the game is about plans."
     ]
   },
 
@@ -57,9 +57,9 @@ export const londonLines = withOpeningFeedback([
       "Black backs up {{square d5}} and keeps ...{{square c5}} and ...B{{square d6}} available.",
       "Finish kingside development without showing your full plan yet.",
       "Black challenges the bishop and asks whether you want to keep tension or trade.",
-      "{{square c3}} is more than a setup move. It overprotects {{square d4}}, slows down Black's counterplay, and prepares B{{square c2}} if ...{{square c4}} comes.",
+      "{{square c3}} completes the pyramid! It overprotects {{square d4}}, slows down Black's counterplay, and prepares B{{square c2}} if ...{{square c4}} comes.",
       "Black castles and reaches a normal Queen's Pawn structure.",
-      "Nb{{square d2}} completes the core shell, supports N{{square e5}} and {{square e4}}, and usually means B{{square d3}} is not far behind."
+      "Nb{{square d2}} completes the core shell. We are now controlling the e4 and e5 squares quite well with our pawns and pieces."
     ]
   },
 
@@ -72,12 +72,12 @@ export const londonLines = withOpeningFeedback([
       "Take the center first and define the structure.",
       "Black mirrors and keeps central symmetry.",
       "Develop the bishop before {{square e3}} would lock it in.",
-      "An early bishop development looks natural, but it also means Black is not fully ready for queenside pressure.",
-      "Switch gears instead of auto-piloting. {{square c4}} challenges {{square d5}} directly and heads toward Queen's Gambit style play.",
+      "If Black leaves the light-squared bishop early, we can actually abandon the pyramid plan and turn this into a Queen's Gambit style attack.",
+      "Switch gears! {{square c4}} challenges {{square d5}} directly and exploits the fact that the bishop is no longer guarding the queenside.",
       "Black supports {{square d5}} and opens the dark bishop.",
       "Develop and increase pressure on {{square d5}} while keeping Q{{square b3}} in mind.",
       "Black develops normally, but {{square b7}} is still a practical target.",
-      "Q{{square b3}} hits {{square b7}} and {{square d5}} at once, which is the main reason this plan is so annoying for early ...B{{square f5}} setups."
+      "Q{{square b3}} hits {{square b7}} and {{square d5}} at once. If they play {{square b6}}, we might even win the whole queenside later!"
     ]
   },
 
@@ -85,35 +85,35 @@ export const londonLines = withOpeningFeedback([
     id: "london-vs-early-c5",
     name: "London vs early ...c5",
     description: "Meet the early pawn strike with simple development and support for d4.",
-    moves: ["d4", "d5", "Bf4", "Nf6", "e3", "c5", "Nf3", "Nc6", "Nbd2"],
+    moves: ["d4", "d5", "Bf4", "Nf6", "e3", "c5", "c3", "Nc6", "Nd2"],
     explanations: [
       "Establish central space so Black has to challenge it.",
       "Black mirrors and keeps central tension.",
       "Develop the bishop before committing to {{square e3}}.",
       "Black develops and eyes {{square e4}} and {{square d5}} squares.",
       "Reinforce {{square d4}} and keep the structure stable.",
-      "Black strikes at {{square d4}} early, typical counterplay versus London setups.",
-      "Develop and prepare to support {{square d4}} against pressure.",
+      "When you see {{square c5}}, think 'c3'! c5? c3! Say that a million times to yourself.",
+      "When you see {{square c5}}, think 'c3'! c5? c3! Say that a million times to yourself. {{square c3}} completes the pyramid and kills Black's counterplay in the center.",
       "Black adds more pressure on {{square d4}} and increases central control.",
-      "Support the center and prepare flexible recaptures and {{square e4}} later."
+      "Nb{{square d2}} is flexible here. It keeps our options open and protects our central structure."
     ]
   },
 
   {
     id: "london-vs-c5-qb6",
     name: "London vs ...c5 and ...Qb6",
-    description: "Black hits b2 and d4 early. Nc3 is practical because it develops, defends, and sets up Nb5 ideas if Black gets careless.",
-    moves: ["d4", "d5", "Bf4", "Nf6", "e3", "c5", "Nf3", "Qb6", "Nc3"],
+    description: "Black hits b2 and d4 early. Offering a queen trade is often the best theoretical response.",
+    moves: ["d4", "d5", "Bf4", "Nf6", "e3", "c5", "c3", "Qb6", "Qb3"],
     explanations: [
       "Claim the center and invite Black to challenge it.",
       "Black mirrors and keeps the structure classical.",
       "Get the bishop out before {{square e3}} fixes the chain.",
       "Black develops and starts looking at {{square e4}} and {{square d5}}.",
       "Stabilize {{square d4}} and open lines for the bishop and queen.",
-      "This is the standard early counterpunch against the London. Black wants quick pressure before your setup settles.",
-      "Develop and keep your structure ready to absorb the pressure.",
+      "Black strikes at {{square d4}} early, typical counterplay versus London setups.",
+      "c5? c3! Support {{square d4}} immediately.",
       "Black attacks {{square b2}} and leans on {{square d4}}, hoping for a simple target game.",
-      "N{{square c3}} is the practical answer. It develops, reinforces the center, and often makes N{{square b5}} with {{square c7}} pressure a real tactical idea later."
+      "Q{{square b3}} is the most common way to meet this. You don't want to take their queen; you actually want them to take you so you get an open a-file for your rook!"
     ]
   },
 
@@ -367,12 +367,12 @@ export const londonLines = withOpeningFeedback([
     explanations: [
       "Take central space and keep options open.",
       "Black mirrors and contests the center.",
-      "Develop the bishop actively as in the London family.",
+      "Develop the bishop actively.",
       "Black develops and contests the center.",
-      "Develop aggressively and prepare quick piece coordination.",
+      "N{{square c3}} is the Joe baba style London! It's much more aggressive than the pyramid.",
       "Black supports {{square d5}} and prepares ...B{{square d6}}.",
-      "Stabilize {{square d4}} and open lines for development.",
-      "Black aims to trade the bishop and reduce activity."
+      "Stabilize {{square d4}} and prepare to jump in with N{{square b5}} later.",
+      "Black aims to trade the bishop, but in the Jobava, we often go for the throat with piece play."
     ]
   },
 
@@ -384,12 +384,12 @@ export const londonLines = withOpeningFeedback([
     explanations: [
       "Claim the center and define a main structure.",
       "Black matches the center.",
-      "Develop the bishop actively, keeping options for {{square e3}}.",
+      "Develop the bishop actively.",
       "Black develops and contests central squares.",
-      "Develop early and increase central influence.",
-      "Black immediately pressures {{square d4}} and seeks counterplay.",
-      "Support {{square d4}} and open lines for development.",
-      "Black adds pressure on {{square d4}} and supports central play."
+      "Develop aggressively! This style focuses on the {{square c7}} pawn and rapid piece development.",
+      "Black immediately pressures {{square d4}}.",
+      "Support {{square d4}} and prepare N{{square b5}} threats.",
+      "Black adds pressure on {{square d4}}. The game is now much more tactical than a standard London."
     ]
   },
 
@@ -423,9 +423,9 @@ export const londonLines = withOpeningFeedback([
       "Develop actively before {{square e3}}.",
       "Black develops and fights for the center.",
       "Support {{square d4}} and open lines for development.",
-      "Black plays ...{{square c5}} to hit {{square d4}} and open the diagonal for the queen.",
-      "N{{square c3}} develops, supports {{square e4}} ideas, and makes it harder for Black to treat {{square d4}} like a loose target.",
-      "Now ...Q{{square b6}} is legal and adds pressure on {{square b2}} and {{square d4}}."
+      "Black plays ...{{square c5}} to hit {{square d4}}.",
+      "N{{square c3}} is the Joe baba style response. It develops, reinforces the center, and sets up N{{square b5}} if Black gets careless.",
+      "Black attacks {{square b2}} and {{square d4}}, but we have tactical counter-pressure on {{square c7}}."
     ]
   },
 
@@ -537,15 +537,39 @@ export const londonLines = withOpeningFeedback([
     explanations: [
       "Take central space and keep several structures available.",
       "Black avoids ...{{square d5}} and heads for a King's Indian setup.",
-      "Develop the bishop actively before deciding how big the center should become.",
+      "Against the King's Indian, I think you should abandon the traditional pyramid and play with N{{square c3}} and Q{{square d2}}.",
       "Black commits to the fianchetto.",
-      "N{{square c3}} is important here because you are not playing a purely mechanical London anymore.",
+      "N{{square c3}} is important here. We're going to try to trade that dark-squared bishop and castle long!",
       "Black finishes the bishop setup and prepares ...{{square d6}}.",
-      "Now {{square e4}} is the point. Since Black did not put a {{pawn d5 full}}, you are allowed to grab more space than in a normal London.",
+      "Now {{square e4}} is the point. Plop a second pawn in the center if they let you!",
       "Black finally supports the dark squares, but White already has the bigger center.",
-      "Q{{square d2}} connects rooks, supports queenside castling, and points toward a direct kingside pawn storm later.",
-      "Black castles into the side you often want to attack.",
-      "Castle long and make the plan clear: use the space edge in the center and then push on the kingside before Black gets their counterplay."
+      "Q{{square d2}} connects rooks, supports queenside castling, and prepares to trade the fianchettoed bishop with B{{square h6}}.",
+      "Black castles into the side we are about to attack.",
+      "Castle long! The plan is simple: if they castle, h4 and h5 are coming to blow them off the board."
+    ]
+  },
+
+  {
+    id: "london-dxc5-nasty-trap",
+    name: "London: the dxc5 nasty trap",
+    description: "If Black tries to undermine your c5 pawn with ...b6, you have a venomous trap involving Bxb8 and Bb5+.",
+    moves: ["d4", "d5", "Bf4", "Nf6", "e3", "c5", "dxc5", "e6", "b4", "b6", "Bxb8", "Rxb8", "Bb5+", "Bd7", "c6"],
+    explanations: [
+      "Start with the usual {{square d4}}.",
+      "Black mirrors.",
+      "B{{square f4}} gets the bishop out.",
+      "Black develops.",
+      "{{square e3}} supports the center.",
+      "Black strikes with ...{{square c5}}.",
+      "Taking on {{square c5}} is actually very venomous if you know the follow-up.",
+      "Black prepares to win the pawn back.",
+      "We hang on to the pawn with {{square b4}}.",
+      "Black tries to undermine your pawns with ...{{square b6}}. Now comes the trap!",
+      "B{{square b8}}! We trade our active bishop to set up a devastating check.",
+      "Black recaptures, unaware of the danger.",
+      "B{{square b5}} check! This is the point.",
+      "Black must block.",
+      "The pawn pushes through to {{square c6}} and the game is effectively over. We discovered check next and win material!"
     ]
   },
 
