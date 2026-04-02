@@ -15,6 +15,7 @@ import Profile from './components/Profile';
 import Leaderboards from './components/Leaderboards';
 import DiscordCallback from './components/DiscordCallback';
 import InstallAppPage from './components/InstallAppPage';
+import GameReview from './components/GameReview';
 
 import PublicProfile from './components/PublicProfile';
 import { installCloudSync } from './utils/cloudSync';
@@ -59,6 +60,7 @@ class App extends React.Component {
 
             {/* Private profile must be exact so it doesn't swallow /profile/u/:username */}
             <ProtectedRoute exact path='/profile' component={Profile} />
+            <ProtectedRoute exact path='/review' component={GameReview} />
           </AuthProvider>
         </HashRouter>
       </div>

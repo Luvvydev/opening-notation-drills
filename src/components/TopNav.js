@@ -364,6 +364,16 @@ function TopNav(props) {
                           Opening Trainer
                         </Link>
 
+
+                        <Link
+                          to="/review"
+                          className="topnav-menu-item"
+                          role="menuitem"
+                          onClick={() => setMenuOpen(false)}
+                        >
+                          Game Review
+                        </Link>
+
                         <button
                           type="button"
                           className="topnav-menu-item"
