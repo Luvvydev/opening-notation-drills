@@ -15,6 +15,7 @@ const OPENINGS = OPENING_CATALOG;
 const _previewFenCache = new Map();
 const PREVIEW_PLIES = 6;
 const HERO_AUTOPLAY_MS = 9000;
+const HERO_SLIDE_COUNT = 7;
 
 function _tokenizePgnLike(text) {
   if (!text) return [];
@@ -344,7 +345,7 @@ perOpening,
     this.stopHeroAutoplay();
     this.heroAutoplay = window.setInterval(() => {
       this.setState((s) => ({
-        heroSlideIndex: (s.heroSlideIndex + 1) % 4
+        heroSlideIndex: (s.heroSlideIndex + 1) % HERO_SLIDE_COUNT
       }));
     }, HERO_AUTOPLAY_MS);
   };
@@ -358,14 +359,14 @@ perOpening,
 
   nextHeroSlide = () => {
     this.setState((s) => ({
-      heroSlideIndex: (s.heroSlideIndex + 1) % 4
+      heroSlideIndex: (s.heroSlideIndex + 1) % HERO_SLIDE_COUNT
     }));
     this.startHeroAutoplay();
   };
 
   prevHeroSlide = () => {
     this.setState((s) => ({
-      heroSlideIndex: (s.heroSlideIndex + 3) % 4
+      heroSlideIndex: (s.heroSlideIndex + HERO_SLIDE_COUNT - 1) % HERO_SLIDE_COUNT
     }));
     this.startHeroAutoplay();
   };
@@ -412,6 +413,12 @@ perOpening,
   goToCreateCustomRep = () => {
     if (!this.props || !this.props.history || !this.props.history.push) return;
     this.props.history.push(`/openings?opening=${encodeURIComponent("london")}&custom=1`);
+  };
+
+  goToRoute = (path) => {
+    if (!path) return;
+    if (!this.props || !this.props.history || !this.props.history.push) return;
+    this.props.history.push(path);
   };
 
   toggleFilters = () => {
@@ -806,8 +813,8 @@ renderHeroCarousel = (slides) => {
       {
         id: "overview",
         kicker: "Build stronger recall",
-        title: "Train openings with cleaner structure.",
-        subtitle: "Drill full lines, get immediate move feedback, and pick back up exactly where you left off.",
+        title: "Begin Training!",
+        subtitle: "Work through full lines, get immediate feedback, and resume exactly where you left off.",
         cta: "Start Drilling →",
         onClick: this.startFirstAvailable,
         pills: ["Learn", "Practice", "Drill"],
@@ -893,6 +900,39 @@ renderHeroCarousel = (slides) => {
               { value: (exploreOpening.orientation || "white") === "black" ? "Black" : "White", label: "repertoire side" }
             ]
           : undefined
+      },
+      {
+        id: "my-games",
+        kicker: "TRAIN FROM YOUR OWN GAMES",
+        title: "Turn your games into training puzzles!",
+        subtitle: "Enter your Chess.com or Lichess username and solve puzzles built from your mistakes",
+        cta: "Open My Games →",
+        onClick: () => this.goToRoute("/my-games"),
+        pills: ["Chess.com", "Lichess", "Personal review"],
+        position: focusOpening ? _getPreviewFenForOpening(focusOpening) : "start",
+        orientation: (focusOpening && focusOpening.orientation) || "white",
+        stats: [
+          { value: "Import", label: "recent games" },
+          { value: "Solve", label: "mistake queue" },
+          { value: "Review", label: "better moves" }
+        ]
+      },
+
+      {
+        id: "notation",
+        kicker: "SHARPEN BOARD VISION",
+        title: "Try Notation Drills!",
+        subtitle: "Improve square recognition, move reading, and input speed inside the same system you already use.",
+        cta: "Open notation drills →",
+        onClick: () => this.goToRoute("/practice"),
+        pills: ["Notation", "Board vision", "Speed"],
+        position: "start",
+        orientation: "white",
+        stats: [
+          { value: "Read", label: "moves faster" },
+          { value: "See", label: "squares cleaner" },
+          { value: "Drill", label: "without setup" }
+        ]
       }
     ];
 

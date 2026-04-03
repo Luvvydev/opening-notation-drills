@@ -61,6 +61,7 @@ class App extends React.Component {
             {/* Private profile must be exact so it doesn't swallow /profile/u/:username */}
             <ProtectedRoute exact path='/profile' component={Profile} />
             <ProtectedRoute exact path='/review' component={GameReview} />
+            <ProtectedRoute exact path='/my-games' component={GameReview} />
           </AuthProvider>
         </HashRouter>
       </div>

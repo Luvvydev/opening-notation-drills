@@ -366,12 +366,12 @@ function TopNav(props) {
 
 
                         <Link
-                          to="/review"
+                          to="/my-games"
                           className="topnav-menu-item"
                           role="menuitem"
                           onClick={() => setMenuOpen(false)}
                         >
-                          Game Review
+                          My Games
                         </Link>
 
                         <button

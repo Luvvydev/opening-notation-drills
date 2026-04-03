@@ -28,6 +28,36 @@ import { OPENING_CATALOG } from '../openings/openingCatalog';
 import { BOARD_THEMES, DEFAULT_THEME, PIECE_THEMES } from '../theme/boardThemes';
 import './GameReview.css';
 
+function ReviewConfetti({ active }) {
+  if (!active) return null;
+
+  const pieces = [];
+  for (let i = 0; i < 60; i += 1) {
+    const left = 6 + Math.random() * 88;
+    const delay = Math.random() * 0.14;
+    const duration = 0.85 + Math.random() * 0.55;
+    const rotation = Math.floor(Math.random() * 360);
+    const size = 6 + Math.floor(Math.random() * 6);
+
+    pieces.push(
+      <span
+        key={i}
+        className="gr-confetti"
+        style={{
+          left: `${left}vw`,
+          animationDelay: `${delay}s`,
+          animationDuration: `${duration}s`,
+          transform: `rotate(${rotation}deg)`,
+          width: `${size}px`,
+          height: `${Math.max(4, Math.floor(size * 0.55))}px`,
+        }}
+      />
+    );
+  }
+
+  return <div className="gr-confetti-layer">{pieces}</div>;
+}
+
 const ENGINE_PATH = '/engines/stockfish-worker.js';
 const DEFAULT_DEPTH = 12;
 const DEFAULT_MULTI_PV = 3;
@@ -769,6 +799,140 @@ function getMoveClassificationCounts(moves) {
   return counts;
 }
 
+function getPerspectiveCpValue(cp, color) {
+  const numeric = Number(cp || 0);
+  return color === 'b' ? -numeric : numeric;
+}
+
+function getPerspectivePositionCp(position, color) {
+  return getPerspectiveCpValue(getPositionCp(position), color);
+}
+
+function getPerspectiveWinPercentage(position, color) {
+  const value = clamp(getPositionWinPercentage(position), 0, 100);
+  return color === 'b' ? 100 - value : value;
+}
+
+function getPuzzleSeverityRank(classification) {
+  if (classification === 'blunder') return 3;
+  if (classification === 'mistake') return 2;
+  if (classification === 'inaccuracy') return 1;
+  return 0;
+}
+
+function formatCpSwing(cpLoss) {
+  const numeric = Number(cpLoss || 0);
+  if (!Number.isFinite(numeric) || numeric <= 0) return '0.0';
+  return (numeric / 100).toFixed(1);
+}
+
+function getPuzzleGoalLabel(classification) {
+  return classification === 'inaccuracy' ? 'Find a better move' : 'Find the best move';
+}
+
+function getPuzzleHintText(puzzle) {
+  if (!puzzle) return '';
+
+  const bestSan = String(puzzle.bestSan || '');
+
+  if (bestSan.indexOf('#') !== -1) return 'There is a direct finish here.';
+  if (bestSan.indexOf('+') !== -1) return 'Start with a forcing check.';
+  if (bestSan.indexOf('x') !== -1) return 'There is a stronger capture here.';
+  if (/^O-O(-O)?/.test(bestSan)) return 'King safety mattered more than the game move.';
+  if (/^[KQRBN]/.test(bestSan)) return 'A piece move fixes this faster than another pawn move.';
+  return 'The game move was too slow. Look for the move that changes the position immediately.';
+}
+
+function getPuzzleLeadText(puzzle) {
+  if (!puzzle) return 'Load a game to start training.';
+
+  if (puzzle.classification === 'blunder') {
+    return `You played ${puzzle.playedSan}. This was the big swing in the game. ${getPuzzleGoalLabel(puzzle.classification)}.`;
+  }
+
+  if (puzzle.classification === 'mistake') {
+    return `You played ${puzzle.playedSan}. There was a cleaner move here. ${getPuzzleGoalLabel(puzzle.classification)}.`;
+  }
+
+  return `You played ${puzzle.playedSan}. There was a stronger continuation available. ${getPuzzleGoalLabel(puzzle.classification)}.`;
+}
+
+function buildPuzzleQueue(gameData) {
+  if (!gameData || !Array.isArray(gameData.moves) || !gameData.moves.length) return [];
+
+  const focusColor = gameData.orientation === 'black' ? 'b' : 'w';
+  const headers = gameData.headers || {};
+  const playerName = focusColor === 'w' ? (headers.White || 'White') : (headers.Black || 'Black');
+  const opponentName = focusColor === 'w' ? (headers.Black || 'Black') : (headers.White || 'White');
+  const sourceUrl = typeof headers.Site === 'string' && /^https?:/i.test(headers.Site) ? headers.Site : '';
+  const opening = gameData.match || null;
+
+  const thresholds = {
+    blunder: 120,
+    mistake: 75,
+    inaccuracy: 40,
+  };
+
+  return gameData.moves
+    .filter((move) => (
+      move &&
+      move.color === focusColor &&
+      move.bestMove &&
+      move.evaluationBefore &&
+      move.evaluationAfter &&
+      (move.classification === 'blunder' || move.classification === 'mistake' || move.classification === 'inaccuracy')
+    ))
+    .map((move) => {
+      const beforePerspectiveCp = getPerspectivePositionCp(move.evaluationBefore, focusColor);
+      const afterPerspectiveCp = getPerspectivePositionCp(move.evaluationAfter, focusColor);
+      const cpLoss = Math.max(0, beforePerspectiveCp - afterPerspectiveCp);
+      const beforeWin = getPerspectiveWinPercentage(move.evaluationBefore, focusColor);
+      const afterWin = getPerspectiveWinPercentage(move.evaluationAfter, focusColor);
+      const winSwing = Math.max(0, beforeWin - afterWin);
+      const bestSan = getBestMoveSan(move.beforeFen, move.bestMove);
+
+      return {
+        id: `puzzle-${move.ply}`,
+        ply: move.ply,
+        turnNumber: move.turnNumber,
+        color: focusColor,
+        sideLabel: focusColor === 'w' ? 'White' : 'Black',
+        beforeFen: move.beforeFen,
+        playedMove: move.uci,
+        playedSan: move.san,
+        bestMove: move.bestMove,
+        bestSan,
+        classification: move.classification,
+        cpLoss,
+        lossLabel: formatCpSwing(cpLoss),
+        beforePerspectiveCp,
+        afterPerspectiveCp,
+        winSwing,
+        goalLabel: getPuzzleGoalLabel(move.classification),
+        playerName,
+        opponentName,
+        result: gameData.result || headers.Result || '*',
+        sourceUrl,
+        date: headers.Date || '',
+        openingKey: opening && opening.openingKey ? opening.openingKey : '',
+        openingTitle: opening && opening.openingTitle ? opening.openingTitle : '',
+        lineName: opening && opening.lineName ? opening.lineName : '',
+      };
+    })
+    .filter((puzzle) => (
+      puzzle.bestSan &&
+      puzzle.beforePerspectiveCp > -320 &&
+      puzzle.cpLoss >= (thresholds[puzzle.classification] || 0) &&
+      puzzle.winSwing >= 4
+    ))
+    .sort((a, b) => (
+      getPuzzleSeverityRank(b.classification) - getPuzzleSeverityRank(a.classification) ||
+      b.cpLoss - a.cpLoss ||
+      a.ply - b.ply
+    ))
+    .slice(0, 12);
+}
+
 function getBestMoveSan(fen, bestMove) {
   if (!fen || !bestMove) return '';
   try {
@@ -1032,6 +1196,18 @@ function GameReview() {
   const [boardWidth, setBoardWidth] = useState(500);
   const [playerVisuals, setPlayerVisuals] = useState({ white: null, black: null });
   const [reviewSettings, setReviewSettings] = useState(loadReviewSettings);
+  const [puzzleIndex, setPuzzleIndex] = useState(0);
+  const [puzzleFen, setPuzzleFen] = useState('start');
+  const [puzzleStatus, setPuzzleStatus] = useState('idle');
+  const [puzzleFeedback, setPuzzleFeedback] = useState('Load a game to start training.');
+  const [puzzleResults, setPuzzleResults] = useState({});
+  const [puzzleHintOpen, setPuzzleHintOpen] = useState(false);
+  const [puzzleShowSolution, setPuzzleShowSolution] = useState(false);
+  const [puzzleSelectedSquare, setPuzzleSelectedSquare] = useState(null);
+  const [puzzleLegalTargets, setPuzzleLegalTargets] = useState([]);
+  const [playSelectedSquare, setPlaySelectedSquare] = useState(null);
+  const [playLegalTargets, setPlayLegalTargets] = useState([]);
+  const [puzzleConfettiActive, setPuzzleConfettiActive] = useState(false);
 
   const fileInputRef = useRef(null);
   const engineRef = useRef(null);
@@ -1045,6 +1221,9 @@ function GameReview() {
   const autoReviewRunningRef = useRef(false);
   const sfxRef = useRef({});
   const lastReviewPlySoundRef = useRef(0);
+  const puzzleRequestRef = useRef(0);
+  const puzzleAdvanceTimerRef = useRef(null);
+  const puzzleConfettiTimerRef = useRef(null);
 
   const currentPosition = gameData && gameData.positions ? gameData.positions[currentPly] : null;
   const currentMove = gameData && gameData.moves && currentPly > 0 ? gameData.moves[currentPly - 1] : null;
@@ -1071,23 +1250,84 @@ function GameReview() {
   }, [reviewSettings]);
   const pieceThemeUrl = useMemo(() => getPieceThemeUrl(reviewSettings && reviewSettings.pieceTheme), [reviewSettings]);
   const playSquareStyles = useMemo(() => {
-    if (!playLastMove) return {};
-    return {
-      [playLastMove.from]: { backgroundColor: 'rgba(255, 208, 96, 0.24)' },
-      [playLastMove.to]: { backgroundColor: 'rgba(137, 97, 255, 0.2)' },
-    };
-  }, [playLastMove]);
+    const styles = {};
+
+    if (playLastMove) {
+      styles[playLastMove.from] = { backgroundColor: 'rgba(255, 208, 96, 0.24)' };
+      styles[playLastMove.to] = { backgroundColor: 'rgba(137, 97, 255, 0.2)' };
+    }
+
+    if (playSelectedSquare) {
+      styles[playSelectedSquare] = {
+        ...(styles[playSelectedSquare] || {}),
+        boxShadow: 'inset 0 0 0 3px rgba(137, 97, 255, 0.82)',
+        backgroundColor: 'rgba(137, 97, 255, 0.22)',
+      };
+    }
+
+    playLegalTargets.forEach((square) => {
+      styles[square] = {
+        ...(styles[square] || {}),
+        boxShadow: 'inset 0 0 0 3px rgba(255, 208, 96, 0.70)',
+        backgroundColor: 'rgba(255, 208, 96, 0.18)',
+      };
+    });
+
+    return styles;
+  }, [playLastMove, playLegalTargets, playSelectedSquare]);
+  const puzzleSquareStyles = useMemo(() => {
+    const styles = {};
+
+    if (puzzleSelectedSquare) {
+      styles[puzzleSelectedSquare] = {
+        boxShadow: 'inset 0 0 0 3px rgba(137, 97, 255, 0.82)',
+        backgroundColor: 'rgba(137, 97, 255, 0.22)',
+      };
+    }
+
+    puzzleLegalTargets.forEach((square) => {
+      styles[square] = {
+        ...(styles[square] || {}),
+        boxShadow: 'inset 0 0 0 3px rgba(255, 208, 96, 0.70)',
+        backgroundColor: 'rgba(255, 208, 96, 0.18)',
+      };
+    });
+
+    return styles;
+  }, [puzzleLegalTargets, puzzleSelectedSquare]);
   const currentEvalLabel = getPositionLabel(positionEval || { lines: [{ cp: 0 }] });
   const currentEvalPercent = getEvalBarPercent(positionEval || { lines: [{ cp: 0 }] });
   const hasLoadedGame = Boolean(gameData && gameData.moves && gameData.moves.length);
   const hasFullReview = Boolean(gameAnalysis && gameAnalysis.positions && gameAnalysis.positions.length);
+  const puzzleQueue = useMemo(() => buildPuzzleQueue(gameData), [gameData]);
+  const currentPuzzle = puzzleQueue[puzzleIndex] || null;
+  const currentPuzzleResult = currentPuzzle ? puzzleResults[currentPuzzle.id] : '';
+  const solvedPuzzleCount = puzzleQueue.filter((puzzle) => puzzleResults[puzzle.id] === 'solved').length;
+  const failedPuzzleCount = puzzleQueue.filter((puzzle) => puzzleResults[puzzle.id] === 'failed').length;
+  const isPuzzleMode = hasLoadedGame && sidebarMode === 'puzzles';
   const sidebarPanelStyle = { '--gr-sidebar-target-height': `${boardWidth + (hasFullReview ? 184 : 108)}px` };
-  const sidebarHeading = !hasLoadedGame ? 'Load Game' : sidebarMode === 'overview' ? 'Overview' : sidebarMode === 'moves' ? 'Move Review' : 'Load Game';
+  const sidebarHeading = !hasLoadedGame ? 'Import' : sidebarMode === 'overview' ? 'Overview' : sidebarMode === 'moves' ? 'Move Review' : sidebarMode === 'puzzles' ? 'Mistake Training' : 'Import';
   const shouldShowLoadView = !hasLoadedGame || sidebarMode === 'load';
   const shouldShowOverviewView = hasLoadedGame && sidebarMode === 'overview';
   const queueAutoReview = useCallback(() => {
     setSidebarMode('load');
     setAutoReviewQueued(true);
+  }, []);
+
+  const setPuzzleOutcome = useCallback((puzzleId, outcome) => {
+    if (!puzzleId || !outcome) return;
+
+    setPuzzleResults((previous) => {
+      const existing = previous[puzzleId];
+
+      if (existing === 'failed') return previous;
+      if (existing === outcome) return previous;
+
+      return {
+        ...previous,
+        [puzzleId]: outcome,
+      };
+    });
   }, []);
 
   const playSfx = useCallback((key) => {
@@ -1100,6 +1340,44 @@ function GameReview() {
       const playPromise = audio.play();
       if (playPromise && typeof playPromise.catch === 'function') playPromise.catch(() => {});
     } catch (_) {}
+  }, [reviewSettings]);
+
+  const clearPuzzleSelection = useCallback(() => {
+    setPuzzleSelectedSquare(null);
+    setPuzzleLegalTargets([]);
+  }, []);
+
+  const clearPlaySelection = useCallback(() => {
+    setPlaySelectedSquare(null);
+    setPlayLegalTargets([]);
+  }, []);
+
+  const getLegalTargetsForFen = useCallback((fen, fromSquare) => {
+    if (!fen || !fromSquare) return [];
+
+    try {
+      const game = new Chess(fen);
+      const moves = game.moves({ square: fromSquare, verbose: true });
+      if (!moves || !moves.length) return [];
+      return moves.map((move) => move.to);
+    } catch (_) {
+      return [];
+    }
+  }, []);
+
+  const triggerPuzzleSolvedCelebration = useCallback(() => {
+    if (!reviewSettings || reviewSettings.showConfetti === false) return;
+
+    setPuzzleConfettiActive(true);
+
+    if (puzzleConfettiTimerRef.current) {
+      window.clearTimeout(puzzleConfettiTimerRef.current);
+    }
+
+    puzzleConfettiTimerRef.current = window.setTimeout(() => {
+      setPuzzleConfettiActive(false);
+      puzzleConfettiTimerRef.current = null;
+    }, 1100);
   }, [reviewSettings]);
 
   const ensureEngineReady = useCallback(async () => {
@@ -1286,6 +1564,7 @@ function GameReview() {
         ...move,
         classification: classifyMove(evaluatedPositions[index], evaluatedPositions[index + 1], move),
         bestMove: evaluatedPositions[index] && evaluatedPositions[index].bestMove ? evaluatedPositions[index].bestMove : null,
+        evaluationBefore: evaluatedPositions[index],
         evaluationAfter: evaluatedPositions[index + 1],
       }));
 
@@ -1329,6 +1608,13 @@ function GameReview() {
     setOrientation(nextOrientation || parsed.orientation || 'white');
     setGameData(parsed);
     setPgnText(nextPgn);
+    setPuzzleIndex(0);
+    setPuzzleFen('start');
+    setPuzzleStatus('idle');
+    setPuzzleFeedback('Game loaded. Building training spots...');
+    setPuzzleResults({});
+    setPuzzleHintOpen(false);
+    setPuzzleShowSolution(false);
     setStatusMessage('Game loaded.');
   }, []);
 
@@ -1503,6 +1789,7 @@ function GameReview() {
     playGameRef.current = new Chess();
     setPlayOrientation(side);
     setPlayLastMove(null);
+    clearPlaySelection();
     setPlayThinking(false);
     setPlayResult('');
     setShowEngineBoard(true);
@@ -1511,10 +1798,11 @@ function GameReview() {
     if (side === 'black') {
       await makeEngineMove();
     }
-  }, [handleStop, makeEngineMove, syncPlayState]);
+  }, [clearPlaySelection, handleStop, makeEngineMove, syncPlayState]);
 
   const handlePlayDrop = useCallback(async ({ sourceSquare, targetSquare }) => {
     if (playThinking || playResult) return;
+    clearPlaySelection();
     const game = playGameRef.current;
     const playerTurn = playOrientation === 'white' ? 'w' : 'b';
     if (game.turn() !== playerTurn) return;
@@ -1533,7 +1821,157 @@ function GameReview() {
     playSfx(isCaptureLike(move) ? 'capture' : 'moveSelf');
     syncPlayState('Engine thinking…', move);
     await makeEngineMove();
-  }, [makeEngineMove, playOrientation, playResult, playSfx, playThinking, syncPlayState]);
+  }, [clearPlaySelection, makeEngineMove, playOrientation, playResult, playSfx, playThinking, syncPlayState]);
+
+  const handlePlaySquareClick = useCallback((square) => {
+    if (playThinking || playResult) return;
+
+    const game = playGameRef.current;
+    const playerTurn = playOrientation === 'white' ? 'w' : 'b';
+    if (game.turn() !== playerTurn) return;
+
+    const piece = game.get(square);
+
+    if (!playSelectedSquare) {
+      if (!piece || piece.color !== playerTurn) return;
+      setPlaySelectedSquare(square);
+      setPlayLegalTargets(getLegalTargetsForFen(game.fen(), square));
+      return;
+    }
+
+    if (square === playSelectedSquare) {
+      clearPlaySelection();
+      return;
+    }
+
+    if (piece && piece.color === playerTurn) {
+      setPlaySelectedSquare(square);
+      setPlayLegalTargets(getLegalTargetsForFen(game.fen(), square));
+      return;
+    }
+
+    const selectedPiece = game.get(playSelectedSquare);
+    const pieceCode = selectedPiece ? `${selectedPiece.color}${selectedPiece.type.toUpperCase()}` : undefined;
+    handlePlayDrop({ sourceSquare: playSelectedSquare, targetSquare: square, piece: pieceCode });
+  }, [clearPlaySelection, getLegalTargetsForFen, handlePlayDrop, playOrientation, playResult, playSelectedSquare, playThinking]);
+
+  const goToNextPuzzle = useCallback(() => {
+    if (!puzzleQueue.length) return;
+    setPuzzleIndex((value) => Math.min(puzzleQueue.length - 1, value + 1));
+  }, [puzzleQueue.length]);
+
+  const handleRevealPuzzleSolution = useCallback(() => {
+    if (!currentPuzzle) return;
+
+    clearPuzzleSelection();
+    setPuzzleFen(currentPuzzle.beforeFen);
+    setPuzzleShowSolution(true);
+    setPuzzleHintOpen(false);
+    setPuzzleStatus('revealed');
+    setPuzzleOutcome(currentPuzzle.id, 'failed');
+    setPuzzleFeedback(`Best was ${currentPuzzle.bestSan}. In the game you played ${currentPuzzle.playedSan}.`);
+  }, [clearPuzzleSelection, currentPuzzle, setPuzzleOutcome]);
+
+  const handlePuzzleDrop = useCallback(async ({ sourceSquare, targetSquare, piece }) => {
+    if (!currentPuzzle || puzzleStatus === 'checking' || puzzleStatus === 'solved' || puzzleStatus === 'revealed') {
+      return;
+    }
+
+    clearPuzzleSelection();
+    const game = new Chess(currentPuzzle.beforeFen);
+    const shouldPromote = /P$/i.test(String(piece || '')) && (targetSquare[1] === '1' || targetSquare[1] === '8');
+    const move = game.move({
+      from: sourceSquare,
+      to: targetSquare,
+      promotion: shouldPromote ? 'q' : undefined,
+    });
+
+    if (!move) {
+      playSfx('illegal');
+      return;
+    }
+
+    playSfx(isCaptureLike(move) ? 'capture' : 'moveSelf');
+    setPuzzleHintOpen(false);
+    setPuzzleShowSolution(false);
+    setPuzzleStatus('checking');
+    setPuzzleFen(game.fen());
+
+    const attemptedUci = moveToUci(move);
+    const attemptedSan = move.san;
+
+    try {
+      let accepted = attemptedUci === currentPuzzle.bestMove;
+
+      if (!accepted) {
+        puzzleRequestRef.current += 1;
+        const candidateEval = await evaluateFen(game.fen(), {
+          depth,
+          multiPv: 1,
+          requestId: `puzzle-${puzzleRequestRef.current}`,
+        });
+
+        const candidatePerspectiveCp = getPerspectivePositionCp(candidateEval, currentPuzzle.color);
+        const cpLossFromBest = Math.max(0, currentPuzzle.beforePerspectiveCp - candidatePerspectiveCp);
+        const cpGainVsPlayed = candidatePerspectiveCp - currentPuzzle.afterPerspectiveCp;
+
+        accepted = cpLossFromBest <= 45 || (cpGainVsPlayed >= 110 && cpLossFromBest <= 110);
+      }
+
+      if (accepted) {
+        setPuzzleStatus('solved');
+        setPuzzleOutcome(currentPuzzle.id, 'solved');
+        triggerPuzzleSolvedCelebration();
+        setPuzzleFeedback(
+          attemptedUci === currentPuzzle.bestMove
+            ? `Best move found: ${attemptedSan}. In the game you played ${currentPuzzle.playedSan}.`
+            : `${attemptedSan} is much better than ${currentPuzzle.playedSan}. Engine best was ${currentPuzzle.bestSan}.`
+        );
+        return;
+      }
+
+      setPuzzleOutcome(currentPuzzle.id, 'failed');
+      setPuzzleStatus('failed');
+      setPuzzleFen(currentPuzzle.beforeFen);
+      setPuzzleFeedback(`${attemptedSan} still misses it. In the game you played ${currentPuzzle.playedSan}. Use Hint or Solution and look again.`);
+    } catch (_) {
+      setPuzzleOutcome(currentPuzzle.id, 'failed');
+      setPuzzleStatus('failed');
+      setPuzzleFen(currentPuzzle.beforeFen);
+      setPuzzleFeedback('That move could not be scored cleanly. Try again or reveal the solution.');
+    }
+  }, [clearPuzzleSelection, currentPuzzle, depth, evaluateFen, playSfx, puzzleStatus, setPuzzleOutcome, triggerPuzzleSolvedCelebration]);
+
+  const handlePuzzleSquareClick = useCallback((square) => {
+    if (!currentPuzzle || puzzleStatus === 'checking' || puzzleStatus === 'solved' || puzzleStatus === 'revealed') {
+      return;
+    }
+
+    const game = new Chess(puzzleFen || currentPuzzle.beforeFen);
+    const piece = game.get(square);
+
+    if (!puzzleSelectedSquare) {
+      if (!piece || piece.color !== currentPuzzle.color) return;
+      setPuzzleSelectedSquare(square);
+      setPuzzleLegalTargets(getLegalTargetsForFen(game.fen(), square));
+      return;
+    }
+
+    if (square === puzzleSelectedSquare) {
+      clearPuzzleSelection();
+      return;
+    }
+
+    if (piece && piece.color === currentPuzzle.color) {
+      setPuzzleSelectedSquare(square);
+      setPuzzleLegalTargets(getLegalTargetsForFen(game.fen(), square));
+      return;
+    }
+
+    const selectedPiece = game.get(puzzleSelectedSquare);
+    const pieceCode = selectedPiece ? `${selectedPiece.color}${selectedPiece.type.toUpperCase()}` : undefined;
+    handlePuzzleDrop({ sourceSquare: puzzleSelectedSquare, targetSquare: square, piece: pieceCode });
+  }, [clearPuzzleSelection, currentPuzzle, getLegalTargetsForFen, handlePuzzleDrop, puzzleFen, puzzleSelectedSquare, puzzleStatus]);
 
   useEffect(() => {
     if (!gameData || !gameData.positions || !gameData.positions[currentPly]) return;
@@ -1560,7 +1998,7 @@ function GameReview() {
       try {
         await analyzeWholeGame();
         if (!cancelled) {
-          setSidebarMode('moves');
+          setSidebarMode('puzzles');
         }
       } finally {
         autoReviewRunningRef.current = false;
@@ -1577,6 +2015,62 @@ function GameReview() {
     };
   }, [analyzeWholeGame, autoReviewQueued, gameData]);
 
+
+  useEffect(() => {
+    if (!puzzleQueue.length) {
+      setPuzzleIndex(0);
+      setPuzzleFen(hasLoadedGame && currentPosition ? currentPosition.fen : 'start');
+      setPuzzleStatus('idle');
+      setPuzzleHintOpen(false);
+      setPuzzleShowSolution(false);
+      if (hasFullReview) {
+        setPuzzleFeedback('No clear training spots were found in this game.');
+      }
+      return;
+    }
+
+    if (puzzleIndex >= puzzleQueue.length) {
+      setPuzzleIndex(0);
+    }
+  }, [currentPosition, hasFullReview, hasLoadedGame, puzzleIndex, puzzleQueue]);
+
+  useEffect(() => {
+    if (!currentPuzzle) return;
+
+    clearPuzzleSelection();
+    setPuzzleFen(currentPuzzle.beforeFen);
+    setPuzzleStatus('idle');
+    setPuzzleHintOpen(false);
+    setPuzzleShowSolution(false);
+    setPuzzleFeedback(getPuzzleLeadText(currentPuzzle));
+  }, [clearPuzzleSelection, currentPuzzle]);
+
+  useEffect(() => {
+    if (puzzleAdvanceTimerRef.current) {
+      window.clearTimeout(puzzleAdvanceTimerRef.current);
+      puzzleAdvanceTimerRef.current = null;
+    }
+
+    if (puzzleStatus !== 'solved' || !currentPuzzle) {
+      return undefined;
+    }
+
+    if (puzzleIndex >= puzzleQueue.length - 1) {
+      return undefined;
+    }
+
+    puzzleAdvanceTimerRef.current = window.setTimeout(() => {
+      goToNextPuzzle();
+      puzzleAdvanceTimerRef.current = null;
+    }, 1250);
+
+    return () => {
+      if (puzzleAdvanceTimerRef.current) {
+        window.clearTimeout(puzzleAdvanceTimerRef.current);
+        puzzleAdvanceTimerRef.current = null;
+      }
+    };
+  }, [currentPuzzle, goToNextPuzzle, puzzleIndex, puzzleQueue.length, puzzleStatus]);
 
   useEffect(() => {
     const syncSettings = () => setReviewSettings(loadReviewSettings());
@@ -1607,6 +2101,14 @@ function GameReview() {
     return () => {
       window.removeEventListener('storage', syncSettings);
       window.removeEventListener('focus', syncSettings);
+      if (puzzleAdvanceTimerRef.current) {
+        window.clearTimeout(puzzleAdvanceTimerRef.current);
+        puzzleAdvanceTimerRef.current = null;
+      }
+      if (puzzleConfettiTimerRef.current) {
+        window.clearTimeout(puzzleConfettiTimerRef.current);
+        puzzleConfettiTimerRef.current = null;
+      }
       Object.values(sfxRef.current || {}).forEach((audio) => {
         try {
           audio.pause();
@@ -1618,6 +2120,11 @@ function GameReview() {
   }, []);
 
   useEffect(() => {
+    if (isPuzzleMode) {
+      lastReviewPlySoundRef.current = currentPly;
+      return;
+    }
+
     if (!gameData || !gameData.moves || !gameData.moves.length) {
       lastReviewPlySoundRef.current = 0;
       return;
@@ -1633,7 +2140,7 @@ function GameReview() {
     const move = gameData.moves[currentPly - 1];
     const key = getReviewMoveSoundKey(move, gameData);
     if (key) playSfx(key);
-  }, [currentPly, gameData, playSfx]);
+  }, [currentPly, gameData, isPuzzleMode, playSfx]);
 
   useEffect(() => () => {
     if (remoteAbortRef.current) {
@@ -1755,7 +2262,7 @@ function GameReview() {
 
   return (
     <div className="gr-page">
-      <TopNav title="Game Review" hideHero />
+      <TopNav title="My Games" hideHero />
 
       <div className="gr-shell gr-shell-review">
         <section className="gr-stage-card">
@@ -1775,7 +2282,14 @@ function GameReview() {
             </button>
           </div>
 
-          {hasFullReview ? (
+          {isPuzzleMode && currentPuzzle ? (
+            <div className="gr-stage-prompt">
+              <span>{currentPuzzle.sideLabel} to move</span>
+              <strong>{currentPuzzle.goalLabel}</strong>
+            </div>
+          ) : null}
+
+          {hasFullReview && !isPuzzleMode ? (
             <div className="gr-stage-top-graph">
               <EvalGraph
                 positions={gameAnalysis ? gameAnalysis.positions : null}
@@ -1785,25 +2299,78 @@ function GameReview() {
             </div>
           ) : null}
 
-          <div className="gr-board-stage">
-            <div className="gr-eval-rail" aria-label="Evaluation bar">
-              <div className="gr-eval-rail-fill" style={{ height: `${currentEvalPercent}%` }} />
-              <div className="gr-eval-rail-label">{currentEvalLabel}</div>
-            </div>
+          <div className={isPuzzleMode ? 'gr-board-stage is-puzzle' : 'gr-board-stage'}>
+            {!isPuzzleMode ? (
+              <div className="gr-eval-rail" aria-label="Evaluation bar">
+                <div className="gr-eval-rail-fill" style={{ height: `${currentEvalPercent}%` }} />
+                <div className="gr-eval-rail-label">{currentEvalLabel}</div>
+              </div>
+            ) : null}
 
             <div className="gr-board-frame" ref={boardFrameRef}>
               <div className="gr-board-stack" style={{ width: `${boardWidth}px` }}>
                 <Chessboard
                   width={boardWidth}
-                  position={currentPosition ? currentPosition.fen : 'start'}
+                  position={isPuzzleMode && currentPuzzle ? puzzleFen : currentPosition ? currentPosition.fen : 'start'}
                   orientation={orientation}
-                  arePiecesDraggable={false}
+                  arePiecesDraggable={isPuzzleMode ? Boolean(currentPuzzle) && puzzleStatus !== 'checking' && puzzleStatus !== 'solved' && puzzleStatus !== 'revealed' : false}
+                  onDrop={isPuzzleMode ? handlePuzzleDrop : undefined}
+                  onSquareClick={isPuzzleMode ? handlePuzzleSquareClick : undefined}
+                  onSquareRightClick={isPuzzleMode ? clearPuzzleSelection : undefined}
                   showNotation
-                  squareStyles={boardSquareStyles}
+                  squareStyles={isPuzzleMode ? puzzleSquareStyles : boardSquareStyles}
                   pieceTheme={pieceThemeUrl}
                   {...boardThemeStyles}
                 />
-                <BoardOverlay move={currentMove} orientation={orientation} classification={currentClassification} />
+                {isPuzzleMode ? (
+                  puzzleFen === (currentPuzzle ? currentPuzzle.beforeFen : '') ? (
+                    <div className="gr-board-overlay" aria-hidden="true">
+                      <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="gr-board-arrow gr-board-arrow-puzzle">
+                        <defs>
+                          <marker id="grPuzzleArrowHeadPlayed" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                            <path d="M0,0 L6,3 L0,6 z" className="gr-board-arrow-played-head" />
+                          </marker>
+                          <marker id="grPuzzleArrowHeadBest" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                            <path d="M0,0 L6,3 L0,6 z" className="gr-board-arrow-best-head" />
+                          </marker>
+                        </defs>
+                        {currentPuzzle ? (() => {
+                          const playedFrom = getSquareCenter(currentPuzzle.playedMove && currentPuzzle.playedMove.slice(0, 2), orientation);
+                          const playedTo = getSquareCenter(currentPuzzle.playedMove && currentPuzzle.playedMove.slice(2, 4), orientation);
+                          const bestFrom = getSquareCenter(currentPuzzle.bestMove && currentPuzzle.bestMove.slice(0, 2), orientation);
+                          const bestTo = getSquareCenter(currentPuzzle.bestMove && currentPuzzle.bestMove.slice(2, 4), orientation);
+
+                          return (
+                            <>
+                              {playedFrom && playedTo ? (
+                                <line
+                                  x1={playedFrom.x}
+                                  y1={playedFrom.y}
+                                  x2={playedTo.x}
+                                  y2={playedTo.y}
+                                  className="gr-board-arrow-played-line"
+                                  markerEnd="url(#grPuzzleArrowHeadPlayed)"
+                                />
+                              ) : null}
+                              {puzzleShowSolution && bestFrom && bestTo ? (
+                                <line
+                                  x1={bestFrom.x}
+                                  y1={bestFrom.y}
+                                  x2={bestTo.x}
+                                  y2={bestTo.y}
+                                  className="gr-board-arrow-best-line"
+                                  markerEnd="url(#grPuzzleArrowHeadBest)"
+                                />
+                              ) : null}
+                            </>
+                          );
+                        })() : null}
+                      </svg>
+                    </div>
+                  ) : null
+                ) : (
+                  <BoardOverlay move={currentMove} orientation={orientation} classification={currentClassification} />
+                )}
               </div>
             </div>
           </div>
@@ -1830,7 +2397,7 @@ function GameReview() {
           <section className="gr-panel gr-sidebar-shell" style={sidebarPanelStyle}>
             <div className="gr-sidebar-topbar">
               <div className="gr-sidebar-title-wrap">
-                <div className="gr-panel-kicker">Game Review</div>
+                <div className="gr-panel-kicker">My Games</div>
                 <h2>{sidebarHeading}</h2>
               </div>
               <div className="gr-sidebar-actions">
@@ -1850,6 +2417,15 @@ function GameReview() {
                   disabled={!hasLoadedGame}
                 >
                   <FontAwesomeIcon icon={faBars} />
+                </button>
+                <button
+                  type="button"
+                  className={hasLoadedGame && sidebarMode === 'puzzles' ? 'gr-panel-gear is-active' : 'gr-panel-gear'}
+                  onClick={() => hasLoadedGame && setSidebarMode('puzzles')}
+                  title="Show mistake training"
+                  disabled={!hasLoadedGame}
+                >
+                  <FontAwesomeIcon icon={faChessKnight} />
                 </button>
                 <button
                   type="button"
@@ -1975,7 +2551,7 @@ function GameReview() {
                       </div>
                     ) : (
                       <div className="gr-remote-panel">
-                        <div className="gr-remote-toolbar">
+                        <form className="gr-remote-toolbar" onSubmit={(event) => { event.preventDefault(); handleLoadRemoteGames(); }}>
                           <label className="gr-compact-field gr-compact-field-wide">
                             <span>{source === 'lichess' ? 'Lichess username' : 'Chess.com username'}</span>
                             <input
@@ -1985,11 +2561,11 @@ function GameReview() {
                               placeholder={source === 'lichess' ? 'Enter a Lichess username' : 'Enter a Chess.com username'}
                             />
                           </label>
-                          <button type="button" className="gr-button gr-button-primary" onClick={handleLoadRemoteGames}>
+                          <button type="submit" className="gr-button gr-button-primary">
                             <FontAwesomeIcon icon={faUser} />
                             <span>Load</span>
                           </button>
-                        </div>
+                        </form>
                         <RemoteGameList
                           games={remoteGames}
                           selectedId={selectedRemoteGameId}
@@ -2002,6 +2578,140 @@ function GameReview() {
                       </div>
                     )}
                   </section>
+                </div>
+              ) : isPuzzleMode ? (
+                <div className="gr-sidebar-view gr-sidebar-view-puzzles">
+                  {!puzzleQueue.length ? (
+                    <section className="gr-view-section gr-puzzle-card gr-puzzle-card-empty">
+                      <div className="gr-puzzle-title">No clean training spots found</div>
+                      <div className="gr-puzzle-copy">This game did not produce a strong queue of better-move positions. Open the move review or load another game.</div>
+                      <div className="gr-inline-actions">
+                        <button type="button" className="gr-button gr-button-primary" onClick={() => setSidebarMode('moves')}>
+                          <FontAwesomeIcon icon={faListOl} />
+                          <span>Open moves</span>
+                        </button>
+                        <button type="button" className="gr-button" onClick={() => setSidebarMode('load')}>
+                          <FontAwesomeIcon icon={faUpload} />
+                          <span>Load another</span>
+                        </button>
+                      </div>
+                    </section>
+                  ) : (
+                    <>
+                      <section className="gr-view-section gr-puzzle-card gr-puzzle-card-primary">
+                        <div className="gr-puzzle-kicker">{currentPuzzle ? `${currentPuzzle.sideLabel} to move` : 'Training spot'}</div>
+                        <div className="gr-puzzle-title">{currentPuzzle ? currentPuzzle.goalLabel : 'Find the move'}</div>
+                        <div className="gr-puzzle-copy">{puzzleFeedback}</div>
+                        {puzzleHintOpen && currentPuzzle ? (
+                          <div className="gr-puzzle-hint">{getPuzzleHintText(currentPuzzle)}</div>
+                        ) : null}
+                        {currentPuzzle ? (
+                          <div className="gr-puzzle-chip-row">
+                            <span className={`gr-puzzle-chip gr-puzzle-chip-${currentPuzzle.classification}`}>{CLASSIFICATION_META[currentPuzzle.classification] ? CLASSIFICATION_META[currentPuzzle.classification].label : currentPuzzle.classification}</span>
+                            <span className="gr-puzzle-chip">Move {currentPuzzle.turnNumber}</span>
+                            <span className="gr-puzzle-chip">Swing {currentPuzzle.lossLabel}</span>
+                          </div>
+                        ) : null}
+                      </section>
+
+                      <div className="gr-puzzle-action-row">
+                        <button type="button" className="gr-button gr-button-secondary gr-puzzle-action-btn" onClick={() => setPuzzleHintOpen((value) => !value)} disabled={!currentPuzzle}>
+                          <FontAwesomeIcon icon={faSearch} />
+                          <span>{puzzleHintOpen ? 'Hide hint' : 'Hint'}</span>
+                        </button>
+                        <button type="button" className="gr-button gr-button-secondary gr-puzzle-action-btn" onClick={handleRevealPuzzleSolution} disabled={!currentPuzzle}>
+                          <FontAwesomeIcon icon={faPlay} />
+                          <span>Solution</span>
+                        </button>
+                      </div>
+
+                      <div className="gr-puzzle-info-grid">
+                        <section className="gr-puzzle-stat-card">
+                          <div className="gr-puzzle-stat-label">Game</div>
+                          {currentPuzzle ? (
+                            <>
+                              <div className="gr-puzzle-stat-value gr-puzzle-stat-matchup">
+                                <span>{currentPuzzle.playerName}</span>
+                                <span className="gr-puzzle-stat-divider">vs</span>
+                                <span>{currentPuzzle.opponentName}</span>
+                              </div>
+                              <div className="gr-puzzle-stat-subtle">{currentPuzzle.date}</div>
+                              {currentPuzzle.sourceUrl ? (
+                                <a className="gr-puzzle-link" href={currentPuzzle.sourceUrl} target="_blank" rel="noopener noreferrer">
+                                  View game ↗
+                                </a>
+                              ) : null}
+                            </>
+                          ) : null}
+                        </section>
+
+                        <section className="gr-puzzle-stat-card">
+                          <div className="gr-puzzle-stat-label">Progress</div>
+                          <div className="gr-puzzle-progress-numbers">
+                            <span className="gr-puzzle-progress-good">{solvedPuzzleCount}</span>
+                            <span className="gr-puzzle-progress-bad">{failedPuzzleCount}</span>
+                          </div>
+                          <div className="gr-puzzle-progress-cells">
+                            {puzzleQueue.map((puzzle, index) => {
+                              const result = puzzleResults[puzzle.id];
+                              const isActive = currentPuzzle && puzzle.id === currentPuzzle.id;
+                              const className = result === 'solved'
+                                ? 'is-solved'
+                                : result === 'failed'
+                                  ? 'is-failed'
+                                  : 'is-pending';
+
+                              return (
+                                <button
+                                  key={puzzle.id}
+                                  type="button"
+                                  className={`gr-puzzle-progress-cell ${className}${isActive ? ' is-active' : ''}`}
+                                  onClick={() => setPuzzleIndex(index)}
+                                  title={`Move ${puzzle.turnNumber}`}
+                                />
+                              );
+                            })}
+                          </div>
+                        </section>
+                      </div>
+
+                      {currentPuzzle && (currentPuzzle.openingTitle || currentPuzzle.openingKey) ? (
+                        <section className="gr-puzzle-stat-card gr-puzzle-opening-card">
+                          <div className="gr-puzzle-stat-label">Opening</div>
+                          <div className="gr-puzzle-stat-value">{currentPuzzle.openingTitle || 'Saved opening'}</div>
+                          {currentPuzzle.lineName ? <div className="gr-puzzle-stat-subtle">{currentPuzzle.lineName}</div> : null}
+                          {currentPuzzle.openingKey ? (
+                            <a className="gr-puzzle-link" href={`#/openings?opening=${currentPuzzle.openingKey}`}>
+                              Train opening ↗
+                            </a>
+                          ) : null}
+                        </section>
+                      ) : null}
+
+                      <div className="gr-puzzle-footer">
+                        <div className={`gr-puzzle-status-pill is-${puzzleStatus}${currentPuzzleResult ? ` has-${currentPuzzleResult}` : ''}`}>
+                          {puzzleStatus === 'checking'
+                            ? 'Checking...'
+                            : puzzleStatus === 'solved'
+                              ? 'Solved'
+                              : puzzleStatus === 'revealed'
+                                ? 'Shown'
+                                : currentPuzzleResult === 'failed'
+                                  ? 'Missed'
+                                  : 'Live'}
+                        </div>
+                        <button
+                          type="button"
+                          className="gr-button gr-button-primary gr-puzzle-next-btn"
+                          onClick={goToNextPuzzle}
+                          disabled={puzzleIndex >= puzzleQueue.length - 1}
+                        >
+                          <span>Next Puzzle</span>
+                          <FontAwesomeIcon icon={faStepForward} />
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </div>
               ) : shouldShowOverviewView ? (
                 <div className="gr-sidebar-view gr-sidebar-view-overview">
@@ -2154,6 +2864,8 @@ function GameReview() {
         </aside>
       </div>
 
+      <ReviewConfetti active={puzzleConfettiActive} />
+
       {showEngineBoard ? (
         <div className="gr-engine-shell">
           <section className="gr-engine-card">
@@ -2174,6 +2886,8 @@ function GameReview() {
                   position={playFen}
                   orientation={playOrientation}
                   onDrop={handlePlayDrop}
+                  onSquareClick={handlePlaySquareClick}
+                  onSquareRightClick={clearPlaySelection}
                   arePiecesDraggable={!playThinking && !playResult}
                   squareStyles={playSquareStyles}
                   pieceTheme={pieceThemeUrl}
