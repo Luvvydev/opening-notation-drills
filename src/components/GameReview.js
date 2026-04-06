@@ -63,6 +63,7 @@ const DEFAULT_DEPTH = 12;
 const DEFAULT_MULTI_PV = 3;
 const DEFAULT_SOURCE = 'chesscom';
 const DEFAULT_PLAY_TIME = 500;
+const DEFAULT_PACK_BATCH = 10;
 const REVIEW_SETTINGS_KEY = 'notation_trainer_opening_settings_v1';
 const SAMPLE_PGN = `[Event "Rated Blitz game"]
 [Site "https://lichess.org/"]
@@ -670,6 +671,8 @@ async function getChessComUserRecentGames(username, signal) {
         url: game.url,
         date: game.end_time ? new Date(game.end_time * 1000).toLocaleDateString() : '',
         timeControl,
+        speedClass: game.time_class || getSpeedClassFromSeconds(baseSeconds),
+        sourceType: 'chesscom',
         movesNb: movesNb ? movesNb * 2 : 0,
         white: {
           name: game.white && game.white.username ? game.white.username : 'White',
@@ -710,6 +713,8 @@ async function getLichessUserRecentGames(username, signal) {
       url: `https://lichess.org/${game.id}`,
       date: new Date(game.createdAt || game.lastMoveAt).toLocaleDateString(),
       timeControl: game.clock ? `${Math.floor((game.clock.initial || 0) / 60)}+${game.clock.increment || 0}` : 'Game',
+      speedClass: game.speed || (game.clock ? getSpeedClassFromSeconds(game.clock.initial || 0) : 'game'),
+      sourceType: 'lichess',
       movesNb: game.moves ? game.moves.split(' ').length : 0,
       white: {
         name: game.players && game.players.white && game.players.white.user ? game.players.white.user.name : 'White',
@@ -830,16 +835,34 @@ function getPuzzleGoalLabel(classification) {
   return classification === 'inaccuracy' ? 'Find a better move' : 'Find the best move';
 }
 
+function isSanPieceMove(san) {
+  return /^[KQRBN]/.test(String(san || ''));
+}
+
+function isSanCastleMove(san) {
+  return /^O-O(-O)?/.test(String(san || ''));
+}
+
+function isSanPawnMove(san) {
+  const value = String(san || '');
+  if (!value) return false;
+  if (isSanCastleMove(value)) return false;
+  return !isSanPieceMove(value);
+}
+
 function getPuzzleHintText(puzzle) {
   if (!puzzle) return '';
 
   const bestSan = String(puzzle.bestSan || '');
+  const playedSan = String(puzzle.playedSan || '');
 
   if (bestSan.indexOf('#') !== -1) return 'There is a direct finish here.';
   if (bestSan.indexOf('+') !== -1) return 'Start with a forcing check.';
   if (bestSan.indexOf('x') !== -1) return 'There is a stronger capture here.';
-  if (/^O-O(-O)?/.test(bestSan)) return 'King safety mattered more than the game move.';
-  if (/^[KQRBN]/.test(bestSan)) return 'A piece move fixes this faster than another pawn move.';
+  if (isSanCastleMove(bestSan)) return 'King safety mattered more than the game move.';
+  if (isSanPieceMove(bestSan) && isSanPawnMove(playedSan)) return 'A piece move fixes this faster than another pawn move.';
+  if (isSanPieceMove(bestSan) && isSanPieceMove(playedSan)) return 'A different piece move was stronger here.';
+  if (isSanPieceMove(bestSan)) return 'A more active piece move was stronger here.';
   return 'The game move was too slow. Look for the move that changes the position immediately.';
 }
 
@@ -857,15 +880,196 @@ function getPuzzleLeadText(puzzle) {
   return `You played ${puzzle.playedSan}. There was a stronger continuation available. ${getPuzzleGoalLabel(puzzle.classification)}.`;
 }
 
-function buildPuzzleQueue(gameData) {
+function getSpeedClassFromSeconds(totalSeconds) {
+  const numeric = Number(totalSeconds || 0);
+  if (!Number.isFinite(numeric) || numeric <= 0) return 'game';
+  if (numeric < 180) return 'bullet';
+  if (numeric < 600) return 'blitz';
+  if (numeric < 1500) return 'rapid';
+  return 'classical';
+}
+
+function getGameSideForUsername(game, username) {
+  const normalized = String(username || '').trim().toLowerCase();
+  if (!normalized || !game) return 'white';
+
+  const blackName = String((game.black && game.black.name) || '').trim().toLowerCase();
+
+  if (blackName === normalized) return 'black';
+  return 'white';
+}
+
+function matchesPackFilters(game, username, sideFilter, speedFilter) {
+  if (!game) return false;
+
+  if (sideFilter && sideFilter !== 'all') {
+    const userSide = getGameSideForUsername(game, username);
+    if (userSide !== sideFilter) return false;
+  }
+
+  if (speedFilter && speedFilter !== 'all') {
+    const speedClass = String(game.speedClass || '').toLowerCase();
+    if (speedClass !== speedFilter) return false;
+  }
+
+  return true;
+}
+
+function getPackThemeLabel(puzzle) {
+  if (!puzzle) return 'Missed stronger move';
+
+  const bestSan = String(puzzle.bestSan || '');
+  const playedSan = String(puzzle.playedSan || '');
+
+  if (bestSan.indexOf('#') !== -1) return 'Missed mate';
+  if (bestSan.indexOf('+') !== -1) return 'Missed forcing move';
+  if (bestSan.indexOf('x') !== -1 && playedSan.indexOf('x') === -1) return 'Missed capture';
+  if (/^O-O(-O)?/.test(bestSan)) return 'King safety';
+  if (/^[NBRQ].*x/.test(bestSan)) return 'Missed tactic';
+  if (/^[NBRQ]/.test(bestSan) && /^[a-h]/.test(playedSan)) return 'Slow pawn move';
+  if (playedSan.indexOf('x') !== -1 && bestSan.indexOf('x') === -1) return 'Bad recapture';
+  if (puzzle.classification === 'blunder') return 'Big tactical miss';
+  return 'Missed stronger move';
+}
+
+function getPackPuzzleSignature(puzzle) {
+  const fenKey = String(puzzle && puzzle.beforeFen ? puzzle.beforeFen : '')
+    .split(' ')
+    .slice(0, 4)
+    .join(' ');
+
+  return [fenKey, puzzle && puzzle.bestMove ? puzzle.bestMove : '', puzzle && puzzle.color ? puzzle.color : ''].join('|');
+}
+
+function getEvaluationLineScore(line) {
+  if (!line) return 0;
+  if (typeof line.mate === 'number') {
+    const distance = Math.max(0, 100 - Math.abs(line.mate));
+    return line.mate > 0 ? 100000 + distance : -100000 - distance;
+  }
+  return typeof line.cp === 'number' ? line.cp : 0;
+}
+
+function getTopLineGap(position) {
+  const lines = position && Array.isArray(position.lines) ? position.lines : [];
+  if (!lines.length) return 0;
+  if (lines.length === 1) return 999999;
+  return Math.max(0, getEvaluationLineScore(lines[0]) - getEvaluationLineScore(lines[1]));
+}
+
+function isForcingSan(value) {
+  const san = String(value || '');
+  return san.indexOf('#') !== -1 || san.indexOf('+') !== -1 || san.indexOf('x') !== -1;
+}
+
+function shouldKeepPackPuzzle(puzzle) {
+  if (!puzzle) return false;
+  if (puzzle.classification !== 'mistake' && puzzle.classification !== 'blunder') return false;
+  if (puzzle.inBook) return false;
+  if (puzzle.turnNumber <= 3) return false;
+  if (puzzle.beforePerspectiveCp <= -260) return false;
+  if (puzzle.winSwing < 6) return false;
+
+  const tactical = Boolean(puzzle.isCapture || puzzle.isForcingBest || puzzle.isForcingPlayed);
+  const lineGap = Number(puzzle.lineGap || 0);
+
+  if (lineGap < 70 && !tactical) return false;
+  if (puzzle.turnNumber <= 5 && (!tactical || lineGap < 120)) return false;
+  if (puzzle.classification === 'mistake' && !tactical && lineGap < 110) return false;
+
+  return true;
+}
+
+function buildPersonalPack(analyzedGames) {
+  const strongestBySignature = new Map();
+
+  (analyzedGames || []).forEach((entry, index) => {
+    if (!entry || !entry.gameData) return;
+
+    const sourceGame = entry.sourceGame || {};
+    const queue = buildPuzzleQueue(entry.gameData, {
+      idPrefix: `${sourceGame.id || `game-${index}`}`,
+      sourceUrl: sourceGame.url || '',
+      date: sourceGame.date || '',
+      gameId: sourceGame.id || '',
+      sourceType: sourceGame.sourceType || '',
+      white: sourceGame.white || null,
+      black: sourceGame.black || null,
+      strictPackMode: true,
+    }).map((puzzle) => ({
+      ...puzzle,
+      themeLabel: getPackThemeLabel(puzzle),
+    }));
+
+    queue.forEach((puzzle) => {
+      const signature = getPackPuzzleSignature(puzzle);
+      const existing = strongestBySignature.get(signature);
+
+      if (!existing) {
+        strongestBySignature.set(signature, puzzle);
+        return;
+      }
+
+      const nextRank = getPuzzleSeverityRank(puzzle.classification);
+      const existingRank = getPuzzleSeverityRank(existing.classification);
+
+      if (nextRank > existingRank || (nextRank === existingRank && puzzle.cpLoss > existing.cpLoss)) {
+        strongestBySignature.set(signature, puzzle);
+      }
+    });
+  });
+
+  const deduped = Array.from(strongestBySignature.values());
+  const themeCounts = deduped.reduce((acc, puzzle) => {
+    const key = puzzle.themeLabel || 'Missed stronger move';
+    acc[key] = (acc[key] || 0) + 1;
+    return acc;
+  }, {});
+
+  const openingCounts = deduped.reduce((acc, puzzle) => {
+    const key = puzzle.openingTitle || '';
+    if (!key) return acc;
+    acc[key] = (acc[key] || 0) + 1;
+    return acc;
+  }, {});
+
+  const sorted = deduped
+    .sort((a, b) => (
+      (themeCounts[b.themeLabel || ''] || 0) - (themeCounts[a.themeLabel || ''] || 0) ||
+      getPuzzleSeverityRank(b.classification) - getPuzzleSeverityRank(a.classification) ||
+      b.cpLoss - a.cpLoss ||
+      a.ply - b.ply
+    ))
+    .slice(0, 24);
+
+  return {
+    puzzles: sorted,
+    themes: Object.entries(themeCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 4)
+      .map(([label, count]) => ({ label, count })),
+    topOpenings: Object.entries(openingCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([label, count]) => ({ label, count })),
+    candidateCount: deduped.length,
+  };
+}
+
+function buildPuzzleQueue(gameData, options) {
   if (!gameData || !Array.isArray(gameData.moves) || !gameData.moves.length) return [];
 
+  const settings = options || {};
   const focusColor = gameData.orientation === 'black' ? 'b' : 'w';
   const headers = gameData.headers || {};
-  const playerName = focusColor === 'w' ? (headers.White || 'White') : (headers.Black || 'Black');
-  const opponentName = focusColor === 'w' ? (headers.Black || 'Black') : (headers.White || 'White');
-  const sourceUrl = typeof headers.Site === 'string' && /^https?:/i.test(headers.Site) ? headers.Site : '';
+  const whitePlayer = settings.white || getHeaderPlayer(headers, 'white');
+  const blackPlayer = settings.black || getHeaderPlayer(headers, 'black');
+  const playerName = focusColor === 'w' ? (whitePlayer.name || 'White') : (blackPlayer.name || 'Black');
+  const opponentName = focusColor === 'w' ? (blackPlayer.name || 'Black') : (whitePlayer.name || 'White');
+  const sourceUrl = settings.sourceUrl || (typeof headers.Site === 'string' && /^https?:/i.test(headers.Site) ? headers.Site : '');
   const opening = gameData.match || null;
+  const idPrefix = settings.idPrefix ? `${settings.idPrefix}-` : '';
+  const totalPlies = gameData.moves.length;
 
   const thresholds = {
     blunder: 120,
@@ -890,9 +1094,11 @@ function buildPuzzleQueue(gameData) {
       const afterWin = getPerspectiveWinPercentage(move.evaluationAfter, focusColor);
       const winSwing = Math.max(0, beforeWin - afterWin);
       const bestSan = getBestMoveSan(move.beforeFen, move.bestMove);
+      const lineGap = getTopLineGap(move.evaluationBefore);
 
       return {
-        id: `puzzle-${move.ply}`,
+        id: `${idPrefix}puzzle-${move.ply}`,
+        gameId: settings.gameId || '',
         ply: move.ply,
         turnNumber: move.turnNumber,
         color: focusColor,
@@ -903,6 +1109,11 @@ function buildPuzzleQueue(gameData) {
         bestMove: move.bestMove,
         bestSan,
         classification: move.classification,
+        inBook: Boolean(move.inBook),
+        isCapture: Boolean(move.isCapture),
+        isForcingBest: isForcingSan(bestSan),
+        isForcingPlayed: isForcingSan(move.san),
+        lineGap,
         cpLoss,
         lossLabel: formatCpSwing(cpLoss),
         beforePerspectiveCp,
@@ -911,9 +1122,17 @@ function buildPuzzleQueue(gameData) {
         goalLabel: getPuzzleGoalLabel(move.classification),
         playerName,
         opponentName,
+        whiteName: whitePlayer.name || 'White',
+        whiteRating: whitePlayer.rating || 0,
+        whiteTitle: whitePlayer.title || '',
+        blackName: blackPlayer.name || 'Black',
+        blackRating: blackPlayer.rating || 0,
+        blackTitle: blackPlayer.title || '',
+        totalPlies,
         result: gameData.result || headers.Result || '*',
         sourceUrl,
-        date: headers.Date || '',
+        sourceType: settings.sourceType || '',
+        date: settings.date || headers.Date || '',
         openingKey: opening && opening.openingKey ? opening.openingKey : '',
         openingTitle: opening && opening.openingTitle ? opening.openingTitle : '',
         lineName: opening && opening.lineName ? opening.lineName : '',
@@ -923,7 +1142,8 @@ function buildPuzzleQueue(gameData) {
       puzzle.bestSan &&
       puzzle.beforePerspectiveCp > -320 &&
       puzzle.cpLoss >= (thresholds[puzzle.classification] || 0) &&
-      puzzle.winSwing >= 4
+      puzzle.winSwing >= 4 &&
+      (!settings.strictPackMode || shouldKeepPackPuzzle(puzzle))
     ))
     .sort((a, b) => (
       getPuzzleSeverityRank(b.classification) - getPuzzleSeverityRank(a.classification) ||
@@ -1181,6 +1401,14 @@ function GameReview() {
   const [remoteLoading, setRemoteLoading] = useState(false);
   const [remoteError, setRemoteError] = useState('');
   const [selectedRemoteGameId, setSelectedRemoteGameId] = useState('');
+  const [packBatchSize, setPackBatchSize] = useState(DEFAULT_PACK_BATCH);
+  const [packSideFilter, setPackSideFilter] = useState('all');
+  const [packSpeedFilter, setPackSpeedFilter] = useState('all');
+  const [packBuilding, setPackBuilding] = useState(false);
+  const [packProgress, setPackProgress] = useState({ current: 0, total: 0, label: '' });
+  const [packSummary, setPackSummary] = useState(null);
+  const [packPuzzles, setPackPuzzles] = useState([]);
+  const [trainingSource, setTrainingSource] = useState('single');
   const [playOrientation, setPlayOrientation] = useState('white');
   const [playFen, setPlayFen] = useState('start');
   const [playStatus, setPlayStatus] = useState('Choose a side and start a game.');
@@ -1300,15 +1528,35 @@ function GameReview() {
   const hasLoadedGame = Boolean(gameData && gameData.moves && gameData.moves.length);
   const hasFullReview = Boolean(gameAnalysis && gameAnalysis.positions && gameAnalysis.positions.length);
   const puzzleQueue = useMemo(() => buildPuzzleQueue(gameData), [gameData]);
-  const currentPuzzle = puzzleQueue[puzzleIndex] || null;
+  const activePuzzleQueue = trainingSource === 'pack' ? packPuzzles : puzzleQueue;
+  const currentPuzzle = activePuzzleQueue[puzzleIndex] || null;
   const currentPuzzleResult = currentPuzzle ? puzzleResults[currentPuzzle.id] : '';
-  const solvedPuzzleCount = puzzleQueue.filter((puzzle) => puzzleResults[puzzle.id] === 'solved').length;
-  const failedPuzzleCount = puzzleQueue.filter((puzzle) => puzzleResults[puzzle.id] === 'failed').length;
-  const isPuzzleMode = hasLoadedGame && sidebarMode === 'puzzles';
+  const solvedPuzzleCount = activePuzzleQueue.filter((puzzle) => puzzleResults[puzzle.id] === 'solved').length;
+  const failedPuzzleCount = activePuzzleQueue.filter((puzzle) => puzzleResults[puzzle.id] === 'failed').length;
+  const eligiblePackGames = remoteGames.filter((game) => matchesPackFilters(game, remoteUsername, packSideFilter, packSpeedFilter));
+  const canOpenSingleGameViews = hasLoadedGame && trainingSource !== 'pack';
+  const isPuzzleMode = (hasLoadedGame || activePuzzleQueue.length > 0) && sidebarMode === 'puzzles';
+  const stagePlayerSummary = trainingSource === 'pack' && currentPuzzle
+    ? {
+        white: {
+          name: currentPuzzle.whiteName || 'White',
+          rating: currentPuzzle.whiteRating || '',
+          title: currentPuzzle.whiteTitle || '',
+        },
+        black: {
+          name: currentPuzzle.blackName || 'Black',
+          rating: currentPuzzle.blackRating || '',
+          title: currentPuzzle.blackTitle || '',
+        },
+      }
+    : playerSummary;
+  const effectiveBoardOrientation = trainingSource === 'pack' && currentPuzzle ? (currentPuzzle.color === 'b' ? 'black' : 'white') : orientation;
+  const stageResult = trainingSource === 'pack' && currentPuzzle ? (currentPuzzle.result || '*') : (gameData ? gameData.result : '*');
+  const stageMoveCount = trainingSource === 'pack' && currentPuzzle ? (currentPuzzle.totalPlies || 0) : (gameData && gameData.moves ? gameData.moves.length : 0);
   const sidebarPanelStyle = { '--gr-sidebar-target-height': `${boardWidth + (hasFullReview ? 184 : 108)}px` };
-  const sidebarHeading = !hasLoadedGame ? 'Import' : sidebarMode === 'overview' ? 'Overview' : sidebarMode === 'moves' ? 'Move Review' : sidebarMode === 'puzzles' ? 'Mistake Training' : 'Import';
-  const shouldShowLoadView = !hasLoadedGame || sidebarMode === 'load';
-  const shouldShowOverviewView = hasLoadedGame && sidebarMode === 'overview';
+  const sidebarHeading = !hasLoadedGame && !activePuzzleQueue.length ? 'Import' : sidebarMode === 'overview' ? 'Overview' : sidebarMode === 'moves' ? 'Move Review' : sidebarMode === 'puzzles' ? (trainingSource === 'pack' ? 'Personal Pack' : 'Mistake Training') : 'Import';
+  const shouldShowLoadView = (!hasLoadedGame && !activePuzzleQueue.length) || sidebarMode === 'load';
+  const shouldShowOverviewView = canOpenSingleGameViews && sidebarMode === 'overview';
   const queueAutoReview = useCallback(() => {
     setSidebarMode('load');
     setAutoReviewQueued(true);
@@ -1608,6 +1856,7 @@ function GameReview() {
     setOrientation(nextOrientation || parsed.orientation || 'white');
     setGameData(parsed);
     setPgnText(nextPgn);
+    setTrainingSource('single');
     setPuzzleIndex(0);
     setPuzzleFen('start');
     setPuzzleStatus('idle');
@@ -1718,6 +1967,130 @@ function GameReview() {
     setStatusMessage(`${source === 'lichess' ? 'Lichess' : 'Chess.com'} game loaded.`);
     queueAutoReview();
   }, [queueAutoReview, remoteUsername, resetReviewStateFromParsed, source]);
+
+  const handleBuildPersonalPack = async () => {
+    const username = remoteUsername.trim();
+    if (!username) {
+      setRemoteError('Enter a username first.');
+      return;
+    }
+
+    const selectedGames = remoteGames
+      .filter((game) => matchesPackFilters(game, username, packSideFilter, packSpeedFilter))
+      .slice(0, packBatchSize);
+
+    if (!selectedGames.length) {
+      setStatusMessage('No recent games matched the current pack filters.');
+      setPackSummary(null);
+      setPackPuzzles([]);
+      return;
+    }
+
+    runRequestRef.current += 1;
+    const requestPrefix = `pack-${runRequestRef.current}`;
+
+    setEngineError('');
+    setPackBuilding(true);
+    setPackProgress({ current: 0, total: selectedGames.length, label: '' });
+    setPackSummary(null);
+    setPackPuzzles([]);
+    setPuzzleResults({});
+    setPuzzleIndex(0);
+    setPuzzleFen('start');
+    setPuzzleStatus('idle');
+    setPuzzleHintOpen(false);
+    setPuzzleShowSolution(false);
+    clearPuzzleSelection();
+    setSidebarMode('load');
+    setEngineState('analyzing');
+    setStatusMessage(`Building pack from ${selectedGames.length} games...`);
+
+    try {
+      await stopSearch();
+      const analyzedGames = [];
+
+      for (let gameIndex = 0; gameIndex < selectedGames.length; gameIndex += 1) {
+        const remoteGame = selectedGames[gameIndex];
+        const nextOrientation = getGameSideForUsername(remoteGame, username);
+        const parsed = parsePgn(remoteGame.pgn, nextOrientation);
+
+        setPackProgress({
+          current: gameIndex + 1,
+          total: selectedGames.length,
+          label: `${remoteGame.white.name} vs ${remoteGame.black.name}`,
+        });
+
+        if (!parsed.ok || !parsed.positions || !parsed.positions.length) {
+          continue;
+        }
+
+        const evaluatedPositions = [];
+        for (let i = 0; i < parsed.positions.length; i += 1) {
+          const position = parsed.positions[i];
+          const result = await evaluateFen(position.fen, {
+            depth,
+            multiPv,
+            requestId: `${requestPrefix}-${gameIndex}-${i}`,
+          });
+          evaluatedPositions.push(result);
+        }
+
+        const enrichedMoves = parsed.moves.map((move, index) => ({
+          ...move,
+          classification: classifyMove(evaluatedPositions[index], evaluatedPositions[index + 1], move),
+          bestMove: evaluatedPositions[index] && evaluatedPositions[index].bestMove ? evaluatedPositions[index].bestMove : null,
+          evaluationBefore: evaluatedPositions[index],
+          evaluationAfter: evaluatedPositions[index + 1],
+        }));
+
+        analyzedGames.push({
+          sourceGame: remoteGame,
+          gameData: {
+            ...parsed,
+            moves: enrichedMoves,
+          },
+        });
+      }
+
+      if (!analyzedGames.length) {
+        setPackSummary({
+          gamesRequested: selectedGames.length,
+          gamesAnalyzed: 0,
+          puzzles: 0,
+          themes: [],
+          topOpenings: [],
+          candidateCount: 0,
+        });
+        setTrainingSource('pack');
+        setSidebarMode('puzzles');
+        setEngineState('ready');
+        setStatusMessage('No analyzable games were found for this pack.');
+        return;
+      }
+
+      const pack = buildPersonalPack(analyzedGames);
+      setPackPuzzles(pack.puzzles);
+      setPackSummary({
+        gamesRequested: selectedGames.length,
+        gamesAnalyzed: analyzedGames.length,
+        puzzles: pack.puzzles.length,
+        themes: pack.themes,
+        topOpenings: pack.topOpenings,
+        candidateCount: pack.candidateCount,
+      });
+      setTrainingSource('pack');
+      setSidebarMode('puzzles');
+      setEngineState('ready');
+      setStatusMessage(pack.puzzles.length ? `Personal pack ready with ${pack.puzzles.length} puzzles.` : 'Pack analysis finished, but no strong puzzle spots survived filtering.');
+    } catch (_) {
+      setEngineState('error');
+      setEngineError('Personal pack analysis failed.');
+      setStatusMessage('Personal pack analysis failed.');
+    } finally {
+      setPackBuilding(false);
+      setPackProgress({ current: 0, total: 0, label: '' });
+    }
+  };
 
   const getBestMoveForCurrentPosition = useCallback(async (fen, movetime) => {
     const engine = await ensureEngineReady();
@@ -1855,10 +2228,15 @@ function GameReview() {
     handlePlayDrop({ sourceSquare: playSelectedSquare, targetSquare: square, piece: pieceCode });
   }, [clearPlaySelection, getLegalTargetsForFen, handlePlayDrop, playOrientation, playResult, playSelectedSquare, playThinking]);
 
+  const goToPreviousPuzzle = useCallback(() => {
+    if (!activePuzzleQueue.length) return;
+    setPuzzleIndex((value) => Math.max(0, value - 1));
+  }, [activePuzzleQueue.length]);
+
   const goToNextPuzzle = useCallback(() => {
-    if (!puzzleQueue.length) return;
-    setPuzzleIndex((value) => Math.min(puzzleQueue.length - 1, value + 1));
-  }, [puzzleQueue.length]);
+    if (!activePuzzleQueue.length) return;
+    setPuzzleIndex((value) => Math.min(activePuzzleQueue.length - 1, value + 1));
+  }, [activePuzzleQueue.length]);
 
   const handleRevealPuzzleSolution = useCallback(() => {
     if (!currentPuzzle) return;
@@ -1873,7 +2251,7 @@ function GameReview() {
   }, [clearPuzzleSelection, currentPuzzle, setPuzzleOutcome]);
 
   const handlePuzzleDrop = useCallback(async ({ sourceSquare, targetSquare, piece }) => {
-    if (!currentPuzzle || puzzleStatus === 'checking' || puzzleStatus === 'solved' || puzzleStatus === 'revealed') {
+    if (!currentPuzzle || puzzleStatus === 'checking' || puzzleStatus === 'solved') {
       return;
     }
 
@@ -1943,7 +2321,7 @@ function GameReview() {
   }, [clearPuzzleSelection, currentPuzzle, depth, evaluateFen, playSfx, puzzleStatus, setPuzzleOutcome, triggerPuzzleSolvedCelebration]);
 
   const handlePuzzleSquareClick = useCallback((square) => {
-    if (!currentPuzzle || puzzleStatus === 'checking' || puzzleStatus === 'solved' || puzzleStatus === 'revealed') {
+    if (!currentPuzzle || puzzleStatus === 'checking' || puzzleStatus === 'solved') {
       return;
     }
 
@@ -2017,22 +2395,22 @@ function GameReview() {
 
 
   useEffect(() => {
-    if (!puzzleQueue.length) {
+    if (!activePuzzleQueue.length) {
       setPuzzleIndex(0);
       setPuzzleFen(hasLoadedGame && currentPosition ? currentPosition.fen : 'start');
       setPuzzleStatus('idle');
       setPuzzleHintOpen(false);
       setPuzzleShowSolution(false);
-      if (hasFullReview) {
-        setPuzzleFeedback('No clear training spots were found in this game.');
+      if (trainingSource === 'pack' || hasFullReview) {
+        setPuzzleFeedback(trainingSource === 'pack' ? 'No clear training spots were found in this pack.' : 'No clear training spots were found in this game.');
       }
       return;
     }
 
-    if (puzzleIndex >= puzzleQueue.length) {
+    if (puzzleIndex >= activePuzzleQueue.length) {
       setPuzzleIndex(0);
     }
-  }, [currentPosition, hasFullReview, hasLoadedGame, puzzleIndex, puzzleQueue]);
+  }, [activePuzzleQueue, currentPosition, hasFullReview, hasLoadedGame, puzzleIndex, trainingSource]);
 
   useEffect(() => {
     if (!currentPuzzle) return;
@@ -2055,7 +2433,7 @@ function GameReview() {
       return undefined;
     }
 
-    if (puzzleIndex >= puzzleQueue.length - 1) {
+    if (puzzleIndex >= activePuzzleQueue.length - 1) {
       return undefined;
     }
 
@@ -2070,7 +2448,7 @@ function GameReview() {
         puzzleAdvanceTimerRef.current = null;
       }
     };
-  }, [currentPuzzle, goToNextPuzzle, puzzleIndex, puzzleQueue.length, puzzleStatus]);
+  }, [activePuzzleQueue.length, currentPuzzle, goToNextPuzzle, puzzleIndex, puzzleStatus]);
 
   useEffect(() => {
     const syncSettings = () => setReviewSettings(loadReviewSettings());
@@ -2268,16 +2646,16 @@ function GameReview() {
         <section className="gr-stage-card">
           <div className="gr-player-band gr-player-band-top">
             <div className="gr-player-left">
-              <PlayerAvatar name={playerSummary.black.name} avatarUrl={playerVisuals.black} />
+              <PlayerAvatar name={stagePlayerSummary.black.name} avatarUrl={trainingSource === 'pack' ? null : playerVisuals.black} />
               <div className="gr-player-copy">
                 <div className="gr-player-name-row">
-                  <span className="gr-player-name">{playerSummary.black.name}</span>
-                  {playerSummary.black.rating ? <span className="gr-player-rating">({playerSummary.black.rating})</span> : null}
+                  <span className="gr-player-name">{stagePlayerSummary.black.name}</span>
+                  {stagePlayerSummary.black.rating ? <span className="gr-player-rating">({stagePlayerSummary.black.rating})</span> : null}
                 </div>
-                {playerSummary.black.title ? <span className="gr-player-title">{playerSummary.black.title}</span> : null}
+                {stagePlayerSummary.black.title ? <span className="gr-player-title">{stagePlayerSummary.black.title}</span> : null}
               </div>
             </div>
-            <button type="button" className="gr-flip-button" onClick={() => setOrientation((value) => (value === 'white' ? 'black' : 'white'))} title="Flip board">
+            <button type="button" className="gr-flip-button" onClick={() => setOrientation((value) => (value === 'white' ? 'black' : 'white'))} title="Flip board" disabled={trainingSource === 'pack' && Boolean(currentPuzzle)}>
               <FontAwesomeIcon icon={faExchangeAlt} />
             </button>
           </div>
@@ -2310,10 +2688,11 @@ function GameReview() {
             <div className="gr-board-frame" ref={boardFrameRef}>
               <div className="gr-board-stack" style={{ width: `${boardWidth}px` }}>
                 <Chessboard
+                  key={`review-board-${effectiveBoardOrientation}-${isPuzzleMode && currentPuzzle ? puzzleFen : currentPosition ? currentPosition.fen : 'start'}`}
                   width={boardWidth}
                   position={isPuzzleMode && currentPuzzle ? puzzleFen : currentPosition ? currentPosition.fen : 'start'}
-                  orientation={orientation}
-                  arePiecesDraggable={isPuzzleMode ? Boolean(currentPuzzle) && puzzleStatus !== 'checking' && puzzleStatus !== 'solved' && puzzleStatus !== 'revealed' : false}
+                  orientation={effectiveBoardOrientation}
+                  arePiecesDraggable={isPuzzleMode ? Boolean(currentPuzzle) && puzzleStatus !== 'checking' && puzzleStatus !== 'solved' : false}
                   onDrop={isPuzzleMode ? handlePuzzleDrop : undefined}
                   onSquareClick={isPuzzleMode ? handlePuzzleSquareClick : undefined}
                   onSquareRightClick={isPuzzleMode ? clearPuzzleSelection : undefined}
@@ -2335,10 +2714,10 @@ function GameReview() {
                           </marker>
                         </defs>
                         {currentPuzzle ? (() => {
-                          const playedFrom = getSquareCenter(currentPuzzle.playedMove && currentPuzzle.playedMove.slice(0, 2), orientation);
-                          const playedTo = getSquareCenter(currentPuzzle.playedMove && currentPuzzle.playedMove.slice(2, 4), orientation);
-                          const bestFrom = getSquareCenter(currentPuzzle.bestMove && currentPuzzle.bestMove.slice(0, 2), orientation);
-                          const bestTo = getSquareCenter(currentPuzzle.bestMove && currentPuzzle.bestMove.slice(2, 4), orientation);
+                          const playedFrom = getSquareCenter(currentPuzzle.playedMove && currentPuzzle.playedMove.slice(0, 2), effectiveBoardOrientation);
+                          const playedTo = getSquareCenter(currentPuzzle.playedMove && currentPuzzle.playedMove.slice(2, 4), effectiveBoardOrientation);
+                          const bestFrom = getSquareCenter(currentPuzzle.bestMove && currentPuzzle.bestMove.slice(0, 2), effectiveBoardOrientation);
+                          const bestTo = getSquareCenter(currentPuzzle.bestMove && currentPuzzle.bestMove.slice(2, 4), effectiveBoardOrientation);
 
                           return (
                             <>
@@ -2369,7 +2748,7 @@ function GameReview() {
                     </div>
                   ) : null
                 ) : (
-                  <BoardOverlay move={currentMove} orientation={orientation} classification={currentClassification} />
+                  <BoardOverlay move={currentMove} orientation={effectiveBoardOrientation} classification={currentClassification} />
                 )}
               </div>
             </div>
@@ -2377,18 +2756,18 @@ function GameReview() {
 
           <div className="gr-player-band gr-player-band-bottom">
             <div className="gr-player-left">
-              <PlayerAvatar name={playerSummary.white.name} avatarUrl={playerVisuals.white} />
+              <PlayerAvatar name={stagePlayerSummary.white.name} avatarUrl={trainingSource === 'pack' ? null : playerVisuals.white} />
               <div className="gr-player-copy">
                 <div className="gr-player-name-row">
-                  <span className="gr-player-name">{playerSummary.white.name}</span>
-                  {playerSummary.white.rating ? <span className="gr-player-rating">({playerSummary.white.rating})</span> : null}
+                  <span className="gr-player-name">{stagePlayerSummary.white.name}</span>
+                  {stagePlayerSummary.white.rating ? <span className="gr-player-rating">({stagePlayerSummary.white.rating})</span> : null}
                 </div>
-                {playerSummary.white.title ? <span className="gr-player-title">{playerSummary.white.title}</span> : null}
+                {stagePlayerSummary.white.title ? <span className="gr-player-title">{stagePlayerSummary.white.title}</span> : null}
               </div>
             </div>
             <div className="gr-player-meta-right">
-              <span className="gr-stage-result">{gameData ? gameData.result : '*'}</span>
-              <span className="gr-stage-moves">{moveCount} plies</span>
+              <span className="gr-stage-result">{stageResult}</span>
+              <span className="gr-stage-moves">{stageMoveCount} plies</span>
             </div>
           </div>
         </section>
@@ -2403,7 +2782,7 @@ function GameReview() {
               <div className="gr-sidebar-actions">
                 <button
                   type="button"
-                  className={sidebarMode === 'load' || !hasLoadedGame ? 'gr-panel-gear is-active' : 'gr-panel-gear'}
+                  className={sidebarMode === 'load' || (!hasLoadedGame && !activePuzzleQueue.length) ? 'gr-panel-gear is-active' : 'gr-panel-gear'}
                   onClick={() => setSidebarMode('load')}
                   title="Load or change game"
                 >
@@ -2412,27 +2791,27 @@ function GameReview() {
                 <button
                   type="button"
                   className={shouldShowOverviewView ? 'gr-panel-gear is-active' : 'gr-panel-gear'}
-                  onClick={() => hasLoadedGame && setSidebarMode('overview')}
+                  onClick={() => canOpenSingleGameViews && setSidebarMode('overview')}
                   title="Show review overview"
-                  disabled={!hasLoadedGame}
+                  disabled={!canOpenSingleGameViews}
                 >
                   <FontAwesomeIcon icon={faBars} />
                 </button>
                 <button
                   type="button"
-                  className={hasLoadedGame && sidebarMode === 'puzzles' ? 'gr-panel-gear is-active' : 'gr-panel-gear'}
-                  onClick={() => hasLoadedGame && setSidebarMode('puzzles')}
+                  className={isPuzzleMode ? 'gr-panel-gear is-active' : 'gr-panel-gear'}
+                  onClick={() => (hasLoadedGame || activePuzzleQueue.length) && setSidebarMode('puzzles')}
                   title="Show mistake training"
-                  disabled={!hasLoadedGame}
+                  disabled={!hasLoadedGame && !activePuzzleQueue.length}
                 >
                   <FontAwesomeIcon icon={faChessKnight} />
                 </button>
                 <button
                   type="button"
-                  className={hasLoadedGame && sidebarMode === 'moves' ? 'gr-panel-gear is-active' : 'gr-panel-gear'}
-                  onClick={() => hasLoadedGame && setSidebarMode('moves')}
+                  className={canOpenSingleGameViews && sidebarMode === 'moves' ? 'gr-panel-gear is-active' : 'gr-panel-gear'}
+                  onClick={() => canOpenSingleGameViews && setSidebarMode('moves')}
                   title="Show move review"
-                  disabled={!hasLoadedGame}
+                  disabled={!canOpenSingleGameViews}
                 >
                   <FontAwesomeIcon icon={faListOl} />
                 </button>
@@ -2575,24 +2954,110 @@ function GameReview() {
                           emptyMessage={`Load recent ${source === 'lichess' ? 'Lichess' : 'Chess.com'} games to choose one.`}
                           focusUsername={remoteUsername}
                         />
+
+                        <section className="gr-pack-builder">
+                          <div className="gr-pack-builder-head">
+                            <div className="gr-loader-summary-title">Personal mistake pack</div>
+                            <div className="gr-loader-summary-body">Analyze a batch of recent games, keep the strongest misses, and turn them into one drill queue.</div>
+                          </div>
+
+                          <div className="gr-settings-row">
+                            <label className="gr-compact-field">
+                              <span>Games</span>
+                              <select value={packBatchSize} onChange={(event) => setPackBatchSize(parseInt(event.target.value, 10))}>
+                                {[10, 20, 30].map((value) => (
+                                  <option key={value} value={value}>{value}</option>
+                                ))}
+                              </select>
+                            </label>
+                            <label className="gr-compact-field">
+                              <span>Side</span>
+                              <select value={packSideFilter} onChange={(event) => setPackSideFilter(event.target.value)}>
+                                <option value="all">All</option>
+                                <option value="white">White</option>
+                                <option value="black">Black</option>
+                              </select>
+                            </label>
+                            <label className="gr-compact-field">
+                              <span>Speed</span>
+                              <select value={packSpeedFilter} onChange={(event) => setPackSpeedFilter(event.target.value)}>
+                                <option value="all">All</option>
+                                <option value="rapid">Rapid</option>
+                                <option value="blitz">Blitz</option>
+                              </select>
+                            </label>
+                          </div>
+
+                          <div className="gr-pack-builder-meta">
+                            {eligiblePackGames.length} eligible game{eligiblePackGames.length === 1 ? '' : 's'} match these filters.
+                          </div>
+
+                          <div className="gr-inline-actions">
+                            <button type="button" className="gr-button gr-button-primary" onClick={handleBuildPersonalPack} disabled={packBuilding || remoteLoading}>
+                              <FontAwesomeIcon icon={packBuilding ? faSpinner : faChessKnight} spin={packBuilding} />
+                              <span>{packBuilding ? 'Building...' : 'Build pack'}</span>
+                            </button>
+                            {trainingSource === 'pack' && packPuzzles.length ? (
+                              <button type="button" className="gr-button" onClick={() => setSidebarMode('puzzles')}>
+                                <FontAwesomeIcon icon={faPlay} />
+                                <span>Open pack</span>
+                              </button>
+                            ) : null}
+                          </div>
+
+                          {packBuilding ? (
+                            <div className="gr-pack-status">
+                              <span>Analyzing {packProgress.current}/{packProgress.total}</span>
+                              {packProgress.label ? <strong>{packProgress.label}</strong> : null}
+                            </div>
+                          ) : null}
+
+                          {packSummary ? (
+                            <div className="gr-pack-summary">
+                              <div className="gr-pack-summary-grid">
+                                <div className="gr-pack-summary-card">
+                                  <span className="gr-pack-summary-label">Games</span>
+                                  <strong>{packSummary.gamesAnalyzed}/{packSummary.gamesRequested}</strong>
+                                </div>
+                                <div className="gr-pack-summary-card">
+                                  <span className="gr-pack-summary-label">Candidates</span>
+                                  <strong>{packSummary.candidateCount}</strong>
+                                </div>
+                                <div className="gr-pack-summary-card">
+                                  <span className="gr-pack-summary-label">Queue</span>
+                                  <strong>{packSummary.puzzles}</strong>
+                                </div>
+                              </div>
+                              {packSummary.themes && packSummary.themes.length ? (
+                                <div className="gr-pack-theme-row">
+                                  {packSummary.themes.map((theme) => (
+                                    <span key={theme.label} className="gr-pack-theme-chip">{theme.label} · {theme.count}</span>
+                                  ))}
+                                </div>
+                              ) : null}
+                            </div>
+                          ) : null}
+                        </section>
                       </div>
                     )}
                   </section>
                 </div>
               ) : isPuzzleMode ? (
                 <div className="gr-sidebar-view gr-sidebar-view-puzzles">
-                  {!puzzleQueue.length ? (
+                  {!activePuzzleQueue.length ? (
                     <section className="gr-view-section gr-puzzle-card gr-puzzle-card-empty">
                       <div className="gr-puzzle-title">No clean training spots found</div>
-                      <div className="gr-puzzle-copy">This game did not produce a strong queue of better-move positions. Open the move review or load another game.</div>
+                      <div className="gr-puzzle-copy">{trainingSource === 'pack' ? 'This batch did not produce a strong queue of personalized training spots. Adjust the filters or build a new pack.' : 'This game did not produce a strong queue of better-move positions. Open the move review or load another game.'}</div>
                       <div className="gr-inline-actions">
-                        <button type="button" className="gr-button gr-button-primary" onClick={() => setSidebarMode('moves')}>
-                          <FontAwesomeIcon icon={faListOl} />
-                          <span>Open moves</span>
-                        </button>
-                        <button type="button" className="gr-button" onClick={() => setSidebarMode('load')}>
+                        {trainingSource !== 'pack' ? (
+                          <button type="button" className="gr-button gr-button-primary" onClick={() => setSidebarMode('moves')}>
+                            <FontAwesomeIcon icon={faListOl} />
+                            <span>Open moves</span>
+                          </button>
+                        ) : null}
+                        <button type="button" className={trainingSource === 'pack' ? 'gr-button gr-button-primary' : 'gr-button'} onClick={() => setSidebarMode('load')}>
                           <FontAwesomeIcon icon={faUpload} />
-                          <span>Load another</span>
+                          <span>{trainingSource === 'pack' ? 'Adjust pack' : 'Load another'}</span>
                         </button>
                       </div>
                     </section>
@@ -2610,6 +3075,7 @@ function GameReview() {
                             <span className={`gr-puzzle-chip gr-puzzle-chip-${currentPuzzle.classification}`}>{CLASSIFICATION_META[currentPuzzle.classification] ? CLASSIFICATION_META[currentPuzzle.classification].label : currentPuzzle.classification}</span>
                             <span className="gr-puzzle-chip">Move {currentPuzzle.turnNumber}</span>
                             <span className="gr-puzzle-chip">Swing {currentPuzzle.lossLabel}</span>
+                            {currentPuzzle.themeLabel ? <span className="gr-puzzle-chip">{currentPuzzle.themeLabel}</span> : null}
                           </div>
                         ) : null}
                       </section>
@@ -2624,6 +3090,36 @@ function GameReview() {
                           <span>Solution</span>
                         </button>
                       </div>
+
+                      {trainingSource === 'pack' && packSummary ? (
+                        <section className="gr-puzzle-stat-card gr-pack-puzzle-summary">
+                          <div className="gr-puzzle-stat-label">Pack summary</div>
+                          <div className="gr-pack-summary-grid">
+                            <div className="gr-pack-summary-card">
+                              <span className="gr-pack-summary-label">Games</span>
+                              <strong>{packSummary.gamesAnalyzed}</strong>
+                            </div>
+                            <div className="gr-pack-summary-card">
+                              <span className="gr-pack-summary-label">Kept</span>
+                              <strong>{packSummary.puzzles}</strong>
+                            </div>
+                            <div className="gr-pack-summary-card">
+                              <span className="gr-pack-summary-label">Themes</span>
+                              <strong>{packSummary.themes ? packSummary.themes.length : 0}</strong>
+                            </div>
+                          </div>
+                          {packSummary.themes && packSummary.themes.length ? (
+                            <div className="gr-pack-theme-row">
+                              {packSummary.themes.map((theme) => (
+                                <span key={theme.label} className="gr-pack-theme-chip">{theme.label} · {theme.count}</span>
+                              ))}
+                            </div>
+                          ) : null}
+                          {packSummary.topOpenings && packSummary.topOpenings.length ? (
+                            <div className="gr-pack-builder-meta">Most common openings: {packSummary.topOpenings.map((opening) => `${opening.label} (${opening.count})`).join(', ')}</div>
+                          ) : null}
+                        </section>
+                      ) : null}
 
                       <div className="gr-puzzle-info-grid">
                         <section className="gr-puzzle-stat-card">
@@ -2652,7 +3148,7 @@ function GameReview() {
                             <span className="gr-puzzle-progress-bad">{failedPuzzleCount}</span>
                           </div>
                           <div className="gr-puzzle-progress-cells">
-                            {puzzleQueue.map((puzzle, index) => {
+                            {activePuzzleQueue.map((puzzle, index) => {
                               const result = puzzleResults[puzzle.id];
                               const isActive = currentPuzzle && puzzle.id === currentPuzzle.id;
                               const className = result === 'solved'
@@ -2689,6 +3185,15 @@ function GameReview() {
                       ) : null}
 
                       <div className="gr-puzzle-footer">
+                        <button
+                          type="button"
+                          className="gr-button gr-puzzle-next-btn"
+                          onClick={goToPreviousPuzzle}
+                          disabled={puzzleIndex <= 0}
+                        >
+                          <FontAwesomeIcon icon={faStepBackward} />
+                          <span>Previous</span>
+                        </button>
                         <div className={`gr-puzzle-status-pill is-${puzzleStatus}${currentPuzzleResult ? ` has-${currentPuzzleResult}` : ''}`}>
                           {puzzleStatus === 'checking'
                             ? 'Checking...'
@@ -2704,7 +3209,7 @@ function GameReview() {
                           type="button"
                           className="gr-button gr-button-primary gr-puzzle-next-btn"
                           onClick={goToNextPuzzle}
-                          disabled={puzzleIndex >= puzzleQueue.length - 1}
+                          disabled={puzzleIndex >= activePuzzleQueue.length - 1}
                         >
                           <span>Next Puzzle</span>
                           <FontAwesomeIcon icon={faStepForward} />
@@ -2723,14 +3228,14 @@ function GameReview() {
 
                     <div className="gr-scoreboard-players gr-scoreboard-players-overview">
                       <div className="gr-score-player">
-                        <PlayerAvatar name={playerSummary.white.name} avatarUrl={playerVisuals.white} className="gr-score-avatar" />
-                        <div className="gr-score-name">{playerSummary.white.name}</div>
+                        <PlayerAvatar name={stagePlayerSummary.white.name} avatarUrl={playerVisuals.white} className="gr-score-avatar" />
+                        <div className="gr-score-name">{stagePlayerSummary.white.name}</div>
                         <div className="gr-score-accuracy">{hasFullReview ? gameAnalysis.accuracy.white.toFixed(1) : '--'}</div>
                       </div>
                       <div className="gr-score-center-pill">{gameData ? gameData.result : '*'}</div>
                       <div className="gr-score-player">
-                        <PlayerAvatar name={playerSummary.black.name} avatarUrl={playerVisuals.black} className="gr-score-avatar" />
-                        <div className="gr-score-name">{playerSummary.black.name}</div>
+                        <PlayerAvatar name={stagePlayerSummary.black.name} avatarUrl={playerVisuals.black} className="gr-score-avatar" />
+                        <div className="gr-score-name">{stagePlayerSummary.black.name}</div>
                         <div className="gr-score-accuracy">{hasFullReview ? gameAnalysis.accuracy.black.toFixed(1) : '--'}</div>
                       </div>
                     </div>

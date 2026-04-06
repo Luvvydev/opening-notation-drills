@@ -500,6 +500,95 @@
   gap: 12px;
 }
 
+.gr-pack-builder,
+.gr-pack-summary,
+.gr-pack-status {
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  padding: 14px;
+}
+
+.gr-pack-builder,
+.gr-pack-summary,
+.gr-pack-puzzle-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.gr-pack-builder-head {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.gr-pack-builder-meta {
+  color: rgba(238, 242, 247, 0.64);
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.gr-pack-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: rgba(238, 242, 247, 0.78);
+  font-size: 0.84rem;
+}
+
+.gr-pack-status strong {
+  color: #eef2f7;
+  font-size: 0.82rem;
+}
+
+.gr-pack-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.gr-pack-summary-card {
+  border-radius: 13px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(8, 10, 14, 0.56);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.gr-pack-summary-card strong {
+  color: #eef2f7;
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.gr-pack-summary-label {
+  color: rgba(238, 242, 247, 0.58);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.gr-pack-theme-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.gr-pack-theme-chip {
+  border-radius: 999px;
+  border: 1px solid rgba(137, 97, 255, 0.25);
+  background: rgba(137, 97, 255, 0.12);
+  padding: 6px 10px;
+  color: #d9cbff;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
 .gr-pgn-input {
   width: 100%;
   min-height: 140px;
@@ -1232,6 +1321,17 @@
   overflow: auto;
   padding-right: 2px;
 }
+.gr-sidebar-view-load {
+  height: 100%;
+  overflow: auto;
+  padding-right: 2px;
+}
+
+.gr-sidebar-view-puzzles {
+  height: 100%;
+  overflow: auto;
+  padding-right: 2px;
+}
 
 .gr-view-section {
   display: flex;
@@ -1370,6 +1470,16 @@
   .gr-remote-toolbar .gr-button,
   .gr-inline-actions .gr-button {
     width: 100%;
+  }
+
+  .gr-pack-summary-grid,
+  .gr-pack-puzzle-summary .gr-pack-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .gr-pack-status {
+    flex-direction: column;
+    align-items: flex-start;
   }
 
   .gr-move-row {
