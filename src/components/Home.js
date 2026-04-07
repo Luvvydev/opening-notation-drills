@@ -421,6 +421,11 @@ perOpening,
     this.props.history.push(path);
   };
 
+  scrollToTop = () => {
+    if (typeof window === "undefined") return;
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   toggleFilters = () => {
     this.setState((s) => ({ filtersOpen: !s.filtersOpen }));
   };
@@ -1127,7 +1132,7 @@ return (
               <div className="home-footer-brand-copy">
                 <div className="home-footer-brand-title">ChessDrills</div>
                 <div className="home-footer-brand-text">
-                  Opening drills, notation training, personal mistake packs, and ranked progress.
+                  Opening drills, notation training, personal mistake puzzle packs, and ranked progress.
                 </div>
               </div>
             </div>
@@ -1149,8 +1154,20 @@ return (
           </div>
 
           <div className="home-footer-bottom">
-            <div className="home-footer-bottom-line">© {footerYear} ChessDrills</div>
-            <div className="home-footer-bottom-line">links for drills, tools, rankings, and opening pages.</div>
+            <div className="home-footer-bottom-meta">
+              <div className="home-footer-bottom-line">© {footerYear} ChessDrills</div>
+              <div className="home-footer-bottom-line">links for drills, tools, rankings, and opening pages.</div>
+            </div>
+
+            <button
+              type="button"
+              className="home-footer-back-to-top"
+              onClick={this.scrollToTop}
+              aria-label="Back to top"
+            >
+              <span className="home-footer-back-to-top-arrow" aria-hidden="true">↑</span>
+              <span>Back to top</span>
+            </button>
           </div>
         </footer>
       </div>
