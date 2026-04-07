@@ -2276,3 +2276,390 @@
     opacity: 0;
   }
 }
+
+/* ===== April 2026 layout + Learn page blend pass ===== */
+.gr-page {
+  position: relative;
+  isolation: isolate;
+  background: transparent;
+}
+
+.gr-page::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  background:
+    radial-gradient(980px 560px at 16% 18%, rgba(152, 103, 255, 0.08), rgba(0, 0, 0, 0) 64%),
+    radial-gradient(920px 540px at 84% 18%, rgba(60, 102, 206, 0.08), rgba(0, 0, 0, 0) 66%),
+    linear-gradient(90deg, rgba(7, 9, 13, 0.10) 0%, rgba(7, 9, 13, 0.04) 46%, rgba(7, 9, 13, 0.12) 100%),
+    linear-gradient(180deg, rgba(9, 11, 15, 0.84) 0%, rgba(7, 9, 13, 0.92) 100%);
+}
+
+.gr-page .topnav {
+  background: linear-gradient(
+    180deg,
+    rgba(15, 17, 21, 0.70) 0%,
+    rgba(15, 17, 21, 0.22) 58%,
+    rgba(15, 17, 21, 0.00) 100%
+  );
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  padding-bottom: 14px;
+}
+
+.gr-page .topnav-inner {
+  position: relative;
+  z-index: 2;
+}
+
+.gr-shell-review {
+  position: relative;
+  max-width: 1200px;
+  padding: 38px 18px 28px;
+  grid-template-columns: minmax(0, 1fr) clamp(340px, 32vw, 392px);
+  gap: 14px;
+}
+
+.gr-shell-review::before {
+  content: "";
+  position: absolute;
+  top: 8px;
+  left: 18px;
+  right: 18px;
+  height: 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background:
+    linear-gradient(90deg, rgba(152, 103, 255, 0.14) 0%, rgba(60, 102, 206, 0.12) 58%, rgba(255, 255, 255, 0.02) 100%),
+    rgba(255, 255, 255, 0.02);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.gr-stage-card,
+.gr-panel,
+.gr-engine-card {
+  border-radius: 18px;
+  box-shadow: 0 22px 52px rgba(0, 0, 0, 0.28);
+}
+
+.gr-stage-card {
+  padding: 12px;
+  gap: 12px;
+  background: linear-gradient(180deg, rgba(26, 22, 41, 0.96) 0%, rgba(13, 16, 22, 0.98) 100%);
+  border-color: rgba(152, 103, 255, 0.16);
+}
+
+.gr-panel,
+.gr-engine-card {
+  background: linear-gradient(180deg, rgba(16, 22, 37, 0.98) 0%, rgba(10, 14, 24, 0.98) 100%);
+  border-color: rgba(86, 118, 214, 0.16);
+}
+
+.gr-player-band {
+  gap: 10px;
+  padding: 2px 2px 0;
+}
+
+.gr-stage-top-graph {
+  margin: 0 2px;
+}
+
+.gr-board-stage {
+  grid-template-columns: 14px minmax(0, 1fr);
+  gap: 10px;
+}
+
+.gr-eval-rail {
+  min-height: 448px;
+  border-radius: 12px;
+  background: rgba(8, 11, 17, 0.88);
+  border-color: rgba(255, 255, 255, 0.10);
+}
+
+.gr-board-frame {
+  align-items: flex-start;
+  padding: 2px 0;
+}
+
+.gr-sidebar-shell {
+  padding: 14px;
+  background: linear-gradient(180deg, rgba(16, 23, 39, 0.98) 0%, rgba(10, 14, 24, 0.98) 100%);
+  border-color: rgba(86, 118, 214, 0.18);
+}
+
+.gr-sidebar-topbar {
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.gr-sidebar-title-wrap h2 {
+  font-size: 1.04rem;
+}
+
+.gr-sidebar-actions {
+  gap: 8px;
+}
+
+.gr-panel-gear,
+.gr-flip-button,
+.gr-dock-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.gr-panel-gear.is-active {
+  background: linear-gradient(180deg, rgba(137, 97, 255, 0.92) 0%, rgba(93, 62, 193, 0.98) 100%);
+  border-color: rgba(137, 97, 255, 0.68);
+}
+
+.gr-sidebar-view,
+.gr-view-section,
+.gr-remote-panel,
+.gr-pgn-panel,
+.gr-settings-drawer {
+  gap: 14px;
+}
+
+.gr-source-tabs {
+  gap: 8px;
+}
+
+.gr-source-tab {
+  min-height: 56px;
+  border-radius: 14px;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.gr-source-tab.is-active {
+  background: linear-gradient(180deg, rgba(137, 97, 255, 0.24) 0%, rgba(18, 24, 39, 0.96) 100%);
+  border-color: rgba(137, 97, 255, 0.46);
+}
+
+.gr-remote-toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: end;
+}
+
+.gr-compact-field,
+.gr-compact-field-wide {
+  gap: 7px;
+}
+
+.gr-compact-field span,
+.gr-compact-field-wide span {
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+
+.gr-compact-field select,
+.gr-text-input,
+.gr-pgn-input {
+  border-radius: 14px;
+  border-color: rgba(255, 255, 255, 0.09);
+  background: rgba(7, 10, 16, 0.94);
+}
+
+.gr-compact-field select,
+.gr-text-input,
+.gr-button {
+  height: 40px;
+}
+
+.gr-button {
+  padding: 0 15px;
+  border-radius: 13px;
+}
+
+.gr-inline-actions {
+  gap: 8px;
+}
+
+.gr-remote-list {
+  max-height: 172px;
+  gap: 8px;
+}
+
+.gr-remote-item,
+.gr-remote-state,
+.gr-empty,
+.gr-error {
+  border-radius: 14px;
+}
+
+.gr-remote-item {
+  padding: 12px 13px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.gr-remote-item.is-active {
+  background: rgba(137, 97, 255, 0.12);
+}
+
+.gr-pack-builder,
+.gr-pack-summary,
+.gr-pack-status,
+.gr-pack-puzzle-summary,
+.gr-loader-summary-card,
+.gr-puzzle-stat-card,
+.gr-puzzle-card,
+.gr-graph-wrap,
+.gr-insight-bubble,
+.gr-status-strip,
+.gr-mini-line {
+  border-radius: 16px;
+}
+
+.gr-pack-builder,
+.gr-pack-summary,
+.gr-pack-status,
+.gr-pack-puzzle-summary,
+.gr-loader-summary-card,
+.gr-puzzle-stat-card,
+.gr-puzzle-card,
+.gr-graph-wrap,
+.gr-insight-bubble,
+.gr-status-strip {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.025) 100%);
+  border-color: rgba(255, 255, 255, 0.07);
+}
+
+.gr-pack-builder,
+.gr-pack-summary,
+.gr-pack-status,
+.gr-pack-puzzle-summary {
+  padding: 16px;
+  gap: 14px;
+}
+
+.gr-pack-builder .gr-settings-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.gr-pack-builder .gr-compact-field:last-child {
+  grid-column: 1 / -1;
+}
+
+.gr-pack-builder-meta,
+.gr-loader-summary-body,
+.gr-insight-body {
+  color: rgba(238, 242, 247, 0.70);
+}
+
+.gr-status-strip {
+  padding: 10px 12px;
+}
+
+.gr-control-dock {
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.gr-move-list {
+  gap: 4px;
+}
+
+.gr-move-cell {
+  min-height: 28px;
+  border-radius: 10px;
+  padding: 0 8px;
+}
+
+.gr-move-cell.is-active {
+  background: rgba(137, 97, 255, 0.18);
+}
+
+@media (max-width: 1100px) {
+  .gr-page .topnav {
+    padding-bottom: 10px;
+  }
+
+  .gr-shell-review {
+    max-width: 760px;
+    padding: 30px 12px 24px;
+    gap: 12px;
+  }
+
+  .gr-shell-review::before {
+    left: 12px;
+    right: 12px;
+  }
+
+  .gr-sidebar-shell {
+    height: auto;
+    max-height: none;
+    overflow: visible;
+  }
+}
+
+@media (max-width: 720px) {
+  .gr-page::before {
+    background:
+      radial-gradient(560px 320px at 14% 8%, rgba(152, 103, 255, 0.07), rgba(0, 0, 0, 0) 60%),
+      radial-gradient(520px 300px at 86% 10%, rgba(60, 102, 206, 0.05), rgba(0, 0, 0, 0) 62%),
+      linear-gradient(180deg, rgba(9, 11, 15, 0.88) 0%, rgba(7, 9, 13, 0.94) 100%);
+  }
+
+  .gr-shell-review,
+  .gr-engine-shell {
+    max-width: 430px;
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .gr-shell-review {
+    padding-top: 26px;
+    gap: 10px;
+  }
+
+  .gr-shell-review::before {
+    left: 10px;
+    right: 10px;
+    top: 4px;
+    height: 12px;
+  }
+
+  .gr-stage-card,
+  .gr-panel,
+  .gr-engine-card {
+    border-radius: 16px;
+    padding: 10px;
+  }
+
+  .gr-sidebar-shell {
+    padding: 12px;
+  }
+
+  .gr-sidebar-topbar {
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+  }
+
+  .gr-remote-toolbar,
+  .gr-pack-builder .gr-settings-row {
+    grid-template-columns: 1fr;
+  }
+
+  .gr-pack-builder .gr-compact-field:last-child {
+    grid-column: auto;
+  }
+
+  .gr-remote-toolbar .gr-button,
+  .gr-inline-actions .gr-button {
+    width: 100%;
+  }
+
+  .gr-source-tab {
+    min-height: 54px;
+    font-size: 0.82rem;
+  }
+}
