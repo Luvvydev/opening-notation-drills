@@ -31,6 +31,26 @@
     <link rel="canonical" href="https://chessdrills.net/" />
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    <script>
+      (function (l) {
+        if (l.hash && l.hash.indexOf('#/') === 0) {
+          window.history.replaceState(null, null, l.hash.slice(1));
+          return;
+        }
+
+        if (l.search[1] === '/') {
+          var decoded = l.search
+            .slice(1)
+            .split('&')
+            .map(function (s) {
+              return s.replace(/~and~/g, '&');
+            })
+            .join('?');
+
+          window.history.replaceState(null, null, l.pathname.slice(0, -1) + decoded + l.hash);
+        }
+      })(window.location);
+    </script>
     <title>ChessDrills | Chess Opening Trainer and Drills</title>
     <script type="application/ld+json">
       {
@@ -63,13 +83,13 @@
         </p>
 <p>
   Train openings in the interactive trainer:
-  <a href="/#/openings?opening=london">London System</a>,
-  <a href="/#/openings?opening=sicilian">Sicilian Defense</a>,
-  <a href="/#/openings?opening=ruy">Ruy Lopez</a>,
-  <a href="/#/openings?opening=carokann">Caro-Kann Defense</a>.
+  <a href="/openings?opening=london">London System</a>,
+  <a href="/openings?opening=sicilian">Sicilian Defense</a>,
+  <a href="/openings?opening=ruy">Ruy Lopez</a>,
+  <a href="/openings?opening=carokann">Caro-Kann Defense</a>.
 </p>
         <p>
-          You can also open the <a href="/#/openings">full openings library</a> or read more on the <a href="/#/about">About</a> page.
+          You can also open the <a href="/openings">full openings library</a> or read more on the <a href="/about">About</a> page.
         </p>
         <p>
           To use the interactive trainer you need JavaScript enabled in your browser.

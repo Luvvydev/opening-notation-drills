@@ -7,7 +7,7 @@ import { useAuth } from "../auth/AuthProvider";
 
 
 const CANONICAL_ORIGIN = "https://chessdrills.net";
-const CANONICAL_REDIRECT_URI = `${CANONICAL_ORIGIN}/#/discord`;
+const CANONICAL_REDIRECT_URI = `${CANONICAL_ORIGIN}/discord`;
 
 function parseOAuthParams(href) {
   try {

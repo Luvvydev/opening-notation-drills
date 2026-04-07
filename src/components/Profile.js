@@ -1084,7 +1084,7 @@ const onChangeCoachTheme = async (nextCoachTheme) => {
                   <button
                     type="button"
                     className="profile-membership-btn"
-                    onClick={() => { try { window.location.href = "#/about"; } catch (_) {} }}
+                    onClick={() => { try { window.location.href = "/about"; } catch (_) {} }}
                   >
                     Join Now
                   </button>
@@ -1095,7 +1095,7 @@ const onChangeCoachTheme = async (nextCoachTheme) => {
                   <button
                     type="button"
                     className="profile-membership-btn"
-                    onClick={() => { try { window.location.href = "#/about"; } catch (_) {} }}
+                    onClick={() => { try { window.location.href = "/about"; } catch (_) {} }}
                   >
                     Start Free Trial
                   </button>
@@ -1106,7 +1106,7 @@ const onChangeCoachTheme = async (nextCoachTheme) => {
                   <button
                     type="button"
                     className="profile-membership-btn"
-                    onClick={() => { try { window.location.href = "#/about"; } catch (_) {} }}
+                    onClick={() => { try { window.location.href = "/about"; } catch (_) {} }}
                   >
                     Join Now
                   </button>

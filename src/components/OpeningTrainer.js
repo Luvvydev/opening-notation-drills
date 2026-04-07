@@ -952,7 +952,7 @@ getShareUrlForLine = (line) => {
   if (!encoded) return "";
   const origin = window.location.origin || "";
   const base = "";
-  const path = `${base}/#/openings`;
+  const path = `${base}/openings`;
   return `${origin}${path}?opening=${encodeURIComponent(this.state.openingKey)}&customRep=${encodeURIComponent(encoded)}`;
 };
 
@@ -1295,7 +1295,7 @@ saveCustomModal = () => {
     }
 
     try {
-      window.location.href = "#/about";
+      window.location.href = "/about";
     } catch (_) {}
   };
 
@@ -1316,15 +1316,8 @@ saveCustomModal = () => {
       return;
     }
 
-    // HashRouter fallback (GitHub Pages).
     try {
-      window.location.hash = "/";
-      return;
-    } catch (_) {}
-
-    // Last resort.
-    try {
-      window.location.href = "#/";
+      window.location.href = "/";
     } catch (_) {}
   };
 

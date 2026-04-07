@@ -30,13 +30,14 @@ export default function About(props) {
 
   const goToSignup = () => {
     try {
-      const from = window.location.hash || "#/about";
-      window.location.href = `#/signup?from=${encodeURIComponent(from)}&reason=membership_requires_account`;
+      const from = `${window.location.pathname || "/about"}${window.location.search || ""}` || "/about";
+      window.location.href = `/signup?from=${encodeURIComponent(from)}&reason=membership_requires_account`;
     } catch (_) {}
   };
 
   const goBack = () => {
-    const from = fromState && typeof fromState.from === "string" ? fromState.from : "";
+    const rawFrom = fromState && typeof fromState.from === "string" ? fromState.from : "";
+    const from = rawFrom.indexOf("#/") === 0 ? rawFrom.slice(1) : rawFrom;
 
     if (props && props.history && typeof props.history.replace === "function" && from && from.charAt(0) === "/") {
       props.history.replace(from);
@@ -44,11 +45,7 @@ export default function About(props) {
     }
 
     try {
-      if (from && from.charAt(0) === "/") {
-        window.location.hash = `#${from}`;
-      } else {
-        window.location.hash = "#/openings";
-      }
+      window.location.href = from && from.charAt(0) === "/" ? from : "/openings";
     } catch (_) {}
   };
 

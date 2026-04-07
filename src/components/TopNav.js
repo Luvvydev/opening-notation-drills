@@ -204,7 +204,7 @@ function TopNav(props) {
     if (!user) return;
     try {
       setMenuOpen(false);
-      const redirectUri = CHESSDRILLS_BASE_URL + "/#/discord";
+      const redirectUri = CHESSDRILLS_BASE_URL + "/discord";
       const fn = httpsCallable(functions, "getDiscordOAuthUrl");
       const res = await fn({ redirectUri });
       const url = res && res.data ? res.data.url : null;
@@ -467,7 +467,7 @@ function TopNav(props) {
             </div>
 
             <Link
-              to={{ pathname: "/about", state: { from: window.location.hash.replace(/^#/, '') || "/about", reason: "upgrade_cta" } }}
+              to={{ pathname: "/about", state: { from: `${window.location.pathname || "/about"}${window.location.search || ""}` || "/about", reason: "upgrade_cta" } }}
               className="topnav-trial-banner-btn"
             >
               Join Now

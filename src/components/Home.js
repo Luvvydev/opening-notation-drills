@@ -820,7 +820,7 @@ renderHeroCarousel = (slides) => {
         if (!opening) return null;
         return {
           label: opening.title,
-          href: `#/openings?opening=${encodeURIComponent(key)}`
+          href: `/openings?opening=${encodeURIComponent(key)}`
         };
       })
       .filter(Boolean);
@@ -829,18 +829,18 @@ renderHeroCarousel = (slides) => {
       {
         title: "Explore",
         links: [
-          { label: "Opening Trainer", href: "#/openings" },
-          { label: "Notation Trainer", href: "#/practice" },
-          { label: "About", href: "#/about" },
-          { label: "Leaderboards", href: "#/leaderboards" }
+          { label: "Opening Trainer", href: "/openings" },
+          { label: "Notation Trainer", href: "/practice" },
+          { label: "About", href: "/about" },
+          { label: "Leaderboards", href: "/leaderboards" }
         ]
       },
       {
         title: "Tools",
         links: [
-          { label: "My Games", href: "#/my-games" },
-          { label: "Sign Up", href: "#/signup" },
-          { label: "Login", href: "#/login" }
+          { label: "My Games", href: "/my-games" },
+          { label: "Sign Up", href: "/signup" },
+          { label: "Login", href: "/login" }
         ]
       },
       {

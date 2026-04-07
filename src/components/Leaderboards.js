@@ -231,8 +231,8 @@ const meRank = useMemo(() => {
               <div className="lb-paywall-title">Create a free account to upgrade.</div>
               <div className="lb-paywall-sub">Leaderboards are members only. You need an account to purchase a membership.</div>
               <div className="lb-paywall-actions">
-                <a className="lb-paywall-btn" href="#/signup">Sign up</a>
-                <a className="lb-paywall-btn secondary" href="#/about">View membership</a>
+                <a className="lb-paywall-btn" href="/signup">Sign up</a>
+                <a className="lb-paywall-btn secondary" href="/about">View membership</a>
               </div>
             </div>
           ) : !isMember ? (
@@ -240,7 +240,7 @@ const meRank = useMemo(() => {
               <div className="lb-paywall-title">Leaderboards are members only.</div>
               <div className="lb-paywall-sub">Upgrade to compete and show your flair.</div>
               <div className="lb-paywall-actions">
-                <a className="lb-paywall-btn" href="#/about">Upgrade</a>
+                <a className="lb-paywall-btn" href="/about">Upgrade</a>
               </div>
             </div>
           ) : null}
@@ -276,7 +276,7 @@ const meRank = useMemo(() => {
                         </div>
                         <div className="lb-rival-name">
                           {un ? (
-                            <a className="lb-userlink" href={`#/u/${un}`} title={`View @${un}`}>
+                            <a className="lb-userlink" href={`/u/${un}`} title={`View @${un}`}>
                               {label}
                             </a>
                           ) : (
@@ -330,7 +330,7 @@ const meRank = useMemo(() => {
             </td>
             <td>
               {un ? (
-                <a className="lb-userlink" href={`#/u/${un}`} title={`View @${un}`}>
+                <a className="lb-userlink" href={`/u/${un}`} title={`View @${un}`}>
                   {label}
                 </a>
               ) : (

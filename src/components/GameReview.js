@@ -3263,7 +3263,7 @@ function GameReview() {
                           <div className="gr-puzzle-stat-value">{currentPuzzle.openingTitle || 'Saved opening'}</div>
                           {currentPuzzle.lineName ? <div className="gr-puzzle-stat-subtle">{currentPuzzle.lineName}</div> : null}
                           {currentPuzzle.openingKey ? (
-                            <a className="gr-puzzle-link" href={`#/openings?opening=${currentPuzzle.openingKey}`}>
+                            <a className="gr-puzzle-link" href={`/openings?opening=${currentPuzzle.openingKey}`}>
                               Train opening ↗
                             </a>
                           ) : null}

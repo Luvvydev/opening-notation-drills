@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { HashRouter, Route } from 'react-router-dom';
+import { BrowserRouter, Route } from 'react-router-dom';
 import './App.css';
 import Home from './components/Home';
 import About from './components/About';
@@ -37,7 +37,7 @@ class App extends React.Component {
   render () {
     return (
       <div className="board-container">
-        <HashRouter basename='/'>
+        <BrowserRouter>
           <AuthProvider>
             <CloudSyncInstaller />
             <StreakModal />
@@ -63,7 +63,7 @@ class App extends React.Component {
             <ProtectedRoute exact path='/review' component={GameReview} />
             <ProtectedRoute exact path='/my-games' component={GameReview} />
           </AuthProvider>
-        </HashRouter>
+        </BrowserRouter>
       </div>
     );
   }
