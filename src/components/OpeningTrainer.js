@@ -4317,6 +4317,9 @@ render() {
     const seoDescription = seoOpening
       ? `Practice ${seoOpening.label} with structured chess opening drills, move feedback, and opening recall training in ChessDrills.`
       : "Practice chess openings with structured drills, move feedback, and opening recall training in ChessDrills.";
+    const seoCanonical = seoOpening
+      ? `https://chessdrills.net/openings?opening=${encodeURIComponent(this.state.openingKey)}`
+      : "https://chessdrills.net/openings";
 
     const modeClass = ` ot-mode-${this.state.gameMode || "learn"}`;
 
@@ -4325,6 +4328,7 @@ render() {
         <SEO
           title={seoTitle}
           description={seoDescription}
+          canonical={seoCanonical}
           image="https://chessdrills.net/logo512.png"
         />
         <OpeningTrainerConfetti active={this.state.confettiActive} />

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import TopNav from './TopNav';
+import SEO from './SEO';
 import './About.css';
 import '../App.css';
 
@@ -119,7 +120,12 @@ export default function About(props) {
 
   return (
     <div className="about-page">
-   
+      <SEO
+        title="ChessDrills Premium | ChessDrills"
+        description="Start a ChessDrills free trial or join premium to unlock more opening training features."
+        canonical="https://chessdrills.net/about"
+        image="https://chessdrills.net/logo512.png"
+      />
 
       <TopNav active="about" title="Chess Opening Drills" />
 

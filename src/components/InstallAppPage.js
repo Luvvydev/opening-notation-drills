@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import TopNav from './TopNav';
+import SEO from './SEO';
 import './InstallAppPage.css';
 import {
   initPwaInstallTracking,
@@ -105,6 +106,12 @@ export default function InstallAppPage({ history }) {
 
   return (
     <div className="install-page">
+      <SEO
+        title="Install ChessDrills | ChessDrills"
+        description="Add ChessDrills to your home screen for faster access on mobile and desktop."
+        canonical="https://chessdrills.net/install"
+        image="https://chessdrills.net/logo512.png"
+      />
       <TopNav title="Add to Home Screen" />
 
       <div className="install-wrap">

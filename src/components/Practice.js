@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import Board from './Board';
 import Settings from './Settings';
 import TopNav from './TopNav';
+import SEO from './SEO';
 import { DEFAULT_THEME } from '../theme/boardThemes';
 import './Board.css';
 import './Practice.css';
@@ -61,6 +62,12 @@ class Practice extends Component {
   render() {
     return (
       <div className="page-dark">
+        <SEO
+          title="Chess Practice Board | ChessDrills"
+          description="Use the ChessDrills practice board to play out moves, flip the board, and train notation visually."
+          canonical="https://chessdrills.net/practice"
+          image="https://chessdrills.net/logo512.png"
+        />
         <TopNav active="about" title="Chess Notation Drills" />
         <div className="page-body">
           <Board
