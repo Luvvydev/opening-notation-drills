@@ -64,6 +64,8 @@ const DEFAULT_MULTI_PV = 3;
 const DEFAULT_SOURCE = 'chesscom';
 const DEFAULT_PLAY_TIME = 500;
 const DEFAULT_PACK_BATCH = 10;
+const PACK_SEED_PUZZLES = 2;
+const MAX_PACK_PUZZLES = 24;
 const REVIEW_SETTINGS_KEY = 'notation_trainer_opening_settings_v1';
 const SAMPLE_PGN = `[Event "Rated Blitz game"]
 [Site "https://lichess.org/"]
@@ -980,6 +982,12 @@ function shouldKeepPackPuzzle(puzzle) {
   return true;
 }
 
+function waitForNextPaint() {
+  return new Promise((resolve) => {
+    window.setTimeout(resolve, 0);
+  });
+}
+
 function buildPersonalPack(analyzedGames) {
   const strongestBySignature = new Map();
 
@@ -1040,7 +1048,7 @@ function buildPersonalPack(analyzedGames) {
       b.cpLoss - a.cpLoss ||
       a.ply - b.ply
     ))
-    .slice(0, 24);
+    .slice(0, MAX_PACK_PUZZLES);
 
   return {
     puzzles: sorted,
@@ -1054,6 +1062,20 @@ function buildPersonalPack(analyzedGames) {
       .map(([label, count]) => ({ label, count })),
     candidateCount: deduped.length,
   };
+}
+
+function mergePackPuzzleQueue(existingPuzzles, nextPuzzles) {
+  const merged = Array.isArray(existingPuzzles) ? existingPuzzles.slice() : [];
+  const seen = new Set(merged.map((puzzle) => getPackPuzzleSignature(puzzle)));
+
+  (nextPuzzles || []).forEach((puzzle) => {
+    const signature = getPackPuzzleSignature(puzzle);
+    if (seen.has(signature)) return;
+    seen.add(signature);
+    merged.push(puzzle);
+  });
+
+  return merged.slice(0, MAX_PACK_PUZZLES);
 }
 
 function buildPuzzleQueue(gameData, options) {
@@ -1987,7 +2009,8 @@ function GameReview() {
     }
 
     runRequestRef.current += 1;
-    const requestPrefix = `pack-${runRequestRef.current}`;
+    const requestId = runRequestRef.current;
+    const requestPrefix = `pack-${requestId}`;
 
     setEngineError('');
     setPackBuilding(true);
@@ -2008,8 +2031,14 @@ function GameReview() {
     try {
       await stopSearch();
       const analyzedGames = [];
+      let revealedSeedQueue = false;
+      let visiblePackQueue = [];
 
       for (let gameIndex = 0; gameIndex < selectedGames.length; gameIndex += 1) {
+        if (requestId !== runRequestRef.current) {
+          return;
+        }
+
         const remoteGame = selectedGames[gameIndex];
         const nextOrientation = getGameSideForUsername(remoteGame, username);
         const parsed = parsePgn(remoteGame.pgn, nextOrientation);
@@ -2026,6 +2055,10 @@ function GameReview() {
 
         const evaluatedPositions = [];
         for (let i = 0; i < parsed.positions.length; i += 1) {
+          if (requestId !== runRequestRef.current) {
+            return;
+          }
+
           const position = parsed.positions[i];
           const result = await evaluateFen(position.fen, {
             depth,
@@ -2050,6 +2083,50 @@ function GameReview() {
             moves: enrichedMoves,
           },
         });
+
+        const partialPack = buildPersonalPack(analyzedGames);
+        const partialSummary = {
+          gamesRequested: selectedGames.length,
+          gamesAnalyzed: analyzedGames.length,
+          puzzles: partialPack.puzzles.length,
+          themes: partialPack.themes,
+          topOpenings: partialPack.topOpenings,
+          candidateCount: partialPack.candidateCount,
+        };
+
+        setPackSummary(partialSummary);
+
+        if (!revealedSeedQueue && partialPack.puzzles.length) {
+          visiblePackQueue = partialPack.puzzles.slice(0, PACK_SEED_PUZZLES);
+          setPackPuzzles(visiblePackQueue);
+          setTrainingSource('pack');
+          setSidebarMode('puzzles');
+          setStatusMessage(
+            visiblePackQueue.length > 1
+              ? `First ${visiblePackQueue.length} personal pack puzzles ready. Loading the rest...`
+              : 'First personal pack puzzle ready. Loading the rest...'
+          );
+          revealedSeedQueue = true;
+          await waitForNextPaint();
+          continue;
+        }
+
+        if (revealedSeedQueue) {
+          const nextVisibleQueue = mergePackPuzzleQueue(visiblePackQueue, partialPack.puzzles);
+          if (nextVisibleQueue.length !== visiblePackQueue.length) {
+            visiblePackQueue = nextVisibleQueue;
+            setPackPuzzles((previous) => {
+              const merged = mergePackPuzzleQueue(previous, partialPack.puzzles);
+              return merged.length === previous.length ? previous : merged;
+            });
+            setStatusMessage(`Loaded ${visiblePackQueue.length} personal pack puzzles. Analyzing the rest...`);
+            await waitForNextPaint();
+          }
+        }
+      }
+
+      if (requestId !== runRequestRef.current) {
+        return;
       }
 
       if (!analyzedGames.length) {
@@ -2068,27 +2145,36 @@ function GameReview() {
         return;
       }
 
-      const pack = buildPersonalPack(analyzedGames);
-      setPackPuzzles(pack.puzzles);
+      const finalPack = buildPersonalPack(analyzedGames);
+      const finalQueue = revealedSeedQueue
+        ? mergePackPuzzleQueue(visiblePackQueue, finalPack.puzzles)
+        : finalPack.puzzles;
+
+      setPackPuzzles(finalQueue);
       setPackSummary({
         gamesRequested: selectedGames.length,
         gamesAnalyzed: analyzedGames.length,
-        puzzles: pack.puzzles.length,
-        themes: pack.themes,
-        topOpenings: pack.topOpenings,
-        candidateCount: pack.candidateCount,
+        puzzles: finalQueue.length,
+        themes: finalPack.themes,
+        topOpenings: finalPack.topOpenings,
+        candidateCount: finalPack.candidateCount,
       });
       setTrainingSource('pack');
       setSidebarMode('puzzles');
       setEngineState('ready');
-      setStatusMessage(pack.puzzles.length ? `Personal pack ready with ${pack.puzzles.length} puzzles.` : 'Pack analysis finished, but no strong puzzle spots survived filtering.');
+      setStatusMessage(finalQueue.length ? `Personal pack ready with ${finalQueue.length} puzzles.` : 'Pack analysis finished, but no strong puzzle spots survived filtering.');
     } catch (_) {
+      if (requestId !== runRequestRef.current) {
+        return;
+      }
       setEngineState('error');
       setEngineError('Personal pack analysis failed.');
       setStatusMessage('Personal pack analysis failed.');
     } finally {
-      setPackBuilding(false);
-      setPackProgress({ current: 0, total: 0, label: '' });
+      if (requestId === runRequestRef.current) {
+        setPackBuilding(false);
+        setPackProgress({ current: 0, total: 0, label: '' });
+      }
     }
   };
 
