@@ -1,6 +1,6 @@
 {
   "files": {
-    "main.css": "/static/css/main.3e06ee76.chunk.css",
+    "main.css": "/static/css/main.1a35aca3.chunk.css",
     "main.js": "/static/js/main.2b3b32bc.chunk.js",
     "main.js.map": "/static/js/main.2b3b32bc.chunk.js.map",
     "runtime-main.js": "/static/js/runtime-main.c28dc3b4.js",
@@ -8,16 +8,16 @@
     "static/js/2.b60b5947.chunk.js": "/static/js/2.b60b5947.chunk.js",
     "static/js/2.b60b5947.chunk.js.map": "/static/js/2.b60b5947.chunk.js.map",
     "index.html": "/index.html",
-    "precache-manifest.1b73d0a6a3847f8212375435f9ed0005.js": "/precache-manifest.1b73d0a6a3847f8212375435f9ed0005.js",
+    "precache-manifest.baadc10c40b63abd39cb83a2f1fbdb5f.js": "/precache-manifest.baadc10c40b63abd39cb83a2f1fbdb5f.js",
     "service-worker.js": "/service-worker.js",
-    "static/css/main.3e06ee76.chunk.css.map": "/static/css/main.3e06ee76.chunk.css.map",
+    "static/css/main.1a35aca3.chunk.css.map": "/static/css/main.1a35aca3.chunk.css.map",
     "static/js/2.b60b5947.chunk.js.LICENSE.txt": "/static/js/2.b60b5947.chunk.js.LICENSE.txt",
     "static/media/chessdrillslogo.png": "/static/media/chessdrillslogo.48a60fec.png"
   },
   "entrypoints": [
     "static/js/runtime-main.c28dc3b4.js",
     "static/js/2.b60b5947.chunk.js",
-    "static/css/main.3e06ee76.chunk.css",
+    "static/css/main.1a35aca3.chunk.css",
     "static/js/main.2b3b32bc.chunk.js"
   ]
 }
