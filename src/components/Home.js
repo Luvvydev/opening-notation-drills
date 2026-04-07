@@ -421,6 +421,13 @@ perOpening,
     this.props.history.push(path);
   };
 
+  handleFooterLinkClick = (e, href) => {
+    if (!href) return;
+    if (e && (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0)) return;
+    if (e) e.preventDefault();
+    this.goToRoute(href);
+  };
+
   scrollToTop = () => {
     if (typeof window === "undefined") return;
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -1143,7 +1150,12 @@ return (
                   <div className="home-footer-heading">{column.title}</div>
                   <div className="home-footer-link-list">
                     {column.links.map((link) => (
-                      <a className="home-footer-link" key={link.href} href={link.href}>
+                      <a
+                        className="home-footer-link"
+                        key={link.href}
+                        href={link.href}
+                        onClick={(e) => this.handleFooterLinkClick(e, link.href)}
+                      >
                         {link.label}
                       </a>
                     ))}
