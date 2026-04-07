@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import TopNav from "./TopNav";
 import "./Leaderboards.css";
 import { db } from "../firebase";
@@ -276,9 +277,9 @@ const meRank = useMemo(() => {
                         </div>
                         <div className="lb-rival-name">
                           {un ? (
-                            <a className="lb-userlink" href={`/u/${un}`} title={`View @${un}`}>
+                            <Link className="lb-userlink" to={`/u/${un}`} title={`View @${un}`}>
                               {label}
-                            </a>
+                            </Link>
                           ) : (
                             label
                           )}
@@ -330,9 +331,9 @@ const meRank = useMemo(() => {
             </td>
             <td>
               {un ? (
-                <a className="lb-userlink" href={`/u/${un}`} title={`View @${un}`}>
+                <Link className="lb-userlink" to={`/u/${un}`} title={`View @${un}`}>
                   {label}
-                </a>
+                </Link>
               ) : (
                 label
               )}

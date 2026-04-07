@@ -38,16 +38,28 @@
           return;
         }
 
-        if (l.search[1] === '/') {
-          var decoded = l.search
+        var raw = l.search || '';
+        var decoded = '';
+
+        if (raw.indexOf('?p=/') === 0) {
+          decoded = raw.slice(3);
+          var qIndex = decoded.indexOf('&q=');
+          if (qIndex !== -1) {
+            decoded = decoded.slice(0, qIndex) + '?' + decoded.slice(qIndex + 3);
+          }
+        } else if (raw[1] === '/') {
+          decoded = raw
             .slice(1)
             .split('&')
             .map(function (s) {
               return s.replace(/~and~/g, '&');
             })
             .join('?');
+        }
 
-          window.history.replaceState(null, null, l.pathname.slice(0, -1) + decoded + l.hash);
+        if (decoded) {
+          decoded = decoded.replace(/~and~/g, '&');
+          window.history.replaceState(null, null, decoded + l.hash);
         }
       })(window.location);
     </script>
