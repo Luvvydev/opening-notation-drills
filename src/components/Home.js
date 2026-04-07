@@ -809,6 +809,43 @@ renderHeroCarousel = (slides) => {
       return Math.round((s.completed / s.total) * 100);
     };
 
+    const footerOpeningLinks = ["london", "sicilian", "ruy", "italian", "kingsindian", "carokann", "scandinavian"]
+      .map((key) => {
+        const opening = OPENINGS.find((item) => item.key === key);
+        if (!opening) return null;
+        return {
+          label: opening.title,
+          href: `#/openings?opening=${encodeURIComponent(key)}`
+        };
+      })
+      .filter(Boolean);
+
+    const footerColumns = [
+      {
+        title: "Explore",
+        links: [
+          { label: "Opening Trainer", href: "#/openings" },
+          { label: "Notation Trainer", href: "#/practice" },
+          { label: "About", href: "#/about" },
+          { label: "Leaderboards", href: "#/leaderboards" }
+        ]
+      },
+      {
+        title: "Tools",
+        links: [
+          { label: "My Games", href: "#/my-games" },
+          { label: "Sign Up", href: "#/signup" },
+          { label: "Login", href: "#/login" }
+        ]
+      },
+      {
+        title: "Popular openings",
+        links: footerOpeningLinks
+      }
+    ];
+
+    const footerYear = new Date().getFullYear();
+
     const heroSlides = [
       {
         id: "overview",
@@ -1081,8 +1118,41 @@ return (
 
             <div className="home-course-grid">{sorted.map(this.renderCard)}</div>
           </div>
-        
         </div>
+
+        <footer className="home-footer" aria-label="Site links">
+          <div className="home-footer-inner">
+            <div className="home-footer-brand">
+              <div className="home-footer-mark" aria-hidden="true">♞</div>
+              <div className="home-footer-brand-copy">
+                <div className="home-footer-brand-title">ChessDrills</div>
+                <div className="home-footer-brand-text">
+                  Opening drills, notation training, personal mistake packs, and ranked progress.
+                </div>
+              </div>
+            </div>
+
+            <div className="home-footer-links">
+              {footerColumns.map((column) => (
+                <div className="home-footer-column" key={column.title}>
+                  <div className="home-footer-heading">{column.title}</div>
+                  <div className="home-footer-link-list">
+                    {column.links.map((link) => (
+                      <a className="home-footer-link" key={link.href} href={link.href}>
+                        {link.label}
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="home-footer-bottom">
+            <div className="home-footer-bottom-line">© {footerYear} ChessDrills</div>
+            <div className="home-footer-bottom-line">links for drills, tools, rankings, and opening pages.</div>
+          </div>
+        </footer>
       </div>
     );
   }
