@@ -474,7 +474,7 @@ function getMatchSummary(sanMoves) {
     });
   });
 
-  if (!best || best.matchedPlies < 2) return null;
+  if (!best || best.matchedPlies < 1) return null;
   return best;
 }
 
