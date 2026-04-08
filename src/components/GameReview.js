@@ -10,7 +10,6 @@ import {
   faCog,
   faListOl,
   faCopy,
-  faExchangeAlt,
   faFastBackward,
   faFastForward,
   faPaste,
@@ -564,27 +563,7 @@ function parsePgn(rawText, orientationOverride) {
   };
 }
 
-function getEvalBarPercent(position) {
-  return clamp(getPositionWinPercentage(position), 0, 100);
-}
 
-function getGraphPoints(positions, width, height) {
-  if (!positions || !positions.length) return [];
-  const innerWidth = width - 16;
-  const innerHeight = height - 16;
-
-  return positions.map((position, index) => {
-    const value = clamp(getPositionCp(position), -600, 600);
-    const x = 8 + ((positions.length === 1 ? 0 : index / (positions.length - 1)) * innerWidth);
-    const y = 8 + (((600 - value) / 1200) * innerHeight);
-    return { x, y, index, value };
-  });
-}
-
-function buildPath(points) {
-  if (!points.length) return '';
-  return points.map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`).join(' ');
-}
 
 function sendCommandsToWorker(workerHandle, commands, finalPrefix, onMessage, timeoutMs) {
   return new Promise((resolve, reject) => {
@@ -1254,7 +1233,7 @@ function getMoveInsight(move, classification, match) {
   }
 }
 
-function getSquareCenter(square, orientation) {
+function getSquareCenter(square, orientation, boardSize = 100) {
   if (!square || square.length < 2) return null;
   const file = square.charCodeAt(0) - 97;
   const rank = parseInt(square[1], 10);
@@ -1262,20 +1241,25 @@ function getSquareCenter(square, orientation) {
 
   const col = orientation === 'white' ? file : 7 - file;
   const row = orientation === 'white' ? 8 - rank : rank - 1;
+  const cellSize = boardSize / 8;
+  const x = (col + 0.5) * cellSize;
+  const y = (row + 0.5) * cellSize;
 
   return {
-    x: (col + 0.5) * 12.5,
-    y: (row + 0.5) * 12.5,
-    left: `${(col + 0.5) * 12.5}%`,
-    top: `${(row + 0.5) * 12.5}%`,
+    x,
+    y,
+    left: `${x}px`,
+    top: `${y}px`,
   };
 }
 
-function BoardOverlay({ move, orientation, classification }) {
-  if (!move || !move.from || !move.to) return null;
+function BoardOverlay({ move, orientation, classification, boardSize }) {
+  const arrowMarkerId = useMemo(() => `grArrowHead-${Math.random().toString(36).slice(2, 9)}`, []);
 
-  const from = getSquareCenter(move.from, orientation);
-  const to = getSquareCenter(move.to, orientation);
+  if (!move || !move.from || !move.to || !boardSize) return null;
+
+  const from = getSquareCenter(move.from, orientation, boardSize);
+  const to = getSquareCenter(move.to, orientation, boardSize);
   if (!from || !to) return null;
 
   const className = classification && classification.className ? classification.className : 'neutral';
@@ -1295,13 +1279,13 @@ function BoardOverlay({ move, orientation, classification }) {
 
   return (
     <div className="gr-board-overlay" aria-hidden="true">
-      <svg viewBox="0 0 100 100" preserveAspectRatio="none" className={`gr-board-arrow gr-board-arrow-${className}`}>
+      <svg viewBox={`0 0 ${boardSize} ${boardSize}`} className={`gr-board-arrow gr-board-arrow-${className}`}>
         <defs>
-          <marker id="grArrowHead" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
-            <path d="M0,0 L6,3 L0,6 z" />
+          <marker id={arrowMarkerId} markerWidth="10" markerHeight="10" refX="7" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+            <path d="M0,0 L10,5 L0,10 z" />
           </marker>
         </defs>
-        <line x1={from.x} y1={from.y} x2={to.x} y2={to.y} markerEnd="url(#grArrowHead)" />
+        <line x1={from.x} y1={from.y} x2={to.x} y2={to.y} markerEnd={`url(#${arrowMarkerId})`} />
       </svg>
       <div className={`gr-board-badge gr-board-badge-${className}`} style={{ left: to.left, top: to.top }}>
         {badgeText}
@@ -1333,7 +1317,7 @@ function RemoteGameList({ games, selectedId, onSelect, loading, error, emptyMess
   }
 
   if (!games.length) {
-    return <div className="gr-empty">{emptyMessage}</div>;
+    return emptyMessage ? <div className="gr-empty">{emptyMessage}</div> : null;
   }
 
   return (
@@ -1373,36 +1357,6 @@ function RemoteGameList({ games, selectedId, onSelect, loading, error, emptyMess
   );
 }
 
-function EvalGraph({ positions, currentPly, onSelect }) {
-  const width = 720;
-  const height = 116;
-  const points = useMemo(() => getGraphPoints(positions, width, height), [positions]);
-  const path = useMemo(() => buildPath(points), [points]);
-
-  if (!positions || positions.length < 2) {
-    return <div className="gr-empty">Run full analysis to see the graph.</div>;
-  }
-
-  return (
-    <div className="gr-graph-wrap">
-      <svg viewBox={`0 0 ${width} ${height}`} className="gr-graph" role="img" aria-label="Evaluation graph">
-        <line x1="8" y1={height / 2} x2={width - 8} y2={height / 2} className="gr-graph-axis" />
-        <path d={path} className="gr-graph-line" />
-        {points.map((point) => (
-          <circle
-            key={point.index}
-            cx={point.x}
-            cy={point.y}
-            r={point.index === currentPly ? 4.2 : 2.7}
-            className={point.index === currentPly ? 'gr-graph-point is-active' : 'gr-graph-point'}
-            onClick={() => onSelect(point.index)}
-          />
-        ))}
-      </svg>
-    </div>
-  );
-}
-
 function GameReview() {
   const [source, setSource] = useState(DEFAULT_SOURCE);
   const [pgnText, setPgnText] = useState('');
@@ -1428,7 +1382,7 @@ function GameReview() {
   const [packSpeedFilter, setPackSpeedFilter] = useState('all');
   const [packBuilding, setPackBuilding] = useState(false);
   const [packProgress, setPackProgress] = useState({ current: 0, total: 0, label: '' });
-  const [packSummary, setPackSummary] = useState(null);
+  const [, setPackSummary] = useState(null);
   const [packPuzzles, setPackPuzzles] = useState([]);
   const [trainingSource, setTrainingSource] = useState('single');
   const [playOrientation, setPlayOrientation] = useState('white');
@@ -1545,8 +1499,6 @@ function GameReview() {
 
     return styles;
   }, [puzzleLegalTargets, puzzleSelectedSquare]);
-  const currentEvalLabel = getPositionLabel(positionEval || { lines: [{ cp: 0 }] });
-  const currentEvalPercent = getEvalBarPercent(positionEval || { lines: [{ cp: 0 }] });
   const hasLoadedGame = Boolean(gameData && gameData.moves && gameData.moves.length);
   const hasFullReview = Boolean(gameAnalysis && gameAnalysis.positions && gameAnalysis.positions.length);
   const puzzleQueue = useMemo(() => buildPuzzleQueue(gameData), [gameData]);
@@ -1554,8 +1506,6 @@ function GameReview() {
   const currentPuzzle = activePuzzleQueue[puzzleIndex] || null;
   const currentPuzzleResult = currentPuzzle ? puzzleResults[currentPuzzle.id] : '';
   const solvedPuzzleCount = activePuzzleQueue.filter((puzzle) => puzzleResults[puzzle.id] === 'solved').length;
-  const failedPuzzleCount = activePuzzleQueue.filter((puzzle) => puzzleResults[puzzle.id] === 'failed').length;
-  const eligiblePackGames = remoteGames.filter((game) => matchesPackFilters(game, remoteUsername, packSideFilter, packSpeedFilter));
   const canOpenSingleGameViews = hasLoadedGame && trainingSource !== 'pack';
   const isPuzzleMode = (hasLoadedGame || activePuzzleQueue.length > 0) && sidebarMode === 'puzzles';
   const stagePlayerSummary = trainingSource === 'pack' && currentPuzzle
@@ -1573,9 +1523,15 @@ function GameReview() {
       }
     : playerSummary;
   const effectiveBoardOrientation = trainingSource === 'pack' && currentPuzzle ? (currentPuzzle.color === 'b' ? 'black' : 'white') : orientation;
-  const stageResult = trainingSource === 'pack' && currentPuzzle ? (currentPuzzle.result || '*') : (gameData ? gameData.result : '*');
-  const stageMoveCount = trainingSource === 'pack' && currentPuzzle ? (currentPuzzle.totalPlies || 0) : (gameData && gameData.moves ? gameData.moves.length : 0);
-  const sidebarPanelStyle = { '--gr-sidebar-target-height': `${boardWidth + (hasFullReview ? 184 : 108)}px` };
+  const topProgressPercent = activePuzzleQueue.length
+    ? Math.round((solvedPuzzleCount / activePuzzleQueue.length) * 100)
+    : engineState === 'analyzing-game'
+      ? gameProgress
+      : 0;
+  const shellProgressStyle = { '--gr-top-progress': `${topProgressPercent}%` };
+  const sidebarPanelStyle = { '--gr-sidebar-target-height': `${boardWidth + 26}px` };
+  const puzzlePlayedMarkerId = useMemo(() => `grPuzzleArrowHeadPlayed-${Math.random().toString(36).slice(2, 9)}`, []);
+  const puzzleBestMarkerId = useMemo(() => `grPuzzleArrowHeadBest-${Math.random().toString(36).slice(2, 9)}`, []);
   const sidebarHeading = !hasLoadedGame && !activePuzzleQueue.length ? 'Import' : sidebarMode === 'overview' ? 'Overview' : sidebarMode === 'moves' ? 'Move Review' : sidebarMode === 'puzzles' ? (trainingSource === 'pack' ? 'Personal Pack' : 'Mistake Training') : 'Import';
   const shouldShowLoadView = (!hasLoadedGame && !activePuzzleQueue.length) || sidebarMode === 'load';
   const shouldShowOverviewView = canOpenSingleGameViews && sidebarMode === 'overview';
@@ -2628,11 +2584,20 @@ function GameReview() {
       }
       frame = window.requestAnimationFrame(() => {
         const viewportWidth = typeof window !== 'undefined' ? Number(window.innerWidth) || 0 : 0;
-        const mobileCap = Math.max(260, viewportWidth - 64);
-        const desktopCap = viewportWidth < 1400 ? 500 : 560;
-        const widthCap = viewportWidth && viewportWidth < 721 ? mobileCap : desktopCap;
-        const measuredWidth = node.clientWidth || widthCap;
-        const nextWidth = Math.max(260, Math.min(widthCap, measuredWidth));
+        const frameWidth = node.clientWidth || 0;
+        const mobileCap = Math.max(260, viewportWidth - 24);
+        let desktopCap = 500;
+        if (viewportWidth >= 1800) desktopCap = 600;
+
+        let nextWidth;
+        if (viewportWidth && viewportWidth < 1100) {
+          const mobileWidth = frameWidth || mobileCap;
+          nextWidth = Math.max(260, Math.min(mobileCap, mobileWidth));
+        } else {
+          const desktopWidth = frameWidth || desktopCap;
+          nextWidth = Math.max(260, Math.min(desktopCap, desktopWidth));
+        }
+
         setBoardWidth(nextWidth);
       });
     };
@@ -2728,135 +2693,87 @@ function GameReview() {
     <div className="gr-page">
       <TopNav title="My Games" hideHero />
 
-      <div className="gr-shell gr-shell-review">
-        <section className="gr-stage-card">
-          <div className="gr-player-band gr-player-band-top">
-            <div className="gr-player-left">
-              <PlayerAvatar name={stagePlayerSummary.black.name} avatarUrl={trainingSource === 'pack' ? null : playerVisuals.black} />
-              <div className="gr-player-copy">
-                <div className="gr-player-name-row">
-                  <span className="gr-player-name">{stagePlayerSummary.black.name}</span>
-                  {stagePlayerSummary.black.rating ? <span className="gr-player-rating">({stagePlayerSummary.black.rating})</span> : null}
+      <div className="gr-shell gr-shell-review" style={shellProgressStyle}>
+        <div className="gr-top-progress-shell" aria-hidden="true">
+          <div className="gr-top-progress-track">
+            <div className="gr-top-progress-fill" />
+          </div>
+        </div>
+
+        <div className="gr-stage-shell">
+
+          <section className="gr-stage-card gr-stage-card-board">
+            <div className="gr-stage-board-only">
+              <div className="gr-board-frame" ref={boardFrameRef}>
+                <div className="gr-board-stack" style={{ width: `${boardWidth}px` }}>
+                  <Chessboard
+                    key={`review-board-${effectiveBoardOrientation}-${isPuzzleMode && currentPuzzle ? puzzleFen : currentPosition ? currentPosition.fen : 'start'}`}
+                    width={boardWidth}
+                    position={isPuzzleMode && currentPuzzle ? puzzleFen : currentPosition ? currentPosition.fen : 'start'}
+                    orientation={effectiveBoardOrientation}
+                    arePiecesDraggable={isPuzzleMode ? Boolean(currentPuzzle) && puzzleStatus !== 'checking' && puzzleStatus !== 'solved' : false}
+                    onDrop={isPuzzleMode ? handlePuzzleDrop : undefined}
+                    onSquareClick={isPuzzleMode ? handlePuzzleSquareClick : undefined}
+                    onSquareRightClick={isPuzzleMode ? clearPuzzleSelection : undefined}
+                    showNotation
+                    squareStyles={isPuzzleMode ? puzzleSquareStyles : boardSquareStyles}
+                    pieceTheme={pieceThemeUrl}
+                    {...boardThemeStyles}
+                  />
+                  {isPuzzleMode ? (
+                    puzzleFen === (currentPuzzle ? currentPuzzle.beforeFen : '') ? (
+                      <div className="gr-board-overlay" aria-hidden="true">
+                        <svg viewBox={`0 0 ${boardWidth} ${boardWidth}`} className="gr-board-arrow gr-board-arrow-puzzle">
+                          <defs>
+                            <marker id={puzzlePlayedMarkerId} markerWidth="10" markerHeight="10" refX="7" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+                              <path d="M0,0 L10,5 L0,10 z" className="gr-board-arrow-played-head" />
+                            </marker>
+                            <marker id={puzzleBestMarkerId} markerWidth="10" markerHeight="10" refX="7" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+                              <path d="M0,0 L10,5 L0,10 z" className="gr-board-arrow-best-head" />
+                            </marker>
+                          </defs>
+                          {currentPuzzle ? (() => {
+                            const playedFrom = getSquareCenter(currentPuzzle.playedMove && currentPuzzle.playedMove.slice(0, 2), effectiveBoardOrientation, boardWidth);
+                            const playedTo = getSquareCenter(currentPuzzle.playedMove && currentPuzzle.playedMove.slice(2, 4), effectiveBoardOrientation, boardWidth);
+                            const bestFrom = getSquareCenter(currentPuzzle.bestMove && currentPuzzle.bestMove.slice(0, 2), effectiveBoardOrientation, boardWidth);
+                            const bestTo = getSquareCenter(currentPuzzle.bestMove && currentPuzzle.bestMove.slice(2, 4), effectiveBoardOrientation, boardWidth);
+
+                            return (
+                              <>
+                                {playedFrom && playedTo ? (
+                                  <line
+                                    x1={playedFrom.x}
+                                    y1={playedFrom.y}
+                                    x2={playedTo.x}
+                                    y2={playedTo.y}
+                                    className="gr-board-arrow-played-line"
+                                    markerEnd={`url(#${puzzlePlayedMarkerId})`}
+                                  />
+                                ) : null}
+                                {puzzleShowSolution && bestFrom && bestTo ? (
+                                  <line
+                                    x1={bestFrom.x}
+                                    y1={bestFrom.y}
+                                    x2={bestTo.x}
+                                    y2={bestTo.y}
+                                    className="gr-board-arrow-best-line"
+                                    markerEnd={`url(#${puzzleBestMarkerId})`}
+                                  />
+                                ) : null}
+                              </>
+                            );
+                          })() : null}
+                        </svg>
+                      </div>
+                    ) : null
+                  ) : (
+                    <BoardOverlay move={currentMove} orientation={effectiveBoardOrientation} classification={currentClassification} boardSize={boardWidth} />
+                  )}
                 </div>
-                {stagePlayerSummary.black.title ? <span className="gr-player-title">{stagePlayerSummary.black.title}</span> : null}
               </div>
             </div>
-            <button type="button" className="gr-flip-button" onClick={() => setOrientation((value) => (value === 'white' ? 'black' : 'white'))} title="Flip board" disabled={trainingSource === 'pack' && Boolean(currentPuzzle)}>
-              <FontAwesomeIcon icon={faExchangeAlt} />
-            </button>
-          </div>
-
-          {isPuzzleMode && currentPuzzle ? (
-            <div className="gr-stage-prompt">
-              <span>{currentPuzzle.sideLabel} to move</span>
-              <strong>{currentPuzzle.goalLabel}</strong>
-            </div>
-          ) : null}
-
-          {hasFullReview && !isPuzzleMode ? (
-            <div className="gr-stage-top-graph">
-              <EvalGraph
-                positions={gameAnalysis ? gameAnalysis.positions : null}
-                currentPly={currentPly}
-                onSelect={setCurrentPly}
-              />
-            </div>
-          ) : null}
-
-          <div className={isPuzzleMode ? 'gr-board-stage is-puzzle' : 'gr-board-stage'}>
-            {!isPuzzleMode ? (
-              <div className="gr-eval-rail" aria-label="Evaluation bar">
-                <div className="gr-eval-rail-fill" style={{ height: `${currentEvalPercent}%` }} />
-                <div className="gr-eval-rail-label">{currentEvalLabel}</div>
-              </div>
-            ) : null}
-
-            <div className="gr-board-frame" ref={boardFrameRef}>
-              <div className="gr-board-stack" style={{ width: `${boardWidth}px` }}>
-                <Chessboard
-                  key={`review-board-${effectiveBoardOrientation}-${isPuzzleMode && currentPuzzle ? puzzleFen : currentPosition ? currentPosition.fen : 'start'}`}
-                  width={boardWidth}
-                  position={isPuzzleMode && currentPuzzle ? puzzleFen : currentPosition ? currentPosition.fen : 'start'}
-                  orientation={effectiveBoardOrientation}
-                  arePiecesDraggable={isPuzzleMode ? Boolean(currentPuzzle) && puzzleStatus !== 'checking' && puzzleStatus !== 'solved' : false}
-                  onDrop={isPuzzleMode ? handlePuzzleDrop : undefined}
-                  onSquareClick={isPuzzleMode ? handlePuzzleSquareClick : undefined}
-                  onSquareRightClick={isPuzzleMode ? clearPuzzleSelection : undefined}
-                  showNotation
-                  squareStyles={isPuzzleMode ? puzzleSquareStyles : boardSquareStyles}
-                  pieceTheme={pieceThemeUrl}
-                  {...boardThemeStyles}
-                />
-                {isPuzzleMode ? (
-                  puzzleFen === (currentPuzzle ? currentPuzzle.beforeFen : '') ? (
-                    <div className="gr-board-overlay" aria-hidden="true">
-                      <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="gr-board-arrow gr-board-arrow-puzzle">
-                        <defs>
-                          <marker id="grPuzzleArrowHeadPlayed" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
-                            <path d="M0,0 L6,3 L0,6 z" className="gr-board-arrow-played-head" />
-                          </marker>
-                          <marker id="grPuzzleArrowHeadBest" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
-                            <path d="M0,0 L6,3 L0,6 z" className="gr-board-arrow-best-head" />
-                          </marker>
-                        </defs>
-                        {currentPuzzle ? (() => {
-                          const playedFrom = getSquareCenter(currentPuzzle.playedMove && currentPuzzle.playedMove.slice(0, 2), effectiveBoardOrientation);
-                          const playedTo = getSquareCenter(currentPuzzle.playedMove && currentPuzzle.playedMove.slice(2, 4), effectiveBoardOrientation);
-                          const bestFrom = getSquareCenter(currentPuzzle.bestMove && currentPuzzle.bestMove.slice(0, 2), effectiveBoardOrientation);
-                          const bestTo = getSquareCenter(currentPuzzle.bestMove && currentPuzzle.bestMove.slice(2, 4), effectiveBoardOrientation);
-
-                          return (
-                            <>
-                              {playedFrom && playedTo ? (
-                                <line
-                                  x1={playedFrom.x}
-                                  y1={playedFrom.y}
-                                  x2={playedTo.x}
-                                  y2={playedTo.y}
-                                  className="gr-board-arrow-played-line"
-                                  markerEnd="url(#grPuzzleArrowHeadPlayed)"
-                                />
-                              ) : null}
-                              {puzzleShowSolution && bestFrom && bestTo ? (
-                                <line
-                                  x1={bestFrom.x}
-                                  y1={bestFrom.y}
-                                  x2={bestTo.x}
-                                  y2={bestTo.y}
-                                  className="gr-board-arrow-best-line"
-                                  markerEnd="url(#grPuzzleArrowHeadBest)"
-                                />
-                              ) : null}
-                            </>
-                          );
-                        })() : null}
-                      </svg>
-                    </div>
-                  ) : null
-                ) : (
-                  <BoardOverlay move={currentMove} orientation={effectiveBoardOrientation} classification={currentClassification} />
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="gr-player-band gr-player-band-bottom">
-            <div className="gr-player-left">
-              <PlayerAvatar name={stagePlayerSummary.white.name} avatarUrl={trainingSource === 'pack' ? null : playerVisuals.white} />
-              <div className="gr-player-copy">
-                <div className="gr-player-name-row">
-                  <span className="gr-player-name">{stagePlayerSummary.white.name}</span>
-                  {stagePlayerSummary.white.rating ? <span className="gr-player-rating">({stagePlayerSummary.white.rating})</span> : null}
-                </div>
-                {stagePlayerSummary.white.title ? <span className="gr-player-title">{stagePlayerSummary.white.title}</span> : null}
-              </div>
-            </div>
-            <div className="gr-player-meta-right">
-              <span className="gr-stage-result">{stageResult}</span>
-              <span className="gr-stage-moves">{stageMoveCount} plies</span>
-            </div>
-          </div>
-        </section>
+          </section>
+        </div>
 
         <aside className="gr-sidebar">
           <section className="gr-panel gr-sidebar-shell" style={sidebarPanelStyle}>
@@ -3037,14 +2954,13 @@ function GameReview() {
                           onSelect={handleSelectRemoteGame}
                           loading={remoteLoading}
                           error={remoteError}
-                          emptyMessage={`Load recent ${source === 'lichess' ? 'Lichess' : 'Chess.com'} games to choose one.`}
+                          emptyMessage=""
                           focusUsername={remoteUsername}
                         />
 
                         <section className="gr-pack-builder">
                           <div className="gr-pack-builder-head">
-                            <div className="gr-loader-summary-title">Personal mistake pack</div>
-                            <div className="gr-loader-summary-body">Analyze a batch of recent games, keep the strongest misses, and turn them into one drill queue.</div>
+                            <div className="gr-loader-summary-title">Mistake pack</div>
                           </div>
 
                           <div className="gr-settings-row">
@@ -3074,9 +2990,6 @@ function GameReview() {
                             </label>
                           </div>
 
-                          <div className="gr-pack-builder-meta">
-                            {eligiblePackGames.length} eligible game{eligiblePackGames.length === 1 ? '' : 's'} match these filters.
-                          </div>
 
                           <div className="gr-inline-actions">
                             <button type="button" className="gr-button gr-button-primary" onClick={handleBuildPersonalPack} disabled={packBuilding || remoteLoading}>
@@ -3098,31 +3011,6 @@ function GameReview() {
                             </div>
                           ) : null}
 
-                          {packSummary ? (
-                            <div className="gr-pack-summary">
-                              <div className="gr-pack-summary-grid">
-                                <div className="gr-pack-summary-card">
-                                  <span className="gr-pack-summary-label">Games</span>
-                                  <strong>{packSummary.gamesAnalyzed}/{packSummary.gamesRequested}</strong>
-                                </div>
-                                <div className="gr-pack-summary-card">
-                                  <span className="gr-pack-summary-label">Candidates</span>
-                                  <strong>{packSummary.candidateCount}</strong>
-                                </div>
-                                <div className="gr-pack-summary-card">
-                                  <span className="gr-pack-summary-label">Queue</span>
-                                  <strong>{packSummary.puzzles}</strong>
-                                </div>
-                              </div>
-                              {packSummary.themes && packSummary.themes.length ? (
-                                <div className="gr-pack-theme-row">
-                                  {packSummary.themes.map((theme) => (
-                                    <span key={theme.label} className="gr-pack-theme-chip">{theme.label} · {theme.count}</span>
-                                  ))}
-                                </div>
-                              ) : null}
-                            </div>
-                          ) : null}
                         </section>
                       </div>
                     )}
@@ -3177,98 +3065,33 @@ function GameReview() {
                         </button>
                       </div>
 
-                      {trainingSource === 'pack' && packSummary ? (
-                        <section className="gr-puzzle-stat-card gr-pack-puzzle-summary">
-                          <div className="gr-puzzle-stat-label">Pack summary</div>
-                          <div className="gr-pack-summary-grid">
-                            <div className="gr-pack-summary-card">
-                              <span className="gr-pack-summary-label">Games</span>
-                              <strong>{packSummary.gamesAnalyzed}</strong>
-                            </div>
-                            <div className="gr-pack-summary-card">
-                              <span className="gr-pack-summary-label">Kept</span>
-                              <strong>{packSummary.puzzles}</strong>
-                            </div>
-                            <div className="gr-pack-summary-card">
-                              <span className="gr-pack-summary-label">Themes</span>
-                              <strong>{packSummary.themes ? packSummary.themes.length : 0}</strong>
-                            </div>
-                          </div>
-                          {packSummary.themes && packSummary.themes.length ? (
-                            <div className="gr-pack-theme-row">
-                              {packSummary.themes.map((theme) => (
-                                <span key={theme.label} className="gr-pack-theme-chip">{theme.label} · {theme.count}</span>
-                              ))}
-                            </div>
-                          ) : null}
-                          {packSummary.topOpenings && packSummary.topOpenings.length ? (
-                            <div className="gr-pack-builder-meta">Most common openings: {packSummary.topOpenings.map((opening) => `${opening.label} (${opening.count})`).join(', ')}</div>
-                          ) : null}
-                        </section>
-                      ) : null}
-
-                      <div className="gr-puzzle-info-grid">
-                        <section className="gr-puzzle-stat-card">
-                          <div className="gr-puzzle-stat-label">Game</div>
-                          {currentPuzzle ? (
-                            <>
-                              <div className="gr-puzzle-stat-value gr-puzzle-stat-matchup">
-                                <span>{currentPuzzle.playerName}</span>
-                                <span className="gr-puzzle-stat-divider">vs</span>
-                                <span>{currentPuzzle.opponentName}</span>
-                              </div>
-                              <div className="gr-puzzle-stat-subtle">{currentPuzzle.date}</div>
-                              {currentPuzzle.sourceUrl ? (
-                                <a className="gr-puzzle-link" href={currentPuzzle.sourceUrl} target="_blank" rel="noopener noreferrer">
-                                  View game ↗
-                                </a>
-                              ) : null}
-                            </>
-                          ) : null}
-                        </section>
-
-                        <section className="gr-puzzle-stat-card">
+                      <section className="gr-puzzle-stat-card gr-puzzle-progress-card">
+                        <div className="gr-puzzle-progress-title-row">
                           <div className="gr-puzzle-stat-label">Progress</div>
-                          <div className="gr-puzzle-progress-numbers">
-                            <span className="gr-puzzle-progress-good">{solvedPuzzleCount}</span>
-                            <span className="gr-puzzle-progress-bad">{failedPuzzleCount}</span>
-                          </div>
-                          <div className="gr-puzzle-progress-cells">
-                            {activePuzzleQueue.map((puzzle, index) => {
-                              const result = puzzleResults[puzzle.id];
-                              const isActive = currentPuzzle && puzzle.id === currentPuzzle.id;
-                              const className = result === 'solved'
-                                ? 'is-solved'
-                                : result === 'failed'
-                                  ? 'is-failed'
-                                  : 'is-pending';
+                          <div className="gr-puzzle-progress-mini-count">{solvedPuzzleCount}/{activePuzzleQueue.length}</div>
+                        </div>
+                        <div className="gr-puzzle-progress-cells">
+                          {activePuzzleQueue.map((puzzle, index) => {
+                            const result = puzzleResults[puzzle.id];
+                            const isActive = currentPuzzle && puzzle.id === currentPuzzle.id;
+                            const className = result === 'solved'
+                              ? 'is-solved'
+                              : result === 'failed'
+                                ? 'is-failed'
+                                : 'is-pending';
 
-                              return (
-                                <button
-                                  key={puzzle.id}
-                                  type="button"
-                                  className={`gr-puzzle-progress-cell ${className}${isActive ? ' is-active' : ''}`}
-                                  onClick={() => setPuzzleIndex(index)}
-                                  title={`Move ${puzzle.turnNumber}`}
-                                />
-                              );
-                            })}
-                          </div>
-                        </section>
-                      </div>
-
-                      {currentPuzzle && (currentPuzzle.openingTitle || currentPuzzle.openingKey) ? (
-                        <section className="gr-puzzle-stat-card gr-puzzle-opening-card">
-                          <div className="gr-puzzle-stat-label">Opening</div>
-                          <div className="gr-puzzle-stat-value">{currentPuzzle.openingTitle || 'Saved opening'}</div>
-                          {currentPuzzle.lineName ? <div className="gr-puzzle-stat-subtle">{currentPuzzle.lineName}</div> : null}
-                          {currentPuzzle.openingKey ? (
-                            <a className="gr-puzzle-link" href={`/openings?opening=${currentPuzzle.openingKey}`}>
-                              Train opening ↗
-                            </a>
-                          ) : null}
-                        </section>
-                      ) : null}
+                            return (
+                              <button
+                                key={puzzle.id}
+                                type="button"
+                                className={`gr-puzzle-progress-cell ${className}${isActive ? ' is-active' : ''}`}
+                                onClick={() => setPuzzleIndex(index)}
+                                title={`Move ${puzzle.turnNumber}`}
+                              />
+                            );
+                          })}
+                        </div>
+                      </section>
 
                       <div className="gr-puzzle-footer">
                         <button

@@ -2663,3 +2663,607 @@
     font-size: 0.82rem;
   }
 }
+
+/* 2026-04-07 layout cleanup: opening-trainer style spacing, board-only stage, slimmer puzzle panel */
+.gr-shell-review {
+  padding-top: 24px;
+  gap: 12px;
+}
+
+.gr-shell-review::before {
+  top: 2px;
+}
+
+.gr-stage-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.gr-stage-card.gr-stage-card-board {
+  padding: 14px;
+}
+
+.gr-stage-board-only {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.gr-board-frame {
+  width: 100%;
+  justify-content: center;
+  align-items: center;
+}
+
+.gr-board-stack {
+  position: relative;
+}
+
+.gr-board-flip-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 6;
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  background: rgba(11, 15, 24, 0.82);
+  border-color: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(10px);
+}
+
+.gr-board-flip-button:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+.gr-eval-strip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 4px;
+}
+
+.gr-eval-strip-label {
+  min-width: 40px;
+  font-size: 0.8rem;
+  font-weight: 900;
+  color: #eef2f7;
+}
+
+.gr-eval-strip-track {
+  position: relative;
+  flex: 1 1 auto;
+  height: 10px;
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.gr-eval-strip-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, rgba(152, 103, 255, 0.78) 0%, rgba(83, 124, 234, 0.68) 100%);
+}
+
+.gr-sidebar-shell {
+  padding: 12px;
+}
+
+.gr-sidebar-topbar {
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+}
+
+.gr-remote-list {
+  max-height: 148px;
+}
+
+.gr-pack-builder {
+  padding: 14px;
+}
+
+.gr-pack-builder-head {
+  margin-bottom: -2px;
+}
+
+.gr-loader-summary-title {
+  font-size: 0.95rem;
+}
+
+.gr-pack-builder .gr-settings-row {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.gr-pack-builder .gr-compact-field:last-child {
+  grid-column: auto;
+}
+
+.gr-puzzle-card-primary {
+  gap: 10px;
+}
+
+.gr-puzzle-action-row {
+  margin-top: -2px;
+}
+
+.gr-puzzle-progress-card {
+  padding: 10px 12px;
+}
+
+.gr-puzzle-progress-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.gr-puzzle-progress-mini-count {
+  font-size: 0.78rem;
+  font-weight: 900;
+  color: rgba(238, 242, 247, 0.72);
+}
+
+.gr-puzzle-progress-numbers {
+  display: none;
+}
+
+.gr-puzzle-progress-cells {
+  margin-top: 10px;
+  gap: 6px;
+}
+
+.gr-puzzle-progress-cell {
+  width: 24px;
+  height: 10px;
+  border-radius: 999px;
+}
+
+.gr-puzzle-progress-cell.is-active {
+  box-shadow: 0 0 0 2px rgba(255, 208, 96, 0.46);
+}
+
+@media (max-width: 1100px) {
+  .gr-shell-review {
+    padding-top: 20px;
+  }
+}
+
+@media (max-width: 720px) {
+  .gr-shell-review {
+    padding-top: 18px;
+  }
+
+  .gr-shell-review::before {
+    top: 0;
+  }
+
+  .gr-board-flip-button {
+    top: 8px;
+    right: 8px;
+  }
+
+  .gr-pack-builder .gr-settings-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* 2026-04-07 size correction: pull GameReview back to OpeningTrainer scale */
+.gr-shell-review {
+  max-width: 1200px;
+  padding: 34px 18px 24px;
+  grid-template-columns: minmax(0, 1fr) clamp(340px, 32vw, 392px);
+  gap: 14px;
+}
+
+.gr-shell-review::before {
+  top: 8px;
+  left: 18px;
+  right: 18px;
+  height: 14px;
+}
+
+.gr-stage-shell {
+  gap: 12px;
+}
+
+.gr-stage-top-graph {
+  display: flex;
+  justify-content: center;
+  margin: 0;
+}
+
+.gr-stage-top-graph .gr-graph-wrap {
+  width: min(100%, 624px);
+  margin: 0 auto;
+  padding: 8px 10px;
+}
+
+.gr-stage-card,
+.gr-panel,
+.gr-engine-card {
+  border-radius: 16px;
+}
+
+.gr-stage-card {
+  padding: 12px;
+}
+
+.gr-stage-card.gr-stage-card-board {
+  padding: 12px;
+}
+
+.gr-stage-board-only,
+.gr-board-frame {
+  width: 100%;
+}
+
+.gr-board-frame {
+  justify-content: center;
+  align-items: center;
+  padding: 0;
+}
+
+.gr-board-stack {
+  max-width: 100%;
+}
+
+.gr-sidebar-shell {
+  padding: 12px;
+}
+
+.gr-sidebar-topbar {
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+}
+
+.gr-panel-gear,
+.gr-flip-button,
+.gr-dock-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+}
+
+.gr-source-tabs {
+  gap: 6px;
+}
+
+.gr-source-tab {
+  min-height: 52px;
+  border-radius: 12px;
+  gap: 5px;
+  font-size: 0.88rem;
+}
+
+.gr-compact-field select,
+.gr-text-input,
+.gr-button {
+  height: 40px;
+}
+
+.gr-button {
+  border-radius: 12px;
+  padding: 0 14px;
+}
+
+.gr-remote-list {
+  max-height: 148px;
+}
+
+.gr-pack-builder,
+.gr-pack-summary,
+.gr-pack-status,
+.gr-pack-puzzle-summary,
+.gr-loader-summary-card,
+.gr-puzzle-stat-card,
+.gr-puzzle-card,
+.gr-graph-wrap,
+.gr-insight-bubble,
+.gr-status-strip,
+.gr-mini-line {
+  border-radius: 14px;
+}
+
+.gr-pack-builder,
+.gr-pack-summary,
+.gr-pack-status,
+.gr-pack-puzzle-summary {
+  padding: 14px;
+  gap: 12px;
+}
+
+@media (max-width: 1100px) {
+  .gr-shell-review {
+    max-width: 760px;
+    padding: 28px 12px 24px;
+  }
+
+  .gr-shell-review::before {
+    left: 12px;
+    right: 12px;
+  }
+}
+
+@media (max-width: 720px) {
+  .gr-shell-review,
+  .gr-engine-shell {
+    max-width: 430px;
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .gr-shell-review {
+    padding-top: 24px;
+    gap: 10px;
+  }
+
+  .gr-shell-review::before {
+    left: 10px;
+    right: 10px;
+    top: 4px;
+    height: 12px;
+  }
+
+  .gr-stage-top-graph .gr-graph-wrap {
+    width: 100%;
+  }
+}
+
+
+/* 2026-04-07 final alignment pass: board-only stage, OT-like desktop/mobile layout */
+.gr-shell-review {
+  max-width: 1200px;
+  padding: 24px 18px 24px;
+  grid-template-columns: minmax(0, 1fr) clamp(340px, 32vw, 420px);
+  gap: 14px;
+  align-items: start;
+}
+
+.gr-shell-review::before {
+  display: none;
+}
+
+.gr-stage-shell {
+  display: block;
+  min-width: 0;
+}
+
+.gr-stage-top-graph,
+.gr-eval-strip,
+.gr-eval-rail,
+.gr-board-flip-button {
+  display: none !important;
+}
+
+.gr-stage-card,
+.gr-panel,
+.gr-engine-card,
+.gr-stage-card.gr-stage-card-board,
+.gr-sidebar-shell {
+  border-radius: 14px;
+}
+
+.gr-stage-card.gr-stage-card-board {
+  padding: 12px;
+}
+
+.gr-stage-board-only,
+.gr-board-frame {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.gr-board-frame {
+  min-width: 0;
+  padding: 0;
+  overflow: visible;
+}
+
+.gr-board-stack {
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.gr-sidebar {
+  min-width: 0;
+  align-self: start;
+}
+
+.gr-sidebar-shell {
+  padding: 12px;
+}
+
+.gr-sidebar-topbar {
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+}
+
+@media (min-width: 1101px) {
+  .gr-sidebar-shell {
+    height: var(--gr-sidebar-target-height);
+    max-height: var(--gr-sidebar-target-height);
+  }
+}
+
+@media (max-width: 1100px) {
+  .gr-shell-review {
+    max-width: 760px;
+    padding: 20px 12px 24px;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .gr-stage-shell,
+  .gr-sidebar {
+    width: 100%;
+  }
+
+  .gr-sidebar-shell {
+    height: auto !important;
+    max-height: none !important;
+  }
+
+  .gr-board-stack {
+    max-width: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .gr-shell-review,
+  .gr-engine-shell {
+    max-width: 430px;
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .gr-shell-review {
+    padding-top: 18px;
+    gap: 12px;
+  }
+
+  .gr-stage-card.gr-stage-card-board,
+  .gr-sidebar-shell {
+    padding: 10px;
+  }
+
+  .gr-sidebar-topbar {
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+  }
+
+  .gr-sidebar-actions {
+    gap: 8px;
+  }
+
+  .gr-pack-builder .gr-settings-row,
+  .gr-settings-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 2026-04-07 top progress polish: align with board + sidebar edges and fill as puzzles are completed */
+.gr-top-progress-shell {
+  grid-column: 1 / -1;
+  width: calc(100% - 24px);
+  margin: 0 auto 12px;
+}
+
+.gr-top-progress-track {
+  position: relative;
+  width: 100%;
+  height: 16px;
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background:
+    linear-gradient(90deg, rgba(152, 103, 255, 0.14) 0%, rgba(60, 102, 206, 0.12) 58%, rgba(255, 255, 255, 0.02) 100%),
+    rgba(255, 255, 255, 0.03);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.gr-top-progress-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--gr-top-progress, 0%);
+  min-width: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, rgba(140, 95, 255, 0.84) 0%, rgba(86, 122, 235, 0.74) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  transition: width 180ms ease;
+}
+
+@media (max-width: 1100px) {
+  .gr-top-progress-shell {
+    width: calc(100% - 12px);
+    margin-bottom: 10px;
+  }
+
+  .gr-top-progress-track {
+    height: 14px;
+  }
+}
+
+@media (max-width: 720px) {
+  .gr-top-progress-shell {
+    width: calc(100% - 8px);
+    margin-bottom: 8px;
+  }
+
+  .gr-top-progress-track {
+    height: 13px;
+  }
+}
+
+
+/* 2026-04-08 cleanup: content-width shell, bottom-anchored puzzle progress, tighter top bar, and pixel-accurate overlays */
+@media (min-width: 1101px) {
+  .gr-shell-review {
+    width: fit-content;
+    max-width: calc(100% - 36px);
+    grid-template-columns: max-content clamp(340px, 32vw, 420px);
+    justify-content: center;
+  }
+
+  .gr-top-progress-shell {
+    width: calc(100% - 88px);
+    max-width: 100%;
+  }
+}
+
+.gr-board-arrow {
+  display: block;
+}
+
+.gr-sidebar-view-puzzles {
+  min-height: 100%;
+  height: 100%;
+}
+
+.gr-puzzle-progress-card {
+  margin-top: auto;
+}
+
+.gr-remote-panel > .gr-pack-builder {
+  margin-top: 14px;
+}
+
+/* 2026-04-07 load view: pin mistake pack to bottom */
+.gr-sidebar-view-load .gr-view-section {
+  min-height: 100%;
+}
+
+.gr-sidebar-view-load .gr-pack-builder {
+  margin-top: auto;
+}
+
+/* 2026-04-08 load view bottom anchor fix */
+.gr-sidebar-view-load {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+.gr-sidebar-view-load .gr-view-section,
+.gr-sidebar-view-load .gr-remote-panel {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 100%;
+}
+
+.gr-sidebar-view-load .gr-pack-builder {
+  margin-top: auto;
+}
+
+/* 2026-04-08 load view bottom offset */
+.gr-sidebar-view-load .gr-pack-builder {
+  margin-bottom: 64px;
+}
