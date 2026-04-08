@@ -3267,3 +3267,135 @@
 .gr-sidebar-view-load .gr-pack-builder {
   margin-bottom: 64px;
 }
+
+
+/* 2026-04-08 engine board overlay cleanup: centered board-only modal */
+.gr-engine-shell {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(6, 8, 14, 0.94);
+  backdrop-filter: blur(10px);
+}
+
+.gr-engine-board-shell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  width: 100%;
+  height: 100%;
+}
+
+.gr-engine-board-topbar {
+  width: min(100%, 760px);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.gr-engine-board-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.42);
+}
+
+.gr-engine-board-visual {
+  position: relative;
+  z-index: 1;
+  pointer-events: none;
+  user-select: none;
+}
+
+.gr-engine-board-wrap img {
+  user-select: none;
+  -webkit-user-drag: none;
+  pointer-events: none;
+}
+
+.gr-engine-input-grid {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  grid-template-rows: repeat(8, minmax(0, 1fr));
+}
+
+.gr-engine-square-hit {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  border-radius: 0;
+}
+
+.gr-engine-square-hit:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.7);
+  outline-offset: -2px;
+}
+
+.gr-engine-close {
+  position: relative;
+  z-index: 12;
+  width: 64px;
+  height: 64px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 18px;
+  background: rgba(12, 16, 24, 0.96);
+  color: #eef2f7;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.95rem;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.42);
+  transition: background 120ms ease, border-color 120ms ease, transform 120ms ease;
+  touch-action: manipulation;
+}
+
+.gr-engine-close::before {
+  content: "";
+  position: absolute;
+  inset: -16px;
+}
+
+.gr-engine-close:hover {
+  background: rgba(24, 30, 42, 0.98);
+  border-color: rgba(255, 255, 255, 0.28);
+}
+
+.gr-engine-close:active {
+  transform: translateY(1px);
+}
+
+@media (max-width: 720px) {
+  .gr-engine-shell {
+    padding: 14px;
+  }
+
+  .gr-engine-board-shell {
+    gap: 10px;
+  }
+
+  .gr-engine-board-topbar {
+    width: min(100%, 520px);
+  }
+
+  .gr-engine-close {
+    width: 56px;
+    height: 52px;
+    font-size: 1.7rem;
+  }
+}

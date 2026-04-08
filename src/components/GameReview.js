@@ -601,6 +601,17 @@ function getPaddedNumber(value) {
   return String(value).padStart(2, '0');
 }
 
+function getEngineBoardSquares(orientation) {
+  const files = orientation === 'black'
+    ? ['h', 'g', 'f', 'e', 'd', 'c', 'b', 'a']
+    : ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+  const ranks = orientation === 'black'
+    ? ['1', '2', '3', '4', '5', '6', '7', '8']
+    : ['8', '7', '6', '5', '4', '3', '2', '1'];
+
+  return ranks.flatMap((rank) => files.map((file) => `${file}${rank}`));
+}
+
 async function getChessComUserRecentGames(username, signal) {
   const trimmed = String(username || '').trim();
   if (!trimmed) return [];
@@ -1425,9 +1436,9 @@ function GameReview() {
   const [trainingSource, setTrainingSource] = useState('single');
   const [playOrientation, setPlayOrientation] = useState('white');
   const [playFen, setPlayFen] = useState('start');
-  const [playStatus, setPlayStatus] = useState('Choose a side and start a game.');
+  const [, setPlayStatus] = useState('Choose a side and start a game.');
   const [playThinking, setPlayThinking] = useState(false);
-  const [playMoveHistory, setPlayMoveHistory] = useState([]);
+  const [, setPlayMoveHistory] = useState([]);
   const [playLastMove, setPlayLastMove] = useState(null);
   const [playTimeMs, setPlayTimeMs] = useState(DEFAULT_PLAY_TIME);
   const [playResult, setPlayResult] = useState('');
@@ -1436,6 +1447,7 @@ function GameReview() {
   const [autoReviewQueued, setAutoReviewQueued] = useState(false);
   const [showEngineBoard, setShowEngineBoard] = useState(false);
   const [boardWidth, setBoardWidth] = useState(500);
+  const [playBoardWidth, setPlayBoardWidth] = useState(560);
   const [playerVisuals, setPlayerVisuals] = useState({ white: null, black: null });
   const [reviewSettings, setReviewSettings] = useState(loadReviewSettings);
   const [puzzleIndex, setPuzzleIndex] = useState(0);
@@ -1449,6 +1461,7 @@ function GameReview() {
   const [puzzleLegalTargets, setPuzzleLegalTargets] = useState([]);
   const [playSelectedSquare, setPlaySelectedSquare] = useState(null);
   const [playLegalTargets, setPlayLegalTargets] = useState([]);
+  const [playDraggedSquare, setPlayDraggedSquare] = useState(null);
   const [puzzleConfettiActive, setPuzzleConfettiActive] = useState(false);
 
   const fileInputRef = useRef(null);
@@ -1466,6 +1479,8 @@ function GameReview() {
   const puzzleRequestRef = useRef(0);
   const puzzleAdvanceTimerRef = useRef(null);
   const puzzleConfettiTimerRef = useRef(null);
+  const copiedTimerRef = useRef(null);
+  const isMountedRef = useRef(true);
 
   const currentPosition = gameData && gameData.positions ? gameData.positions[currentPly] : null;
   const currentMove = gameData && gameData.moves && currentPly > 0 ? gameData.moves[currentPly - 1] : null;
@@ -1491,12 +1506,20 @@ function GameReview() {
     return BOARD_THEMES[key] || BOARD_THEMES[DEFAULT_THEME] || {};
   }, [reviewSettings]);
   const pieceThemeUrl = useMemo(() => getPieceThemeUrl(reviewSettings && reviewSettings.pieceTheme), [reviewSettings]);
+  const engineBoardSquares = useMemo(() => getEngineBoardSquares(playOrientation), [playOrientation]);
   const playSquareStyles = useMemo(() => {
     const styles = {};
 
     if (playLastMove) {
       styles[playLastMove.from] = { backgroundColor: 'rgba(255, 208, 96, 0.24)' };
       styles[playLastMove.to] = { backgroundColor: 'rgba(137, 97, 255, 0.2)' };
+    }
+
+    if (playDraggedSquare) {
+      styles[playDraggedSquare] = {
+        ...(styles[playDraggedSquare] || {}),
+        opacity: 0.22,
+      };
     }
 
     if (playSelectedSquare) {
@@ -1516,7 +1539,7 @@ function GameReview() {
     });
 
     return styles;
-  }, [playLastMove, playLegalTargets, playSelectedSquare]);
+  }, [playDraggedSquare, playLastMove, playLegalTargets, playSelectedSquare]);
   const puzzleSquareStyles = useMemo(() => {
     const styles = {};
 
@@ -1615,6 +1638,17 @@ function GameReview() {
     setPlaySelectedSquare(null);
     setPlayLegalTargets([]);
   }, []);
+
+  const clearPlayDragState = useCallback(() => {
+    setPlayDraggedSquare(null);
+  }, []);
+
+  const closeEngineBoard = useCallback(() => {
+    setShowEngineBoard(false);
+    clearPlaySelection();
+    clearPlayDragState();
+    setPlayThinking(false);
+  }, [clearPlayDragState, clearPlaySelection]);
 
   const getLegalTargetsForFen = useCallback((fen, fromSquare) => {
     if (!fen || !fromSquare) return [];
@@ -1928,8 +1962,16 @@ function GameReview() {
     if (!gameData || !gameData.pgn) return;
     try {
       await navigator.clipboard.writeText(gameData.pgn);
+      if (!isMountedRef.current) return;
       setCopied(true);
-      window.setTimeout(() => setCopied(false), 1400);
+      if (copiedTimerRef.current) {
+        window.clearTimeout(copiedTimerRef.current);
+      }
+      copiedTimerRef.current = window.setTimeout(() => {
+        if (!isMountedRef.current) return;
+        setCopied(false);
+        copiedTimerRef.current = null;
+      }, 1400);
     } catch (_) {}
   }, [gameData]);
 
@@ -2256,6 +2298,7 @@ function GameReview() {
     setPlayOrientation(side);
     setPlayLastMove(null);
     clearPlaySelection();
+    clearPlayDragState();
     setPlayThinking(false);
     setPlayResult('');
     setShowEngineBoard(true);
@@ -2264,11 +2307,12 @@ function GameReview() {
     if (side === 'black') {
       await makeEngineMove();
     }
-  }, [clearPlaySelection, handleStop, makeEngineMove, syncPlayState]);
+  }, [clearPlayDragState, clearPlaySelection, handleStop, makeEngineMove, syncPlayState]);
 
   const handlePlayDrop = useCallback(async ({ sourceSquare, targetSquare }) => {
     if (playThinking || playResult) return;
     clearPlaySelection();
+    clearPlayDragState();
     const game = playGameRef.current;
     const playerTurn = playOrientation === 'white' ? 'w' : 'b';
     if (game.turn() !== playerTurn) return;
@@ -2287,7 +2331,7 @@ function GameReview() {
     playSfx(isCaptureLike(move) ? 'capture' : 'moveSelf');
     syncPlayState('Engine thinking…', move);
     await makeEngineMove();
-  }, [clearPlaySelection, makeEngineMove, playOrientation, playResult, playSfx, playThinking, syncPlayState]);
+  }, [clearPlayDragState, clearPlaySelection, makeEngineMove, playOrientation, playResult, playSfx, playThinking, syncPlayState]);
 
   const handlePlaySquareClick = useCallback((square) => {
     if (playThinking || playResult) return;
@@ -2544,6 +2588,18 @@ function GameReview() {
   }, [activePuzzleQueue.length, currentPuzzle, goToNextPuzzle, puzzleIndex, puzzleStatus]);
 
   useEffect(() => {
+    isMountedRef.current = true;
+
+    return () => {
+      isMountedRef.current = false;
+      if (copiedTimerRef.current) {
+        window.clearTimeout(copiedTimerRef.current);
+        copiedTimerRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
     const syncSettings = () => setReviewSettings(loadReviewSettings());
 
     syncSettings();
@@ -2579,6 +2635,10 @@ function GameReview() {
       if (puzzleConfettiTimerRef.current) {
         window.clearTimeout(puzzleConfettiTimerRef.current);
         puzzleConfettiTimerRef.current = null;
+      }
+      if (copiedTimerRef.current) {
+        window.clearTimeout(copiedTimerRef.current);
+        copiedTimerRef.current = null;
       }
       Object.values(sfxRef.current || {}).forEach((audio) => {
         try {
@@ -2623,6 +2683,86 @@ function GameReview() {
       try { engine.worker.terminate(); } catch (_) {}
     }
   }, []);
+
+  useEffect(() => {
+    if (!showEngineBoard) return undefined;
+
+    const update = () => {
+      const viewportWidth = typeof window !== 'undefined' ? Number(window.innerWidth) || 0 : 0;
+      const viewportHeight = typeof window !== 'undefined' ? Number(window.innerHeight) || 0 : 0;
+      const horizontalInset = viewportWidth < 720 ? 32 : 96;
+      const verticalInset = viewportWidth < 720 ? 160 : 180;
+      const maxByWidth = Math.max(280, viewportWidth - horizontalInset);
+      const maxByHeight = Math.max(280, viewportHeight - verticalInset);
+      const nextWidth = Math.floor(Math.max(280, Math.min(680, maxByWidth, maxByHeight)));
+      setPlayBoardWidth(nextWidth);
+    };
+
+    update();
+    window.addEventListener('resize', update);
+
+    return () => {
+      window.removeEventListener('resize', update);
+    };
+  }, [showEngineBoard]);
+
+  useEffect(() => {
+    if (!showEngineBoard) return undefined;
+
+    const preventNativeDrag = (event) => {
+      const target = event.target;
+      if (target && typeof target.closest === 'function' && target.closest('.gr-engine-board-wrap')) {
+        event.preventDefault();
+      }
+    };
+
+    const disablePieceDragging = () => {
+      const nodes = document.querySelectorAll('.gr-engine-board-wrap img, .gr-engine-board-wrap [draggable="true"]');
+      nodes.forEach((node) => {
+        node.setAttribute('draggable', 'false');
+        node.style.pointerEvents = 'none';
+        node.style.userSelect = 'none';
+        node.style.webkitUserDrag = 'none';
+      });
+    };
+
+    disablePieceDragging();
+    document.addEventListener('dragstart', preventNativeDrag, true);
+
+    return () => {
+      document.removeEventListener('dragstart', preventNativeDrag, true);
+    };
+  }, [playFen, playBoardWidth, showEngineBoard]);
+
+  useEffect(() => {
+    if (!showEngineBoard) return undefined;
+
+    const clear = () => {
+      setPlayDraggedSquare(null);
+    };
+
+    window.addEventListener('mouseup', clear);
+    window.addEventListener('dragend', clear);
+
+    return () => {
+      window.removeEventListener('mouseup', clear);
+      window.removeEventListener('dragend', clear);
+    };
+  }, [showEngineBoard]);
+
+  useEffect(() => {
+    if (!showEngineBoard) return undefined;
+
+    const onKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        closeEngineBoard();
+      }
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [closeEngineBoard, showEngineBoard]);
 
   useEffect(() => {
     const node = boardFrameRef.current;
@@ -3332,54 +3472,58 @@ function GameReview() {
       <ReviewConfetti active={puzzleConfettiActive} />
 
       {showEngineBoard ? (
-        <div className="gr-engine-shell">
-          <section className="gr-engine-card">
-            <div className="gr-panel-head">
-              <div>
-                <div className="gr-panel-kicker">Engine Game</div>
-                <h2>{playOrientation === 'white' ? 'You are White' : 'You are Black'}</h2>
-              </div>
-              <button type="button" className="gr-panel-gear" onClick={() => setShowEngineBoard(false)} title="Hide engine board">
-                <FontAwesomeIcon icon={faStopCircle} />
+        <div
+          className="gr-engine-shell"
+          role="dialog"
+          aria-modal="true"
+          aria-label={playOrientation === 'white' ? 'Play as White' : 'Play as Black'}
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              closeEngineBoard();
+            }
+          }}
+        >
+          <div className="gr-engine-board-shell">
+            <div className="gr-engine-board-topbar">
+              <button
+                type="button"
+                className="gr-engine-close"
+                onClick={closeEngineBoard}
+                title="Close engine board"
+                aria-label="Close engine board"
+              >
+                ×
               </button>
             </div>
-
-            <div className="gr-engine-grid">
-              <div className="gr-engine-board-wrap">
+            <div className="gr-engine-board-wrap" onMouseDown={(event) => event.stopPropagation()}>
+              <div className="gr-engine-board-visual" aria-hidden="true">
                 <Chessboard
-                  width={340}
+                  width={playBoardWidth}
                   position={playFen}
                   orientation={playOrientation}
-                  onDrop={handlePlayDrop}
-                  onSquareClick={handlePlaySquareClick}
-                  onSquareRightClick={clearPlaySelection}
-                  arePiecesDraggable={!playThinking && !playResult}
+                  arePiecesDraggable={false}
                   squareStyles={playSquareStyles}
                   pieceTheme={pieceThemeUrl}
                   {...boardThemeStyles}
                 />
               </div>
-              <div className="gr-engine-side">
-                <div className="gr-status-strip is-ready">
-                  <span>{playThinking ? 'Engine thinking…' : playStatus}</span>
-                </div>
-                {playResult ? <div className="gr-status-pill">{playResult}</div> : null}
-                <div className="gr-inline-actions">
-                  <button type="button" className="gr-button" onClick={() => startPlayGame('white')}>
-                    Play White
-                  </button>
-                  <button type="button" className="gr-button" onClick={() => startPlayGame('black')}>
-                    Play Black
-                  </button>
-                </div>
-                <div className="gr-play-history">
-                  {playMoveHistory.length ? playMoveHistory.map((move, index) => (
-                    <span key={`${index}-${move.san}`} className="gr-play-history-move">{index % 2 === 0 ? `${Math.floor(index / 2) + 1}.` : ''} {move.san}</span>
-                  )) : <div className="gr-empty">Start an engine game to see the moves.</div>}
-                </div>
+              <div className="gr-engine-input-grid" role="presentation">
+                {engineBoardSquares.map((square) => (
+                  <button
+                    key={square}
+                    type="button"
+                    className="gr-engine-square-hit"
+                    aria-label={`Select ${square}`}
+                    onClick={() => handlePlaySquareClick(square)}
+                    onContextMenu={(event) => {
+                      event.preventDefault();
+                      clearPlaySelection();
+                    }}
+                  />
+                ))}
               </div>
             </div>
-          </section>
+          </div>
         </div>
       ) : null}
     </div>
