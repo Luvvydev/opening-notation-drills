@@ -961,6 +961,26 @@ function shouldKeepPackPuzzle(puzzle) {
   return true;
 }
 
+function shouldKeepSingleGamePuzzle(puzzle) {
+  if (!puzzle) return false;
+  if (puzzle.inBook) return false;
+
+  const tactical = Boolean(puzzle.isCapture || puzzle.isForcingBest || puzzle.isForcingPlayed);
+  const lineGap = Number(puzzle.lineGap || 0);
+  const openingTagged = Boolean(puzzle.openingKey || puzzle.lineName);
+
+  if (puzzle.turnNumber <= 6) {
+    if (puzzle.classification !== 'blunder') return false;
+    if (!tactical) return false;
+    if (lineGap < 160) return false;
+  }
+
+  if (puzzle.turnNumber <= 8 && openingTagged && !tactical) return false;
+  if (puzzle.turnNumber <= 8 && !tactical && lineGap < 140) return false;
+
+  return true;
+}
+
 function waitForNextPaint() {
   return new Promise((resolve) => {
     window.setTimeout(resolve, 0);
@@ -1144,7 +1164,7 @@ function buildPuzzleQueue(gameData, options) {
       puzzle.beforePerspectiveCp > -320 &&
       puzzle.cpLoss >= (thresholds[puzzle.classification] || 0) &&
       puzzle.winSwing >= 4 &&
-      (!settings.strictPackMode || shouldKeepPackPuzzle(puzzle))
+      (settings.strictPackMode ? shouldKeepPackPuzzle(puzzle) : shouldKeepSingleGamePuzzle(puzzle))
     ))
     .sort((a, b) => (
       getPuzzleSeverityRank(b.classification) - getPuzzleSeverityRank(a.classification) ||
