@@ -1,378 +1,323 @@
 # ChessDrills
 
-ChessDrills is a chess opening training web application built around move recall, repeated practice, account based progress tracking, and public competitive surfaces.
-
-Live URLs:
-- https://chessdrills.net
-- https://luvvydev.github.io/opening-notation-drills/#/
-
-Repository:
-- opening-notation-drills
-
----
-
-## Overview
-
-ChessDrills trains opening lines through repeated move entry inside an interactive board UI.
-
-The project currently includes:
-- curated opening courses
-- learn, practice, and drill style training flows
-- Firebase authentication
-- Firestore synced progress
-- Stripe membership handling
-- public profiles
-- leaderboards
-- streak and activity tracking
-- board and piece customization
-
-Users work through openings by entering moves from memory. Progress is persisted to accounts and reused across profile, leaderboard, and training surfaces.
-
----
-
-## Core Trainer
-
-The main trainer is centered around structured opening lines stored as JavaScript data.
-
-Current trainer behavior includes:
-- SAN move validation through chess.js
-- randomized line selection
-- automatic opponent replies when a line continues
-- move checking during user input
-- prevention of illegal moves
-- line explanations attached to training data
-- retry handling after mistakes
-- progress updates tied to completion
-- repeated cycling through lines during training sessions
-
-The trainer is used across multiple opening courses and multiple account states.
-
----
-
-## Training Modes
-
-### Learn Mode
-
-Learn Mode is the baseline guided training flow.
-
-Current Learn Mode behavior includes:
-- progress tracking by opening
-- saved line completion state
-- explanation support during line study
-- account synced persistence
-- structured repetition through repeated usage
-
-### Practice Mode
-
-Practice Mode is intended for faster repetition and less guided review.
-
-Current Practice Mode behavior includes:
-- continuous training flow
-- repeated line exposure
-- lower interruption during move entry
-- member gating
-
-### Drill Mode
-
-Drill Mode is intended for scored performance sessions.
-
-Current Drill Mode behavior includes:
-- score tracking
-- personal best tracking
-- leaderboard integration
-- session oriented repetition
-- member gating
-
----
-
-## Opening Library
-
-Opening data is stored in:
-
-    src/openings/
-
-Each opening file contains move sequences and explanation data in a trainer friendly structure.
-
-Current opening coverage includes:
-- London System
-- Sicilian Defense
-- Ruy Lopez
-- Fried Liver Attack
-- Stafford Gambit
-- Caro-Kann
-- Queen's Gambit Accepted
-- Queen's Gambit Declined
-- Italian Game
-- King's Indian Defense
-- French Defense
-- Englund Gambit
-- English Opening
-- Scotch Game
-- Vienna Gambit
-- Vienna Gambit Counter
-- Bishop's Opening
-- Rousseau Gambit
-- Petrov Defense
-- Danish Gambit
-
-The opening catalog is used for homepage presentation, access rules, descriptions, and course metadata.
-
----
-
-## Accounts and Authentication
-
-ChessDrills uses Firebase Authentication.
-
-Current account related behavior includes:
-- email and password signup
-- email and password login
-- persistent sessions
-- account based progress syncing
-- gating tied to account and membership state
-
-Anonymous visitors can browse the site and view public facing pages.
-
-Signed in users can save:
-- opening progress
-- streak data
-- training totals
-- settings
-- profile data
-- activity history
-
----
-
-## Membership System
-
-Membership handling is connected to Stripe and backend verified account state.
-
-Current architecture includes:
-- Stripe Checkout
-- Stripe billing portal support
-- Firebase Cloud Functions
-- Stripe webhooks
-- Firestore membership fields consumed by the frontend
-
-Relevant membership fields include:
-- membershipActive
-- membershipTier
-- membershipUpdatedAt
-
-Monthly, yearly, and lifetime related handling exist in the broader project direction and implementation history. Frontend gating reads backend state from Firestore.
-
----
-
-## Leaderboards
-
-Leaderboards are tied to training performance and public identity features.
-
-Current leaderboard related behavior includes:
-- daily scope
-- weekly scope
-- all time scope
-- rank movement indicators
-- rival windows near the user's position
-- tier badges
-- clickable usernames
-- links to public profiles
-
-Leaderboard data is stored in Firestore and surfaced through dedicated UI components.
-
----
-
-## Public Profiles
-
-Users can have public profiles that expose training related information.
-
-Public profile route pattern:
-
-    /#/profile/u/<username>
-
-Current public profile content includes:
-- avatar
-- username
-- tier badge
-- drill related statistics
-- leaderboard snapshot
-- training totals
-- lines learned
-- activity heatmap
-
-The public profile layout has been revised toward a more compact presentation and supports mobile and desktop use.
-
----
-
-## Private Profile and User Settings
-
-The private profile area includes user specific settings and account management surfaces.
-
-Current private profile related behavior includes:
-- avatar upload
-- board theme selection
-- piece theme selection
-- settings persistence
-- training stat display
-- streak display
-- membership management links
-
-Avatar files are stored through Firebase Storage.
-
----
-
-## Activity Tracking
-
-Activity is tracked over time and reused in profile level summaries.
-
-Current activity related behavior includes:
-- daily activity recording
-- streak tracking
-- training totals
-- GitHub style heatmap rendering
-- synced progress history
-
-Implementation note:
-heatmap sizing depends on matching values across component constants and CSS rules. PublicProfile.js and ActivityHeatmap.css need coordinated changes when cell or gap values are adjusted.
-
----
-
-## Data Sync
-
-User data is synchronized between local state and cloud state.
-
-Important utility files include:
-
-    src/utils/cloudSync.js
-    src/utils/accountSync.js
-
-Synced categories include:
-- learn progress
-- drill scores
-- settings
-- streak data
-- activity history
-- opening progress
-- some custom training state where applicable
-
-This logic supports reuse of progress across sessions and devices.
-
----
-
-## UI Structure
-
-Important components include:
-
-    src/components/
-        Home.js
-        TopNav.js
-        OpeningTrainer.js
-        Practice.js
-        Leaderboards.js
-        Profile.js
-        PublicProfile.js
-
-Supporting project areas include:
-
-    src/openings/
-        opening data and catalog definitions
-
-    src/utils/
-        sync, storage, scoring, and progress logic
-
-    src/theme/
-        board theme definitions
-
-    src/auth/
-        auth and route protection logic
-
-Opening availability and some gating rules are driven through catalog level data.
-
----
-
-## Current Product Shape
-
-The current project state includes:
-- homepage course discovery
-- structured opening training
-- Firebase auth and Firestore persistence
-- member gated training modes
-- public profiles
-- leaderboard identity surfaces
-- streak and heatmap tracking
-- theme and piece customization
-- GitHub Pages deployment
-- custom domain routing
-
-The broader product direction remains tied to repeated recall, visible progress, and user retention through ongoing training use.
-
----
-
-## Tech Stack
-
-Frontend:
-- React using Create React App
-- react-router-dom
-- chess.js
-- chessboardjsx
-- Firebase client SDK v9
-
-Backend and platform services:
-- Firebase Authentication
-- Firestore
-- Firebase Storage
-- Firebase Cloud Functions
-
-Payments:
-- Stripe Checkout
-- Stripe webhooks
-- Stripe billing portal
-
-Hosting:
-- GitHub Pages
-- custom domain configuration
-
----
-
-## Local Development
-
-This project uses Node version switching in local workflows.
-
-Typical frontend workflow:
-
-    nvm use 16
-    npm start
-
-Production build:
-
-    npm run build
-
-Deployment and Firebase CLI work may use a newer Node version depending on the local setup.
-
-An example deployment workflow used in this project:
-
-    nvm use 22
-    firebase deploy
-
-GitHub Pages publishing is done through the project deploy script:
-
-    npm run deploy
-
-The repository includes:
-
-    .nvmrc
-
----
-
-## Deployment
+ChessDrills is a browser based chess training app focused on opening recall, mistake driven review, and account synced progress.
 
 Primary live site:
 - https://chessdrills.net
 
-GitHub Pages deployment:
-- https://luvvydev.github.io/opening-notation-drills/#/
+Repository:
+- opening-notation-drills
 
-The project is deployed through GitHub Pages and connected to a custom domain.
+## What is in the project
 
----
+
+The app includes:
+- structured opening training with Learn, Practice, Drill, and Puzzles modes
+- immediate move validation and feedback on the board
+- opening specific puzzle packs generated from external puzzle data
+- game review that imports recent games or pasted PGN and turns mistakes into training positions
+- synced accounts, streaks, activity history, profiles, and leaderboard data
+- installable web app support
+
+The core idea is still active recall. You make moves from memory, get corrected immediately, and repeat until the position sticks.
+
+## Routes
+
+The React app mounts these main routes:
+
+- `/`
+- `/openings`
+- `/practice`
+- `/about`
+- `/leaderboards`
+- `/install`
+- `/login`
+- `/signup`
+- `/profile`
+- `/profile/u/:username`
+- `/u/:username`
+- `/review`
+- `/my-games`
+- `/discord`
+
+The app uses `BrowserRouter` with SPA fallback files in `public/index.html` and `public/404.html` so clean URLs work on the custom domain and on GitHub Pages style hosting.
+
+## Opening trainer
+
+The main trainer lives in:
+
+```text
+src/components/OpeningTrainer.js
+```
+
+Trainer behavior includes:
+- SAN move validation with `chess.js`
+- automatic opponent replies when a line continues
+- illegal move prevention
+- coach text and inline square or piece highlights
+- board theme, piece theme, coach theme, sound, and confetti settings
+- optional transposition handling with a visible transposition notice
+- copy and export helpers for SAN, PGN, and FEN
+- shareable reps
+- custom reps stored alongside the built in catalog
+- prestige reset flow for fully completed opening courses
+
+### Modes
+
+**Learn**
+- guided line study with explanations
+- saved completion state
+- free users can use Learn, but non members are capped before the trial or membership gate appears
+
+**Practice**
+- faster repetition
+- premium gated
+
+**Drill**
+- scored repetition
+- premium gated
+- feeds leaderboard data
+
+**Puzzles**
+- opening specific tactical or recall puzzles
+- uses generated puzzle packs in `src/data/generatedOpeningPuzzles.js`
+
+## Opening catalog
+
+Opening data lives in:
+
+```text
+src/openings/
+```
+
+The catalog contains 25 openings.
+
+Free openings:
+- London
+- Sicilian Defense
+- Ruy Lopez
+- Fried Liver Attack
+- Stafford Gambit
+- Caro-Kann Defense
+- Queen’s Gambit Accepted
+- Queen’s Gambit Declined
+- Italian Game
+- King's Indian Defense
+- French Defense
+- Englund Gambit
+
+Signup required openings:
+- English Opening
+- Scotch Game
+- Vienna Gambit
+- Vienna Gambit Counter
+- Rousseau Gambit
+- Bishop's Opening
+- Vienna Game
+- King's Gambit
+- Danish Gambit
+- Scandinavian Defense
+- Van't Kruijs
+- Punishing Bad Openings
+- Petrov Defense
+
+Catalog metadata also controls:
+- descriptions shown on the homepage
+- board orientation and player color
+- access rules
+- badges such as `New`
+- SEO text for selected openings
+
+## Game review and personal mistake packs
+
+Game review lives in:
+
+```text
+src/components/GameReview.js
+public/engines/
+```
+
+ Review flow supports:
+- importing recent games from Chess.com
+- importing recent games from Lichess
+- pasting raw PGN directly
+- local engine analysis through a Stockfish worker
+- move by move review with best move comparisons
+- single game mistake training
+- personal mistake packs built across multiple recent games
+- pack filters for side, speed, and batch size
+- puzzle style replay with hints, solution reveal, and auto advance
+
+The public engine assets currently include a Stockfish worker plus Stockfish 17 lite wasm files.
+
+## Accounts, sync, and identity
+
+Auth and account state are centered around Firebase.
+
+Account behavior includes:
+- email and password signup
+- email and password login
+- persistent sessions
+- sync from local progress into cloud state after sign in
+- public username claiming
+- public profile documents
+- private profile settings
+- synced activity history and streak tracking
+
+Important files:
+
+```text
+src/auth/AuthProvider.js
+src/utils/accountSync.js
+src/utils/cloudSync.js
+src/firebase.js
+firestore.rules
+```
+
+The profile system supports:
+- avatar upload with client side resize into a stored data URL
+- public profile pages at `/profile/u/:username` and `/u/:username`
+- board, piece, and coach themes
+- activity heatmap
+- streak display
+- membership status display
+
+## Membership and gating
+
+The frontend recognizes:
+- free users
+- a 3 day free trial
+- paid member state
+- lifetime member state
+
+Gating behavior in the app:
+- some openings require signup
+- Practice and Drill are premium gated
+- Learn stays available for non members but is capped
+- billing portal access is wired through a callable Firebase Function from the profile page
+
+Relevant membership state is read from the user document in Firestore.
+
+## Leaderboards
+
+Leaderboard UI currently lives in:
+
+```text
+src/components/Leaderboards.js
+```
+
+Behavior is drill focused and centered on identity and rank display.
+
+The live screen currently exposes:
+- all time drill ranking
+- rival window around the current user
+- tier labels based on score
+- links to public profiles
+
+
+## Installable web app
+
+Install flow lives in:
+
+```text
+src/components/InstallAppPage.js
+src/utils/pwaInstall.js
+public/manifest.json
+```
+
+Current install support includes:
+- install page at `/install`
+- browser prompt handling where supported
+- separate iPhone and Android instructions
+- standalone manifest configuration
+
+## Tech stack
+
+Frontend:
+- React 16 with Create React App
+- `react-router-dom` v5
+- `chess.js`
+- `chessboardjsx`
+- Firebase client SDK v9
+
+Build and deploy:
+- `gh-pages`
+- custom domain at `https://chessdrills.net`
+- Firebase config for Firestore rules and Functions
+
+Config files worth knowing about:
+
+```text
+package.json
+firebase.json
+firestore.rules
+public/index.html
+public/404.html
+public/sitemap.xml
+public/robots.txt
+```
+
+## Environment variables
+
+Firebase client config is read from:
+
+- `REACT_APP_FIREBASE_API_KEY`
+- `REACT_APP_FIREBASE_AUTH_DOMAIN`
+- `REACT_APP_FIREBASE_PROJECT_ID`
+- `REACT_APP_FIREBASE_APP_ID`
+
+## Local development
+
+Typical frontend workflow:
+
+```bash
+nvm use 16
+npm install
+npm start
+```
+
+Production build:
+
+```bash
+npm run build
+```
+
+GitHub Pages deploy script:
+
+```bash
+npm run deploy
+```
+
+Firebase project deploy work, such as rules or functions, is configured through `firebase.json` and is separate from the static site deploy.
+
+## Project structure
+
+```text
+src/
+  auth/
+  components/
+  data/
+  openings/
+  scripts/
+  theme/
+  utils/
+public/
+  coaches/
+  engines/
+  sounds/
+```
+
+High signal files and folders:
+
+- `src/components/OpeningTrainer.js`
+- `src/components/GameReview.js`
+- `src/components/Profile.js`
+- `src/components/PublicProfile.js`
+- `src/components/Leaderboards.js`
+- `src/openings/openingCatalog.js`
+- `src/data/generatedOpeningPuzzles.js`
+- `src/scripts/build_opening_puzzle_packs.py`
+
 
 ## License
 
