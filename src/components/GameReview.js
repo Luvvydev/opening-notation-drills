@@ -987,6 +987,24 @@ function waitForNextPaint() {
   });
 }
 
+function getPackEvaluationIndexes(parsed) {
+  if (!parsed || !Array.isArray(parsed.moves) || !Array.isArray(parsed.positions) || !parsed.positions.length) {
+    return [];
+  }
+
+  const focusColor = parsed.orientation === 'black' ? 'b' : 'w';
+  const needed = new Set();
+
+  parsed.moves.forEach((move, index) => {
+    if (!move || move.color !== focusColor) return;
+    if (!parsed.positions[index] || !parsed.positions[index + 1]) return;
+    needed.add(index);
+    needed.add(index + 1);
+  });
+
+  return Array.from(needed).sort((a, b) => a - b);
+}
+
 function buildPersonalPack(analyzedGames) {
   const strongestBySignature = new Map();
 
@@ -1976,6 +1994,9 @@ function GameReview() {
     const selectedGames = remoteGames
       .filter((game) => matchesPackFilters(game, username, packSideFilter, packSpeedFilter))
       .slice(0, packBatchSize);
+    const prioritizedGames = selectedGames
+      .slice()
+      .sort((a, b) => (a.movesNb || 0) - (b.movesNb || 0));
 
     if (!selectedGames.length) {
       setStatusMessage('No recent games matched the current pack filters.');
@@ -2010,12 +2031,12 @@ function GameReview() {
       let revealedSeedQueue = false;
       let visiblePackQueue = [];
 
-      for (let gameIndex = 0; gameIndex < selectedGames.length; gameIndex += 1) {
+      for (let gameIndex = 0; gameIndex < prioritizedGames.length; gameIndex += 1) {
         if (requestId !== runRequestRef.current) {
           return;
         }
 
-        const remoteGame = selectedGames[gameIndex];
+        const remoteGame = prioritizedGames[gameIndex];
         const nextOrientation = getGameSideForUsername(remoteGame, username);
         const parsed = parsePgn(remoteGame.pgn, nextOrientation);
 
@@ -2029,19 +2050,29 @@ function GameReview() {
           continue;
         }
 
-        const evaluatedPositions = [];
-        for (let i = 0; i < parsed.positions.length; i += 1) {
+        const evaluationIndexes = getPackEvaluationIndexes(parsed);
+        if (!evaluationIndexes.length) {
+          continue;
+        }
+
+        const evaluatedPositions = new Array(parsed.positions.length);
+        for (let i = 0; i < evaluationIndexes.length; i += 1) {
           if (requestId !== runRequestRef.current) {
             return;
           }
 
-          const position = parsed.positions[i];
+          const positionIndex = evaluationIndexes[i];
+          const position = parsed.positions[positionIndex];
+          if (!position) {
+            continue;
+          }
+
           const result = await evaluateFen(position.fen, {
             depth,
             multiPv,
-            requestId: `${requestPrefix}-${gameIndex}-${i}`,
+            requestId: `${requestPrefix}-${gameIndex}-${positionIndex}`,
           });
-          evaluatedPositions.push(result);
+          evaluatedPositions[positionIndex] = result;
         }
 
         const enrichedMoves = parsed.moves.map((move, index) => ({
