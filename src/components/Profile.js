@@ -1,5 +1,6 @@
 // Profile.js
 import React, { useEffect, useRef, useState, useCallback } from "react";
+import { Link } from "react-router-dom";
 import TopNav from "./TopNav";
 import { useAuth } from "../auth/AuthProvider";
 import { db, serverTimestamp, functions } from "../firebase";
@@ -10,6 +11,9 @@ import { BOARD_THEMES, DEFAULT_THEME, PIECE_THEMES } from "../theme/boardThemes"
 import "./ActivityHeatmap.css";
 import "./Profile.css";
 import { getActivityDays } from "../utils/activityDays";
+import { OPENING_CATALOG } from "../openings/openingCatalog";
+import { loadProgress, loadLearnProgress, getOpeningCompletionSummary } from "./openingTrainer/otStorage";
+import { getStreakState } from "../utils/streak";
 
 const LS_SETTINGS_KEY = "notation_trainer_opening_settings_v1";
 const SECRET_UNLOCK_KEY = "chessdrills.secret_easteregg_v1";
@@ -127,6 +131,34 @@ function activityLevel(count) {
   return 4;
 }
 
+function buildLocalTrainingSnapshot(progress, learnProgress, streakState) {
+  const safeProgress = progress && typeof progress === "object" ? progress : { lines: {}, openings: {} };
+  const safeLearn = learnProgress && typeof learnProgress === "object" ? learnProgress : { openings: {} };
+
+  let linesLearned = 0;
+  let openingsCompleted = 0;
+  let totalPrestige = 0;
+
+  const openingMap = (safeProgress && safeProgress.openings) || {};
+  Object.keys(openingMap).forEach((key) => {
+    totalPrestige += Math.max(0, Number(openingMap[key] && openingMap[key].prestigeCount) || 0);
+  });
+
+  for (let i = 0; i < OPENING_CATALOG.length; i += 1) {
+    const opening = OPENING_CATALOG[i];
+    const summary = getOpeningCompletionSummary(safeProgress, safeLearn, opening.key, opening.lines || []);
+    linesLearned += Number(summary.completed) || 0;
+    if (summary.isComplete) openingsCompleted += 1;
+  }
+
+  return {
+    streakCurrent: Number(streakState && streakState.current) || 0,
+    linesLearned,
+    openingsCompleted,
+    totalPrestige
+  };
+}
+
 function formatTrialRemaining(targetMs) {
   const remainingMs = Math.max(0, (Number(targetMs) || 0) - Date.now());
   const totalMinutes = Math.floor(remainingMs / 60000);
@@ -233,6 +265,12 @@ export default function Profile() {
   const membershipPlan = (userData && userData.membershipPlan) || (userDoc && userDoc.membershipPlan) || null;
   const trialRemainingLabel = trialActive ? formatTrialRemaining(trialEndsAtMs) : "";
 
+  const localProgress = loadProgress();
+  const localLearnProgress = loadLearnProgress();
+  const localStreakState = getStreakState();
+  const trainingSnapshot = buildLocalTrainingSnapshot(localProgress, localLearnProgress, localStreakState);
+  const publicProfileHref = username ? `/u/${normalizeUsername(username)}` : "";
+
   useEffect(() => {
     const el = boardPreviewRef.current;
     if (!el) return;
@@ -266,10 +304,18 @@ export default function Profile() {
   const heatmapScrollRef = useRef(null);
 
   useEffect(() => {
-    const onAct = () => setActivityTick((x) => x + 1);
-    window.addEventListener("activity:updated", onAct);
-    return () => window.removeEventListener("activity:updated", onAct);
-  }, [])
+    const refresh = () => setActivityTick((x) => x + 1);
+    window.addEventListener("activity:updated", refresh);
+    window.addEventListener("progress:updated", refresh);
+    window.addEventListener("learnprogress:updated", refresh);
+    window.addEventListener("streak:updated", refresh);
+    return () => {
+      window.removeEventListener("activity:updated", refresh);
+      window.removeEventListener("progress:updated", refresh);
+      window.removeEventListener("learnprogress:updated", refresh);
+      window.removeEventListener("streak:updated", refresh);
+    };
+  }, []);
 
   useEffect(() => {
     // Load theme from localStorage on first mount
@@ -877,6 +923,49 @@ const onChangeCoachTheme = async (nextCoachTheme) => {
               <div className="profile-value">
                 {membershipTier === "lifetime" ? "Lifetime Member" : trialActive ? "Free Trial" : hasPaidMembership ? (membershipPlan === "yearly" ? "Member (Yearly)" : "Member (Monthly)") : trialExpired ? "Trial Ended" : "Free"}
               </div>
+            </div>
+          </div>
+
+          <div className="profile-identity-strip">
+            <div className="profile-identity-card">
+              <div className="profile-identity-label">Current streak</div>
+              <div className="profile-identity-value">{trainingSnapshot.streakCurrent || 0}</div>
+            </div>
+            <div className="profile-identity-card">
+              <div className="profile-identity-label">Lines learned</div>
+              <div className="profile-identity-value">{trainingSnapshot.linesLearned || 0}</div>
+            </div>
+            <div className="profile-identity-card">
+              <div className="profile-identity-label">Openings cleared</div>
+              <div className="profile-identity-value">{trainingSnapshot.openingsCompleted || 0}</div>
+            </div>
+            <div className="profile-identity-card">
+              <div className="profile-identity-label">Prestige</div>
+              <div className="profile-identity-value">{trainingSnapshot.totalPrestige || 0}</div>
+            </div>
+          </div>
+
+          <div className="profile-focus-card">
+            <div className="profile-focus-copy">
+              <div className="profile-focus-eyebrow">Public profile</div>
+              <div className="profile-focus-title">{publicProfileHref ? "Your public page is ready" : "Set a username to unlock your public page"}</div>
+              <div className="profile-focus-sub">
+                {publicProfileHref
+                  ? "Open your public profile to see the page other players can visit."
+                  : "Choose a username in your profile settings and your public page link will appear here."}
+              </div>
+            </div>
+
+            <div className="profile-focus-actions">
+              {publicProfileHref ? (
+                <Link className="profile-focus-btn profile-focus-btn-primary" to={publicProfileHref}>
+                  View public profile
+                </Link>
+              ) : null}
+
+              <Link className="profile-focus-btn" to="/leaderboards">
+                Open leaderboards
+              </Link>
             </div>
           </div>
 

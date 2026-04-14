@@ -3686,10 +3686,87 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
         </div>
       </div>
       {this.renderMoveFeedbackCard()}
+      {this.renderCompletionRewardCard()}
       {this.renderPrestigeCard()}
     </div>
   );
 };
+  openMyGames = () => {
+    try {
+      if (this.props && this.props.history && this.props.history.push) {
+        this.props.history.push("/my-games");
+      }
+    } catch (_) {
+      // ignore
+    }
+  };
+
+  renderCompletionRewardCard = () => {
+    const showCleanReward = this.state.gameMode === "learn" && this.state.completed && (this.state.learnRewardPending || this.state.learnNextReady);
+    if (!showCleanReward) return null;
+
+    const openingName = this.getOpeningDisplayName();
+    const lines = this.getLines();
+    const currentLineNumber = getLineNumberForLines(this.state.openingKey, lines, this.state.lineId);
+    const nextLineId = pickNextOrderedLearnLineId({
+      openingKey: this.state.openingKey,
+      lines,
+      learnProgress: this.state.learnProgress,
+      currentLineId: this.state.lineId,
+      advancePastCurrent: true
+    });
+    const nextLineNumber = nextLineId ? getLineNumberForLines(this.state.openingKey, lines, nextLineId) : null;
+    const summary = this.getOpeningPrestigeSummary();
+    const progressLabel = `${summary.completed}/${summary.total}`;
+
+    return (
+      <div className="ot-completion-toast" role="status" aria-live="polite">
+        <div className="ot-completion-toast-glow" aria-hidden="true" />
+
+        <div className="ot-completion-toast-top">
+          <div className="ot-completion-pill">Clean run</div>
+          <div className="ot-completion-progress-chip">{progressLabel}</div>
+        </div>
+
+        <div className="ot-completion-title-row">
+          <div className="ot-completion-burst" aria-hidden="true">✦</div>
+          <div className="ot-completion-title-wrap">
+            <div className="ot-completion-title">{openingName}{currentLineNumber ? ` #${currentLineNumber}` : ""} locked in</div>
+            <div className="ot-completion-copy">{nextLineNumber ? `Next line ready: #${nextLineNumber}` : "Course progress updated"}</div>
+          </div>
+        </div>
+
+        <div className="ot-completion-actions ot-completion-actions-inline">
+          <button
+            className="ot-button ot-button-small ot-completion-btn ot-completion-btn-primary"
+            type="button"
+            onClick={this.nextLine}
+            disabled={!this.state.learnNextReady}
+            title={this.state.learnNextReady ? "Pick the next line" : "Confetti is still finishing"}
+          >
+            {nextLineNumber ? `Next #${nextLineNumber}` : "Next line"}
+          </button>
+
+          <button
+            className="ot-button ot-button-small ot-completion-btn"
+            type="button"
+            onClick={() => this.setGameMode("practice")}
+          >
+            Practice
+          </button>
+
+          <button
+            className="ot-button ot-button-small ot-completion-btn"
+            type="button"
+            onClick={this.openMyGames}
+          >
+            My Games
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   getPrestigeCourseLines = () => {
     const set = OPENING_SETS[this.state.openingKey];
     return (set && Array.isArray(set.lines)) ? set.lines : [];

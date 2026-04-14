@@ -169,7 +169,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  margin: 10px 0 18px;
+  margin: 0 0 18px;
 }
 
 .home-search {
@@ -1518,5 +1518,120 @@
   .home-footer-back-to-top {
     width: 100%;
     justify-content: center;
+  }
+}
+
+.home-focus-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 0.95fr;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.home-focus-card {
+  padding: 18px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.18);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.24);
+}
+
+.home-focus-card--primary {
+  background:
+    radial-gradient(800px 220px at 18% 0%, rgba(244, 197, 66, 0.12), rgba(0, 0, 0, 0) 58%),
+    rgba(0, 0, 0, 0.2);
+}
+
+.home-focus-card--games {
+  background:
+    radial-gradient(700px 200px at 85% 0%, rgba(122, 92, 255, 0.14), rgba(0, 0, 0, 0) 60%),
+    rgba(0, 0, 0, 0.2);
+}
+
+.home-focus-eyebrow {
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(233, 237, 242, 0.58);
+}
+
+.home-focus-title {
+  margin-top: 6px;
+  font-size: 24px;
+  font-weight: 900;
+  color: #e9edf2;
+  letter-spacing: -0.3px;
+}
+
+.home-focus-sub {
+  margin-top: 8px;
+  max-width: 620px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: rgba(233, 237, 242, 0.78);
+}
+
+.home-focus-pillrow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.home-focus-pill {
+  padding: 8px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(233, 237, 242, 0.86);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.home-focus-cta {
+  margin-top: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 0 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(244, 197, 66, 0.48);
+  background: rgba(244, 197, 66, 0.96);
+  color: #111;
+  font-size: 14px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.home-focus-cta-secondary {
+  border-color: rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.08);
+  color: #e9edf2;
+}
+
+.home-focus-cta:hover {
+  transform: translateY(-1px);
+}
+
+@media (max-width: 900px) {
+  .home-focus-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  .home-focus-card {
+    padding: 14px;
+    border-radius: 16px;
+  }
+
+  .home-focus-title {
+    font-size: 20px;
+  }
+
+  .home-focus-cta {
+    width: 100%;
   }
 }

@@ -713,12 +713,20 @@ renderHeroCarousel = (slides) => {
     });
 
     const withMeta = filtered.map((o, idx) => {
-      const p =
+      const progressEntry =
         (this.state.progress &&
           this.state.progress.openings &&
           this.state.progress.openings[o.key]) ||
         {};
-      const lastPlayedAt = Number(p.lastPlayedAt) || 0;
+      const learnEntry =
+        (this.state.learnProgress &&
+          this.state.learnProgress.openings &&
+          this.state.learnProgress.openings[o.key]) ||
+        {};
+      const lastPlayedAt = Math.max(
+        Number(progressEntry.lastPlayedAt) || 0,
+        Number(learnEntry.lastPlayedAt) || 0
+      );
       const isNew = o.badge === "New";
       const group = lastPlayedAt > 0 ? 0 : isNew ? 1 : 2;
       return { o, idx, lastPlayedAt, group };
@@ -734,9 +742,6 @@ renderHeroCarousel = (slides) => {
     const progressOpenings =
       (this.state.progress && this.state.progress.openings) || {};
 
-
-
-        const recommendedCount = 2;
 
     const getStatsFor = (o) =>
       this.state.perOpening[o.key] || { completed: 0, total: (o.lines && o.lines.length) || 0 };
@@ -769,15 +774,6 @@ renderHeroCarousel = (slides) => {
 
     const fallbackCatalog = sorted
       .filter((o) => !isStartedOpening(o) && !isNewOpening(o));
-
-    const recommendedPool = [
-      ...startedNotCompleted,
-      ...recentlyPlayed,
-      ...newOpenings,
-      ...fallbackCatalog
-    ];
-
-    const recommended = recommendedPool.slice(0, recommendedCount);
 
     const pickDistinctOpening = (usedKeys, ...lists) => {
       for (const list of lists) {
@@ -857,6 +853,48 @@ renderHeroCarousel = (slides) => {
     ];
 
     const footerYear = new Date().getFullYear();
+
+    const guideOpening = resumeOpening || focusOpening || OPENINGS.find((item) => item.key === "london") || sorted[0] || null;
+    const guideStats = guideOpening ? getStatsFor(guideOpening) : { completed: 0, total: 0 };
+    const guidePct = guideOpening && guideStats.total > 0
+      ? Math.round((guideStats.completed / guideStats.total) * 100)
+      : 0;
+
+    const homeGuide = resumeOpening
+      ? {
+          eyebrow: "What to do next",
+          title: `Continue ${resumeOpening.title}`,
+          subtitle: `${guideStats.completed}/${guideStats.total} lines learned. Keep building the course while it is still familiar.`,
+          cta: "Continue training →",
+          onClick: () => this.goToOpening(resumeOpening.key),
+          pills: [`${guidePct}% complete`, `${guideStats.total} lines`]
+        }
+      : guideOpening
+        ? {
+            eyebrow: "What to do next",
+            title: `Start ${guideOpening.title}`,
+            subtitle: `Open the course, learn the first line, and get momentum on the board.`,
+            cta: "Start training →",
+            onClick: () => this.goToOpening(guideOpening.key),
+            pills: [(guideOpening.orientation || "white") === "black" ? "Black repertoire" : "White repertoire", `${guideStats.total} lines`]
+          }
+        : {
+            eyebrow: "What to do next",
+            title: "Open the trainer",
+            subtitle: "Pick a course and start your next block.",
+            cta: "Browse openings →",
+            onClick: () => this.goToRoute("/openings"),
+            pills: ["Learn", "Practice", "Drill"]
+          };
+
+    const myGamesCard = {
+      eyebrow: "My Games",
+      title: "Turn your own mistakes into puzzles",
+      subtitle: "Load a Chess.com or Lichess username and build personal training from the games you already played.",
+      cta: "Open My Games →",
+      onClick: () => this.goToRoute("/my-games"),
+      pills: ["Chess.com", "Lichess", "Personal pack"]
+    };
 
     const heroSlides = [
       {
@@ -1001,6 +1039,36 @@ return (
 
   <div className="home-courses">
 
+          <div className="home-focus-grid">
+            <div className="home-focus-card home-focus-card--primary">
+              <div className="home-focus-eyebrow">{homeGuide.eyebrow}</div>
+              <div className="home-focus-title">{homeGuide.title}</div>
+              <div className="home-focus-sub">{homeGuide.subtitle}</div>
+              <div className="home-focus-pillrow">
+                {homeGuide.pills.map((pill) => (
+                  <div className="home-focus-pill" key={pill}>{pill}</div>
+                ))}
+              </div>
+              <button className="home-focus-cta" type="button" onClick={homeGuide.onClick}>
+                {homeGuide.cta}
+              </button>
+            </div>
+
+            <div className="home-focus-card home-focus-card--games">
+              <div className="home-focus-eyebrow">{myGamesCard.eyebrow}</div>
+              <div className="home-focus-title">{myGamesCard.title}</div>
+              <div className="home-focus-sub">{myGamesCard.subtitle}</div>
+              <div className="home-focus-pillrow">
+                {myGamesCard.pills.map((pill) => (
+                  <div className="home-focus-pill" key={pill}>{pill}</div>
+                ))}
+              </div>
+              <button className="home-focus-cta home-focus-cta-secondary" type="button" onClick={myGamesCard.onClick}>
+                {myGamesCard.cta}
+              </button>
+            </div>
+          </div>
+
           <div className="home-courses-header">
             <div className="home-search-wrap">
               <div className="home-search">
@@ -1107,16 +1175,6 @@ return (
                 {this.state.totalCompleted}/{this.state.totalLines} lines learned
               </div>
             </div>
-          </div>
-
-          <div className="home-section home-section--recommended">
-            <div className="home-section-row">
-              <div className="home-section-left">
-                <div className="home-section-title">Recommended for you</div>
-                <div className="home-section-sub">Picked based on your recent drills</div>
-              </div>
-            </div>
-            <div className="home-course-grid">{recommended.map(this.renderCard)}</div>
           </div>
 
           <div className="home-section home-section--all">

@@ -627,6 +627,45 @@ export default function PublicProfile() {
           }
         }
 
+        .pp-spotlight-grid {
+          display: grid;
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          gap: 10px;
+          margin-top: 14px;
+        }
+
+        .pp-spotlight-card {
+          border-radius: 12px;
+          border: 1px solid rgba(255,255,255,0.08);
+          background: rgba(255,255,255,0.04);
+          padding: 10px 12px;
+        }
+
+        .pp-spotlight-label {
+          font-size: 11px;
+          font-weight: 800;
+          opacity: 0.62;
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+        }
+
+        .pp-spotlight-value {
+          margin-top: 6px;
+          font-size: 20px;
+          font-weight: 900;
+          color: rgba(255,255,255,0.96);
+        }
+
+        @media (max-width: 820px) {
+          .pp-panels {
+            grid-template-columns: 1fr;
+          }
+
+          .pp-spotlight-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+          }
+        }
+
         @media (max-width: 520px) {
           .pp-wrap {
             padding: 14px 10px 34px;
@@ -648,6 +687,10 @@ export default function PublicProfile() {
 
           .pp-meta {
             grid-template-columns: 1fr;
+          }
+
+          .pp-spotlight-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
           }
         }
 
@@ -678,6 +721,25 @@ export default function PublicProfile() {
                 {lastActive ? <span className="pp-pill subtle">Last active {lastActive}</span> : null}
               </div>
 
+              <div className="pp-spotlight-grid">
+                <div className="pp-spotlight-card">
+                  <div className="pp-spotlight-label">Weekly rank</div>
+                  <div className="pp-spotlight-value">{lbWeek && lbWeek.rank ? `#${lbWeek.rank}` : "-"}</div>
+                </div>
+                <div className="pp-spotlight-card">
+                  <div className="pp-spotlight-label">All time rank</div>
+                  <div className="pp-spotlight-value">{lbAll && lbAll.rank ? `#${lbAll.rank}` : "-"}</div>
+                </div>
+                <div className="pp-spotlight-card">
+                  <div className="pp-spotlight-label">Current streak</div>
+                  <div className="pp-spotlight-value">{shownStats.streakCurrent || 0}</div>
+                </div>
+                <div className="pp-spotlight-card">
+                  <div className="pp-spotlight-label">Lines learned</div>
+                  <div className="pp-spotlight-value">{shownStats.linesLearned || 0}</div>
+                </div>
+              </div>
+
               <div className="pp-meta">
                 <div className="pp-meta-item">
                   <div className="pp-label">Username</div>
@@ -693,7 +755,7 @@ export default function PublicProfile() {
 
             <div className="pp-hr" />
 
-            <div className="pp-section-title">Highlights</div>
+            <div className="pp-section-title">Training identity</div>
 
             {(() => {
               const hasDrill =
