@@ -410,6 +410,11 @@ perOpening,
     this.props.history.push(`/openings?opening=${encodeURIComponent(openingKey)}`);
   };
 
+  goToInstantDemo = () => {
+    if (!this.props || !this.props.history || !this.props.history.push) return;
+    this.props.history.push(`/openings?opening=${encodeURIComponent("london")}&demo=1`);
+  };
+
   goToCreateCustomRep = () => {
     if (!this.props || !this.props.history || !this.props.history.push) return;
     this.props.history.push(`/openings?opening=${encodeURIComponent("london")}&custom=1`);
@@ -897,6 +902,22 @@ renderHeroCarousel = (slides) => {
     };
 
     const heroSlides = [
+      {
+        id: "instant-demo",
+        kicker: "TRY IT NOW",
+        title: "Fix this opening mistake in 10 seconds",
+        subtitle: "Make one move, get immediate feedback, and see how recall training works before signing up.",
+        cta: "Try the demo →",
+        onClick: this.goToInstantDemo,
+        pills: ["No login", "One position", "Instant feedback"],
+        position: "rnbqkb1r/ppp1pppp/5n2/3p4/2PP4/5P2/PP2P1PP/RNBQKBNR b KQkq - 0 3",
+        orientation: "white",
+        stats: [
+          { value: "1", label: "move to find" },
+          { value: "10s", label: "demo" },
+          { value: "0", label: "setup" }
+        ]
+      },
       {
         id: "overview",
         kicker: "Build stronger recall",

@@ -96,6 +96,7 @@ function toRomanNumeral(value) {
 
 // ---- Logged-out free drills limiter ----
 const FREE_DRILLS_KEY = "chessdrills_free_drills_v1";
+const DEMO_OPENING_KEY = "london";
 
 function loadFreeDrillsMap() {
   try {
@@ -335,13 +336,16 @@ class OpeningTrainer extends Component {
     this._linePickerAnchorEl = null;
     let firstSetKey = "london";
     let sharedCustomLine = null;
+    let demoMode = false;
     try {
       const search = (props && props.location && props.location.search) || "";
       const params = new URLSearchParams(search);
       
       this._openCustomOnMount = params.get("custom") === "1";
+      demoMode = params.get("demo") === "1";
       const fromHome = params.get("opening");
-      if (fromHome && OPENING_SETS[fromHome]) firstSetKey = fromHome;
+      if (demoMode && OPENING_SETS[DEMO_OPENING_KEY]) firstSetKey = DEMO_OPENING_KEY;
+      else if (fromHome && OPENING_SETS[fromHome]) firstSetKey = fromHome;
       sharedCustomLine = decodeSharedCustomLine(params.get("customRep"), firstSetKey);
       if (sharedCustomLine && sharedCustomLine.openingKey && OPENING_SETS[sharedCustomLine.openingKey]) firstSetKey = sharedCustomLine.openingKey;
     } catch (_) {
@@ -371,22 +375,25 @@ class OpeningTrainer extends Component {
     const progress = loadProgress();
     const learnProgress = loadLearnProgress();
     const settings = loadSettings(DEFAULT_THEME);
-    const shouldStartFromIntro = !sharedCustomLine && shouldStartLearnFromIntro(firstSetKey, firstLines, progress, learnProgress);
-    const firstId = sharedCustomLine
-      ? pickDefaultLearnLineId(firstSetKey, firstLines, sharedCustomLine.id)
-      : shouldStartFromIntro
-        ? pickDefaultLearnLineId(firstSetKey, firstLines)
-        : pickNextOrderedLearnLineId({
-            openingKey: firstSetKey,
-            lines: firstLines,
-            learnProgress
-          });
+    const shouldStartFromIntro = !demoMode && !sharedCustomLine && shouldStartLearnFromIntro(firstSetKey, firstLines, progress, learnProgress);
+    const firstId = demoMode
+      ? pickDefaultLearnLineId(firstSetKey, firstLines)
+      : sharedCustomLine
+        ? pickDefaultLearnLineId(firstSetKey, firstLines, sharedCustomLine.id)
+        : shouldStartFromIntro
+          ? pickDefaultLearnLineId(firstSetKey, firstLines)
+          : pickNextOrderedLearnLineId({
+              openingKey: firstSetKey,
+              lines: firstLines,
+              learnProgress
+            });
 
     const drillStats = this.loadDrillStats();
 
     this.state = {
       openingKey: firstSetKey,
       lineId: firstId,
+      demoMode: demoMode,
       sessionLineId: null,
       practiceForceRepeat: false,
       prevPracticeLineId: null,
@@ -394,7 +401,7 @@ class OpeningTrainer extends Component {
       learnRecentLineIds: [],
       linePicker: "random",
       gameMode: "learn",
-      modePanelVisible: true,
+      modePanelVisible: !demoMode,
       userHasPlayedThisLine: false,
       helpUsed: false,
       drillStreak: 0,
@@ -583,6 +590,7 @@ this._countedSeenForRun = false;
 
   enforceLearnGate = () => {
     if (this.props.authLoading) return false;
+    if (this.state && this.state.demoMode) return false;
 
     const mode = this.state.gameMode || "learn";
     const hasPaidAccess = !!(this.props.user && this.props.membershipActive === true);
@@ -1451,7 +1459,7 @@ saveCustomModal = () => {
         selectedSquare: null,
         legalTargets: [],
         userHasPlayedThisLine: false,
-        modePanelVisible: true,
+        modePanelVisible: prev.demoMode ? false : true,
         helpUsed: false,
         learnRewardPending: false,
         learnNextReady: false,
@@ -1962,6 +1970,25 @@ if (!nextId) nextId = nextLines[0] ? nextLines[0].id : "";
 onCompletedLine = () => {
   if (this._autoNextTimer) clearTimeout(this._autoNextTimer);
   if (this._confettiTimer) clearTimeout(this._confettiTimer);
+
+  if (this.state.demoMode) {
+    const wantsConfetti = !!(this.state.settings && this.state.settings.showConfetti);
+    this.setState({
+      modePanelVisible: true,
+      learnNextReady: false,
+      learnRewardPending: false,
+      prestigeJustUnlocked: false,
+      confettiActive: wantsConfetti
+    });
+
+    if (wantsConfetti) {
+      this._confettiTimer = setTimeout(() => {
+        this.setState({ confettiActive: false });
+      }, 1200);
+    }
+
+    return;
+  }
 
   const streakResult = markLineCompletedTodayDetailed();
   if (streakResult && streakResult.didMarkToday && streakResult.state) {
@@ -3915,6 +3942,7 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
   };
 
   setGameMode = (nextMode) => {
+    if (this.state.demoMode) return;
     const mode = nextMode || "learn";
 
     const hasPaidAccess = !!(this.props.user && this.props.membershipActive === true);
@@ -4246,6 +4274,30 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
   resetBoardRender = () => {
     this.setState((s) => ({ boardRenderToken: (s.boardRenderToken || 0) + 1 }));
   };
+
+renderDemoPanel = () => {
+  if (!this.state.demoMode) return null;
+
+  const done = !!this.state.completed;
+
+  return (
+    <div className={"ot-demo-panel" + (done ? " is-complete" : "")}>
+      <div>
+        <div className="ot-demo-kicker">Instant demo</div>
+        <div className="ot-demo-title">Find the best move, then read the feedback.</div>
+        <div className="ot-demo-copy">No account required. This demo does not change your saved progress.</div>
+      </div>
+      <div className="ot-demo-actions">
+        <button type="button" className="ot-button ot-button-small" onClick={this.retryLine}>
+          Retry
+        </button>
+        <button type="button" className="ot-button ot-button-small ot-demo-primary" onClick={() => this.props.history && this.props.history.push ? this.props.history.push("/signup") : null}>
+          Create free account →
+        </button>
+      </div>
+    </div>
+  );
+};
 
 render() {
     const line = this.getLine();
@@ -4777,6 +4829,7 @@ render() {
         ) : null}
 
         {this.state.isMobile ? null : <TopNav title="Chess Opening Drills" />}
+        {this.renderDemoPanel()}
 {/* Per-line progress (moved to top) */}
         <div className="ot-top-line">
           <div className="ot-top-line-row">
