@@ -868,7 +868,7 @@ renderHeroCarousel = (slides) => {
     const homeGuide = resumeOpening
       ? {
           eyebrow: "What to do next",
-          title: `Continue ${resumeOpening.title}`,
+          title: `Learn ${resumeOpening.title}`,
           subtitle: `${guideStats.completed}/${guideStats.total} lines learned. Keep building the course while it is still familiar.`,
           cta: "Continue training →",
           onClick: () => this.goToOpening(resumeOpening.key),
