@@ -44,6 +44,19 @@ class App extends React.Component {
 
             <Route exact path='/' component={Home} />
             <Route path='/practice' component={Practice} />
+            <Route
+              exact
+              path='/demo'
+              render={(props) => (
+                <OpeningTrainer
+                  {...props}
+                  location={{
+                    ...props.location,
+                    search: props.location.search || '?opening=london&demo=1'
+                  }}
+                />
+              )}
+            />
             <Route exact path='/openings' component={OpeningTrainer} />
             <Route path='/about' component={About} />
             <Route path='/leaderboards' component={Leaderboards} />

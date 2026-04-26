@@ -410,11 +410,6 @@ perOpening,
     this.props.history.push(`/openings?opening=${encodeURIComponent(openingKey)}`);
   };
 
-  goToInstantDemo = () => {
-    if (!this.props || !this.props.history || !this.props.history.push) return;
-    this.props.history.push(`/openings?opening=${encodeURIComponent("london")}&demo=1`);
-  };
-
   goToCreateCustomRep = () => {
     if (!this.props || !this.props.history || !this.props.history.push) return;
     this.props.history.push(`/openings?opening=${encodeURIComponent("london")}&custom=1`);
@@ -424,6 +419,10 @@ perOpening,
     if (!path) return;
     if (!this.props || !this.props.history || !this.props.history.push) return;
     this.props.history.push(path);
+  };
+
+  goToDemo = () => {
+    this.goToRoute("/demo");
   };
 
   handleFooterLinkClick = (e, href) => {
@@ -794,7 +793,7 @@ renderHeroCarousel = (slides) => {
       return null;
     };
 
-    const resumeOpening = pickDistinctOpening(new Set(), startedNotCompleted, recentlyPlayed, sorted);
+    const resumeOpening = pickDistinctOpening(new Set(), startedNotCompleted, recentlyPlayed);
 
     const heroUsedKeys = new Set(resumeOpening ? [resumeOpening.key] : []);
 
@@ -868,7 +867,7 @@ renderHeroCarousel = (slides) => {
     const homeGuide = resumeOpening
       ? {
           eyebrow: "What to do next",
-          title: `Learn ${resumeOpening.title}`,
+          title: `Continue ${resumeOpening.title}`,
           subtitle: `${guideStats.completed}/${guideStats.total} lines learned. Keep building the course while it is still familiar.`,
           cta: "Continue training →",
           onClick: () => this.goToOpening(resumeOpening.key),
@@ -901,29 +900,31 @@ renderHeroCarousel = (slides) => {
       pills: ["Chess.com", "Lichess", "Personal pack"]
     };
 
+    const demoOpening = OPENINGS.find((item) => item.key === "london") || sorted[0] || null;
+
     const heroSlides = [
       {
         id: "instant-demo",
-        kicker: "TRY IT NOW",
-        title: "Try one opening position",
-        subtitle: "Make one move, get immediate feedback, and see how recall training works before signing up.",
-        cta: "Start demo →",
-        onClick: this.goToInstantDemo,
-        pills: ["No login", "One position", "Instant feedback"],
-        position: "rnbqkb1r/ppp1pppp/5n2/3p4/2PP4/5P2/PP2P1PP/RNBQKBNR b KQkq - 0 3",
-        orientation: "white",
+        kicker: "Free instant demo",
+        title: "Stop forgetting your openings after 2 games",
+        subtitle: "Try one London line. Make the moves, get instant feedback, and see the pattern before signup.",
+        cta: "Try 1 line instantly →",
+        onClick: this.goToDemo,
+        pills: ["No account needed", "One London line", "Instant feedback"],
+        position: demoOpening ? _getPreviewFenForOpening(demoOpening) : "start",
+        orientation: (demoOpening && demoOpening.orientation) || "white",
         stats: [
-          { value: "1", label: "move to find" },
-          { value: "10s", label: "demo" },
-          { value: "0", label: "setup" }
+          { value: "1", label: "free line" },
+          { value: "0", label: "signup required" },
+          { value: "Fast", label: "move feedback" }
         ]
       },
       {
         id: "overview",
         kicker: "Build stronger recall",
-        title: "Begin Training!",
-        subtitle: "Work through full lines, get immediate feedback, and resume exactly where you left off.",
-        cta: "Start Drilling →",
+        title: "Train openings like puzzles",
+        subtitle: "Work through full lines, get immediate feedback, and build recall one move at a time.",
+        cta: "Start training →",
         onClick: this.startFirstAvailable,
         pills: ["Learn", "Practice", "Drill"],
         position: "start",
@@ -936,12 +937,12 @@ renderHeroCarousel = (slides) => {
       },
       {
         id: "resume",
-        kicker: "Continue where you left off",
-        title: resumeOpening ? `Resume ${resumeOpening.title}` : "Resume your training",
+        kicker: resumeOpening ? "Continue where you left off" : "Start a course",
+        title: resumeOpening ? `Resume ${resumeOpening.title}` : "Start your first opening drill",
         subtitle: resumeOpening
           ? "Pick up your most relevant opening and keep your recall clean."
-          : "Jump back into your latest work.",
-        cta: resumeOpening ? "Continue training →" : "Open trainer →",
+          : "Choose a line, make the moves, and get corrected immediately.",
+        cta: resumeOpening ? "Continue training →" : "Start London →",
         onClick: () => this.goToOpening((resumeOpening && resumeOpening.key) || "london"),
         pills: resumeOpening
           ? [
@@ -1049,7 +1050,7 @@ return (
 
       <SEO
         title="ChessDrills | Chess Opening Trainer and Drills"
-        description="ChessDrills is a chess opening trainer with structured drills, move feedback, and repeatable opening recall practice."
+        description="ChessDrills helps you remember chess openings with structured drills, instant move feedback, and a no-signup demo line."
         canonical="https://chessdrills.net/"
         image="https://chessdrills.net/logo512.png"
       />
