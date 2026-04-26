@@ -48,6 +48,18 @@
           return;
         }
 
+        var params = new URLSearchParams(l.search);
+        var fallbackPath = params.get('p');
+
+        if (fallbackPath) {
+          var fallbackSearch = params.get('q');
+          var restoredPath = fallbackPath.replace(/~and~/g, '&');
+          var restoredSearch = fallbackSearch ? '?' + fallbackSearch.replace(/~and~/g, '&') : '';
+
+          window.history.replaceState(null, null, restoredPath + restoredSearch + l.hash);
+          return;
+        }
+
         if (l.search[1] === '/') {
           var decoded = l.search
             .slice(1)
