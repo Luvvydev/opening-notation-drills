@@ -6,6 +6,8 @@ import { OPENING_CATALOG } from "../openings/openingCatalog";
 import { BOARD_THEMES, DEFAULT_THEME } from "../theme/boardThemes";
 import "./Home.css";
 import SEO from "./SEO";
+import { useAuth } from "../auth/AuthProvider";
+import { trackEvent } from "../utils/trackEvent";
 
 const STORAGE_KEY = "notation_trainer_opening_progress_v2";
 const LEARN_STORAGE_KEY = "notation_trainer_learn_progress_v1";
@@ -448,14 +450,26 @@ perOpening,
     this.props.history.push(path);
   };
 
-  goToDemo = () => {
+  goToDemo = (location = "home") => {
+    const safeLocation = typeof location === "string" ? location : "home";
+    trackEvent("demo_start_click", { location: safeLocation, opening: "london" }, this.props.user);
     this.goToRoute("/demo");
+  };
+
+  goToMyGames = (location = "home") => {
+    const safeLocation = typeof location === "string" ? location : "home";
+    trackEvent("my_games_click", { location: safeLocation }, this.props.user);
+    this.goToRoute("/my-games");
   };
 
   handleFooterLinkClick = (e, href) => {
     if (!href) return;
     if (e && (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0)) return;
     if (e) e.preventDefault();
+    if (href === "/my-games") {
+      this.goToMyGames("home_footer");
+      return;
+    }
     this.goToRoute(href);
   };
 
@@ -941,7 +955,7 @@ renderHeroCarousel = (slides) => {
           title: "Try one drill before signup",
           subtitle: "Play one London line, make the moves yourself, and see the feedback loop immediately.",
           cta: "Try instant demo →",
-          onClick: this.goToDemo,
+          onClick: () => this.goToDemo("home_focus_card"),
           pills: ["No account", "1 line", "Fast feedback"]
         };
 
@@ -950,7 +964,7 @@ renderHeroCarousel = (slides) => {
       title: "Fix the mistakes from your own games",
       subtitle: "Enter a Chess.com or Lichess username, pull recent games, and turn your mistakes into drills.",
       cta: "Build my mistake pack →",
-      onClick: () => this.goToRoute("/my-games"),
+      onClick: () => this.goToMyGames("home_personal_drill_pack"),
       pills: ["Chess.com", "Lichess", "Your positions"]
     };
 
@@ -978,9 +992,9 @@ renderHeroCarousel = (slides) => {
         title: "Remember openings by making the moves yourself",
         subtitle: "Try one London line before signup. Move, get corrected instantly, and see if the training loop fits.",
         cta: "Try 1 line instantly →",
-        onClick: this.goToDemo,
+        onClick: () => this.goToDemo("home_hero_primary"),
         secondaryCta: "Import my games →",
-        secondaryOnClick: () => this.goToRoute("/my-games"),
+        secondaryOnClick: () => this.goToMyGames("home_hero_secondary"),
         pills: ["No account needed", "One London line", "Instant feedback"],
         position: demoOpening ? _getPreviewFenForOpening(demoOpening) : "start",
         orientation: (demoOpening && demoOpening.orientation) || "white",
@@ -1087,7 +1101,7 @@ renderHeroCarousel = (slides) => {
         title: "Fix mistakes from games you already played",
         subtitle: "Enter your Chess.com or Lichess username and solve drills built from your recent misses.",
         cta: "Build my mistake pack →",
-        onClick: () => this.goToRoute("/my-games"),
+        onClick: () => this.goToMyGames("home_hero_my_games"),
         pills: ["Chess.com", "Lichess", "Personal review"],
         position: focusOpening ? _getPreviewFenForOpening(focusOpening) : "start",
         orientation: (focusOpening && focusOpening.orientation) || "white",
@@ -1428,4 +1442,9 @@ return (
 
 }
 
-export default Home;
+function HomeWithAuth(props) {
+  const { user } = useAuth();
+  return <Home {...props} user={user} />;
+}
+
+export default HomeWithAuth;

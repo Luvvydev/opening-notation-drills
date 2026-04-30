@@ -23,6 +23,7 @@ import OpeningTrainerConfetti from "./openingTrainer/OpeningTrainerConfetti";
 import { db } from "../firebase";
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { dayKeyFromDate, isoWeekKeyFromDate, monthKeyFromDate } from "../utils/periodKeys";
+import { trackEvent } from "../utils/trackEvent";
 
 class BoardErrorBoundary extends Component {
   constructor(props) {
@@ -1973,6 +1974,18 @@ onCompletedLine = () => {
 
   if (this.state.demoMode) {
     const wantsConfetti = !!(this.state.settings && this.state.settings.showConfetti);
+    const line = this.getLine();
+
+    trackEvent(
+      "demo_complete",
+      {
+        opening: this.state.openingKey || "london",
+        line_id: line && line.id ? line.id : "",
+        clean: !this.state.mistakeUnlocked && !this.state.helpUsed
+      },
+      this.props.user
+    );
+
     this.setState({
       modePanelVisible: true,
       learnNextReady: false,
@@ -3720,6 +3733,7 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
 };
   openMyGames = () => {
     try {
+      trackEvent("my_games_click", { location: "opening_completion_card" }, this.props.user);
       if (this.props && this.props.history && this.props.history.push) {
         this.props.history.push("/my-games");
       }
@@ -4294,17 +4308,30 @@ renderDemoPanel = () => {
         <button
           type="button"
           className="ot-button ot-button-small ot-demo-primary"
-          onClick={() =>
-            this.props.history && this.props.history.push
+          onClick={() => {
+            trackEvent(
+              "demo_signup_click",
+              {
+                location: "demo_panel",
+                opening: this.state.openingKey || "london",
+                line_id: this.getLine() && this.getLine().id ? this.getLine().id : "",
+                demo_completed: !!this.state.completed
+              },
+              this.props.user
+            );
+
+            return this.props.history && this.props.history.push
               ? this.props.history.push({
                   pathname: "/signup",
+                  search: "?source=demo&from=%2Fopenings%3Fopening%3Dlondon&reason=demo",
                   state: {
                     from: "/openings?opening=london",
-                    reason: "demo"
+                    reason: "demo",
+                    source: "demo"
                   }
                 })
-              : null
-          }
+              : null;
+          }}
         >
           Save progress →
         </button>

@@ -8,6 +8,7 @@ import { httpsCallable } from "firebase/functions";
 import { doc, runTransaction } from "firebase/firestore";
 import { db, functions, serverTimestamp } from "../firebase";
 import { useAuth } from "../auth/AuthProvider";
+import { trackEvent, trackOncePerUser } from "../utils/trackEvent";
 
 
 export default function About(props) {
@@ -32,7 +33,7 @@ export default function About(props) {
   const goToSignup = () => {
     try {
       const from = `${window.location.pathname || "/about"}${window.location.search || ""}` || "/about";
-      window.location.href = `/signup?from=${encodeURIComponent(from)}&reason=membership_requires_account`;
+      window.location.href = `/signup?source=membership&from=${encodeURIComponent(from)}&reason=membership_requires_account`;
     } catch (_) {}
   };
 
@@ -86,6 +87,7 @@ export default function About(props) {
         }, { merge: true });
       });
 
+      trackOncePerUser(user, "trial_start", { source: "about_free_trial", plan: "free_trial" });
       goBack();
     } catch (_) {
       alert("Could not start the free trial. Please try again.");
@@ -100,6 +102,7 @@ export default function About(props) {
       return;
     }
 
+    trackEvent("checkout_start", { source: "about", plan: selectedPlan }, user);
     setCheckoutBusy(true);
     try {
       const fn = httpsCallable(functions, "createCheckoutSession");

@@ -19,6 +19,7 @@ import GameReview from './components/GameReview';
 
 import PublicProfile from './components/PublicProfile';
 import { installCloudSync } from './utils/cloudSync';
+import { trackDay2Return, trackFirstVisit, trackMembershipMilestones } from './utils/trackEvent';
 
 function CloudSyncInstaller() {
   const { user } = useAuth();
@@ -33,6 +34,21 @@ function CloudSyncInstaller() {
   return null;
 }
 
+function AnalyticsInstaller() {
+  const { user, userDoc } = useAuth();
+
+  useEffect(() => {
+    trackFirstVisit(user);
+    trackDay2Return(user);
+  }, [user]);
+
+  useEffect(() => {
+    trackMembershipMilestones(user, userDoc);
+  }, [user, userDoc]);
+
+  return null;
+}
+
 class App extends React.Component {
   render () {
     return (
@@ -40,6 +56,7 @@ class App extends React.Component {
         <BrowserRouter>
           <AuthProvider>
             <CloudSyncInstaller />
+            <AnalyticsInstaller />
             <StreakModal />
 
             <Route exact path='/' component={Home} />

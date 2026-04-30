@@ -8,6 +8,7 @@ import { getStreakState, ymdLocal } from '../utils/streak';
 import { getActivityDays } from '../utils/activityDays';
 import { useAuth } from "../auth/AuthProvider";
 import logo from "../assets/chessdrillslogo.png";
+import { trackEvent } from "../utils/trackEvent";
 
 const DISCORD_INVITE_URL = "https://discord.gg/BtCHkuDqJq";
 const CHESSDRILLS_BASE_URL = "https://chessdrills.net";
@@ -369,7 +370,10 @@ function TopNav(props) {
                           to="/my-games"
                           className="topnav-menu-item"
                           role="menuitem"
-                          onClick={() => setMenuOpen(false)}
+                          onClick={() => {
+                            trackEvent("my_games_click", { location: "topnav_menu" }, user);
+                            setMenuOpen(false);
+                          }}
                         >
                           My Games
                         </Link>

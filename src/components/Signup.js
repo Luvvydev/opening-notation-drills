@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import TopNav from "./TopNav";
+import { getSignupSourceFromReason, trackEvent } from "../utils/trackEvent";
 
 const ONBOARDING_KEY = "chessdrills.onboarding.v1";
 
@@ -242,6 +243,13 @@ export default function Signup(props) {
       ? queryParams.get("from")
       : null;
 
+  const signupSource =
+    props && props.location && props.location.state && props.location.state.source
+      ? props.location.state.source
+      : queryParams && queryParams.get("source")
+      ? queryParams.get("source")
+      : getSignupSourceFromReason(gateReason, "direct");
+
   const gateCopy =
     gateReason === "my_games_requires_account"
       ? "Create a free account to build mistake drills from your games."
@@ -289,7 +297,8 @@ export default function Signup(props) {
     }
 
     try {
-      await signUp(email, password);
+      const credential = await signUp(email, password);
+      const createdUser = credential && credential.user ? credential.user : null;
 
       safeWriteOnboarding({
         completed: true,
@@ -298,6 +307,17 @@ export default function Signup(props) {
         goal,
         completedAt: Date.now()
       });
+
+      trackEvent(
+        "signup_complete",
+        {
+          source: signupSource,
+          from: from || "",
+          reason: gateReason || "",
+          had_onboarding: !!(ratingBand || motivation || goal)
+        },
+        createdUser
+      );
 
       if (props && props.history) {
         const destination = from && from.charAt(0) === "/" ? from : "/about";
