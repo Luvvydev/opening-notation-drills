@@ -12,11 +12,21 @@ export default function ProtectedRoute({ component: Component, ...rest }) {
         if (authLoading) return null;
 
         if (!user) {
+          const pathname =
+            props.location && props.location.pathname ? props.location.pathname : "/profile";
+          const search =
+            props.location && props.location.search ? props.location.search : "";
+          const from = `${pathname}${search}`;
+          const signupFirst = pathname === "/my-games";
+
           return (
             <Redirect
               to={{
-                pathname: "/login",
-                state: { from: props.location && props.location.pathname ? props.location.pathname : "/profile" }
+                pathname: signupFirst ? "/signup" : "/login",
+                state: {
+                  from,
+                  reason: signupFirst ? "my_games_requires_account" : "protected_route"
+                }
               }}
             />
           );

@@ -4284,15 +4284,29 @@ renderDemoPanel = () => {
     <div className={"ot-demo-panel" + (done ? " is-complete" : "")}>
       <div>
         <div className="ot-demo-kicker">Instant demo</div>
-        <div className="ot-demo-title">Find the best move, then read the feedback.</div>
-        <div className="ot-demo-copy">No account required. This demo does not change your saved progress.</div>
+        <div className="ot-demo-title">Make the move yourself, then read the feedback.</div>
+        <div className="ot-demo-copy">No account required. Create one after the demo to save progress and keep training.</div>
       </div>
       <div className="ot-demo-actions">
         <button type="button" className="ot-button ot-button-small" onClick={this.retryLine}>
           Retry
         </button>
-        <button type="button" className="ot-button ot-button-small ot-demo-primary" onClick={() => this.props.history && this.props.history.push ? this.props.history.push("/signup") : null}>
-          Create free account →
+        <button
+          type="button"
+          className="ot-button ot-button-small ot-demo-primary"
+          onClick={() =>
+            this.props.history && this.props.history.push
+              ? this.props.history.push({
+                  pathname: "/signup",
+                  state: {
+                    from: "/openings?opening=london",
+                    reason: "demo"
+                  }
+                })
+              : null
+          }
+        >
+          Save progress →
         </button>
       </div>
     </div>

@@ -220,15 +220,40 @@ export default function Signup(props) {
 
   const [error, setError] = useState("");
 
+  const queryParams = useMemo(() => {
+    try {
+      return new URLSearchParams((props && props.location && props.location.search) || "");
+    } catch (_) {
+      return null;
+    }
+  }, [props]);
+
   const gateReason =
     props && props.location && props.location.state && props.location.state.reason
       ? props.location.state.reason
+      : queryParams && queryParams.get("reason")
+      ? queryParams.get("reason")
       : null;
 
   const from =
     props && props.location && props.location.state && props.location.state.from
       ? props.location.state.from
+      : queryParams && queryParams.get("from")
+      ? queryParams.get("from")
       : null;
+
+  const gateCopy =
+    gateReason === "my_games_requires_account"
+      ? "Create a free account to build mistake drills from your games."
+      : gateReason === "demo"
+      ? "Create a free account to save progress after the demo."
+      : gateReason === "membership_requires_account"
+      ? "Create a free account to start the 3 day trial."
+      : "Create a free account to access new drills.";
+
+  const signupCopy = from
+    ? "Create an account, then continue where you were headed."
+    : "Create an account, then pick your plan on the next page.";
 
   const initialOnboarding = safeReadOnboarding();
 
@@ -274,12 +299,9 @@ export default function Signup(props) {
         completedAt: Date.now()
       });
 
-      // After account creation, send them to About (pricing/upgrade).
       if (props && props.history) {
-        props.history.push({
-          pathname: "/about",
-          state: { from: from || "/" }
-        });
+        const destination = from && from.charAt(0) === "/" ? from : "/about";
+        props.history.push(destination);
       }
     } catch (err) {
       if (isMountedRef.current) {
@@ -400,7 +422,7 @@ export default function Signup(props) {
               fontWeight: 800
             }}
           >
-            Create a free account to access new drills.
+            {gateCopy}
           </div>
         ) : null}
 
@@ -656,7 +678,7 @@ export default function Signup(props) {
         <ProgressBar step={6} total={6} />
 
         <h2 style={{ marginTop: 0, marginBottom: 8, fontSize: 34 }}>Save your progress</h2>
-        <p style={subStyle}>Create an account, then pick your plan on the next page.</p>
+        <p style={subStyle}>{signupCopy}</p>
 
         {gateReason ? (
           <div
@@ -670,7 +692,7 @@ export default function Signup(props) {
               fontWeight: 800
             }}
           >
-            Create a free account to access new drills.
+            {gateCopy}
           </div>
         ) : null}
 

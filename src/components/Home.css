@@ -693,6 +693,29 @@
   color: rgba(233, 237, 242, 0.70);
 }
 
+.home-hero-v2-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.home-hero-v2-actions .home-hero-v2-cta {
+  margin-top: 0;
+}
+
+.home-hero-v2-actions .home-hero-v2-cta-secondary {
+  border-color: rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.08);
+  color: #e9edf2;
+}
+
+.home-hero-v2-actions .home-hero-v2-cta-secondary:hover {
+  border-color: rgba(255, 255, 255, 0.24);
+  background: rgba(255, 255, 255, 0.11);
+}
+
 .home-hero-v2-cta {
   margin-top: 22px;
   display: inline-flex;
@@ -1525,11 +1548,18 @@
   display: grid;
   grid-template-columns: 1.2fr 0.95fr;
   gap: 14px;
+  align-items: stretch;
   margin-bottom: 20px;
 }
 
+.home-focus-grid--single {
+  grid-template-columns: 1fr;
+}
+
 .home-focus-card {
+  position: relative;
   padding: 18px;
+  padding-right: 42px;
   border-radius: 18px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(0, 0, 0, 0.18);
@@ -1546,6 +1576,150 @@
   background:
     radial-gradient(700px 200px at 85% 0%, rgba(122, 92, 255, 0.14), rgba(0, 0, 0, 0) 60%),
     rgba(0, 0, 0, 0.2);
+}
+
+.home-panel-minimize {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 24px;
+  height: 24px;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: rgba(233, 237, 242, 0.22);
+  cursor: pointer;
+  opacity: 0.58;
+  transition: color 120ms ease, opacity 120ms ease, background 120ms ease;
+}
+
+.home-panel-minimize svg {
+  display: block;
+}
+
+.home-panel-minimize:hover,
+.home-panel-minimize:focus-visible {
+  color: rgba(233, 237, 242, 0.58);
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.home-panel-minimize:focus-visible {
+  outline: 1px solid rgba(244, 197, 66, 0.32);
+  outline-offset: 2px;
+}
+
+.home-panel-minimize--loop {
+  top: 8px;
+  right: 8px;
+}
+
+@media (max-width: 520px) {
+  .home-panel-minimize {
+    top: 8px;
+    right: 8px;
+    width: 24px;
+    height: 24px;
+  }
+}
+
+.home-panel-collapsed,
+.home-loop-collapsed {
+  width: 100%;
+  min-height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.035);
+  color: rgba(233, 237, 242, 0.7);
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  text-align: left;
+}
+
+.home-panel-collapsed strong,
+.home-loop-collapsed strong {
+  color: rgba(244, 197, 66, 0.92);
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.home-panel-collapsed:hover,
+.home-loop-collapsed:hover {
+  border-color: rgba(244, 197, 66, 0.24);
+  background: rgba(255, 255, 255, 0.055);
+}
+
+.home-loop-collapsed {
+  width: auto;
+  min-height: 28px;
+  display: inline-flex;
+  justify-content: center;
+  margin: 0 0 18px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border-color: rgba(255, 255, 255, 0.055);
+  background: rgba(255, 255, 255, 0.018);
+  color: rgba(233, 237, 242, 0.44);
+  font-size: 12px;
+}
+
+.home-loop-collapsed:hover,
+.home-loop-collapsed:focus-visible {
+  color: rgba(233, 237, 242, 0.72);
+  border-color: rgba(244, 197, 66, 0.18);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.home-panel-restore-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 18px;
+}
+
+.home-focus-grid + .home-panel-restore-row {
+  margin-top: -10px;
+}
+
+.home-panel-restore-chip {
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.055);
+  background: rgba(255, 255, 255, 0.018);
+  color: rgba(233, 237, 242, 0.44);
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: color 120ms ease, border-color 120ms ease, background 120ms ease;
+}
+
+.home-panel-restore-chip:hover,
+.home-panel-restore-chip:focus-visible {
+  color: rgba(233, 237, 242, 0.72);
+  border-color: rgba(244, 197, 66, 0.18);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.home-panel-restore-chip:focus-visible {
+  outline: 1px solid rgba(244, 197, 66, 0.28);
+  outline-offset: 2px;
 }
 
 .home-focus-eyebrow {
@@ -1615,6 +1789,59 @@
   transform: translateY(-1px);
 }
 
+.home-loop-strip {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin: 0 0 22px;
+  padding: 14px;
+  padding-right: 42px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(0, 0, 0, 0.14);
+}
+
+.home-loop-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+}
+
+.home-loop-number {
+  width: 26px;
+  height: 26px;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid rgba(244, 197, 66, 0.28);
+  background: rgba(244, 197, 66, 0.12);
+  color: rgba(244, 197, 66, 0.96);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.home-loop-copy {
+  min-width: 0;
+}
+
+.home-loop-title {
+  color: rgba(233, 237, 242, 0.95);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.home-loop-sub {
+  margin-top: 4px;
+  color: rgba(233, 237, 242, 0.62);
+  font-size: 12px;
+  line-height: 1.35;
+  font-weight: 700;
+}
+
 @media (max-width: 900px) {
   .home-focus-grid {
     grid-template-columns: 1fr;
@@ -1624,6 +1851,7 @@
 @media (max-width: 520px) {
   .home-focus-card {
     padding: 14px;
+    padding-right: 42px;
     border-radius: 16px;
   }
 
@@ -1632,6 +1860,24 @@
   }
 
   .home-focus-cta {
+    width: 100%;
+  }
+}
+
+@media (max-width: 720px) {
+  .home-loop-strip {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+}
+
+@media (max-width: 520px) {
+  .home-hero-v2-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .home-hero-v2-actions .home-hero-v2-cta {
     width: 100%;
   }
 }

@@ -16,6 +16,31 @@ const _previewFenCache = new Map();
 const PREVIEW_PLIES = 6;
 const HERO_AUTOPLAY_MS = 9000;
 const HERO_SLIDE_COUNT = 7;
+const HOME_PANEL_HIDDEN_KEY = "chessdrills_home_panel_hidden_v1";
+
+function _loadHomePanelHiddenState() {
+  if (typeof window === "undefined" || !window.localStorage) return {};
+  try {
+    const raw = window.localStorage.getItem(HOME_PANEL_HIDDEN_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") return {};
+    return {
+      nextRep: !!parsed.nextRep,
+      mistakePack: !!parsed.mistakePack,
+      dailyLoop: !!parsed.dailyLoop
+    };
+  } catch (_) {
+    return {};
+  }
+}
+
+function _saveHomePanelHiddenState(hiddenPanels) {
+  if (typeof window === "undefined" || !window.localStorage) return;
+  try {
+    window.localStorage.setItem(HOME_PANEL_HIDDEN_KEY, JSON.stringify(hiddenPanels || {}));
+  } catch (_) {}
+}
 
 function _tokenizePgnLike(text) {
   if (!text) return [];
@@ -258,6 +283,7 @@ class Home extends Component {
     const progress = _loadProgress();
     const learnProgress = _loadLearnProgress();
     const settings = _loadSettings();
+    const hiddenPanels = _loadHomePanelHiddenState();
 
     this.heroFrameRef = React.createRef();
 
@@ -279,6 +305,7 @@ perOpening,
       heroBoardW: null,
       heroSlideIndex: 0,
       filtersOpen: false,
+      hiddenHomePanels: hiddenPanels,
       filters: {
         color: { white: false, black: false },
         progress: { new: false, inProgress: false, completed: false }
@@ -441,6 +468,30 @@ perOpening,
     this.setState((s) => ({ filtersOpen: !s.filtersOpen }));
   };
 
+  hideHomePanel = (panelKey) => {
+    if (!panelKey) return;
+    this.setState((s) => {
+      const hiddenHomePanels = {
+        ...(s.hiddenHomePanels || {}),
+        [panelKey]: true
+      };
+      _saveHomePanelHiddenState(hiddenHomePanels);
+      return { hiddenHomePanels };
+    });
+  };
+
+  showHomePanel = (panelKey) => {
+    if (!panelKey) return;
+    this.setState((s) => {
+      const hiddenHomePanels = {
+        ...(s.hiddenHomePanels || {}),
+        [panelKey]: false
+      };
+      _saveHomePanelHiddenState(hiddenHomePanels);
+      return { hiddenHomePanels };
+    });
+  };
+
   toggleFilter = (group, key) => {
     this.setState((s) => ({
       filters: {
@@ -539,13 +590,25 @@ renderHeroCarousel = (slides) => {
         <div className="home-hero-v2-title">{activeSlide.title}</div>
         <div className="home-hero-v2-sub">{activeSlide.subtitle}</div>
 
-        <button
-          type="button"
-          className="home-hero-v2-cta"
-          onClick={activeSlide.onClick}
-        >
-          {activeSlide.cta}
-        </button>
+        <div className="home-hero-v2-actions">
+          <button
+            type="button"
+            className="home-hero-v2-cta"
+            onClick={activeSlide.onClick}
+          >
+            {activeSlide.cta}
+          </button>
+
+          {activeSlide.secondaryCta ? (
+            <button
+              type="button"
+              className="home-hero-v2-cta home-hero-v2-cta-secondary"
+              onClick={activeSlide.secondaryOnClick}
+            >
+              {activeSlide.secondaryCta}
+            </button>
+          ) : null}
+        </div>
 
         {activeSlide.pills && activeSlide.pills.length ? (
           <div className="home-hero-v2-pillrow">
@@ -866,39 +929,45 @@ renderHeroCarousel = (slides) => {
 
     const homeGuide = resumeOpening
       ? {
-          eyebrow: "What to do next",
+          eyebrow: "Next rep",
           title: `Continue ${resumeOpening.title}`,
-          subtitle: `${guideStats.completed}/${guideStats.total} lines learned. Keep building the course while it is still familiar.`,
+          subtitle: `${guideStats.completed}/${guideStats.total} lines learned. Do the next rep while the pattern is still fresh.`,
           cta: "Continue training →",
           onClick: () => this.goToOpening(resumeOpening.key),
           pills: [`${guidePct}% complete`, `${guideStats.total} lines`]
         }
-      : guideOpening
-        ? {
-            eyebrow: "What to do next",
-            title: `Start ${guideOpening.title}`,
-            subtitle: `Open the course, learn the first line, and get momentum on the board.`,
-            cta: "Start training →",
-            onClick: () => this.goToOpening(guideOpening.key),
-            pills: [(guideOpening.orientation || "white") === "black" ? "Black repertoire" : "White repertoire", `${guideStats.total} lines`]
-          }
-        : {
-            eyebrow: "What to do next",
-            title: "Open the trainer",
-            subtitle: "Pick a course and start your next block.",
-            cta: "Browse openings →",
-            onClick: () => this.goToRoute("/openings"),
-            pills: ["Learn", "Practice", "Drill"]
-          };
+      : {
+          eyebrow: "Start here",
+          title: "Try one drill before signup",
+          subtitle: "Play one London line, make the moves yourself, and see the feedback loop immediately.",
+          cta: "Try instant demo →",
+          onClick: this.goToDemo,
+          pills: ["No account", "1 line", "Fast feedback"]
+        };
 
     const myGamesCard = {
-      eyebrow: "My Games",
-      title: "Turn your own mistakes into puzzles",
-      subtitle: "Load a Chess.com or Lichess username and build personal training from the games you already played.",
-      cta: "Open My Games →",
+      eyebrow: "Personal Drill pack",
+      title: "Fix the mistakes from your own games",
+      subtitle: "Enter a Chess.com or Lichess username, pull recent games, and turn your mistakes into drills.",
+      cta: "Build my mistake pack →",
       onClick: () => this.goToRoute("/my-games"),
-      pills: ["Chess.com", "Lichess", "Personal pack"]
+      pills: ["Chess.com", "Lichess", "Your positions"]
     };
+
+    const dailyLoop = [
+      {
+        title: "Try one line",
+        copy: "Start with the free demo or continue the opening you touched last."
+      },
+      {
+        title: "Fix one mistake",
+        copy: "Use My Games to convert recent Chess.com or Lichess games into drills."
+      },
+      {
+        title: "Return tomorrow",
+        copy: "Repeat the next suggested rep so the pattern survives another day."
+      }
+    ];
 
     const demoOpening = OPENINGS.find((item) => item.key === "london") || sorted[0] || null;
 
@@ -906,10 +975,12 @@ renderHeroCarousel = (slides) => {
       {
         id: "instant-demo",
         kicker: "Free instant demo",
-        title: "Stop forgetting your openings after 2 games",
-        subtitle: "Try one London line. Make the moves, get instant feedback, and see the pattern before signup.",
+        title: "Remember openings by making the moves yourself",
+        subtitle: "Try one London line before signup. Move, get corrected instantly, and see if the training loop fits.",
         cta: "Try 1 line instantly →",
         onClick: this.goToDemo,
+        secondaryCta: "Import my games →",
+        secondaryOnClick: () => this.goToRoute("/my-games"),
         pills: ["No account needed", "One London line", "Instant feedback"],
         position: demoOpening ? _getPreviewFenForOpening(demoOpening) : "start",
         orientation: (demoOpening && demoOpening.orientation) || "white",
@@ -922,8 +993,8 @@ renderHeroCarousel = (slides) => {
       {
         id: "overview",
         kicker: "Build stronger recall",
-        title: "Train openings like puzzles",
-        subtitle: "Work through full lines, get immediate feedback, and build recall one move at a time.",
+        title: "Move, feedback, repeat",
+        subtitle: "Work through full lines with instant correction so your opening memory comes from reps.",
         cta: "Start training →",
         onClick: this.startFirstAvailable,
         pills: ["Learn", "Practice", "Drill"],
@@ -1013,9 +1084,9 @@ renderHeroCarousel = (slides) => {
       {
         id: "my-games",
         kicker: "TRAIN FROM YOUR OWN GAMES",
-        title: "Turn your games into training puzzles!",
-        subtitle: "Enter your Chess.com or Lichess username and solve puzzles built from your mistakes",
-        cta: "Open My Games →",
+        title: "Fix mistakes from games you already played",
+        subtitle: "Enter your Chess.com or Lichess username and solve drills built from your recent misses.",
+        cta: "Build my mistake pack →",
         onClick: () => this.goToRoute("/my-games"),
         pills: ["Chess.com", "Lichess", "Personal review"],
         position: focusOpening ? _getPreviewFenForOpening(focusOpening) : "start",
@@ -1045,6 +1116,10 @@ renderHeroCarousel = (slides) => {
       }
     ];
 
+    const hiddenHomePanels = this.state.hiddenHomePanels || {};
+    const focusVisibleCount =
+      (hiddenHomePanels.nextRep ? 0 : 1) + (hiddenHomePanels.mistakePack ? 0 : 1);
+
 return (
 <div className="home-page">
 
@@ -1061,35 +1136,120 @@ return (
 
   <div className="home-courses">
 
-          <div className="home-focus-grid">
-            <div className="home-focus-card home-focus-card--primary">
-              <div className="home-focus-eyebrow">{homeGuide.eyebrow}</div>
-              <div className="home-focus-title">{homeGuide.title}</div>
-              <div className="home-focus-sub">{homeGuide.subtitle}</div>
-              <div className="home-focus-pillrow">
-                {homeGuide.pills.map((pill) => (
-                  <div className="home-focus-pill" key={pill}>{pill}</div>
-                ))}
-              </div>
-              <button className="home-focus-cta" type="button" onClick={homeGuide.onClick}>
-                {homeGuide.cta}
-              </button>
-            </div>
+          {focusVisibleCount > 0 ? (
+            <div className={`home-focus-grid ${focusVisibleCount === 1 ? "home-focus-grid--single" : ""}`}>
+              {!hiddenHomePanels.nextRep ? (
+                <div className="home-focus-card home-focus-card--primary">
+                  <button
+                    className="home-panel-minimize"
+                    type="button"
+                    aria-label="Minimize next rep card"
+                    title="Minimize"
+                    onClick={() => this.hideHomePanel("nextRep")}
+                  >
+                    <svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none">
+                      <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </button>
+                  <div className="home-focus-eyebrow">{homeGuide.eyebrow}</div>
+                  <div className="home-focus-title">{homeGuide.title}</div>
+                  <div className="home-focus-sub">{homeGuide.subtitle}</div>
+                  <div className="home-focus-pillrow">
+                    {homeGuide.pills.map((pill) => (
+                      <div className="home-focus-pill" key={pill}>{pill}</div>
+                    ))}
+                  </div>
+                  <button className="home-focus-cta" type="button" onClick={homeGuide.onClick}>
+                    {homeGuide.cta}
+                  </button>
+                </div>
+              ) : null}
 
-            <div className="home-focus-card home-focus-card--games">
-              <div className="home-focus-eyebrow">{myGamesCard.eyebrow}</div>
-              <div className="home-focus-title">{myGamesCard.title}</div>
-              <div className="home-focus-sub">{myGamesCard.subtitle}</div>
-              <div className="home-focus-pillrow">
-                {myGamesCard.pills.map((pill) => (
-                  <div className="home-focus-pill" key={pill}>{pill}</div>
-                ))}
-              </div>
-              <button className="home-focus-cta home-focus-cta-secondary" type="button" onClick={myGamesCard.onClick}>
-                {myGamesCard.cta}
-              </button>
+              {!hiddenHomePanels.mistakePack ? (
+                <div className="home-focus-card home-focus-card--games">
+                  <button
+                    className="home-panel-minimize"
+                    type="button"
+                    aria-label="Minimize personal drill pack card"
+                    title="Minimize"
+                    onClick={() => this.hideHomePanel("mistakePack")}
+                  >
+                    <svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none">
+                      <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </button>
+                  <div className="home-focus-eyebrow">{myGamesCard.eyebrow}</div>
+                  <div className="home-focus-title">{myGamesCard.title}</div>
+                  <div className="home-focus-sub">{myGamesCard.subtitle}</div>
+                  <div className="home-focus-pillrow">
+                    {myGamesCard.pills.map((pill) => (
+                      <div className="home-focus-pill" key={pill}>{pill}</div>
+                    ))}
+                  </div>
+                  <button className="home-focus-cta home-focus-cta-secondary" type="button" onClick={myGamesCard.onClick}>
+                    {myGamesCard.cta}
+                  </button>
+                </div>
+              ) : null}
             </div>
-          </div>
+          ) : null}
+
+          {(hiddenHomePanels.nextRep || hiddenHomePanels.mistakePack) ? (
+            <div className="home-panel-restore-row" aria-label="Minimized homepage cards">
+              {hiddenHomePanels.nextRep ? (
+                <button
+                  className="home-panel-restore-chip"
+                  type="button"
+                  onClick={() => this.showHomePanel("nextRep")}
+                >
+                  Show {homeGuide.eyebrow.toLowerCase()}
+                </button>
+              ) : null}
+
+              {hiddenHomePanels.mistakePack ? (
+                <button
+                  className="home-panel-restore-chip"
+                  type="button"
+                  onClick={() => this.showHomePanel("mistakePack")}
+                >
+                  Show drill pack
+                </button>
+              ) : null}
+            </div>
+          ) : null}
+
+          {hiddenHomePanels.dailyLoop ? (
+            <button
+              className="home-loop-collapsed"
+              type="button"
+              onClick={() => this.showHomePanel("dailyLoop")}
+            >
+              <span>Show daily loop</span>
+            </button>
+          ) : (
+            <div className="home-loop-strip" aria-label="Daily ChessDrills loop">
+              <button
+                className="home-panel-minimize home-panel-minimize--loop"
+                type="button"
+                aria-label="Minimize daily loop"
+                title="Minimize"
+                onClick={() => this.hideHomePanel("dailyLoop")}
+              >
+                <svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none">
+                  <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+              {dailyLoop.map((step, index) => (
+                <div className="home-loop-item" key={step.title}>
+                  <div className="home-loop-number">{index + 1}</div>
+                  <div className="home-loop-copy">
+                    <div className="home-loop-title">{step.title}</div>
+                    <div className="home-loop-sub">{step.copy}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
 
           <div className="home-courses-header">
             <div className="home-search-wrap">
