@@ -3381,6 +3381,20 @@
     flex-direction: column;
   }
 
+  .ot-demo-panel.is-mobile.is-complete {
+    padding: 10px 12px;
+    gap: 10px;
+  }
+
+  .ot-demo-panel.is-mobile.is-complete .ot-demo-kicker,
+  .ot-demo-panel.is-mobile.is-complete .ot-demo-copy {
+    display: none;
+  }
+
+  .ot-demo-panel.is-mobile.is-complete .ot-demo-title {
+    font-size: 15px;
+  }
+
   .ot-demo-actions {
     width: 100%;
   }

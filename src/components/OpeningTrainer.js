@@ -4293,13 +4293,16 @@ renderDemoPanel = () => {
   if (!this.state.demoMode) return null;
 
   const done = !!this.state.completed;
+  const mobile = !!this.state.isMobile;
+
+  if (mobile && !done) return null;
 
   return (
-    <div className={"ot-demo-panel" + (done ? " is-complete" : "")}>
+    <div className={"ot-demo-panel" + (done ? " is-complete" : "") + (mobile ? " is-mobile" : "")}>
       <div>
         <div className="ot-demo-kicker">Instant demo</div>
-        <div className="ot-demo-title">Make the move yourself, then read the feedback.</div>
-        <div className="ot-demo-copy">No account required. Create one after the demo to save progress and keep training.</div>
+        <div className="ot-demo-title">{mobile ? "Demo complete." : "Make the move yourself, then read the feedback."}</div>
+        <div className="ot-demo-copy">{mobile ? "Create an account to save progress." : "No account required. Create one after the demo to save progress and keep training."}</div>
       </div>
       <div className="ot-demo-actions">
         <button type="button" className="ot-button ot-button-small" onClick={this.retryLine}>
