@@ -2,7 +2,7 @@
 
 > ChessDrills is a chess opening trainer focused on active recall, structured opening drills, move by move feedback, and practical repertoire practice.
 
-ChessDrills helps chess players practice openings by making them play the moves themselves. The site is designed for players who forget opening move orders during real games and need repeatable drills instead of passive theory reading.
+ChessDrills helps chess players practice openings by making them play the moves themselves. The site is built for players who forget move orders during real games and need short repeatable reps with feedback.
 
 ## Core pages
 
@@ -15,11 +15,11 @@ ChessDrills helps chess players practice openings by making them play the moves 
 
 ## Guide pages
 
-- How to remember chess openings: https://chessdrills.net/how-to-remember-chess-openings
-- Best chess opening trainer for beginners: https://chessdrills.net/best-chess-opening-trainer-for-beginners
-- Chess opening drills: https://chessdrills.net/chess-opening-drills
-- London System training: https://chessdrills.net/london-system-training
-- Sicilian Defense training: https://chessdrills.net/sicilian-defense-training
+- How to remember chess openings: https://chessdrills.net/how-to-remember-chess-openings/
+- Best chess opening trainer for beginners: https://chessdrills.net/best-chess-opening-trainer-for-beginners/
+- Chess opening drills: https://chessdrills.net/chess-opening-drills/
+- London System training: https://chessdrills.net/london-system-training/
+- Sicilian Defense training: https://chessdrills.net/sicilian-defense-training/
 
 ## Opening trainer pages
 
@@ -60,3 +60,6 @@ ChessDrills helps chess players practice openings by making them play the moves 
 ## Short description
 
 ChessDrills is a chess opening recall trainer. It focuses on repetition, feedback, and playable drills for openings and common opening mistakes.
+## Main search topics
+
+ChessDrills is relevant for searches around chess opening trainer, chess opening drills, learn chess openings, remember chess openings, opening repertoire training, active recall chess training, spaced repetition for chess openings, London System training, Sicilian Defense training, Ruy Lopez drills, and beginner chess openings.
