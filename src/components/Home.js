@@ -928,6 +928,16 @@ renderHeroCarousel = (slides) => {
         ]
       },
       {
+        title: "Guides",
+        links: [
+          { label: "Remember openings", href: "/how-to-remember-chess-openings/", staticPage: true },
+          { label: "Opening trainer guide", href: "/best-chess-opening-trainer-for-beginners/", staticPage: true },
+          { label: "Chess opening drills", href: "/chess-opening-drills/", staticPage: true },
+          { label: "London training", href: "/london-system-training/", staticPage: true },
+          { label: "Sicilian training", href: "/sicilian-defense-training/", staticPage: true }
+        ]
+      },
+      {
         title: "Popular openings",
         links: footerOpeningLinks
       }
@@ -1408,7 +1418,7 @@ return (
                         className="home-footer-link"
                         key={link.href}
                         href={link.href}
-                        onClick={(e) => this.handleFooterLinkClick(e, link.href)}
+                        onClick={link.staticPage ? undefined : (e) => this.handleFooterLinkClick(e, link.href)}
                       >
                         {link.label}
                       </a>
@@ -1422,7 +1432,7 @@ return (
           <div className="home-footer-bottom">
             <div className="home-footer-bottom-meta">
               <div className="home-footer-bottom-line">© {footerYear} ChessDrills</div>
-              <div className="home-footer-bottom-line">links for drills, tools, rankings, and opening pages.</div>
+              <div className="home-footer-bottom-line">links for drills, tools, rankings, opening pages, and training guides.</div>
             </div>
 
             <button
