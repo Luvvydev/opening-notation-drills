@@ -2,63 +2,79 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://chessdrills.net/</loc>
-    <lastmod>2026-04-07</lastmod>
+    <lastmod>2026-05-05</lastmod>
   </url>
   <url>
     <loc>https://chessdrills.net/openings</loc>
-    <lastmod>2026-04-07</lastmod>
+    <lastmod>2026-05-05</lastmod>
   </url>
   <url>
     <loc>https://chessdrills.net/demo</loc>
-    <lastmod>2026-04-26</lastmod>
+    <lastmod>2026-05-05</lastmod>
+  </url>
+  <url>
+    <loc>https://chessdrills.net/practice</loc>
+    <lastmod>2026-05-05</lastmod>
+  </url>
+  <url>
+    <loc>https://chessdrills.net/leaderboards</loc>
+    <lastmod>2026-05-05</lastmod>
+  </url>
+  <url>
+    <loc>https://chessdrills.net/about</loc>
+    <lastmod>2026-05-05</lastmod>
+  </url>
+  <url>
+    <loc>https://chessdrills.net/install</loc>
+    <lastmod>2026-05-05</lastmod>
   </url>
   <url>
     <loc>https://chessdrills.net/openings?opening=london</loc>
-    <lastmod>2026-04-07</lastmod>
+    <lastmod>2026-05-05</lastmod>
   </url>
   <url>
     <loc>https://chessdrills.net/openings?opening=sicilian</loc>
-    <lastmod>2026-04-07</lastmod>
+    <lastmod>2026-05-05</lastmod>
   </url>
   <url>
     <loc>https://chessdrills.net/openings?opening=ruy</loc>
-    <lastmod>2026-04-07</lastmod>
+    <lastmod>2026-05-05</lastmod>
   </url>
   <url>
     <loc>https://chessdrills.net/openings?opening=friedliver</loc>
-    <lastmod>2026-04-07</lastmod>
+    <lastmod>2026-05-05</lastmod>
   </url>
   <url>
     <loc>https://chessdrills.net/openings?opening=stafford</loc>
-    <lastmod>2026-04-07</lastmod>
+    <lastmod>2026-05-05</lastmod>
   </url>
   <url>
     <loc>https://chessdrills.net/openings?opening=carokann</loc>
-    <lastmod>2026-04-07</lastmod>
+    <lastmod>2026-05-05</lastmod>
   </url>
   <url>
     <loc>https://chessdrills.net/openings?opening=qga</loc>
-    <lastmod>2026-04-07</lastmod>
+    <lastmod>2026-05-05</lastmod>
   </url>
   <url>
     <loc>https://chessdrills.net/openings?opening=qgd</loc>
-    <lastmod>2026-04-07</lastmod>
+    <lastmod>2026-05-05</lastmod>
   </url>
   <url>
     <loc>https://chessdrills.net/openings?opening=italian</loc>
-    <lastmod>2026-04-07</lastmod>
+    <lastmod>2026-05-05</lastmod>
   </url>
   <url>
     <loc>https://chessdrills.net/openings?opening=kingsindian</loc>
-    <lastmod>2026-04-07</lastmod>
+    <lastmod>2026-05-05</lastmod>
   </url>
   <url>
     <loc>https://chessdrills.net/openings?opening=french</loc>
-    <lastmod>2026-04-07</lastmod>
+    <lastmod>2026-05-05</lastmod>
   </url>
   <url>
     <loc>https://chessdrills.net/openings?opening=englund</loc>
-    <lastmod>2026-04-07</lastmod>
+    <lastmod>2026-05-05</lastmod>
   </url>
   <url>
     <loc>https://chessdrills.net/openings?opening=english</loc>
@@ -113,19 +129,23 @@
     <lastmod>2026-05-05</lastmod>
   </url>
   <url>
-    <loc>https://chessdrills.net/about</loc>
-    <lastmod>2026-04-07</lastmod>
-  </url>
-  <url>
-    <loc>https://chessdrills.net/practice</loc>
-    <lastmod>2026-04-07</lastmod>
-  </url>
-  <url>
-    <loc>https://chessdrills.net/leaderboards</loc>
+    <loc>https://chessdrills.net/how-to-remember-chess-openings</loc>
     <lastmod>2026-05-05</lastmod>
   </url>
   <url>
-    <loc>https://chessdrills.net/install</loc>
-    <lastmod>2026-04-07</lastmod>
+    <loc>https://chessdrills.net/best-chess-opening-trainer-for-beginners</loc>
+    <lastmod>2026-05-05</lastmod>
+  </url>
+  <url>
+    <loc>https://chessdrills.net/chess-opening-drills</loc>
+    <lastmod>2026-05-05</lastmod>
+  </url>
+  <url>
+    <loc>https://chessdrills.net/london-system-training</loc>
+    <lastmod>2026-05-05</lastmod>
+  </url>
+  <url>
+    <loc>https://chessdrills.net/sicilian-defense-training</loc>
+    <lastmod>2026-05-05</lastmod>
   </url>
 </urlset>
