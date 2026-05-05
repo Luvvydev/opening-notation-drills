@@ -1,0 +1,313 @@
+html {
+  background: #0f1115;
+}
+
+body.seo-guide-page {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 18% 0%, rgba(124, 92, 255, 0.16), transparent 30%),
+    radial-gradient(circle at 82% 12%, rgba(244, 197, 66, 0.10), transparent 28%),
+    #0f1115;
+  color: #e9edf2;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.seo-shell {
+  width: min(1060px, calc(100% - 36px));
+  margin: 0 auto;
+  padding: 20px 0 48px;
+}
+
+.seo-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 34px;
+}
+
+.seo-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: #e9edf2;
+  text-decoration: none;
+  font-size: clamp(24px, 4vw, 34px);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+}
+
+.seo-logo img {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+}
+
+.seo-logo span span {
+  color: rgba(233, 237, 242, 0.62);
+  font-weight: 800;
+}
+
+.seo-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.seo-nav-links a,
+.seo-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  padding: 0 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.045);
+  color: #e9edf2;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.seo-nav-links a:hover,
+.seo-button:hover {
+  border-color: rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.075);
+}
+
+.seo-button.primary {
+  border-color: rgba(124, 92, 255, 0.55);
+  background: linear-gradient(180deg, rgba(124, 92, 255, 0.38), rgba(124, 92, 255, 0.18));
+}
+
+.seo-hero {
+  display: grid;
+  grid-template-columns: 1.06fr 0.94fr;
+  gap: 24px;
+  align-items: stretch;
+  margin-bottom: 24px;
+}
+
+.seo-panel {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(24, 28, 39, 0.92), rgba(14, 16, 22, 0.90));
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.48);
+}
+
+.seo-hero-main {
+  padding: 30px;
+}
+
+.seo-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  padding: 7px 10px;
+  border: 1px solid rgba(244, 197, 66, 0.24);
+  border-radius: 999px;
+  background: rgba(244, 197, 66, 0.10);
+  color: rgba(244, 197, 66, 0.95);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.seo-hero h1 {
+  max-width: 740px;
+  margin: 0;
+  font-size: clamp(36px, 6vw, 64px);
+  line-height: 0.96;
+  letter-spacing: -0.06em;
+}
+
+.seo-lede {
+  max-width: 660px;
+  margin: 18px 0 0;
+  color: rgba(233, 237, 242, 0.70);
+  font-size: 17px;
+  line-height: 1.65;
+}
+
+.seo-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.seo-demo-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px;
+}
+
+.seo-mini-board {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 14px;
+}
+
+.seo-mini-board span {
+  display: block;
+  aspect-ratio: 1;
+}
+
+.seo-mini-board span:nth-child(16n + 1),
+.seo-mini-board span:nth-child(16n + 3),
+.seo-mini-board span:nth-child(16n + 5),
+.seo-mini-board span:nth-child(16n + 7),
+.seo-mini-board span:nth-child(16n + 10),
+.seo-mini-board span:nth-child(16n + 12),
+.seo-mini-board span:nth-child(16n + 14),
+.seo-mini-board span:nth-child(16n + 16) {
+  background: #edd7ac;
+}
+
+.seo-mini-board span:nth-child(16n + 2),
+.seo-mini-board span:nth-child(16n + 4),
+.seo-mini-board span:nth-child(16n + 6),
+.seo-mini-board span:nth-child(16n + 8),
+.seo-mini-board span:nth-child(16n + 9),
+.seo-mini-board span:nth-child(16n + 11),
+.seo-mini-board span:nth-child(16n + 13),
+.seo-mini-board span:nth-child(16n + 15) {
+  background: #b98f66;
+}
+
+.seo-callout {
+  padding: 16px;
+  border: 1px solid rgba(124, 92, 255, 0.36);
+  border-radius: 16px;
+  background: rgba(124, 92, 255, 0.12);
+}
+
+.seo-callout strong {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 15px;
+}
+
+.seo-callout p {
+  margin: 0;
+  color: rgba(233, 237, 242, 0.72);
+  line-height: 1.55;
+}
+
+.seo-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin: 24px 0;
+}
+
+.seo-card {
+  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.seo-card h2,
+.seo-card h3 {
+  margin: 0 0 10px;
+  color: #f3f6fb;
+  letter-spacing: -0.03em;
+}
+
+.seo-card p,
+.seo-card li {
+  color: rgba(233, 237, 242, 0.72);
+  line-height: 1.62;
+}
+
+.seo-card p:last-child,
+.seo-card ul:last-child,
+.seo-card ol:last-child {
+  margin-bottom: 0;
+}
+
+.seo-wide {
+  grid-column: span 2;
+}
+
+.seo-full {
+  grid-column: 1 / -1;
+}
+
+.seo-list {
+  padding-left: 20px;
+}
+
+.seo-link-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  padding: 0;
+  list-style: none;
+}
+
+.seo-link-list a {
+  display: block;
+  padding: 13px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  color: #e9edf2;
+  text-decoration: none;
+  font-weight: 800;
+}
+
+.seo-link-list a:hover {
+  border-color: rgba(124, 92, 255, 0.45);
+  background: rgba(124, 92, 255, 0.10);
+}
+
+.seo-footer {
+  margin-top: 28px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.10);
+  color: rgba(233, 237, 242, 0.50);
+  font-size: 13px;
+}
+
+@media (max-width: 860px) {
+  .seo-hero,
+  .seo-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .seo-wide {
+    grid-column: auto;
+  }
+
+  .seo-nav {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .seo-nav-links {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 560px) {
+  .seo-shell {
+    width: min(100% - 24px, 1060px);
+    padding-top: 14px;
+  }
+
+  .seo-hero-main,
+  .seo-card {
+    padding: 18px;
+  }
+
+  .seo-link-list {
+    grid-template-columns: 1fr;
+  }
+}

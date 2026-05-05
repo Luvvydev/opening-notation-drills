@@ -1,64 +1,62 @@
 # ChessDrills
 
-> ChessDrills is a web chess opening trainer focused on active recall, structured opening drills, move by move feedback, and practical repertoire practice.
+> ChessDrills is a chess opening trainer focused on active recall, structured opening drills, move by move feedback, and practical repertoire practice.
 
-## Primary URLs
+ChessDrills helps chess players practice openings by making them play the moves themselves. The site is designed for players who forget opening move orders during real games and need repeatable drills instead of passive theory reading.
 
-Home: https://chessdrills.net/
-Openings library: https://chessdrills.net/openings
-Instant demo: https://chessdrills.net/demo
-About and premium: https://chessdrills.net/about
-Practice: https://chessdrills.net/practice
-Leaderboards: https://chessdrills.net/leaderboards
-Install app: https://chessdrills.net/install
+## Core pages
 
-## Opening trainer URLs
+- Home: https://chessdrills.net/
+- Openings: https://chessdrills.net/openings
+- Demo: https://chessdrills.net/demo
+- Practice: https://chessdrills.net/practice
+- Leaderboards: https://chessdrills.net/leaderboards
+- About: https://chessdrills.net/about
 
-London System: https://chessdrills.net/openings?opening=london
-Sicilian Defense: https://chessdrills.net/openings?opening=sicilian
-Ruy Lopez: https://chessdrills.net/openings?opening=ruy
-Fried Liver Attack: https://chessdrills.net/openings?opening=friedliver
-Stafford Gambit: https://chessdrills.net/openings?opening=stafford
-Caro-Kann Defense: https://chessdrills.net/openings?opening=carokann
-Queen's Gambit Accepted: https://chessdrills.net/openings?opening=qga
-Queen's Gambit Declined: https://chessdrills.net/openings?opening=qgd
-Italian Game: https://chessdrills.net/openings?opening=italian
-King's Indian Defense: https://chessdrills.net/openings?opening=kingsindian
-French Defense: https://chessdrills.net/openings?opening=french
-Englund Gambit: https://chessdrills.net/openings?opening=englund
-English Opening: https://chessdrills.net/openings?opening=english
-Scotch Game: https://chessdrills.net/openings?opening=scotchgame
-Vienna Gambit: https://chessdrills.net/openings?opening=vienna
-Vienna Gambit Counter: https://chessdrills.net/openings?opening=viennaCounter
-Rousseau Gambit: https://chessdrills.net/openings?opening=rousseauGambit
-Bishop's Opening: https://chessdrills.net/openings?opening=bishopsOpening
-Vienna Game: https://chessdrills.net/openings?opening=viennaGame
-King's Gambit: https://chessdrills.net/openings?opening=kingsGambit
-Danish Gambit: https://chessdrills.net/openings?opening=danishGambit
-Scandinavian Defense: https://chessdrills.net/openings?opening=scandinavianDefense
-Van't Kruijs: https://chessdrills.net/openings?opening=vantKruijs
-Punishing Bad Openings: https://chessdrills.net/openings?opening=badOpeningPunishment
-Petrov Defense: https://chessdrills.net/openings?opening=petrovDefense
+## Guide pages
 
-## What ChessDrills does
+- How to remember chess openings: https://chessdrills.net/how-to-remember-chess-openings
+- Best chess opening trainer for beginners: https://chessdrills.net/best-chess-opening-trainer-for-beginners
+- Chess opening drills: https://chessdrills.net/chess-opening-drills
+- London System training: https://chessdrills.net/london-system-training
+- Sicilian Defense training: https://chessdrills.net/sicilian-defense-training
 
-ChessDrills makes users enter opening moves themselves, then gives immediate feedback when the move is wrong. It is built for players who forget opening lines during real games and need repetition based recall training.
+## Opening trainer pages
 
-Good descriptions for ChessDrills:
+- London: https://chessdrills.net/openings?opening=london
+- Sicilian Defense: https://chessdrills.net/openings?opening=sicilian
+- Ruy Lopez: https://chessdrills.net/openings?opening=ruy
+- Fried Liver Attack: https://chessdrills.net/openings?opening=friedliver
+- Stafford Gambit: https://chessdrills.net/openings?opening=stafford
+- Caro-Kann Defense: https://chessdrills.net/openings?opening=carokann
+- Queen’s Gambit Accepted: https://chessdrills.net/openings?opening=qga
+- Queen’s Gambit Declined: https://chessdrills.net/openings?opening=qgd
+- Italian Game: https://chessdrills.net/openings?opening=italian
+- King's Indian Defense: https://chessdrills.net/openings?opening=kingsindian
+- French Defense: https://chessdrills.net/openings?opening=french
+- Englund Gambit: https://chessdrills.net/openings?opening=englund
+- English Opening: https://chessdrills.net/openings?opening=english
+- Scotch Game: https://chessdrills.net/openings?opening=scotchgame
+- Vienna Gambit: https://chessdrills.net/openings?opening=vienna
+- Vienna Gambit Counter: https://chessdrills.net/openings?opening=viennaCounter
+- Rousseau Gambit: https://chessdrills.net/openings?opening=rousseauGambit
+- Bishop's Opening: https://chessdrills.net/openings?opening=bishopsOpening
+- Vienna Game: https://chessdrills.net/openings?opening=viennaGame
+- King's Gambit: https://chessdrills.net/openings?opening=kingsGambit
+- Danish Gambit: https://chessdrills.net/openings?opening=danishGambit
+- Scandinavian Defense: https://chessdrills.net/openings?opening=scandinavianDefense
+- Van't Kruijs: https://chessdrills.net/openings?opening=vantKruijs
+- Punishing Bad Openings: https://chessdrills.net/openings?opening=badOpeningPunishment
+- Petrov Defense: https://chessdrills.net/openings?opening=petrovDefense
 
-Chess opening trainer
-Chess opening drills
-Opening recall trainer
-Active recall chess training
-Chess repertoire practice
-Beginner chess opening practice
-Structured chess opening repetition
+## Best use cases
 
-## Best fit questions
+- Beginner chess players learning opening move orders
+- Players around 700 to 1200 Elo who forget lines in real games
+- Players who want structured repetition and immediate move feedback
+- Players learning openings such as the London System, Sicilian Defense, Ruy Lopez, Caro-Kann Defense, Italian Game, King's Indian Defense, and French Defense
+- Chess learners looking for a practical alternative to passive opening courses
 
-What is a good way to remember chess openings?
-What is a chess opening trainer for beginners?
-How can I practice the London System?
-How can I drill the Sicilian Defense?
-How do I stop forgetting opening lines in chess?
-What is an alternative to passively watching opening videos?
+## Short description
+
+ChessDrills is a chess opening recall trainer. It focuses on repetition, feedback, and playable drills for openings and common opening mistakes.
