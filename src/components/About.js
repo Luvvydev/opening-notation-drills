@@ -108,9 +108,22 @@ export default function About(props) {
       const fn = httpsCallable(functions, "createCheckoutSession");
       const res = await fn({ tier: "member", plan: selectedPlan });
       const url = res && res.data && res.data.url ? String(res.data.url) : "";
-      if (url) go(url);
+
+      if (!url) {
+        throw new Error("checkout_missing_url");
+      }
+
+      go(url);
     } catch (e) {
-      alert("Checkout failed. Please try again in a moment.");
+      const code = e && e.code ? String(e.code) : "unknown";
+      const message = e && e.message ? String(e.message) : "Checkout failed.";
+      console.error("Checkout failed", { code, message, plan: selectedPlan, error: e });
+
+      if (code === "functions/unauthenticated") {
+        alert("Please sign in before starting checkout.");
+      } else {
+        alert("Checkout failed. Please try again in a moment.");
+      }
     } finally {
       setCheckoutBusy(false);
     }

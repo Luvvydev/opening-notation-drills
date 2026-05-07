@@ -12,7 +12,7 @@ const DISCORD_CLIENT_SECRET = defineSecret("DISCORD_CLIENT_SECRET");
 const DISCORD_BOT_TOKEN = defineSecret("DISCORD_BOT_TOKEN");
 const DISCORD_STATE_SECRET = defineSecret("DISCORD_STATE_SECRET");
 
-const CANONICAL_DISCORD_REDIRECT_URI = "https://chessdrills.net/#/discord";
+const CANONICAL_DISCORD_REDIRECT_URI = "https://chessdrills.net/discord";
 
 // Stripe config (hardcoded for fast, deterministic live setup)
 // If you change prices later, update these constants and redeploy functions.
@@ -59,13 +59,12 @@ exports.createCheckoutSession = functions
 
     const priceMonthly = STRIPE_PRICE_MONTHLY;
     const priceYearly = STRIPE_PRICE_YEARLY;
-    const priceLifetime = STRIPE_PRICE_LIFETIME.value();
 
     let priceId;
     let membershipPlan = null;
 
     if (tier === "lifetime") {
-      priceId = priceLifetime;
+      priceId = STRIPE_PRICE_LIFETIME.value();
     } else {
       // Default to yearly if omitted
       const requestedPlan = data?.plan === "monthly" ? "monthly" : "yearly";
@@ -77,20 +76,41 @@ exports.createCheckoutSession = functions
       throw new functions.https.HttpsError("failed-precondition", "Missing Stripe price id");
     }
 
-    const session = await stripe.checkout.sessions.create({
-      mode: tier === "lifetime" ? "payment" : "subscription",
-      line_items: [{ price: priceId, quantity: 1 }],
-      success_url: `${baseUrl}/#/profile?checkout=success`,
-      cancel_url: `${baseUrl}/#/about?checkout=cancel`,
-      client_reference_id: uid,
-      metadata: {
+    try {
+      const session = await stripe.checkout.sessions.create({
+        mode: tier === "lifetime" ? "payment" : "subscription",
+        line_items: [{ price: priceId, quantity: 1 }],
+        success_url: `${baseUrl}/profile?checkout=success`,
+        cancel_url: `${baseUrl}/about?checkout=cancel`,
+        client_reference_id: uid,
+        metadata: {
+          uid,
+          tier,
+          plan: membershipPlan || ""
+        }
+      });
+
+      if (!session.url) {
+        throw new Error("Stripe did not return a checkout URL");
+      }
+
+      return { url: session.url };
+    } catch (err) {
+      console.error("createCheckoutSession failed", {
         uid,
         tier,
-        plan: membershipPlan || ""
-      }
-    });
+        plan: membershipPlan || "",
+        priceId,
+        code: err && err.code ? err.code : null,
+        type: err && err.type ? err.type : null,
+        message: err && err.message ? err.message : String(err)
+      });
 
-    return { url: session.url };
+      throw new functions.https.HttpsError(
+        "internal",
+        "Could not start Stripe Checkout."
+      );
+    }
   });
 
 exports.stripeWebhook = functions
