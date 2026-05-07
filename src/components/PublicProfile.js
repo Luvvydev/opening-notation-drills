@@ -7,6 +7,7 @@ import "./ActivityHeatmap.css";
 import { db } from "../firebase";
 import { collection, doc, getDoc, getDocs, limit, orderBy, query } from "firebase/firestore";
 import { leaderboardScopeKey } from "../utils/periodKeys";
+import { getSyntheticLeaderboardProfile } from "./syntheticLeaderboardProfiles";
 
 function ymdFromDate(dt) {
   const y = dt.getFullYear();
@@ -258,7 +259,11 @@ export default function PublicProfile() {
 
     (async () => {
       const snap = await getDoc(doc(db, "publicProfiles", un));
-      setProfile(snap.exists() ? snap.data() : null);
+      if (snap.exists()) {
+        setProfile(snap.data());
+      } else {
+        setProfile(getSyntheticLeaderboardProfile(un));
+      }
       setLoading(false);
     })();
   }, [un]);
@@ -269,6 +274,14 @@ export default function PublicProfile() {
     let alive = true;
 
     async function loadRanks() {
+      if (profile.isSyntheticLeaderboardProfile) {
+        const synthetic = profile.syntheticLeaderboard || {};
+        setLbWeek({ rank: null, score: 0 });
+        setLbAll({ rank: synthetic.allRank || null, score: Number(synthetic.allScore) || 0 });
+        setLbLoading(false);
+        return;
+      }
+
       setLbLoading(true);
       try {
         const weekScope = leaderboardScopeKey("week");
@@ -330,7 +343,7 @@ export default function PublicProfile() {
   }, [profile]);
 
   useEffect(() => {
-  if (!profile || !profile.uid) return;
+  if (!profile || !profile.uid || profile.isSyntheticLeaderboardProfile) return;
 
   let alive = true;
 
