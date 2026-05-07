@@ -40,9 +40,8 @@
 
 .about-hero {
   text-align: center;
-  padding-bottom: 18px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  margin-bottom: 18px;
+  padding-bottom: 8px;
+  margin-bottom: 0;
 }
 
 .about-hero-badge {
@@ -77,6 +76,70 @@
   line-height: 1.55;
   text-align: center;
 }
+
+
+.about-proof-strip {
+  max-width: 430px;
+  margin: 10px auto 0 auto;
+  padding: 2px 0 0 0;
+  background: transparent;
+  border: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.about-proof-count {
+  min-width: 0;
+  color: rgba(148, 155, 166, 0.82);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.35;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  text-align: left;
+}
+
+.about-proof-count strong {
+  color: rgba(194, 203, 216, 0.86);
+  font-weight: 800;
+}
+
+.about-proof-faces {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+}
+
+.about-proof-faces img {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 2px solid rgba(15, 17, 21, 0.92);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08);
+  background: #151923;
+}
+
+.about-proof-faces img + img {
+  margin-left: -8px;
+}
+
+@media (max-width: 640px) {
+  .about-proof-strip {
+    max-width: 100%;
+    padding: 2px 0 0 0;
+  }
+
+  .about-proof-count {
+    justify-content: center;
+    text-align: left;
+    font-size: 12px;
+  }
+}
+
 
 .about-muted {
   margin: 0 auto 18px auto;
@@ -473,4 +536,19 @@
   font-size: 13px;
   line-height: 1.45;
   color: rgba(201, 210, 221, 0.88);
+}
+
+.about-trial-button-time {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 8px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  color: rgba(233, 237, 242, 0.94);
+  background: rgba(0, 0, 0, 0.20);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: 12px;
+  font-weight: 1000;
+  line-height: 1.2;
 }
