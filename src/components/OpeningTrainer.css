@@ -3403,3 +3403,38 @@
     flex: 1;
   }
 }
+
+.ot-board {
+  position: relative;
+}
+
+.ot-board-inner {
+  position: relative;
+  width: fit-content;
+}
+
+.ot-hint-arrow-overlay {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+  z-index: 4;
+}
+
+.ot-hint-arrow-svg {
+  width: 100%;
+  height: 100%;
+  color: rgba(80, 170, 255, 0.92);
+  filter: drop-shadow(0 0 8px rgba(80, 170, 255, 0.28));
+}
+
+.ot-hint-arrow-svg line {
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  opacity: 0.92;
+}
+
+.ot-hint-arrow-svg path {
+  fill: currentColor;
+}

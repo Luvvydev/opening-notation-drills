@@ -418,6 +418,7 @@ class OpeningTrainer extends Component {
       completed: false,
       confettiActive: false,
       wrongAttempt: null,
+      wrongAttemptCount: 0,
       progress: progress,
       learnProgress: learnProgress,
       learnStartFromIntroPending: shouldStartFromIntro,
@@ -439,6 +440,7 @@ class OpeningTrainer extends Component {
       viewIndex: 0,
       viewFen: "start",
       hintFromSquare: null,
+      hintToSquare: null,
       solveArmed: false,
       selectedSquare: null,
       coachHighlight: null,
@@ -1148,12 +1150,13 @@ saveCustomModal = () => {
     const playerColor = this.getPlayerColor();
     if (this.game.turn() !== playerColor) return;
 
-    const fromSq = this.getHintFromSquare(expected);
+    const hintPreview = this.getExpectedMovePreview(expected);
 
     this.setState({
       showHint: true,
       solveArmed: true,
-      hintFromSquare: fromSq,
+      hintFromSquare: hintPreview && hintPreview.from ? hintPreview.from : this.getHintFromSquare(expected),
+      hintToSquare: hintPreview && hintPreview.to ? hintPreview.to : null,
       helpUsed: true
     });
   };
@@ -1194,9 +1197,11 @@ saveCustomModal = () => {
         lastMistake: null,
         lastMoveFeedback: null,
         wrongAttempt: null,
+        wrongAttemptCount: 0,
         showHint: false,
         solveArmed: false,
         hintFromSquare: null,
+        hintToSquare: null,
         // Solve breaks clean completion
         helpUsed: true,
         lastMove: { from: mv.from, to: mv.to }
@@ -1215,6 +1220,79 @@ saveCustomModal = () => {
   toggleLineMenuOpen = (e) => {
     if (e && e.stopPropagation) e.stopPropagation();
     this.setState({ lineMenuOpen: !this.state.lineMenuOpen });
+  };
+
+
+  getLineOptionLabel = (line, symbol) => {
+    if (!line) return symbol || "";
+    const lineNumber = getLineNumberForLines(this.state.openingKey, this.getLines(), line.id);
+    const prefix = lineNumber ? `#${lineNumber}` : "#?";
+    const status = symbol ? `${symbol} ` : "";
+    return `${status}${prefix} ${line.name || "Untitled line"}`;
+  };
+
+  renderLineSelectOptions = () => {
+    const grouped = groupLines(this.getLines());
+
+    return grouped.cats.map((cat) => {
+      const arr = grouped.map[cat] || [];
+      return (
+        <optgroup key={cat} label={cat}>
+          {arr.map((l) => {
+            const s = getLineStats(this.state.progress, this.state.openingKey, l.id);
+            const symbol = isCompleted(s) ? "✓" : s.timesSeen > 0 ? "•" : "○";
+            return (
+              <option key={l.id} value={l.id}>
+                {this.getLineOptionLabel(l, symbol)}
+              </option>
+            );
+          })}
+        </optgroup>
+      );
+    });
+  };
+
+
+  getBoardSquareCenter = (square, orientation, boardSize) => {
+    if (!square || square.length < 2 || !boardSize) return null;
+    const file = square.charCodeAt(0) - 97;
+    const rank = parseInt(square[1], 10);
+    if (Number.isNaN(file) || Number.isNaN(rank)) return null;
+
+    const col = orientation === "white" ? file : 7 - file;
+    const row = orientation === "white" ? 8 - rank : rank - 1;
+    const cellSize = boardSize / 8;
+
+    return {
+      x: (col + 0.5) * cellSize,
+      y: (row + 0.5) * cellSize
+    };
+  };
+
+  renderHintArrowOverlay = (playerColor) => {
+    if ((!this.state.showHint && !this.state.solveArmed) || !this.state.hintFromSquare || !this.state.hintToSquare || this.state.completed) return null;
+    if (this.state.isMobile && !this.state.mobileBoardSize) return null;
+
+    const boardSize = this.state.isMobile && this.state.mobileBoardSize ? this.state.mobileBoardSize : this.state.boardSize;
+    const orientation = playerColor === "b" ? "black" : "white";
+    const from = this.getBoardSquareCenter(this.state.hintFromSquare, orientation, boardSize);
+    const to = this.getBoardSquareCenter(this.state.hintToSquare, orientation, boardSize);
+    if (!from || !to) return null;
+
+    const markerId = `otHintArrow-${this.state.boardRenderToken || 0}-${this.state.stepIndex || 0}`;
+
+    return (
+      <div className="ot-hint-arrow-overlay" style={{ width: boardSize, height: boardSize }}>
+        <svg viewBox={`0 0 ${boardSize} ${boardSize}`} className="ot-hint-arrow-svg" aria-hidden="true">
+          <defs>
+            <marker id={markerId} markerWidth="10" markerHeight="10" refX="7" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+              <path d="M0,0 L10,5 L0,10 z" />
+            </marker>
+          </defs>
+          <line x1={from.x} y1={from.y} x2={to.x} y2={to.y} markerEnd={`url(#${markerId})`} />
+        </svg>
+      </div>
+    );
   };
 
 
@@ -1421,7 +1499,10 @@ saveCustomModal = () => {
       lastMoveFeedback: null,
       feedbackExpanded: false,
       completed: false,
-      showHint: false
+      showHint: false,
+      solveArmed: false,
+      hintFromSquare: null,
+      hintToSquare: null
     });
   };
 
@@ -1455,7 +1536,9 @@ saveCustomModal = () => {
         lastMoveFeedback: null,
         feedbackExpanded: false,
         wrongAttempt: null,
+        wrongAttemptCount: 0,
         showHint: false,
+        hintToSquare: null,
         lastMove: null,
         selectedSquare: null,
         legalTargets: [],
@@ -1489,7 +1572,9 @@ saveCustomModal = () => {
         lastMoveFeedback: null,
         completed: false,
         wrongAttempt: null,
+        wrongAttemptCount: 0,
         showHint: false,
+        hintToSquare: null,
         lastMove: null,
         userHasPlayedThisLine: false,
         modePanelVisible: true,
@@ -1576,7 +1661,9 @@ nextLine = () => {
         lastMoveFeedback: null,
         completed: false,
         wrongAttempt: null,
+        wrongAttemptCount: 0,
         showHint: false,
+        hintToSquare: null,
         lastMove: null,
         userHasPlayedThisLine: false,
         modePanelVisible: true,
@@ -1637,7 +1724,9 @@ nextLine = () => {
         lastMoveFeedback: null,
         completed: false,
         wrongAttempt: null,
+        wrongAttemptCount: 0,
         showHint: false,
+        hintToSquare: null,
         lastMove: null,
         userHasPlayedThisLine: false,
         modePanelVisible: true,
@@ -1709,7 +1798,9 @@ if (!nextId) nextId = nextLines[0] ? nextLines[0].id : "";
         lastMoveFeedback: null,
         completed: false,
         wrongAttempt: null,
+        wrongAttemptCount: 0,
         showHint: false,
+        hintToSquare: null,
         lastMove: null,
         userHasPlayedThisLine: false,
         modePanelVisible: true,
@@ -1759,7 +1850,9 @@ if (!nextId) nextId = nextLines[0] ? nextLines[0].id : "";
         lastMoveFeedback: null,
         completed: false,
         wrongAttempt: null,
+        wrongAttemptCount: 0,
         showHint: false,
+        hintToSquare: null,
         lastMove: null,
         userHasPlayedThisLine: false,
         modePanelVisible: true,
@@ -2230,9 +2323,11 @@ onCompletedLine = () => {
             lastMoveFeedback: matchedFeedback,
             feedbackExpanded: false,
             wrongAttempt: null,
+            wrongAttemptCount: 0,
             showHint: false,
             solveArmed: false,
             hintFromSquare: null,
+            hintToSquare: null,
             selectedSquare: null,
             legalTargets: [],
             lastMove: { from: sourceSquare, to: targetSquare },
@@ -2267,6 +2362,10 @@ onCompletedLine = () => {
         isCorrect: false
       });
 
+      const nextWrongAttemptCount = (Number(this.state.wrongAttemptCount) || 0) + 1;
+      const fallbackUnlocked = mode !== "drill" && nextWrongAttemptCount >= 2;
+      const fallbackPreview = fallbackUnlocked ? this.getExpectedMovePreview(expected) : null;
+
       if (mode === "drill") {
         this.setState({
           fen: this.game.fen(),
@@ -2285,6 +2384,7 @@ onCompletedLine = () => {
             from: sourceSquare,
             to: targetSquare
           },
+          wrongAttemptCount: nextWrongAttemptCount,
           selectedSquare: null,
           legalTargets: [],
           userHasPlayedThisLine: true,
@@ -2300,9 +2400,11 @@ onCompletedLine = () => {
         fen: this.game.fen(),
         completed: false,
         mistakeUnlocked: true,
-        showHint: false,
-        solveArmed: false,
-        hintFromSquare: null,
+        showHint: fallbackUnlocked,
+        solveArmed: fallbackUnlocked,
+        hintFromSquare: fallbackPreview && fallbackPreview.from ? fallbackPreview.from : null,
+        hintToSquare: fallbackPreview && fallbackPreview.to ? fallbackPreview.to : null,
+        helpUsed: fallbackUnlocked ? true : this.state.helpUsed,
         lastMistake: {
           expected: expected,
           played: playedSAN,
@@ -2314,6 +2416,7 @@ onCompletedLine = () => {
           from: sourceSquare,
           to: targetSquare
         },
+        wrongAttemptCount: nextWrongAttemptCount,
         selectedSquare: null,
         legalTargets: [],
         userHasPlayedThisLine: true,
@@ -2343,9 +2446,11 @@ onCompletedLine = () => {
         lastMoveFeedback: correctFeedback,
         feedbackExpanded: false,
         wrongAttempt: null,
+        wrongAttemptCount: 0,
         showHint: false,
         solveArmed: false,
         hintFromSquare: null,
+        hintToSquare: null,
         selectedSquare: null,
         legalTargets: [],
         lastMove: { from: sourceSquare, to: targetSquare },
@@ -3440,6 +3545,13 @@ renderMoveFeedbackCard = () => {
         </div>
       ) : null}
 
+      {isWrong && this.state.solveArmed ? (
+        <div className="ot-move-feedback-why">
+          <div className="ot-move-feedback-label">Fallback</div>
+          <div className="ot-move-feedback-text">The move is highlighted now. Press ✓ to play it and keep the line moving.</div>
+        </div>
+      ) : null}
+
       {expanded && feedback.why ? (
         <div className="ot-move-feedback-why">
           <div className="ot-move-feedback-label">Why</div>
@@ -3687,25 +3799,7 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
                   ─────────
                 </option>
 
-                {(() => {
-                  const grouped = groupLines(this.getLines());
-                  return grouped.cats.map((cat) => {
-                    const arr = grouped.map[cat] || [];
-                    return (
-                      <optgroup key={cat} label={cat}>
-                        {arr.map((l) => {
-                          const s = getLineStats(this.state.progress, this.state.openingKey, l.id);
-                          const symbol = isCompleted(s) ? "✓" : s.timesSeen > 0 ? "•" : "○";
-                          return (
-                            <option key={l.id} value={l.id}>
-                              {symbol} {l.name}
-                            </option>
-                          );
-                        })}
-                      </optgroup>
-                    );
-                  });
-                })()}
+                {this.renderLineSelectOptions()}
               </select>
             </>
           )}
@@ -3871,9 +3965,11 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
         completed: false,
         confettiActive: false,
         wrongAttempt: null,
+        wrongAttemptCount: 0,
         showHint: false,
         solveArmed: false,
         hintFromSquare: null,
+        hintToSquare: null,
         selectedSquare: null,
         coachHighlight: null,
         legalTargets: [],
@@ -4395,9 +4491,32 @@ render() {
       };
     }
 
-    if (this.state.hintFromSquare) {
+    if (this.state.showHint && this.state.hintFromSquare) {
       squareStyles[this.state.hintFromSquare] = {
-        background: "rgba(80, 170, 255, 0.45)"
+        ...(squareStyles[this.state.hintFromSquare] || {}),
+        background: "rgba(80, 170, 255, 0.45)",
+        boxShadow: "inset 0 0 0 3px rgba(80, 170, 255, 0.9)"
+      };
+    }
+
+    if (this.state.showHint && this.state.hintToSquare) {
+      const existingHintTarget = squareStyles[this.state.hintToSquare] || {};
+      const hintTargetGlow = "radial-gradient(circle at center, rgba(80, 170, 255, 0.95) 0 18%, rgba(80, 170, 255, 0.25) 19 38%, rgba(0,0,0,0) 39%)";
+      squareStyles[this.state.hintToSquare] = {
+        ...existingHintTarget,
+        backgroundImage: existingHintTarget.backgroundImage
+          ? `${existingHintTarget.backgroundImage}, ${hintTargetGlow}`
+          : hintTargetGlow,
+        backgroundRepeat: existingHintTarget.backgroundRepeat
+          ? `${existingHintTarget.backgroundRepeat}, no-repeat`
+          : "no-repeat",
+        backgroundPosition: existingHintTarget.backgroundPosition
+          ? `${existingHintTarget.backgroundPosition}, center`
+          : "center",
+        backgroundSize: existingHintTarget.backgroundSize
+          ? `${existingHintTarget.backgroundSize}, 100% 100%`
+          : "100% 100%",
+        boxShadow: "inset 0 0 0 3px rgba(80, 170, 255, 0.9)"
       };
     }
 
@@ -5054,25 +5173,7 @@ render() {
                               ─────────
                             </option>
 
-                            {(() => {
-                              const grouped = groupLines(this.getLines());
-                              return grouped.cats.map((cat) => {
-                                const arr = grouped.map[cat] || [];
-                                return (
-                                  <optgroup key={cat} label={cat}>
-                                    {arr.map((l) => {
-                                      const s = getLineStats(this.state.progress, this.state.openingKey, l.id);
-                                      const symbol = isCompleted(s) ? "✓" : s.timesSeen > 0 ? "•" : "○";
-                                      return (
-                                        <option key={l.id} value={l.id}>
-                                          {symbol} {l.name}
-                                        </option>
-                                      );
-                                    })}
-                                  </optgroup>
-                                );
-                              });
-                            })()}
+                            {this.renderLineSelectOptions()}
                           </select>
                         </>
                       )}
@@ -5089,6 +5190,7 @@ render() {
 
               <div className="ot-mobile-board-wrap">
                 <div className="ot-board">
+                  <div className="ot-board-inner">
                   <BoardErrorBoundary onReset={this.resetBoardRender}>
                   <Chessboard
                     width={this.state.isMobile && this.state.mobileBoardSize ? this.state.mobileBoardSize : this.state.boardSize}
@@ -5104,6 +5206,8 @@ render() {
                     {...BOARD_THEMES[this.state.settings.boardTheme || DEFAULT_THEME]}
                   />
                   </BoardErrorBoundary>
+                  {this.renderHintArrowOverlay(playerColor)}
+                  </div>
                 </div>
               </div>
 
@@ -5217,25 +5321,7 @@ render() {
                       ─────────
                     </option>
 
-                    {(() => {
-                      const grouped = groupLines(this.getLines());
-                      return grouped.cats.map((cat) => {
-                        const arr = grouped.map[cat] || [];
-                        return (
-                          <optgroup key={cat} label={cat}>
-                            {arr.map((l) => {
-                              const s = getLineStats(this.state.progress, this.state.openingKey, l.id);
-                              const symbol = isCompleted(s) ? "✓" : s.timesSeen > 0 ? "•" : "○";
-                              return (
-                                <option key={l.id} value={l.id}>
-                                  {symbol} {l.name}
-                                </option>
-                              );
-                            })}
-                          </optgroup>
-                        );
-                      });
-                    })()}
+                    {this.renderLineSelectOptions()}
                   </select>
                 </div>
               ) : null}
@@ -5360,6 +5446,7 @@ render() {
 <option value="badOpeningPunishment">Bad Opening Punishment Drills</option>
 </select>
             </div>
+            <div className="ot-board-inner">
 <BoardErrorBoundary onReset={this.resetBoardRender}>
 <Chessboard
   width={this.state.isMobile && this.state.mobileBoardSize ? this.state.mobileBoardSize : this.state.boardSize}
@@ -5375,6 +5462,8 @@ render() {
   {...BOARD_THEMES[this.state.settings.boardTheme || DEFAULT_THEME]}
 />
 </BoardErrorBoundary>
+{this.renderHintArrowOverlay(playerColor)}
+            </div>
           </div>
 
           
