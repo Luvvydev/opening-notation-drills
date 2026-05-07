@@ -1589,6 +1589,10 @@ function GameReview() {
     : engineState === 'analyzing-game'
       ? gameProgress
       : 0;
+  const isPersonalPackPopulating = trainingSource === 'pack' && packBuilding && activePuzzleQueue.length > 0;
+  const packBuildProgressText = packProgress.total
+    ? `${packProgress.current}/${packProgress.total}`
+    : 'working';
   const shellProgressStyle = { '--gr-top-progress': `${topProgressPercent}%` };
   const sidebarPanelStyle = { '--gr-sidebar-target-height': `${boardWidth + 26}px` };
   const puzzlePlayedMarkerId = useMemo(() => `grPuzzleArrowHeadPlayed-${Math.random().toString(36).slice(2, 9)}`, []);
@@ -2152,8 +2156,8 @@ function GameReview() {
           setSidebarMode('puzzles');
           setStatusMessage(
             visiblePackQueue.length > 1
-              ? `First ${visiblePackQueue.length} personal pack puzzles ready. Loading the rest...`
-              : 'First personal pack puzzle ready. Loading the rest...'
+              ? `First ${visiblePackQueue.length} personal pack puzzles are ready. You can play them while the rest keeps analyzing.`
+              : 'First personal pack puzzle is ready. You can play it while the rest keeps analyzing.'
           );
           revealedSeedQueue = true;
           await waitForNextPaint();
@@ -2168,7 +2172,7 @@ function GameReview() {
               const merged = mergePackPuzzleQueue(previous, partialPack.puzzles);
               return merged.length === previous.length ? previous : merged;
             });
-            setStatusMessage(`Loaded ${visiblePackQueue.length} personal pack puzzles. Analyzing the rest...`);
+            setStatusMessage(`Loaded ${visiblePackQueue.length} personal pack puzzles so far. You can keep playing while the rest analyzes.`);
             await waitForNextPaint();
           }
         }
@@ -3196,8 +3200,8 @@ function GameReview() {
                           </div>
 
                           {packBuilding ? (
-                            <div className="gr-pack-status">
-                              <span>Analyzing {packProgress.current}/{packProgress.total}</span>
+                            <div className={packPuzzles.length ? 'gr-pack-status gr-pack-status-live' : 'gr-pack-status'}>
+                              <span>{packPuzzles.length ? `${packPuzzles.length} puzzles ready. Keep playing while analysis continues.` : `Analyzing ${packProgress.current}/${packProgress.total}`}</span>
                               {packProgress.label ? <strong>{packProgress.label}</strong> : null}
                             </div>
                           ) : null}
@@ -3228,6 +3232,17 @@ function GameReview() {
                     </section>
                   ) : (
                     <>
+                      {isPersonalPackPopulating ? (
+                        <section className="gr-view-section gr-pack-live-card">
+                          <div className="gr-pack-live-topline">
+                            <span>Pack still building</span>
+                            <strong>{packBuildProgressText}</strong>
+                          </div>
+                          <div className="gr-pack-live-title">{activePuzzleQueue.length} puzzles ready now</div>
+                          <div className="gr-pack-live-copy">Start these positions while the rest of your recent games keep analyzing. More puzzles will appear here automatically.</div>
+                        </section>
+                      ) : null}
+
                       <section className="gr-view-section gr-puzzle-card gr-puzzle-card-primary">
                         <div className="gr-puzzle-kicker">{currentPuzzle ? `${currentPuzzle.sideLabel} to move` : 'Training spot'}</div>
                         <div className="gr-puzzle-title">{currentPuzzle ? currentPuzzle.goalLabel : 'Find the move'}</div>
@@ -3261,6 +3276,9 @@ function GameReview() {
                           <div className="gr-puzzle-stat-label">Progress</div>
                           <div className="gr-puzzle-progress-mini-count">{solvedPuzzleCount}/{activePuzzleQueue.length}</div>
                         </div>
+                        {isPersonalPackPopulating ? (
+                          <div className="gr-puzzle-progress-note">Adding more puzzles as analysis finishes.</div>
+                        ) : null}
                         <div className="gr-puzzle-progress-cells">
                           {activePuzzleQueue.map((puzzle, index) => {
                             const result = puzzleResults[puzzle.id];
