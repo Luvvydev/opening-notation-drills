@@ -153,6 +153,21 @@ async function getSubscription(subscriptionId) {
   return paypalRequest(`/v1/billing/subscriptions/${encodeURIComponent(safeId)}`);
 }
 
+
+async function cancelSubscription(subscriptionId, reason) {
+  const safeId = String(subscriptionId || "").trim();
+  if (!safeId || safeId.length > 128) {
+    throw new Error("PAYPAL_SUBSCRIPTION_ID_INVALID");
+  }
+
+  await paypalRequest(`/v1/billing/subscriptions/${encodeURIComponent(safeId)}/cancel`, {
+    method: "POST",
+    body: {
+      reason: String(reason || "Cancelled from ChessDrills account settings").slice(0, 128)
+    }
+  });
+}
+
 async function findUidBySubscriptionId(subscriptionId) {
   const snap = await db.collection("users")
     .where("paypalSubscriptionId", "==", subscriptionId)
@@ -338,6 +353,67 @@ exports.syncPaypalMembership = functions.region(REGION).https.onCall(async (data
     }
 
     return writeMembershipFromSubscription(subscription, "CLIENT_SYNC");
+  } catch (err) {
+    if (err instanceof functions.https.HttpsError) throw err;
+    throw mapFunctionError(err);
+  }
+});
+
+
+exports.cancelPaypalSubscription = functions.region(REGION).https.onCall(async (data, context) => {
+  if (!context.auth || !context.auth.uid) {
+    throw new functions.https.HttpsError("unauthenticated", "sign_in_required");
+  }
+
+  const uid = context.auth.uid;
+
+  try {
+    const userRef = db.collection("users").doc(uid);
+    const userSnap = await userRef.get();
+    const userData = userSnap.exists ? (userSnap.data() || {}) : {};
+    const subscriptionId = userData.paypalSubscriptionId ? String(userData.paypalSubscriptionId).trim() : "";
+
+    if (!subscriptionId) {
+      throw new functions.https.HttpsError("failed-precondition", "paypal_subscription_missing");
+    }
+
+    const subscription = await getSubscription(subscriptionId);
+    const subscriptionUid = subscription && subscription.custom_id ? String(subscription.custom_id) : "";
+
+    if (subscriptionUid && subscriptionUid !== uid) {
+      throw new functions.https.HttpsError("permission-denied", "subscription_owner_mismatch");
+    }
+
+    const status = subscription && subscription.status ? String(subscription.status) : "UNKNOWN";
+    const plan = getPlanFromPlanId(subscription && subscription.plan_id ? String(subscription.plan_id) : userData.paypalPlanId);
+    const now = admin.firestore.FieldValue.serverTimestamp();
+
+    if (!INACTIVE_PAYPAL_STATUSES.has(status)) {
+      await cancelSubscription(subscriptionId, data && data.reason);
+    }
+
+    await userRef.set({
+      paypalSubscriptionId: subscriptionId,
+      paypalPlanId: subscription && subscription.plan_id ? String(subscription.plan_id) : userData.paypalPlanId || null,
+      paypalStatus: "CANCELLED",
+      paypalCancelRequestedAt: now,
+      paypalUpdatedAt: now,
+      paypalLastEventType: "CLIENT_CANCEL",
+      membershipActive: false,
+      membershipTier: "free",
+      membershipPlan: plan,
+      membershipSource: "paypal",
+      membershipUpdatedAt: now,
+      updatedAt: now
+    }, { merge: true });
+
+    return {
+      ok: true,
+      cancelled: true,
+      membershipActive: false,
+      status: "CANCELLED",
+      plan
+    };
   } catch (err) {
     if (err instanceof functions.https.HttpsError) throw err;
     throw mapFunctionError(err);

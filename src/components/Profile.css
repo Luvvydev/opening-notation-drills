@@ -245,6 +245,12 @@
   color: rgba(255, 180, 180, 0.95);
 }
 
+.profile-membership-note {
+  margin-top: 10px;
+  font-size: 13px;
+  color: rgba(190, 255, 210, 0.95);
+}
+
 .profile-identity-strip {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));

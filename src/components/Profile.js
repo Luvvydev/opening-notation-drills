@@ -3,8 +3,9 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import TopNav from "./TopNav";
 import { useAuth } from "../auth/AuthProvider";
-import { db, serverTimestamp } from "../firebase";
+import { db, functions, serverTimestamp } from "../firebase";
 import { doc, onSnapshot, runTransaction, setDoc } from "firebase/firestore";
+import { httpsCallable } from "firebase/functions";
 import Chessboard from "chessboardjsx";
 import { BOARD_THEMES, DEFAULT_THEME, PIECE_THEMES } from "../theme/boardThemes";
 import "./ActivityHeatmap.css";
@@ -244,6 +245,9 @@ export default function Profile() {
   const [userData, setUserData] = useState(null);
   const [activityTick, setActivityTick] = useState(0);
   const [profileError, setProfileError] = useState("");
+  const [membershipActionError, setMembershipActionError] = useState("");
+  const [membershipActionMessage, setMembershipActionMessage] = useState("");
+  const [cancelSubscriptionBusy, setCancelSubscriptionBusy] = useState(false);
 
   const [editingUsername, setEditingUsername] = useState(false);
   const [editingDisplayName, setEditingDisplayName] = useState(false);
@@ -260,6 +264,8 @@ export default function Profile() {
   const avatarInputRef = useRef(null);
   const unlockSecretRef = useRef(null);
   const membershipPlan = (userData && userData.membershipPlan) || (userDoc && userDoc.membershipPlan) || null;
+  const paypalSubscriptionId = (userData && userData.paypalSubscriptionId) || (userDoc && userDoc.paypalSubscriptionId) || "";
+  const membershipSource = (userData && userData.membershipSource) || (userDoc && userDoc.membershipSource) || "";
   const trialRemainingLabel = trialActive ? formatTrialRemaining(trialEndsAtMs) : "";
 
   const localProgress = loadProgress();
@@ -790,6 +796,40 @@ const onChangeCoachTheme = async (nextCoachTheme) => {
 
 
 
+  const cancelPaypalSubscription = async () => {
+    setMembershipActionError("");
+    setMembershipActionMessage("");
+
+    if (!paypalSubscriptionId) {
+      setMembershipActionError("No PayPal subscription was found for this account.");
+      return;
+    }
+
+    const confirmed = window.confirm("Cancel your PayPal subscription? Premium access will end immediately.");
+    if (!confirmed) return;
+
+    setCancelSubscriptionBusy(true);
+
+    try {
+      const cancelSubscription = httpsCallable(functions, "cancelPaypalSubscription");
+      await cancelSubscription({ reason: "Cancelled from ChessDrills profile" });
+      setMembershipActionMessage("Subscription cancelled. Premium access has been turned off.");
+    } catch (err) {
+      const code = err && err.code ? String(err.code) : "";
+      const message = err && err.message ? String(err.message) : "";
+
+      if (message.indexOf("paypal_subscription_missing") !== -1) {
+        setMembershipActionError("No PayPal subscription was found for this account.");
+      } else if (code.indexOf("permission-denied") !== -1 || message.indexOf("subscription_owner_mismatch") !== -1) {
+        setMembershipActionError("This PayPal subscription does not belong to this signed in account.");
+      } else {
+        setMembershipActionError("Could not cancel the subscription. Try again or manage it from PayPal.");
+      }
+    } finally {
+      setCancelSubscriptionBusy(false);
+    }
+  };
+
   const openPaymentOptions = () => {
     try {
       window.location.href = process.env.REACT_APP_PAYPAL_MANAGE_URL || "https://www.paypal.com/myaccount/autopay/";
@@ -1131,18 +1171,37 @@ const onChangeCoachTheme = async (nextCoachTheme) => {
                   <div className="profile-membership-text">Lifetime Member</div>
                 </div>
               ) : hasPaidMembership ? (
-                <div className="profile-membership-row">
-                  <div className="profile-membership-text">
-                    {membershipPlan === "yearly" ? "Yearly subscription" : "Monthly subscription"}
+                <>
+                  <div className="profile-membership-row">
+                    <div className="profile-membership-text">
+                      {membershipPlan === "yearly" ? "Yearly subscription" : "Monthly subscription"}
+                    </div>
+                    {membershipSource === "paypal" && paypalSubscriptionId ? (
+                      <button
+                        type="button"
+                        className="profile-membership-btn"
+                        onClick={cancelPaypalSubscription}
+                        disabled={cancelSubscriptionBusy}
+                      >
+                        {cancelSubscriptionBusy ? "Cancelling..." : "Cancel Subscription"}
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        className="profile-membership-btn"
+                        onClick={openPaymentOptions}
+                      >
+                        Manage in PayPal
+                      </button>
+                    )}
                   </div>
-                  <button
-                    type="button"
-                    className="profile-membership-btn"
-                    onClick={openPaymentOptions}
-                  >
-                    Manage in PayPal
-                  </button>
-                </div>
+                  {membershipActionMessage ? (
+                    <div className="profile-membership-note">{membershipActionMessage}</div>
+                  ) : null}
+                  {membershipActionError ? (
+                    <div className="profile-membership-error">{membershipActionError}</div>
+                  ) : null}
+                </>
               ) : trialActive ? (
                 <div className="profile-membership-row">
                   <div className="profile-membership-text">3 day free trial active. {trialRemainingLabel}</div>
