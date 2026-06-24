@@ -607,7 +607,7 @@ this._countedSeenForRun = false;
         const search = this.props && this.props.location ? this.props.location.search : "";
         const from = `${pathname}${search}`;
 
-        // Force them to About to start the Stripe trial.
+        // Force them to About to start the premium trial or checkout.
         this.props.history.replace({
           pathname: "/about",
           state: { from, reason: "membership_required" }
@@ -4057,7 +4057,7 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
 
     const hasPaidAccess = !!(this.props.user && this.props.membershipActive === true);
 
-    // Practice and Drill are always premium (Stripe trial counts as premium).
+    // Practice and Drill are always premium. Trial access counts as premium.
     if ((mode === "practice" || mode === "drill") && !hasPaidAccess) {
       if (this.props && this.props.history && this.props.history.replace) {
         const pathname = this.props && this.props.location ? this.props.location.pathname : "/openings";

@@ -1,217 +1,431 @@
-const functions = require("firebase-functions");
-const { defineString, defineSecret } = require("firebase-functions/params");
+const crypto = require("crypto");
 const admin = require("firebase-admin");
+const functions = require("firebase-functions");
+
 admin.initializeApp();
 
-// Secrets
-const STRIPE_SECRET = defineSecret("STRIPE_SECRET");
-const STRIPE_WEBHOOK_SECRET = defineSecret("STRIPE_WEBHOOK_SECRET");
+const db = admin.firestore();
+const REGION = "us-central1";
+const ACTIVE_PAYPAL_STATUSES = new Set(["ACTIVE"]);
+const INACTIVE_PAYPAL_STATUSES = new Set(["CANCELLED", "SUSPENDED", "EXPIRED"]);
 
-// Discord secrets
-const DISCORD_CLIENT_SECRET = defineSecret("DISCORD_CLIENT_SECRET");
-const DISCORD_BOT_TOKEN = defineSecret("DISCORD_BOT_TOKEN");
-const DISCORD_STATE_SECRET = defineSecret("DISCORD_STATE_SECRET");
+let paypalTokenCache = {
+  accessToken: "",
+  expiresAtMs: 0
+};
 
-const CANONICAL_DISCORD_REDIRECT_URI = "https://chessdrills.net/discord";
-
-// Stripe config (hardcoded for fast, deterministic live setup)
-// If you change prices later, update these constants and redeploy functions.
-const APP_BASE_URL = "https://chessdrills.net";
-const STRIPE_PRICE_MONTHLY = "price_1T4BR2BDxUShr6GYnIqz9qEp"; // $5.99/month
-const STRIPE_PRICE_YEARLY = "price_1T4BRhBDxUShr6GY0gC1oqOI"; // $39/year
-
-// Keep lifetime as a param so you can set it without touching code if needed.
-const STRIPE_PRICE_LIFETIME = defineString("STRIPE_PRICE_LIFETIME");
-const DISCORD_CLIENT_ID = defineString("DISCORD_CLIENT_ID");
-const DISCORD_GUILD_ID = defineString("DISCORD_GUILD_ID");
-const DISCORD_ROLE_MEMBER = defineString("DISCORD_ROLE_MEMBER");
-const DISCORD_ROLE_ANNUAL = defineString("DISCORD_ROLE_ANNUAL");
-const DISCORD_ROLE_YEARLY = defineString("DISCORD_ROLE_YEARLY");
-const DISCORD_ROLE_LIFETIME = defineString("DISCORD_ROLE_LIFETIME");
-
-function requireAuth(context) {
-  if (!context.auth || !context.auth.uid) {
-    throw new functions.https.HttpsError("unauthenticated", "Sign in first.");
+function requireEnv(name) {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(`${name}_MISSING`);
   }
-  return context.auth.uid;
+  return value;
 }
 
-function getBaseUrl() {
-  return String(APP_BASE_URL).replace(/\/$/, "");
+function getPaypalApiBase() {
+  return process.env.PAYPAL_ENV === "live"
+    ? "https://api-m.paypal.com"
+    : "https://api-m.sandbox.paypal.com";
 }
 
-function isActiveSubscriptionStatus(status) {
-  return status === "active" || status === "trialing" || status === "past_due";
+function getAppBaseUrl() {
+  return (process.env.APP_BASE_URL || "https://chessdrills.net").replace(/\/+$/, "");
 }
 
-exports.createCheckoutSession = functions
-  .runWith({ secrets: ["STRIPE_SECRET"] })
-  .https.onCall(async (data, context) => {
-    const uid = requireAuth(context);
+function normalizePlan(plan) {
+  const value = String(plan || "").toLowerCase();
+  if (value === "monthly" || value === "yearly") return value;
+  return "";
+}
 
-    const tier = data?.tier;
-    if (tier !== "member" && tier !== "lifetime") {
-      throw new functions.https.HttpsError("invalid-argument", "tier must be member or lifetime");
-    }
+function normalizeMethod(method) {
+  const value = String(method || "").toLowerCase();
+  if (value === "paypal" || value === "card") return value;
+  return "paypal";
+}
 
-    const stripe = require("stripe")(STRIPE_SECRET.value());
-    const baseUrl = getBaseUrl();
+function getPlanId(plan) {
+  if (plan === "monthly") return requireEnv("PAYPAL_MONTHLY_PLAN_ID");
+  if (plan === "yearly") return requireEnv("PAYPAL_YEARLY_PLAN_ID");
+  throw new Error("PAYPAL_PLAN_INVALID");
+}
 
-    const priceMonthly = STRIPE_PRICE_MONTHLY;
-    const priceYearly = STRIPE_PRICE_YEARLY;
+function getPlanFromPlanId(planId) {
+  if (planId && planId === process.env.PAYPAL_MONTHLY_PLAN_ID) return "monthly";
+  if (planId && planId === process.env.PAYPAL_YEARLY_PLAN_ID) return "yearly";
+  return "unknown";
+}
 
-    let priceId;
-    let membershipPlan = null;
-
-    if (tier === "lifetime") {
-      priceId = STRIPE_PRICE_LIFETIME.value();
-    } else {
-      // Default to yearly if omitted
-      const requestedPlan = data?.plan === "monthly" ? "monthly" : "yearly";
-      membershipPlan = requestedPlan;
-      priceId = requestedPlan === "monthly" ? priceMonthly : priceYearly;
-    }
-
-    if (!priceId) {
-      throw new functions.https.HttpsError("failed-precondition", "Missing Stripe price id");
-    }
-
-    try {
-      const session = await stripe.checkout.sessions.create({
-        mode: tier === "lifetime" ? "payment" : "subscription",
-        line_items: [{ price: priceId, quantity: 1 }],
-        success_url: `${baseUrl}/profile?checkout=success`,
-        cancel_url: `${baseUrl}/about?checkout=cancel`,
-        client_reference_id: uid,
-        metadata: {
-          uid,
-          tier,
-          plan: membershipPlan || ""
-        }
-      });
-
-      if (!session.url) {
-        throw new Error("Stripe did not return a checkout URL");
-      }
-
-      return { url: session.url };
-    } catch (err) {
-      console.error("createCheckoutSession failed", {
-        uid,
-        tier,
-        plan: membershipPlan || "",
-        priceId,
-        code: err && err.code ? err.code : null,
-        type: err && err.type ? err.type : null,
-        message: err && err.message ? err.message : String(err)
-      });
-
-      throw new functions.https.HttpsError(
-        "internal",
-        "Could not start Stripe Checkout."
-      );
+function buildReturnUrl(pathname, params) {
+  const url = new URL(pathname, getAppBaseUrl());
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && String(value) !== "") {
+      url.searchParams.set(key, String(value));
     }
   });
+  return url.toString();
+}
 
-exports.stripeWebhook = functions
-  .runWith({ secrets: ["STRIPE_SECRET", "STRIPE_WEBHOOK_SECRET"] })
-  .https.onRequest(async (req, res) => {
-    const stripe = require("stripe")(STRIPE_SECRET.value());
-    const sig = req.headers["stripe-signature"];
+async function readJsonResponse(res) {
+  const text = await res.text();
+  if (!text) return {};
 
-    let event;
-    try {
-      event = stripe.webhooks.constructEvent(
-        req.rawBody,
-        sig,
-        STRIPE_WEBHOOK_SECRET.value()
-      );
-    } catch (err) {
-      res.status(400).send(`Webhook Error: ${err.message}`);
+  try {
+    return JSON.parse(text);
+  } catch (_) {
+    return { raw: text };
+  }
+}
+
+async function getPaypalAccessToken() {
+  if (paypalTokenCache.accessToken && paypalTokenCache.expiresAtMs > Date.now() + 60000) {
+    return paypalTokenCache.accessToken;
+  }
+
+  const clientId = requireEnv("PAYPAL_CLIENT_ID");
+  const clientSecret = requireEnv("PAYPAL_CLIENT_SECRET");
+  const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
+
+  const res = await fetch(`${getPaypalApiBase()}/v1/oauth2/token`, {
+    method: "POST",
+    headers: {
+      Authorization: `Basic ${credentials}`,
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
+    body: "grant_type=client_credentials"
+  });
+
+  const body = await readJsonResponse(res);
+  if (!res.ok || !body.access_token) {
+    throw new Error("PAYPAL_ACCESS_TOKEN_FAILED");
+  }
+
+  paypalTokenCache = {
+    accessToken: body.access_token,
+    expiresAtMs: Date.now() + Math.max(60, Number(body.expires_in) || 300) * 1000
+  };
+
+  return paypalTokenCache.accessToken;
+}
+
+async function paypalRequest(path, options) {
+  const accessToken = await getPaypalAccessToken();
+  const method = (options && options.method) || "GET";
+  const body = options && Object.prototype.hasOwnProperty.call(options, "body") ? options.body : undefined;
+  const headers = Object.assign(
+    {
+      Authorization: `Bearer ${accessToken}`,
+      Accept: "application/json"
+    },
+    (options && options.headers) || {}
+  );
+
+  const init = { method, headers };
+
+  if (body !== undefined) {
+    headers["Content-Type"] = headers["Content-Type"] || "application/json";
+    init.body = typeof body === "string" ? body : JSON.stringify(body);
+  }
+
+  const res = await fetch(`${getPaypalApiBase()}${path}`, init);
+  const responseBody = await readJsonResponse(res);
+
+  if (!res.ok) {
+    const debugId = responseBody && responseBody.debug_id ? `:${responseBody.debug_id}` : "";
+    throw new Error(`PAYPAL_REQUEST_FAILED_${res.status}${debugId}`);
+  }
+
+  return responseBody;
+}
+
+function getApprovalUrl(subscription) {
+  const links = Array.isArray(subscription && subscription.links) ? subscription.links : [];
+  const approve = links.find((link) => link && link.rel === "approve" && link.href);
+  return approve ? approve.href : "";
+}
+
+async function getSubscription(subscriptionId) {
+  const safeId = String(subscriptionId || "").trim();
+  if (!safeId || safeId.length > 128) {
+    throw new Error("PAYPAL_SUBSCRIPTION_ID_INVALID");
+  }
+
+  return paypalRequest(`/v1/billing/subscriptions/${encodeURIComponent(safeId)}`);
+}
+
+async function findUidBySubscriptionId(subscriptionId) {
+  const snap = await db.collection("users")
+    .where("paypalSubscriptionId", "==", subscriptionId)
+    .limit(1)
+    .get();
+
+  if (snap.empty) return "";
+  return snap.docs[0].id;
+}
+
+async function resolveUidForSubscription(subscription) {
+  const customId = subscription && subscription.custom_id ? String(subscription.custom_id) : "";
+  if (customId) return customId;
+
+  const subscriptionId = subscription && subscription.id ? String(subscription.id) : "";
+  if (!subscriptionId) return "";
+
+  return findUidBySubscriptionId(subscriptionId);
+}
+
+function getPayerEmail(subscription) {
+  const subscriber = subscription && subscription.subscriber ? subscription.subscriber : null;
+  return subscriber && subscriber.email_address ? String(subscriber.email_address) : null;
+}
+
+function getPayerId(subscription) {
+  const subscriber = subscription && subscription.subscriber ? subscription.subscriber : null;
+  return subscriber && subscriber.payer_id ? String(subscriber.payer_id) : null;
+}
+
+async function writeMembershipFromSubscription(subscription, sourceEventType) {
+  const subscriptionId = subscription && subscription.id ? String(subscription.id) : "";
+  const status = subscription && subscription.status ? String(subscription.status) : "UNKNOWN";
+  const planId = subscription && subscription.plan_id ? String(subscription.plan_id) : "";
+  const uid = await resolveUidForSubscription(subscription);
+
+  if (!subscriptionId || !uid) {
+    return { updated: false, reason: "missing_uid_or_subscription" };
+  }
+
+  const userRef = db.collection("users").doc(uid);
+  const userSnap = await userRef.get();
+  const current = userSnap.exists ? (userSnap.data() || {}) : {};
+  const plan = getPlanFromPlanId(planId);
+  const now = admin.firestore.FieldValue.serverTimestamp();
+
+  const baseUpdate = {
+    paypalSubscriptionId: subscriptionId,
+    paypalPlanId: planId || null,
+    paypalStatus: status,
+    paypalPayerId: getPayerId(subscription),
+    paypalSubscriberEmail: getPayerEmail(subscription),
+    paypalUpdatedAt: now,
+    membershipSource: "paypal",
+    updatedAt: now
+  };
+
+  if (sourceEventType) {
+    baseUpdate.paypalLastEventType = String(sourceEventType).slice(0, 120);
+  }
+
+  if (current.membershipTier === "lifetime") {
+    await userRef.set(baseUpdate, { merge: true });
+    return { updated: true, membershipActive: true, lifetime: true, status };
+  }
+
+  if (ACTIVE_PAYPAL_STATUSES.has(status)) {
+    await userRef.set(Object.assign({}, baseUpdate, {
+      membershipActive: true,
+      membershipTier: "member",
+      membershipPlan: plan,
+      membershipUpdatedAt: now
+    }), { merge: true });
+
+    return { updated: true, membershipActive: true, status, plan };
+  }
+
+  if (INACTIVE_PAYPAL_STATUSES.has(status)) {
+    await userRef.set(Object.assign({}, baseUpdate, {
+      membershipActive: false,
+      membershipTier: "free",
+      membershipPlan: plan,
+      membershipUpdatedAt: now
+    }), { merge: true });
+
+    return { updated: true, membershipActive: false, status, plan };
+  }
+
+  await userRef.set(baseUpdate, { merge: true });
+  return { updated: true, membershipActive: !!current.membershipActive, status, plan };
+}
+
+function mapFunctionError(err) {
+  if (err && err.message && err.message.indexOf("PAYPAL_") === 0) {
+    return new functions.https.HttpsError("failed-precondition", err.message);
+  }
+
+  return new functions.https.HttpsError("internal", "payment_operation_failed");
+}
+
+exports.createPaypalCheckout = functions.region(REGION).https.onCall(async (data, context) => {
+  if (!context.auth || !context.auth.uid) {
+    throw new functions.https.HttpsError("unauthenticated", "sign_in_required");
+  }
+
+  const uid = context.auth.uid;
+  const plan = normalizePlan(data && data.plan);
+  const method = normalizeMethod(data && data.method);
+
+  if (!plan) {
+    throw new functions.https.HttpsError("invalid-argument", "invalid_plan");
+  }
+
+  try {
+    const userRef = db.collection("users").doc(uid);
+    const userSnap = await userRef.get();
+    const userData = userSnap.exists ? (userSnap.data() || {}) : {};
+    const tier = userData.membershipTier || "free";
+
+    if (userData.membershipActive === true && (tier === "member" || tier === "lifetime")) {
+      return { alreadyActive: true };
+    }
+
+    const planId = getPlanId(plan);
+    const requestId = crypto.randomUUID ? crypto.randomUUID() : `${uid}-${Date.now()}`;
+    const subscription = await paypalRequest("/v1/billing/subscriptions", {
+      method: "POST",
+      headers: {
+        "PayPal-Request-Id": requestId
+      },
+      body: {
+        plan_id: planId,
+        custom_id: uid,
+        application_context: {
+          brand_name: "ChessDrills",
+          locale: "en-US",
+          shipping_preference: "NO_SHIPPING",
+          user_action: "SUBSCRIBE_NOW",
+          return_url: buildReturnUrl("/payment/success", { provider: "paypal", plan, method }),
+          cancel_url: buildReturnUrl("/payment/cancel", { provider: "paypal", plan, method })
+        }
+      }
+    });
+
+    const approvalUrl = getApprovalUrl(subscription);
+    if (!approvalUrl) {
+      throw new Error("PAYPAL_APPROVAL_URL_MISSING");
+    }
+
+    await userRef.set({
+      pendingPaypalSubscriptionId: subscription.id || null,
+      pendingPaypalPlan: plan,
+      pendingPaypalMethod: method,
+      pendingPaypalCreatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+
+    return {
+      approvalUrl,
+      subscriptionId: subscription.id || "",
+      plan,
+      method
+    };
+  } catch (err) {
+    throw mapFunctionError(err);
+  }
+});
+
+exports.syncPaypalMembership = functions.region(REGION).https.onCall(async (data, context) => {
+  if (!context.auth || !context.auth.uid) {
+    throw new functions.https.HttpsError("unauthenticated", "sign_in_required");
+  }
+
+  const uid = context.auth.uid;
+  const subscriptionId = data && data.subscriptionId ? String(data.subscriptionId) : "";
+
+  try {
+    const subscription = await getSubscription(subscriptionId);
+    const ownerUid = await resolveUidForSubscription(subscription);
+
+    if (ownerUid !== uid) {
+      throw new functions.https.HttpsError("permission-denied", "subscription_owner_mismatch");
+    }
+
+    return writeMembershipFromSubscription(subscription, "CLIENT_SYNC");
+  } catch (err) {
+    if (err instanceof functions.https.HttpsError) throw err;
+    throw mapFunctionError(err);
+  }
+});
+
+function readWebhookEvent(req) {
+  if (req.body && typeof req.body === "object") return req.body;
+
+  const raw = req.rawBody ? req.rawBody.toString("utf8") : "";
+  if (!raw) return null;
+
+  try {
+    return JSON.parse(raw);
+  } catch (_) {
+    return null;
+  }
+}
+
+async function verifyPaypalWebhook(req, event) {
+  const payload = {
+    auth_algo: req.get("paypal-auth-algo") || "",
+    cert_url: req.get("paypal-cert-url") || "",
+    transmission_id: req.get("paypal-transmission-id") || "",
+    transmission_sig: req.get("paypal-transmission-sig") || "",
+    transmission_time: req.get("paypal-transmission-time") || "",
+    webhook_id: requireEnv("PAYPAL_WEBHOOK_ID"),
+    webhook_event: event
+  };
+
+  if (!payload.auth_algo || !payload.cert_url || !payload.transmission_id || !payload.transmission_sig || !payload.transmission_time) {
+    return false;
+  }
+
+  const result = await paypalRequest("/v1/notifications/verify-webhook-signature", {
+    method: "POST",
+    body: payload
+  });
+
+  return result && result.verification_status === "SUCCESS";
+}
+
+function getSubscriptionIdFromEvent(event) {
+  const resource = event && event.resource ? event.resource : {};
+  return String(
+    resource.id ||
+    resource.subscription_id ||
+    resource.billing_agreement_id ||
+    resource.billing_subscription_id ||
+    ""
+  );
+}
+
+async function processPaypalEvent(event) {
+  const eventType = event && event.event_type ? String(event.event_type) : "";
+  const subscriptionId = getSubscriptionIdFromEvent(event);
+
+  if (!subscriptionId) {
+    return { ignored: true, reason: "missing_subscription_id", eventType };
+  }
+
+  const subscription = await getSubscription(subscriptionId);
+  return writeMembershipFromSubscription(subscription, eventType);
+}
+
+exports.paypalWebhook = functions.region(REGION).https.onRequest(async (req, res) => {
+  if (req.method !== "POST") {
+    res.status(405).send("Method Not Allowed");
+    return;
+  }
+
+  const event = readWebhookEvent(req);
+  if (!event) {
+    res.status(400).send("Invalid JSON");
+    return;
+  }
+
+  try {
+    const verified = await verifyPaypalWebhook(req, event);
+    if (!verified) {
+      res.status(401).send("Invalid PayPal webhook signature");
       return;
     }
 
-    try {
-      if (event.type === "checkout.session.completed") {
-        const session = event.data.object;
-        const uid = session.metadata?.uid;
-        const tier = session.metadata?.tier;
-        const plan = session.metadata?.plan;
-
-        if (!uid) return res.json({ received: true });
-
-        const patch = {
-          membershipActive: true,
-          membershipTier: tier,
-          membershipUpdatedAt: admin.firestore.FieldValue.serverTimestamp(),
-          stripeCustomerId: session.customer || null
-        };
-
-        if (tier === "member") {
-          patch.stripeSubscriptionId = session.subscription || null;
-          patch.membershipPlan = plan === "monthly" ? "monthly" : "yearly";
-        }
-
-        if (tier === "lifetime") {
-          patch.stripePaymentIntentId = session.payment_intent || null;
-          patch.membershipPlan = null;
-        }
-
-        await admin.firestore().doc(`users/${uid}`).set(patch, { merge: true });
-      }
-
-      if (
-        event.type === "customer.subscription.updated" ||
-        event.type === "customer.subscription.deleted"
-      ) {
-        const sub = event.data.object;
-        const customerId = sub.customer;
-
-        const snap = await admin
-          .firestore()
-          .collection("users")
-          .where("stripeCustomerId", "==", customerId)
-          .limit(1)
-          .get();
-
-        if (!snap.empty) {
-          const userRef = snap.docs[0].ref;
-
-          if (event.type === "customer.subscription.deleted") {
-            await userRef.set(
-              {
-                membershipActive: false,
-                membershipTier: "free",
-                membershipPlan: null,
-                membershipUpdatedAt: admin.firestore.FieldValue.serverTimestamp()
-              },
-              { merge: true }
-            );
-          } else {
-            const active = isActiveSubscriptionStatus(sub.status);
-
-            let membershipPlan = "monthly";
-            const priceId = sub.items.data[0]?.price?.id;
-
-            if (priceId === STRIPE_PRICE_YEARLY) {
-              membershipPlan = "yearly";
-            }
-
-            await userRef.set(
-              {
-                membershipActive: active,
-                membershipTier: active ? "member" : "free",
-                membershipPlan: active ? membershipPlan : null,
-                membershipUpdatedAt: admin.firestore.FieldValue.serverTimestamp()
-              },
-              { merge: true }
-            );
-          }
-        }
-      }
-
-      res.json({ received: true });
-    } catch (err) {
-      res.status(500).send(`Server Error: ${err.message}`);
-    }
-  });
+    await processPaypalEvent(event);
+    res.status(200).json({ ok: true });
+  } catch (err) {
+    console.error("paypalWebhook failed", err);
+    res.status(500).send("Webhook processing failed");
+  }
+});

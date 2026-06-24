@@ -3,8 +3,7 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import TopNav from "./TopNav";
 import { useAuth } from "../auth/AuthProvider";
-import { db, serverTimestamp, functions } from "../firebase";
-import { httpsCallable } from "firebase/functions";
+import { db, serverTimestamp } from "../firebase";
 import { doc, onSnapshot, runTransaction, setDoc } from "firebase/firestore";
 import Chessboard from "chessboardjsx";
 import { BOARD_THEMES, DEFAULT_THEME, PIECE_THEMES } from "../theme/boardThemes";
@@ -244,8 +243,6 @@ export default function Profile() {
   const [username, setUsername] = useState("");
   const [userData, setUserData] = useState(null);
   const [activityTick, setActivityTick] = useState(0);
-  const [billingBusy, setBillingBusy] = useState(false);
-  const [billingError, setBillingError] = useState("");
   const [profileError, setProfileError] = useState("");
 
   const [editingUsername, setEditingUsername] = useState(false);
@@ -793,30 +790,10 @@ const onChangeCoachTheme = async (nextCoachTheme) => {
 
 
 
-  const openBillingPortal = async () => {
-    setBillingError("");
-    if (!user) return;
-
-    // Lifetime purchases have no subscription to cancel.
-    if (!hasPaidMembership || membershipTier !== "member") {
-      return;
-    }
-
-    setBillingBusy(true);
+  const openPaymentOptions = () => {
     try {
-      const fn = httpsCallable(functions, "createBillingPortalLink");
-      const res = await fn({});
-      const url = res && res.data && res.data.url ? String(res.data.url) : "";
-      if (url) {
-        window.location.href = url;
-      } else {
-        setBillingError("Could not open billing portal. Try again.");
-      }
-    } catch (_) {
-      setBillingError("Could not open billing portal. Try again.");
-    } finally {
-      setBillingBusy(false);
-    }
+      window.location.href = process.env.REACT_APP_PAYPAL_MANAGE_URL || "https://www.paypal.com/myaccount/autopay/";
+    } catch (_) {}
   };
 
   if (!user) return null;
@@ -1161,10 +1138,9 @@ const onChangeCoachTheme = async (nextCoachTheme) => {
                   <button
                     type="button"
                     className="profile-membership-btn"
-                    onClick={openBillingPortal}
-                    disabled={billingBusy}
+                    onClick={openPaymentOptions}
                   >
-                    {billingBusy ? "Opening..." : "Manage subscription"}
+                    Manage in PayPal
                   </button>
                 </div>
               ) : trialActive ? (
@@ -1202,8 +1178,6 @@ const onChangeCoachTheme = async (nextCoachTheme) => {
                 </div>
               )
             }
-
-              {billingError ? <div className="profile-membership-error">{billingError}</div> : null}
             </div>
           </div>
         </div>

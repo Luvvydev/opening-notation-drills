@@ -16,6 +16,7 @@ import Leaderboards from './components/Leaderboards';
 import DiscordCallback from './components/DiscordCallback';
 import InstallAppPage from './components/InstallAppPage';
 import GameReview from './components/GameReview';
+import PaymentReturn from './components/PaymentReturn';
 
 import PublicProfile from './components/PublicProfile';
 import { installCloudSync } from './utils/cloudSync';
@@ -78,6 +79,8 @@ class App extends React.Component {
             <Route path='/about' component={About} />
             <Route path='/leaderboards' component={Leaderboards} />
             <Route path='/install' component={InstallAppPage} />
+            <Route exact path='/payment/success' component={PaymentReturn} />
+            <Route exact path='/payment/cancel' component={PaymentReturn} />
 
             <Route path='/discord' component={DiscordCallback} />
 
