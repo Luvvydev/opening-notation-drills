@@ -2075,8 +2075,12 @@
   grid-template-columns: minmax(0, 1fr);
 }
 
-.gr-board-arrow-puzzle line {
+.gr-board-arrow-puzzle line,
+.gr-board-arrow-puzzle .gr-board-arrow-played-line,
+.gr-board-arrow-puzzle .gr-board-arrow-best-line {
+  fill: none;
   stroke-linecap: round;
+  stroke-linejoin: round;
   stroke-width: 2.2;
 }
 
@@ -3675,5 +3679,89 @@
 @media (max-width: 680px) {
   .gr-pack-builder-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+
+/* 2026-07 Mistake Training inline Build Pack flow */
+.gr-puzzle-build-pack {
+  border-radius: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.035);
+  padding: 10px 12px;
+}
+
+.gr-puzzle-build-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: rgba(238, 242, 247, 0.70);
+  font-size: 0.76rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.gr-puzzle-build-toggle {
+  border: 1px solid rgba(137, 97, 255, 0.35);
+  background: rgba(137, 97, 255, 0.14);
+  color: #efeaff;
+  border-radius: 999px;
+  min-height: 28px;
+  padding: 0 10px;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 900;
+}
+
+.gr-puzzle-build-toggle:hover {
+  background: rgba(137, 97, 255, 0.22);
+  border-color: rgba(137, 97, 255, 0.52);
+}
+
+.gr-puzzle-build-controls {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: end;
+}
+
+.gr-puzzle-build-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.gr-puzzle-build-field span {
+  color: rgba(238, 242, 247, 0.60);
+  font-size: 0.7rem;
+  font-weight: 900;
+}
+
+.gr-puzzle-build-field select {
+  height: 38px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(8, 10, 14, 0.92);
+  color: #eef2f7;
+  padding: 0 10px;
+  font-weight: 800;
+}
+
+.gr-puzzle-build-btn {
+  height: 38px;
+  padding: 0 12px;
+  white-space: nowrap;
+}
+
+@media (max-width: 680px) {
+  .gr-puzzle-build-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .gr-puzzle-build-btn {
+    width: 100%;
   }
 }

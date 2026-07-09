@@ -1235,7 +1235,7 @@ function getMoveInsight(move, classification, match) {
           ? `Still inside ${match.lineName}.`
           : 'Still inside your saved opening path.',
         tone: 'book',
-        bestSan,
+        bestSan: '',
       };
     case 'best':
       return {
@@ -1328,22 +1328,21 @@ function offsetBoardPoint(point, xOffset, yOffset, boardSize) {
   };
 }
 
-function getArrowPath(from, to, bend) {
+function getArrowPath(from, to) {
   if (!from || !to) return '';
+  return `M ${from.x} ${from.y} L ${to.x} ${to.y}`;
+}
 
-  if (!bend) {
-    return `M ${from.x} ${from.y} L ${to.x} ${to.y}`;
-  }
+function getKnightArrowPath(from, to) {
+  if (!from || !to) return '';
 
   const dx = to.x - from.x;
   const dy = to.y - from.y;
-  const length = Math.max(1, Math.sqrt((dx * dx) + (dy * dy)));
-  const normalX = -dy / length;
-  const normalY = dx / length;
-  const controlX = ((from.x + to.x) / 2) + (normalX * bend);
-  const controlY = ((from.y + to.y) / 2) + (normalY * bend);
+  const shouldMoveVerticalFirst = Math.abs(dy) >= Math.abs(dx);
+  const cornerX = shouldMoveVerticalFirst ? from.x : to.x;
+  const cornerY = shouldMoveVerticalFirst ? to.y : from.y;
 
-  return `M ${from.x} ${from.y} Q ${controlX} ${controlY} ${to.x} ${to.y}`;
+  return `M ${from.x} ${from.y} L ${cornerX} ${cornerY} L ${to.x} ${to.y}`;
 }
 
 function isKnightArrow(arrow) {
@@ -1371,14 +1370,16 @@ function BoardOverlay({ move, orientation, classification, boardSize }) {
   const bestTo = bestArrow ? getSquareCenter(bestArrow.to, orientation, boardSize) : null;
   const playedUci = playedArrow && playedArrow.uci ? String(playedArrow.uci).toLowerCase() : '';
   const bestUci = bestArrow && bestArrow.uci ? String(bestArrow.uci).toLowerCase() : '';
-  const showBestArrow = Boolean(bestFrom && bestTo && bestUci && bestUci !== playedUci && move.classification !== 'best');
+  const showBestArrow = Boolean(bestFrom && bestTo && bestUci && bestUci !== playedUci && move.classification !== 'best' && move.classification !== 'book');
 
   if (!playedTo) return null;
 
   const className = classification && classification.className ? classification.className : 'neutral';
   const cellSize = boardSize / 8;
   const playedBadge = offsetBoardPoint(playedTo, cellSize * 0.29, -cellSize * 0.29, boardSize);
-  const bestBend = showBestArrow && isKnightArrow(bestArrow) ? cellSize * 0.22 : 0;
+  const bestPath = showBestArrow && isKnightArrow(bestArrow)
+    ? getKnightArrowPath(bestFrom, bestTo)
+    : getArrowPath(bestFrom, bestTo);
   const badgeText = move.classification === 'book'
     ? '📘'
     : move.classification === 'best'
@@ -1403,7 +1404,7 @@ function BoardOverlay({ move, orientation, classification, boardSize }) {
             </marker>
           </defs>
           <path
-            d={getArrowPath(bestFrom, bestTo, bestBend)}
+            d={bestPath}
             className="gr-board-arrow-review-best-path"
             markerEnd={`url(#${bestMarkerId})`}
           />
@@ -1454,7 +1455,6 @@ function RemoteGameList({ games, selectedId, onSelect, loading, error, emptyMess
             type="button"
             className={isActive ? 'gr-remote-item is-active' : 'gr-remote-item'}
             onClick={() => onSelect(game)}
-            title="Review this game"
             aria-label={`Review ${game.white.name} versus ${game.black.name}`}
           >
             <div className="gr-remote-avatars">
@@ -1502,6 +1502,7 @@ function GameReview() {
   const [remoteError, setRemoteError] = useState('');
   const [selectedRemoteGameId, setSelectedRemoteGameId] = useState('');
   const [packBatchSize, setPackBatchSize] = useState(DEFAULT_PACK_BATCH);
+  const [packBuilderOpen, setPackBuilderOpen] = useState(false);
   const [packSideFilter, setPackSideFilter] = useState('all');
   const [packSpeedFilter, setPackSpeedFilter] = useState('all');
   const [packBuilding, setPackBuilding] = useState(false);
@@ -1577,7 +1578,7 @@ function GameReview() {
       [currentMove.to]: { backgroundColor: currentMove.classification === 'best' ? 'rgba(136, 214, 82, 0.28)' : 'rgba(137, 97, 255, 0.20)' },
     };
 
-    if (currentMove.bestMove && currentMove.bestMove !== currentMove.uci && currentMove.classification !== 'best') {
+    if (currentMove.bestMove && currentMove.bestMove !== currentMove.uci && currentMove.classification !== 'best' && currentMove.classification !== 'book') {
       const bestFrom = currentMove.bestMove.slice(0, 2);
       const bestTo = currentMove.bestMove.slice(2, 4);
       styles[bestFrom] = {
@@ -1686,6 +1687,8 @@ function GameReview() {
   const packBuildProgressText = packProgress.total
     ? `${packProgress.current}/${packProgress.total}`
     : 'working';
+  const packTrainingLabel = trainingSource === 'pack' ? 'Training from recent games' : 'Training from this game';
+  const canCreateRecentPack = Boolean(remoteUsername.trim() && remoteGames.length) && !packBuilding && !remoteLoading;
   const shellProgressStyle = { '--gr-top-progress': `${topProgressPercent}%` };
   const sidebarPanelStyle = { '--gr-sidebar-target-height': `${boardWidth + 26}px` };
   const puzzlePlayedMarkerId = useMemo(() => `grPuzzleArrowHeadPlayed-${Math.random().toString(36).slice(2, 9)}`, []);
@@ -2178,6 +2181,7 @@ function GameReview() {
       return;
     }
 
+    setPackBuilderOpen(false);
     runRequestRef.current += 1;
     const requestId = runRequestRef.current;
     const requestPrefix = `pack-${requestId}`;
@@ -2194,7 +2198,9 @@ function GameReview() {
     setPuzzleHintOpen(false);
     setPuzzleShowSolution(false);
     clearPuzzleSelection();
-    setSidebarMode('load');
+    if (sidebarMode !== 'puzzles') {
+      setSidebarMode('load');
+    }
     setEngineState('analyzing');
     setStatusMessage(`Building Mistake Pack from ${selectedGames.length} games...`);
 
@@ -3058,29 +3064,31 @@ function GameReview() {
                             </marker>
                           </defs>
                           {currentPuzzle ? (() => {
-                            const playedFrom = getSquareCenter(currentPuzzle.playedMove && currentPuzzle.playedMove.slice(0, 2), effectiveBoardOrientation, boardWidth);
-                            const playedTo = getSquareCenter(currentPuzzle.playedMove && currentPuzzle.playedMove.slice(2, 4), effectiveBoardOrientation, boardWidth);
-                            const bestFrom = getSquareCenter(currentPuzzle.bestMove && currentPuzzle.bestMove.slice(0, 2), effectiveBoardOrientation, boardWidth);
-                            const bestTo = getSquareCenter(currentPuzzle.bestMove && currentPuzzle.bestMove.slice(2, 4), effectiveBoardOrientation, boardWidth);
+                            const playedArrow = getUciArrow(currentPuzzle.playedMove);
+                            const bestArrow = getUciArrow(currentPuzzle.bestMove);
+                            const playedFrom = playedArrow ? getSquareCenter(playedArrow.from, effectiveBoardOrientation, boardWidth) : null;
+                            const playedTo = playedArrow ? getSquareCenter(playedArrow.to, effectiveBoardOrientation, boardWidth) : null;
+                            const bestFrom = bestArrow ? getSquareCenter(bestArrow.from, effectiveBoardOrientation, boardWidth) : null;
+                            const bestTo = bestArrow ? getSquareCenter(bestArrow.to, effectiveBoardOrientation, boardWidth) : null;
+                            const playedPath = isKnightArrow(playedArrow)
+                              ? getKnightArrowPath(playedFrom, playedTo)
+                              : getArrowPath(playedFrom, playedTo);
+                            const bestPath = isKnightArrow(bestArrow)
+                              ? getKnightArrowPath(bestFrom, bestTo)
+                              : getArrowPath(bestFrom, bestTo);
 
                             return (
                               <>
                                 {playedFrom && playedTo ? (
-                                  <line
-                                    x1={playedFrom.x}
-                                    y1={playedFrom.y}
-                                    x2={playedTo.x}
-                                    y2={playedTo.y}
+                                  <path
+                                    d={playedPath}
                                     className="gr-board-arrow-played-line"
                                     markerEnd={`url(#${puzzlePlayedMarkerId})`}
                                   />
                                 ) : null}
                                 {puzzleShowSolution && bestFrom && bestTo ? (
-                                  <line
-                                    x1={bestFrom.x}
-                                    y1={bestFrom.y}
-                                    x2={bestTo.x}
-                                    y2={bestTo.y}
+                                  <path
+                                    d={bestPath}
                                     className="gr-board-arrow-best-line"
                                     markerEnd={`url(#${puzzleBestMarkerId})`}
                                   />
@@ -3228,7 +3236,6 @@ function GameReview() {
                           type="button"
                           className={source === tab.key ? 'gr-source-tab is-active' : 'gr-source-tab'}
                           onClick={() => setSource(tab.key)}
-                          title={tab.key === 'pgn' ? 'Paste or upload PGN' : `Load recent ${tab.label} games`}
                           aria-label={tab.key === 'pgn' ? 'Paste or upload PGN' : `Load recent ${tab.label} games`}
                         >
                           {tab.logoSrc ? (
@@ -3275,7 +3282,7 @@ function GameReview() {
                               placeholder={source === 'lichess' ? 'Enter a Lichess username' : 'Enter a Chess.com username'}
                             />
                           </label>
-                          <button type="submit" className="gr-button gr-button-primary" title="Load recent games" aria-label="Load recent games">
+                          <button type="submit" className="gr-button gr-button-primary" aria-label="Load recent games">
                             <FontAwesomeIcon icon={faUser} />
                             <span>Load</span>
                           </button>
@@ -3300,7 +3307,7 @@ function GameReview() {
                           <div className="gr-pack-builder-grid">
                             <label className="gr-compact-field">
                               <span>Games</span>
-                              <select value={packBatchSize} onChange={(event) => setPackBatchSize(parseInt(event.target.value, 10))} title="Number of recent games" aria-label="Number of recent games">
+                              <select value={packBatchSize} onChange={(event) => setPackBatchSize(parseInt(event.target.value, 10))} aria-label="Number of recent games">
                                 {[10, 20, 30].map((value) => (
                                   <option key={value} value={value}>Last {value}</option>
                                 ))}
@@ -3308,7 +3315,7 @@ function GameReview() {
                             </label>
                             <label className="gr-compact-field">
                               <span>Side</span>
-                              <select value={packSideFilter} onChange={(event) => setPackSideFilter(event.target.value)} title="Side filter" aria-label="Side filter">
+                              <select value={packSideFilter} onChange={(event) => setPackSideFilter(event.target.value)} aria-label="Side filter">
                                 <option value="all">All</option>
                                 <option value="white">White</option>
                                 <option value="black">Black</option>
@@ -3316,7 +3323,7 @@ function GameReview() {
                             </label>
                             <label className="gr-compact-field">
                               <span>Speed</span>
-                              <select value={packSpeedFilter} onChange={(event) => setPackSpeedFilter(event.target.value)} title="Speed filter" aria-label="Speed filter">
+                              <select value={packSpeedFilter} onChange={(event) => setPackSpeedFilter(event.target.value)} aria-label="Speed filter">
                                 <option value="all">All</option>
                                 <option value="rapid">Rapid</option>
                                 <option value="blitz">Blitz</option>
@@ -3325,12 +3332,12 @@ function GameReview() {
                           </div>
 
                           <div className="gr-inline-actions gr-pack-actions">
-                            <button type="button" className="gr-button gr-button-primary" onClick={handleBuildPersonalPack} disabled={packBuilding || remoteLoading} title="Create practice puzzles from your recent mistakes" aria-label="Create Mistake Pack from recent games">
+                            <button type="button" className="gr-button gr-button-primary" onClick={handleBuildPersonalPack} disabled={packBuilding || remoteLoading} aria-label="Create Mistake Pack from recent games">
                               <FontAwesomeIcon icon={packBuilding ? faSpinner : faChessKnight} spin={packBuilding} />
                               <span>{packBuilding ? 'Building...' : 'Create Mistake Pack'}</span>
                             </button>
                             {trainingSource === 'pack' && packPuzzles.length ? (
-                              <button type="button" className="gr-button" onClick={() => setSidebarMode('puzzles')} title="Open Mistake Pack" aria-label="Open Mistake Pack">
+                              <button type="button" className="gr-button" onClick={() => setSidebarMode('puzzles')} aria-label="Open Mistake Pack">
                                 <FontAwesomeIcon icon={faPlay} />
                                 <span>Open pack</span>
                               </button>
@@ -3370,6 +3377,43 @@ function GameReview() {
                     </section>
                   ) : (
                     <>
+                      <section className="gr-view-section gr-puzzle-build-pack">
+                        <div className="gr-puzzle-build-topline">
+                          <span>{packTrainingLabel}</span>
+                          <button
+                            type="button"
+                            className="gr-puzzle-build-toggle"
+                            onClick={() => setPackBuilderOpen((value) => !value)}
+                            aria-expanded={packBuilderOpen ? 'true' : 'false'}
+                          >
+                            Build Pack
+                          </button>
+                        </div>
+
+                        {packBuilderOpen ? (
+                          <div className="gr-puzzle-build-controls">
+                            <label className="gr-puzzle-build-field">
+                              <span>Recent games</span>
+                              <select value={packBatchSize} onChange={(event) => setPackBatchSize(parseInt(event.target.value, 10))} aria-label="Recent games for Mistake Pack">
+                                {[10, 20, 30].map((value) => (
+                                  <option key={value} value={value}>Last {value}</option>
+                                ))}
+                              </select>
+                            </label>
+                            <button
+                              type="button"
+                              className="gr-button gr-button-primary gr-puzzle-build-btn"
+                              onClick={handleBuildPersonalPack}
+                              disabled={!canCreateRecentPack}
+                              aria-label="Create Mistake Pack from recent games"
+                            >
+                              <FontAwesomeIcon icon={packBuilding ? faSpinner : faChessKnight} spin={packBuilding} />
+                              <span>{packBuilding ? 'Building...' : 'Create Pack'}</span>
+                            </button>
+                          </div>
+                        ) : null}
+                      </section>
+
                       {isPersonalPackPopulating ? (
                         <section className="gr-view-section gr-pack-live-card">
                           <div className="gr-pack-live-topline">
@@ -3430,7 +3474,6 @@ function GameReview() {
                                 type="button"
                                 className={`gr-puzzle-progress-cell ${className}${isActive ? ' is-active' : ''}`}
                                 onClick={() => setPuzzleIndex(index)}
-                                title={`Move ${puzzle.turnNumber}`}
                               />
                             );
                           })}
@@ -3512,7 +3555,7 @@ function GameReview() {
                       ].map((row) => (
                         <div key={row.key} className="gr-count-row">
                           <span className="gr-count-value">{classificationCounts.white[row.key]}</span>
-                          <span className={`gr-count-icon gr-count-icon-${row.key}`} title={row.label}>
+                          <span className={`gr-count-icon gr-count-icon-${row.key}`} aria-label={row.label}>
                             <FontAwesomeIcon icon={row.icon} />
                           </span>
                           <span className="gr-count-value">{classificationCounts.black[row.key]}</span>
@@ -3555,7 +3598,6 @@ function GameReview() {
                             setPuzzleIndex(0);
                             setSidebarMode('puzzles');
                           }}
-                          title="Practice missed moves from this game"
                           aria-label="Practice missed moves from this game"
                         >
                           <FontAwesomeIcon icon={faChessKnight} />
@@ -3668,7 +3710,6 @@ function GameReview() {
                 type="button"
                 className="gr-engine-close"
                 onClick={closeEngineBoard}
-                title="Close engine board"
                 aria-label="Close engine board"
               >
                 ×
