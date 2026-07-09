@@ -5,8 +5,6 @@ ChessDrills is a browser based chess training app focused on opening recall, mis
 Primary live site:
 - https://chessdrills.net
 
-Repository:
-- opening-notation-drills
 
 ## What is in the project
 
