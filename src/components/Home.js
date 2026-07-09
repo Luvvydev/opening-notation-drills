@@ -970,12 +970,12 @@ renderHeroCarousel = (slides) => {
         };
 
     const myGamesCard = {
-      eyebrow: "Personal Drill pack",
-      title: "Fix the mistakes from your own games",
-      subtitle: "Enter a Chess.com or Lichess username, pull recent games, and turn your mistakes into drills.",
-      cta: "Build my mistake pack →",
+      eyebrow: "Mistake Pack",
+      title: "Turn your own mistakes into puzzles",
+      subtitle: "Import recent Chess.com or Lichess games and train the moves you missed.",
+      cta: "Build Mistake Pack →",
       onClick: () => this.goToMyGames("home_personal_drill_pack"),
-      pills: ["Chess.com", "Lichess", "Your positions"]
+      pills: ["Chess.com", "Lichess", "Recent games"]
     };
 
     const dailyLoop = [
@@ -1107,12 +1107,12 @@ renderHeroCarousel = (slides) => {
       },
       {
         id: "my-games",
-        kicker: "TRAIN FROM YOUR OWN GAMES",
-        title: "Fix mistakes from games you already played",
-        subtitle: "Enter your Chess.com or Lichess username and solve drills built from your recent misses.",
-        cta: "Build my mistake pack →",
+        kicker: "MISTAKE PACK",
+        title: "Turn your own mistakes into puzzles",
+        subtitle: "Import recent Chess.com or Lichess games and train the moves you missed.",
+        cta: "Build Mistake Pack →",
         onClick: () => this.goToMyGames("home_hero_my_games"),
-        pills: ["Chess.com", "Lichess", "Personal review"],
+        pills: ["Chess.com", "Lichess", "Recent games"],
         position: focusOpening ? _getPreviewFenForOpening(focusOpening) : "start",
         orientation: (focusOpening && focusOpening.orientation) || "white",
         stats: [
@@ -1202,8 +1202,21 @@ return (
                       <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   </button>
-                  <div className="home-focus-eyebrow">{myGamesCard.eyebrow}</div>
-                  <div className="home-focus-title">{myGamesCard.title}</div>
+                  <div className="home-mistake-pack-top">
+                    <div className="home-mistake-pack-copy">
+                      <div className="home-focus-eyebrow">{myGamesCard.eyebrow}</div>
+                      <div className="home-focus-title">{myGamesCard.title}</div>
+                    </div>
+                    <div className="home-mistake-pack-mark" aria-hidden="true">
+                      <span className="home-mistake-pack-board">
+                        <span />
+                        <span />
+                        <span />
+                        <span />
+                      </span>
+                      <span className="home-mistake-pack-target-mark" />
+                    </div>
+                  </div>
                   <div className="home-focus-sub">{myGamesCard.subtitle}</div>
                   <div className="home-focus-pillrow">
                     {myGamesCard.pills.map((pill) => (
