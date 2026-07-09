@@ -247,6 +247,7 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
+  z-index: 5;
 }
 
 .gr-board-arrow {
@@ -257,6 +258,50 @@
 .gr-board-arrow line {
   stroke-width: 1.9;
   stroke-linecap: round;
+}
+
+.gr-board-arrow-review line {
+  stroke-width: 2.35;
+  stroke-linecap: round;
+}
+
+.gr-board-arrow-review-played-line {
+  stroke: currentColor;
+  stroke-width: 2.85;
+  opacity: 0.96;
+}
+
+.gr-board-arrow-review-played-path {
+  fill: none !important;
+  stroke: currentColor;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.98;
+}
+
+.gr-board-arrow-review-played-head,
+.gr-board-arrow .gr-board-arrow-review-played-head {
+  fill: currentColor !important;
+}
+
+.gr-board-arrow-review-best-line {
+  stroke: rgba(108, 223, 154, 0.98);
+  stroke-width: 3.15;
+}
+
+.gr-board-arrow-review-best-path {
+  fill: none !important;
+  stroke: rgba(122, 191, 82, 0.68);
+  stroke-width: 6.25;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.88;
+}
+
+.gr-board-arrow-review-best-head,
+.gr-board-arrow .gr-board-arrow-review-best-head {
+  fill: rgba(122, 191, 82, 0.68) !important;
 }
 
 .gr-board-arrow path {
@@ -328,6 +373,74 @@
 
 .gr-board-badge-neutral {
   background: rgba(255, 255, 255, 0.86);
+}
+
+.gr-board-badge-review-best {
+  background: #6cdf9a;
+  color: #07120c;
+  font-size: 0.68rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.gr-board-badge-split {
+  min-width: 30px;
+  height: 30px;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.34);
+}
+
+.gr-board-badge-split-played {
+  z-index: 6;
+}
+
+.gr-board-badge-split-best {
+  z-index: 7;
+}
+
+.gr-board-corner-badge {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  min-width: 21px;
+  height: 21px;
+  padding: 0 5px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 8;
+  color: #1b1208;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.24);
+  font-size: 0.66rem;
+  font-weight: 900;
+  line-height: 1;
+  opacity: 0.94;
+}
+
+.gr-board-corner-badge-best,
+.gr-board-corner-badge-excellent {
+  background: rgba(124, 195, 72, 0.88);
+}
+
+.gr-board-corner-badge-book {
+  background: rgba(217, 171, 121, 0.9);
+}
+
+.gr-board-corner-badge-inaccuracy {
+  background: rgba(243, 186, 75, 0.9);
+}
+
+.gr-board-corner-badge-mistake {
+  background: rgba(242, 172, 98, 0.9);
+}
+
+.gr-board-corner-badge-blunder {
+  background: rgba(255, 91, 86, 0.9);
+  color: #fff;
+}
+
+.gr-board-corner-badge-neutral {
+  background: rgba(255, 255, 255, 0.76);
 }
 
 .gr-sidebar {

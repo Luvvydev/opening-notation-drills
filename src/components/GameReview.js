@@ -1286,7 +1286,7 @@ function getSquareCenter(square, orientation, boardSize = 100) {
   if (!square || square.length < 2) return null;
   const file = square.charCodeAt(0) - 97;
   const rank = parseInt(square[1], 10);
-  if (Number.isNaN(file) || Number.isNaN(rank)) return null;
+  if (Number.isNaN(file) || Number.isNaN(rank) || file < 0 || file > 7 || rank < 1 || rank > 8) return null;
 
   const col = orientation === 'white' ? file : 7 - file;
   const row = orientation === 'white' ? 8 - rank : rank - 1;
@@ -1302,16 +1302,84 @@ function getSquareCenter(square, orientation, boardSize = 100) {
   };
 }
 
+function getMoveArrow(move) {
+  if (!move || !move.from || !move.to) return null;
+  return { from: move.from, to: move.to, uci: moveToUci(move) };
+}
+
+function getUciArrow(uci) {
+  const value = String(uci || '');
+  if (value.length < 4) return null;
+  return { from: value.slice(0, 2), to: value.slice(2, 4), uci: value };
+}
+
+function offsetBoardPoint(point, xOffset, yOffset, boardSize) {
+  if (!point) return null;
+  const min = 8;
+  const max = Math.max(min, boardSize - min);
+  const x = clamp(point.x + xOffset, min, max);
+  const y = clamp(point.y + yOffset, min, max);
+
+  return {
+    x,
+    y,
+    left: `${x}px`,
+    top: `${y}px`,
+  };
+}
+
+function getArrowPath(from, to) {
+  if (!from || !to) return '';
+  return `M ${from.x} ${from.y} L ${to.x} ${to.y}`;
+}
+
+function getKnightArrowPath(from, to) {
+  if (!from || !to) return '';
+
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  const shouldMoveVerticalFirst = Math.abs(dy) >= Math.abs(dx);
+  const cornerX = shouldMoveVerticalFirst ? from.x : to.x;
+  const cornerY = shouldMoveVerticalFirst ? to.y : from.y;
+
+  return `M ${from.x} ${from.y} L ${cornerX} ${cornerY} L ${to.x} ${to.y}`;
+}
+
+function isKnightArrow(arrow) {
+  if (!arrow || !arrow.from || !arrow.to) return false;
+  const fromFile = arrow.from.charCodeAt(0) - 97;
+  const toFile = arrow.to.charCodeAt(0) - 97;
+  const fromRank = parseInt(arrow.from[1], 10);
+  const toRank = parseInt(arrow.to[1], 10);
+  if ([fromFile, toFile, fromRank, toRank].some((value) => Number.isNaN(value))) return false;
+
+  const fileDiff = Math.abs(toFile - fromFile);
+  const rankDiff = Math.abs(toRank - fromRank);
+  return (fileDiff === 1 && rankDiff === 2) || (fileDiff === 2 && rankDiff === 1);
+}
+
 function BoardOverlay({ move, orientation, classification, boardSize }) {
-  const arrowMarkerId = useMemo(() => `grArrowHead-${Math.random().toString(36).slice(2, 9)}`, []);
+  const bestMarkerId = useMemo(() => `grArrowHeadBest-${Math.random().toString(36).slice(2, 9)}`, []);
 
-  if (!move || !move.from || !move.to || !boardSize) return null;
+  if (!move || !boardSize) return null;
 
-  const from = getSquareCenter(move.from, orientation, boardSize);
-  const to = getSquareCenter(move.to, orientation, boardSize);
-  if (!from || !to) return null;
+  const playedArrow = getMoveArrow(move);
+  const bestArrow = getUciArrow(move.bestMove);
+  const playedTo = playedArrow ? getSquareCenter(playedArrow.to, orientation, boardSize) : null;
+  const bestFrom = bestArrow ? getSquareCenter(bestArrow.from, orientation, boardSize) : null;
+  const bestTo = bestArrow ? getSquareCenter(bestArrow.to, orientation, boardSize) : null;
+  const playedUci = playedArrow && playedArrow.uci ? String(playedArrow.uci).toLowerCase() : '';
+  const bestUci = bestArrow && bestArrow.uci ? String(bestArrow.uci).toLowerCase() : '';
+  const showBestArrow = Boolean(bestFrom && bestTo && bestUci && bestUci !== playedUci && move.classification !== 'best');
+
+  if (!playedTo) return null;
 
   const className = classification && classification.className ? classification.className : 'neutral';
+  const cellSize = boardSize / 8;
+  const playedBadge = offsetBoardPoint(playedTo, cellSize * 0.29, -cellSize * 0.29, boardSize);
+  const bestPath = showBestArrow && isKnightArrow(bestArrow)
+    ? getKnightArrowPath(bestFrom, bestTo)
+    : getArrowPath(bestFrom, bestTo);
   const badgeText = move.classification === 'book'
     ? '📘'
     : move.classification === 'best'
@@ -1328,15 +1396,21 @@ function BoardOverlay({ move, orientation, classification, boardSize }) {
 
   return (
     <div className="gr-board-overlay" aria-hidden="true">
-      <svg viewBox={`0 0 ${boardSize} ${boardSize}`} className={`gr-board-arrow gr-board-arrow-${className}`}>
-        <defs>
-          <marker id={arrowMarkerId} markerWidth="10" markerHeight="10" refX="7" refY="5" orient="auto" markerUnits="userSpaceOnUse">
-            <path d="M0,0 L10,5 L0,10 z" />
-          </marker>
-        </defs>
-        <line x1={from.x} y1={from.y} x2={to.x} y2={to.y} markerEnd={`url(#${arrowMarkerId})`} />
-      </svg>
-      <div className={`gr-board-badge gr-board-badge-${className}`} style={{ left: to.left, top: to.top }}>
+      {showBestArrow ? (
+        <svg viewBox={`0 0 ${boardSize} ${boardSize}`} className={`gr-board-arrow gr-board-arrow-review gr-board-arrow-${className}`}>
+          <defs>
+            <marker id={bestMarkerId} markerWidth="15" markerHeight="15" refX="11" refY="7.5" orient="auto" markerUnits="userSpaceOnUse">
+              <path d="M0,0 L15,7.5 L0,15 z" className="gr-board-arrow-review-best-head" />
+            </marker>
+          </defs>
+          <path
+            d={bestPath}
+            className="gr-board-arrow-review-best-path"
+            markerEnd={`url(#${bestMarkerId})`}
+          />
+        </svg>
+      ) : null}
+      <div className={`gr-board-corner-badge gr-board-corner-badge-${className}`} style={{ left: playedBadge.left, top: playedBadge.top }}>
         {badgeText}
       </div>
     </div>
@@ -1471,9 +1545,10 @@ function GameReview() {
   const runRequestRef = useRef(0);
   const cacheRef = useRef(new Map());
   const remoteAbortRef = useRef(null);
+  const remoteAutoLoadKeyRef = useRef('');
   const playGameRef = useRef(new Chess());
   const boardFrameRef = useRef(null);
-  const autoReviewRunningRef = useRef(false);
+  const autoReviewRunningRef = useRef('');
   const sfxRef = useRef({});
   const lastReviewPlySoundRef = useRef(0);
   const puzzleRequestRef = useRef(0);
@@ -1496,10 +1571,25 @@ function GameReview() {
   const currentInsight = useMemo(() => getMoveInsight(currentMove, currentClassification, gameData && gameData.match), [currentMove, currentClassification, gameData]);
   const boardSquareStyles = useMemo(() => {
     if (!currentMove) return {};
-    return {
+    const styles = {
       [currentMove.from]: { backgroundColor: 'rgba(255, 208, 96, 0.24)' },
       [currentMove.to]: { backgroundColor: currentMove.classification === 'best' ? 'rgba(136, 214, 82, 0.28)' : 'rgba(137, 97, 255, 0.20)' },
     };
+
+    if (currentMove.bestMove && currentMove.bestMove !== currentMove.uci && currentMove.classification !== 'best') {
+      const bestFrom = currentMove.bestMove.slice(0, 2);
+      const bestTo = currentMove.bestMove.slice(2, 4);
+      styles[bestFrom] = {
+        ...(styles[bestFrom] || {}),
+        backgroundColor: 'rgba(108, 223, 154, 0.18)',
+      };
+      styles[bestTo] = {
+        ...(styles[bestTo] || {}),
+        backgroundColor: 'rgba(108, 223, 154, 0.28)',
+      };
+    }
+
+    return styles;
   }, [currentMove]);
   const boardThemeStyles = useMemo(() => {
     const key = reviewSettings && reviewSettings.boardTheme ? reviewSettings.boardTheme : DEFAULT_THEME;
@@ -1584,10 +1674,12 @@ function GameReview() {
       }
     : playerSummary;
   const effectiveBoardOrientation = trainingSource === 'pack' && currentPuzzle ? (currentPuzzle.color === 'b' ? 'black' : 'white') : orientation;
-  const topProgressPercent = activePuzzleQueue.length
-    ? Math.round((solvedPuzzleCount / activePuzzleQueue.length) * 100)
-    : engineState === 'analyzing-game'
-      ? gameProgress
+  const isFullReviewProgressActive = engineState === 'analyzing-game'
+    || (hasLoadedGame && !hasFullReview && gameProgress > 0 && (autoReviewQueued || engineState === 'starting'));
+  const topProgressPercent = isFullReviewProgressActive
+    ? Math.max(4, gameProgress || 1)
+    : activePuzzleQueue.length
+      ? Math.round((solvedPuzzleCount / activePuzzleQueue.length) * 100)
       : 0;
   const isPersonalPackPopulating = trainingSource === 'pack' && packBuilding && activePuzzleQueue.length > 0;
   const packBuildProgressText = packProgress.total
@@ -1601,7 +1693,10 @@ function GameReview() {
   const shouldShowLoadView = (!hasLoadedGame && !activePuzzleQueue.length) || sidebarMode === 'load';
   const shouldShowOverviewView = canOpenSingleGameViews && sidebarMode === 'overview';
   const queueAutoReview = useCallback(() => {
-    setSidebarMode('load');
+    setSidebarMode('overview');
+    setEngineState('analyzing-game');
+    setGameProgress(1);
+    setStatusMessage('Starting full review...');
     setAutoReviewQueued(true);
   }, []);
 
@@ -1834,7 +1929,7 @@ function GameReview() {
     positionRequestRef.current = requestId;
     setEngineState('analyzing-game');
     setEngineError('');
-    setGameProgress(0);
+    setGameProgress(1);
     setStatusMessage('Analyzing every position…');
 
     try {
@@ -1856,6 +1951,7 @@ function GameReview() {
             : null,
         });
 
+        setEngineState('analyzing-game');
         evaluatedPositions.push(result);
         setGameProgress(Math.round(((i + 1) / gameData.positions.length) * 100));
       }
@@ -1906,7 +2002,7 @@ function GameReview() {
     setPositionEval(null);
     setGameProgress(0);
     setCurrentPly(0);
-    setSidebarMode('load');
+    setSidebarMode('overview');
     setOrientation(nextOrientation || parsed.orientation || 'white');
     setGameData(parsed);
     setPgnText(nextPgn);
@@ -1993,6 +2089,7 @@ function GameReview() {
     const controller = new window.AbortController();
     remoteAbortRef.current = controller;
 
+    remoteAutoLoadKeyRef.current = `${source}|${username.toLowerCase()}`;
     setRemoteLoading(true);
     setRemoteError('');
     setRemoteGames([]);
@@ -2015,6 +2112,35 @@ function GameReview() {
       setRemoteLoading(false);
     }
   }, [remoteUsername, source]);
+
+  useEffect(() => {
+    const username = remoteUsername.trim();
+
+    if (!username) {
+      remoteAutoLoadKeyRef.current = '';
+      setRemoteError('');
+      setRemoteGames([]);
+      setSelectedRemoteGameId('');
+      return undefined;
+    }
+
+    if (username.length < 2) {
+      return undefined;
+    }
+
+    const nextKey = `${source}|${username.toLowerCase()}`;
+    if (remoteAutoLoadKeyRef.current === nextKey) {
+      return undefined;
+    }
+
+    const timerId = window.setTimeout(() => {
+      handleLoadRemoteGames();
+    }, 600);
+
+    return () => {
+      window.clearTimeout(timerId);
+    };
+  }, [handleLoadRemoteGames, remoteUsername, source]);
 
   const handleSelectRemoteGame = useCallback((game) => {
     const username = remoteUsername.trim().toLowerCase();
@@ -2506,21 +2632,21 @@ function GameReview() {
       return undefined;
     }
 
-    if (autoReviewRunningRef.current) {
+    const autoReviewKey = `${gameData.pgn || ''}|${gameData.moves.length}`;
+    if (autoReviewRunningRef.current === autoReviewKey) {
       return undefined;
     }
 
-    autoReviewRunningRef.current = true;
+    autoReviewRunningRef.current = autoReviewKey;
     let cancelled = false;
 
     const run = async () => {
       try {
         await analyzeWholeGame();
-        if (!cancelled) {
-          setSidebarMode('puzzles');
-        }
       } finally {
-        autoReviewRunningRef.current = false;
+        if (autoReviewRunningRef.current === autoReviewKey) {
+          autoReviewRunningRef.current = '';
+        }
         if (!cancelled) {
           setAutoReviewQueued(false);
         }
@@ -2882,6 +3008,13 @@ function GameReview() {
   }, [gameData, source, selectedRemoteGameId]);
 
   const moveCount = gameData && gameData.moves ? gameData.moves.length : 0;
+  const reviewBoardFen = isPuzzleMode && currentPuzzle
+    ? puzzleFen
+    : currentMove
+      ? (currentMove.afterFen || (currentPosition ? currentPosition.fen : currentMove.beforeFen))
+      : currentPosition
+        ? currentPosition.fen
+        : 'start';
   const statusTone = engineState === 'error' ? 'error' : engineState === 'ready' ? 'ready' : engineState === 'idle' ? 'idle' : 'working';
 
   return (
@@ -2902,9 +3035,9 @@ function GameReview() {
               <div className="gr-board-frame" ref={boardFrameRef}>
                 <div className="gr-board-stack" style={{ width: `${boardWidth}px` }}>
                   <Chessboard
-                    key={`review-board-${effectiveBoardOrientation}-${isPuzzleMode && currentPuzzle ? puzzleFen : currentPosition ? currentPosition.fen : 'start'}`}
+                    key={`review-board-${effectiveBoardOrientation}-${reviewBoardFen}`}
                     width={boardWidth}
-                    position={isPuzzleMode && currentPuzzle ? puzzleFen : currentPosition ? currentPosition.fen : 'start'}
+                    position={reviewBoardFen}
                     orientation={effectiveBoardOrientation}
                     arePiecesDraggable={isPuzzleMode ? Boolean(currentPuzzle) && puzzleStatus !== 'checking' && puzzleStatus !== 'solved' : false}
                     onDrop={isPuzzleMode ? handlePuzzleDrop : undefined}
@@ -3343,6 +3476,14 @@ function GameReview() {
                       <FontAwesomeIcon icon={faListOl} />
                       <span>{hasFullReview ? 'Open review' : 'Open moves'}</span>
                     </button>
+
+                    {!hasFullReview || isFullReviewProgressActive || engineError ? (
+                      <div className={`gr-status-strip is-${statusTone}`}>
+                        <span>{hasFullReview ? 'Full review finished.' : statusMessage}</span>
+                        {isFullReviewProgressActive ? <span>{Math.max(1, gameProgress || 1)}%</span> : null}
+                      </div>
+                    ) : null}
+                    {engineError ? <div className="gr-error">{engineError}</div> : null}
 
                     <div className="gr-scoreboard-players gr-scoreboard-players-overview">
                       <div className="gr-score-player">
