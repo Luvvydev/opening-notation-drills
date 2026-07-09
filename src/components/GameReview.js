@@ -1328,21 +1328,22 @@ function offsetBoardPoint(point, xOffset, yOffset, boardSize) {
   };
 }
 
-function getArrowPath(from, to) {
+function getArrowPath(from, to, bend) {
   if (!from || !to) return '';
-  return `M ${from.x} ${from.y} L ${to.x} ${to.y}`;
-}
 
-function getKnightArrowPath(from, to) {
-  if (!from || !to) return '';
+  if (!bend) {
+    return `M ${from.x} ${from.y} L ${to.x} ${to.y}`;
+  }
 
   const dx = to.x - from.x;
   const dy = to.y - from.y;
-  const shouldMoveVerticalFirst = Math.abs(dy) >= Math.abs(dx);
-  const cornerX = shouldMoveVerticalFirst ? from.x : to.x;
-  const cornerY = shouldMoveVerticalFirst ? to.y : from.y;
+  const length = Math.max(1, Math.sqrt((dx * dx) + (dy * dy)));
+  const normalX = -dy / length;
+  const normalY = dx / length;
+  const controlX = ((from.x + to.x) / 2) + (normalX * bend);
+  const controlY = ((from.y + to.y) / 2) + (normalY * bend);
 
-  return `M ${from.x} ${from.y} L ${cornerX} ${cornerY} L ${to.x} ${to.y}`;
+  return `M ${from.x} ${from.y} Q ${controlX} ${controlY} ${to.x} ${to.y}`;
 }
 
 function isKnightArrow(arrow) {
@@ -1377,9 +1378,7 @@ function BoardOverlay({ move, orientation, classification, boardSize }) {
   const className = classification && classification.className ? classification.className : 'neutral';
   const cellSize = boardSize / 8;
   const playedBadge = offsetBoardPoint(playedTo, cellSize * 0.29, -cellSize * 0.29, boardSize);
-  const bestPath = showBestArrow && isKnightArrow(bestArrow)
-    ? getKnightArrowPath(bestFrom, bestTo)
-    : getArrowPath(bestFrom, bestTo);
+  const bestBend = showBestArrow && isKnightArrow(bestArrow) ? cellSize * 0.22 : 0;
   const badgeText = move.classification === 'book'
     ? '📘'
     : move.classification === 'best'
@@ -1404,7 +1403,7 @@ function BoardOverlay({ move, orientation, classification, boardSize }) {
             </marker>
           </defs>
           <path
-            d={bestPath}
+            d={getArrowPath(bestFrom, bestTo, bestBend)}
             className="gr-board-arrow-review-best-path"
             markerEnd={`url(#${bestMarkerId})`}
           />
@@ -1455,6 +1454,8 @@ function RemoteGameList({ games, selectedId, onSelect, loading, error, emptyMess
             type="button"
             className={isActive ? 'gr-remote-item is-active' : 'gr-remote-item'}
             onClick={() => onSelect(game)}
+            title="Review this game"
+            aria-label={`Review ${game.white.name} versus ${game.black.name}`}
           >
             <div className="gr-remote-avatars">
               <PlayerAvatar name={game.white.name} className="gr-remote-avatar" />
@@ -2195,7 +2196,7 @@ function GameReview() {
     clearPuzzleSelection();
     setSidebarMode('load');
     setEngineState('analyzing');
-    setStatusMessage(`Building pack from ${selectedGames.length} games...`);
+    setStatusMessage(`Building Mistake Pack from ${selectedGames.length} games...`);
 
     try {
       await stopSearch();
@@ -2280,11 +2281,7 @@ function GameReview() {
           setPackPuzzles(visiblePackQueue);
           setTrainingSource('pack');
           setSidebarMode('puzzles');
-          setStatusMessage(
-            visiblePackQueue.length > 1
-              ? `First ${visiblePackQueue.length} personal pack puzzles are ready. You can play them while the rest keeps analyzing.`
-              : 'First personal pack puzzle is ready. You can play it while the rest keeps analyzing.'
-          );
+          setStatusMessage(visiblePackQueue.length > 1 ? `${visiblePackQueue.length} puzzles ready.` : '1 puzzle ready.');
           revealedSeedQueue = true;
           await waitForNextPaint();
           continue;
@@ -2298,7 +2295,7 @@ function GameReview() {
               const merged = mergePackPuzzleQueue(previous, partialPack.puzzles);
               return merged.length === previous.length ? previous : merged;
             });
-            setStatusMessage(`Loaded ${visiblePackQueue.length} personal pack puzzles so far. You can keep playing while the rest analyzes.`);
+            setStatusMessage(`${visiblePackQueue.length} puzzles ready.`);
             await waitForNextPaint();
           }
         }
@@ -2341,7 +2338,7 @@ function GameReview() {
       setTrainingSource('pack');
       setSidebarMode('puzzles');
       setEngineState('ready');
-      setStatusMessage(finalQueue.length ? `Personal pack ready with ${finalQueue.length} puzzles.` : 'Pack analysis finished, but no strong puzzle spots survived filtering.');
+      setStatusMessage(finalQueue.length ? `Mistake Pack ready with ${finalQueue.length} puzzles.` : 'No strong puzzle spots found.');
     } catch (_) {
       if (requestId !== runRequestRef.current) {
         return;
@@ -3113,45 +3110,50 @@ function GameReview() {
               <div className="gr-sidebar-actions">
                 <button
                   type="button"
-                  className={sidebarMode === 'load' || (!hasLoadedGame && !activePuzzleQueue.length) ? 'gr-panel-gear is-active' : 'gr-panel-gear'}
+                  className={`${sidebarMode === 'load' || (!hasLoadedGame && !activePuzzleQueue.length) ? 'gr-panel-gear is-active' : 'gr-panel-gear'} gr-tooltip-anchor`}
                   onClick={() => setSidebarMode('load')}
-                  title="Load or change game"
+                  aria-label="Load games or paste PGN"
+                  data-tooltip="Load games or PGN"
                 >
                   <FontAwesomeIcon icon={faUpload} />
                 </button>
                 <button
                   type="button"
-                  className={shouldShowOverviewView ? 'gr-panel-gear is-active' : 'gr-panel-gear'}
+                  className={`${shouldShowOverviewView ? 'gr-panel-gear is-active' : 'gr-panel-gear'} gr-tooltip-anchor`}
                   onClick={() => canOpenSingleGameViews && setSidebarMode('overview')}
-                  title="Show review overview"
+                  aria-label="Show accuracy overview"
+                  data-tooltip="Accuracy overview"
                   disabled={!canOpenSingleGameViews}
                 >
                   <FontAwesomeIcon icon={faBars} />
                 </button>
                 <button
                   type="button"
-                  className={isPuzzleMode ? 'gr-panel-gear is-active' : 'gr-panel-gear'}
+                  className={`${isPuzzleMode ? 'gr-panel-gear is-active' : 'gr-panel-gear'} gr-tooltip-anchor`}
                   onClick={() => (hasLoadedGame || activePuzzleQueue.length) && setSidebarMode('puzzles')}
-                  title="Show mistake training"
+                  aria-label="Create practice puzzles from your mistakes"
+                  data-tooltip="Practice mistakes"
                   disabled={!hasLoadedGame && !activePuzzleQueue.length}
                 >
                   <FontAwesomeIcon icon={faChessKnight} />
                 </button>
                 <button
                   type="button"
-                  className={canOpenSingleGameViews && sidebarMode === 'moves' ? 'gr-panel-gear is-active' : 'gr-panel-gear'}
+                  className={`${canOpenSingleGameViews && sidebarMode === 'moves' ? 'gr-panel-gear is-active' : 'gr-panel-gear'} gr-tooltip-anchor`}
                   onClick={() => canOpenSingleGameViews && setSidebarMode('moves')}
-                  title="Show move review"
+                  aria-label="Open Move Review"
+                  data-tooltip="Move Review"
                   disabled={!canOpenSingleGameViews}
                 >
                   <FontAwesomeIcon icon={faListOl} />
                 </button>
                 <button
                   type="button"
-                  className={settingsOpen ? 'gr-panel-gear is-active' : 'gr-panel-gear'}
+                  className={`${settingsOpen ? 'gr-panel-gear is-active' : 'gr-panel-gear'} gr-tooltip-anchor`}
                   onClick={() => setSettingsOpen((value) => !value)}
                   aria-expanded={settingsOpen ? 'true' : 'false'}
-                  title="Review settings"
+                  aria-label="Review settings"
+                  data-tooltip="Review settings"
                 >
                   <FontAwesomeIcon icon={faCog} />
                 </button>
@@ -3226,6 +3228,8 @@ function GameReview() {
                           type="button"
                           className={source === tab.key ? 'gr-source-tab is-active' : 'gr-source-tab'}
                           onClick={() => setSource(tab.key)}
+                          title={tab.key === 'pgn' ? 'Paste or upload PGN' : `Load recent ${tab.label} games`}
+                          aria-label={tab.key === 'pgn' ? 'Paste or upload PGN' : `Load recent ${tab.label} games`}
                         >
                           {tab.logoSrc ? (
                             <span className="gr-source-tab-logo-wrap">
@@ -3271,7 +3275,7 @@ function GameReview() {
                               placeholder={source === 'lichess' ? 'Enter a Lichess username' : 'Enter a Chess.com username'}
                             />
                           </label>
-                          <button type="submit" className="gr-button gr-button-primary">
+                          <button type="submit" className="gr-button gr-button-primary" title="Load recent games" aria-label="Load recent games">
                             <FontAwesomeIcon icon={faUser} />
                             <span>Load</span>
                           </button>
@@ -3288,21 +3292,23 @@ function GameReview() {
 
                         <section className="gr-pack-builder">
                           <div className="gr-pack-builder-head">
-                            <div className="gr-loader-summary-title">Mistake pack</div>
+                            <div className="gr-pack-builder-kicker">Train from recent games</div>
+                            <div className="gr-loader-summary-title">Mistake Pack</div>
+                            <div className="gr-pack-builder-meta">Turn missed moves into puzzles.</div>
                           </div>
 
-                          <div className="gr-settings-row">
+                          <div className="gr-pack-builder-grid">
                             <label className="gr-compact-field">
                               <span>Games</span>
-                              <select value={packBatchSize} onChange={(event) => setPackBatchSize(parseInt(event.target.value, 10))}>
+                              <select value={packBatchSize} onChange={(event) => setPackBatchSize(parseInt(event.target.value, 10))} title="Number of recent games" aria-label="Number of recent games">
                                 {[10, 20, 30].map((value) => (
-                                  <option key={value} value={value}>{value}</option>
+                                  <option key={value} value={value}>Last {value}</option>
                                 ))}
                               </select>
                             </label>
                             <label className="gr-compact-field">
                               <span>Side</span>
-                              <select value={packSideFilter} onChange={(event) => setPackSideFilter(event.target.value)}>
+                              <select value={packSideFilter} onChange={(event) => setPackSideFilter(event.target.value)} title="Side filter" aria-label="Side filter">
                                 <option value="all">All</option>
                                 <option value="white">White</option>
                                 <option value="black">Black</option>
@@ -3310,7 +3316,7 @@ function GameReview() {
                             </label>
                             <label className="gr-compact-field">
                               <span>Speed</span>
-                              <select value={packSpeedFilter} onChange={(event) => setPackSpeedFilter(event.target.value)}>
+                              <select value={packSpeedFilter} onChange={(event) => setPackSpeedFilter(event.target.value)} title="Speed filter" aria-label="Speed filter">
                                 <option value="all">All</option>
                                 <option value="rapid">Rapid</option>
                                 <option value="blitz">Blitz</option>
@@ -3318,14 +3324,13 @@ function GameReview() {
                             </label>
                           </div>
 
-
-                          <div className="gr-inline-actions">
-                            <button type="button" className="gr-button gr-button-primary" onClick={handleBuildPersonalPack} disabled={packBuilding || remoteLoading}>
+                          <div className="gr-inline-actions gr-pack-actions">
+                            <button type="button" className="gr-button gr-button-primary" onClick={handleBuildPersonalPack} disabled={packBuilding || remoteLoading} title="Create practice puzzles from your recent mistakes" aria-label="Create Mistake Pack from recent games">
                               <FontAwesomeIcon icon={packBuilding ? faSpinner : faChessKnight} spin={packBuilding} />
-                              <span>{packBuilding ? 'Building...' : 'Build pack'}</span>
+                              <span>{packBuilding ? 'Building...' : 'Create Mistake Pack'}</span>
                             </button>
                             {trainingSource === 'pack' && packPuzzles.length ? (
-                              <button type="button" className="gr-button" onClick={() => setSidebarMode('puzzles')}>
+                              <button type="button" className="gr-button" onClick={() => setSidebarMode('puzzles')} title="Open Mistake Pack" aria-label="Open Mistake Pack">
                                 <FontAwesomeIcon icon={faPlay} />
                                 <span>Open pack</span>
                               </button>
@@ -3334,7 +3339,7 @@ function GameReview() {
 
                           {packBuilding ? (
                             <div className={packPuzzles.length ? 'gr-pack-status gr-pack-status-live' : 'gr-pack-status'}>
-                              <span>{packPuzzles.length ? `${packPuzzles.length} puzzles ready. Keep playing while analysis continues.` : `Analyzing ${packProgress.current}/${packProgress.total}`}</span>
+                              <span>{packPuzzles.length ? `${packPuzzles.length} ready` : `Analyzing ${packProgress.current}/${packProgress.total}`}</span>
                               {packProgress.label ? <strong>{packProgress.label}</strong> : null}
                             </div>
                           ) : null}
@@ -3371,8 +3376,7 @@ function GameReview() {
                             <span>Pack still building</span>
                             <strong>{packBuildProgressText}</strong>
                           </div>
-                          <div className="gr-pack-live-title">{activePuzzleQueue.length} puzzles ready now</div>
-                          <div className="gr-pack-live-copy">Start these positions while the rest of your recent games keep analyzing. More puzzles will appear here automatically.</div>
+                          <div className="gr-pack-live-title">{activePuzzleQueue.length} puzzles ready</div>
                         </section>
                       ) : null}
 
@@ -3409,9 +3413,7 @@ function GameReview() {
                           <div className="gr-puzzle-stat-label">Progress</div>
                           <div className="gr-puzzle-progress-mini-count">{solvedPuzzleCount}/{activePuzzleQueue.length}</div>
                         </div>
-                        {isPersonalPackPopulating ? (
-                          <div className="gr-puzzle-progress-note">Adding more puzzles as analysis finishes.</div>
-                        ) : null}
+                        
                         <div className="gr-puzzle-progress-cells">
                           {activePuzzleQueue.map((puzzle, index) => {
                             const result = puzzleResults[puzzle.id];
@@ -3543,6 +3545,24 @@ function GameReview() {
                       {engineState === 'analyzing-game' ? <span>{gameProgress}%</span> : null}
                     </div>
                     {engineError ? <div className="gr-error">{engineError}</div> : null}
+                    {hasFullReview && trainingSource !== 'pack' && puzzleQueue.length ? (
+                      <div className="gr-review-practice-row">
+                        <button
+                          type="button"
+                          className="gr-button"
+                          onClick={() => {
+                            setTrainingSource('single');
+                            setPuzzleIndex(0);
+                            setSidebarMode('puzzles');
+                          }}
+                          title="Practice missed moves from this game"
+                          aria-label="Practice missed moves from this game"
+                        >
+                          <FontAwesomeIcon icon={faChessKnight} />
+                          <span>Practice this game</span>
+                        </button>
+                      </div>
+                    ) : null}
                   </div>
 
                   <div className="gr-moves-head">
@@ -3551,22 +3571,22 @@ function GameReview() {
                   </div>
 
                   <div className="gr-control-dock">
-                    <button type="button" className="gr-dock-btn" onClick={() => setCurrentPly(0)} title="Start">
+                    <button type="button" className="gr-dock-btn gr-tooltip-anchor" onClick={() => setCurrentPly(0)} aria-label="Jump to the first move" data-tooltip="Jump to first move">
                       <FontAwesomeIcon icon={faFastBackward} />
                     </button>
-                    <button type="button" className="gr-dock-btn" onClick={() => setCurrentPly((value) => Math.max(0, value - 1))} title="Previous">
+                    <button type="button" className="gr-dock-btn gr-tooltip-anchor" onClick={() => setCurrentPly((value) => Math.max(0, value - 1))} aria-label="Review the previous move" data-tooltip="Previous move">
                       <FontAwesomeIcon icon={faStepBackward} />
                     </button>
-                    <button type="button" className="gr-dock-btn gr-dock-btn-primary" onClick={() => analyzeCurrentPosition()} title="Analyze current position">
+                    <button type="button" className="gr-dock-btn gr-dock-btn-primary gr-tooltip-anchor" onClick={() => analyzeCurrentPosition()} aria-label="Analyze current position" data-tooltip="Analyze position">
                       {engineState === 'analyzing-position' ? <FontAwesomeIcon icon={faSpinner} spin /> : <FontAwesomeIcon icon={faSearch} />}
                     </button>
-                    <button type="button" className="gr-dock-btn gr-dock-btn-primary" onClick={analyzeWholeGame} title="Analyze full game">
+                    <button type="button" className="gr-dock-btn gr-dock-btn-primary gr-tooltip-anchor" onClick={analyzeWholeGame} aria-label="Analyze full game" data-tooltip="Analyze full game">
                       {engineState === 'analyzing-game' ? <FontAwesomeIcon icon={faSpinner} spin /> : <FontAwesomeIcon icon={faChartLine} />}
                     </button>
-                    <button type="button" className="gr-dock-btn" onClick={() => setCurrentPly((value) => Math.min(moveCount, value + 1))} title="Next">
+                    <button type="button" className="gr-dock-btn gr-tooltip-anchor" onClick={() => setCurrentPly((value) => Math.min(moveCount, value + 1))} aria-label="Review the next move" data-tooltip="Next move">
                       <FontAwesomeIcon icon={faStepForward} />
                     </button>
-                    <button type="button" className="gr-dock-btn" onClick={() => setCurrentPly(moveCount)} title="End">
+                    <button type="button" className="gr-dock-btn gr-tooltip-anchor" onClick={() => setCurrentPly(moveCount)} aria-label="Jump to the final move" data-tooltip="Final move">
                       <FontAwesomeIcon icon={faFastForward} />
                     </button>
                   </div>

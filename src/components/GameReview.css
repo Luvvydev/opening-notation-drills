@@ -3561,3 +3561,119 @@
     font-size: 1.7rem;
   }
 }
+
+.gr-tooltip-anchor {
+  position: relative;
+}
+
+.gr-tooltip-anchor::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 80;
+  width: max-content;
+  max-width: 210px;
+  padding: 6px 8px;
+  border-radius: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(11, 14, 20, 0.96);
+  color: rgba(238, 242, 247, 0.94);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.34);
+  font-size: 0.7rem;
+  font-weight: 800;
+  line-height: 1.2;
+  white-space: normal;
+  text-align: left;
+  opacity: 0;
+  transform: translateY(-2px);
+  pointer-events: none;
+  transition: none;
+}
+
+.gr-tooltip-anchor:hover::after,
+.gr-tooltip-anchor:focus-visible::after {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.gr-control-dock .gr-tooltip-anchor::after {
+  left: 50%;
+  right: auto;
+  transform: translate(-50%, -2px);
+  text-align: center;
+}
+
+.gr-control-dock .gr-tooltip-anchor:hover::after,
+.gr-control-dock .gr-tooltip-anchor:focus-visible::after {
+  transform: translate(-50%, 0);
+}
+
+.gr-tooltip-anchor:disabled::after {
+  display: none;
+}
+
+/* 2026-07 guided flow polish: compact two-path Game Review and Mistake Pack entry */
+.gr-pack-builder-kicker {
+  color: rgba(244, 197, 66, 0.82);
+  font-size: 0.64rem;
+  font-weight: 900;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  margin-bottom: 3px;
+}
+
+.gr-pack-builder .gr-loader-summary-title {
+  margin-bottom: 3px;
+}
+
+.gr-pack-builder .gr-pack-builder-meta {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.25;
+}
+
+.gr-pack-builder-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.gr-pack-actions .gr-button-primary {
+  flex: 1 1 auto;
+}
+
+.gr-sidebar-view-load .gr-remote-panel {
+  gap: 10px;
+}
+
+.gr-sidebar-view-load .gr-remote-list {
+  max-height: 168px;
+}
+
+.gr-sidebar-view-load .gr-pack-builder {
+  margin-top: 8px;
+  margin-bottom: 0;
+  padding: 12px;
+  gap: 10px;
+}
+
+.gr-sidebar-view-load .gr-pack-builder-head {
+  margin-bottom: 0;
+}
+
+.gr-review-practice-row {
+  display: flex;
+  justify-content: stretch;
+  margin-top: 8px;
+}
+
+.gr-review-practice-row .gr-button {
+  width: 100%;
+}
+
+@media (max-width: 680px) {
+  .gr-pack-builder-grid {
+    grid-template-columns: 1fr;
+  }
+}
