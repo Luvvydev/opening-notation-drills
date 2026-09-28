@@ -597,6 +597,87 @@ function sendCommandsToWorker(workerHandle, commands, finalPrefix, onMessage, ti
   });
 }
 
+// ---------------------------------------------------------------------------
+// Parallel review workers
+// Full-game review evaluates every position independently, so we spread the
+// positions across a small pool of Stockfish workers instead of one at a time.
+// The pool is warmed up when the page opens so the first click has no startup wait.
+// ---------------------------------------------------------------------------
+const MAX_REVIEW_WORKERS = 4;
+
+function getReviewWorkerCount() {
+  if (typeof navigator === 'undefined') return 2;
+  const cores = Number(navigator.hardwareConcurrency) || 4;
+  const memory = Number(navigator.deviceMemory) || 4;
+  const byCores = Math.floor(cores / 2);
+  const byMemory = memory >= 4 ? MAX_REVIEW_WORKERS : 2;
+  return clamp(Math.min(byCores, byMemory), 1, MAX_REVIEW_WORKERS);
+}
+
+function createReviewWorkerHandle(multiPv) {
+  return new Promise((resolve, reject) => {
+    let worker = null;
+    try {
+      worker = new window.Worker(ENGINE_PATH);
+    } catch (error) {
+      reject(error);
+      return;
+    }
+
+    const handle = { worker, listener: null, multiPv, busy: false };
+    worker.onmessage = (event) => {
+      if (handle.listener) handle.listener(String(event.data || ''));
+    };
+    worker.onerror = () => {
+      reject(new Error('review worker failed'));
+    };
+
+    sendCommandsToWorker(handle, ['uci'], 'uciok', null, 10000)
+      .then(() => sendCommandsToWorker(handle, [`setoption name MultiPV value ${multiPv}`, 'isready'], 'readyok', null, 10000))
+      .then(() => resolve(handle))
+      .catch((error) => {
+        try { worker.terminate(); } catch (_) {}
+        reject(error);
+      });
+  });
+}
+
+function stopReviewWorkerHandle(handle) {
+  if (!handle || !handle.busy) return;
+  try { handle.worker.postMessage('stop'); } catch (_) {}
+}
+
+function disposeReviewWorkerHandle(handle) {
+  if (!handle || !handle.worker) return;
+  try { handle.worker.postMessage('quit'); } catch (_) {}
+  try { handle.worker.terminate(); } catch (_) {}
+}
+
+async function evaluateOnReviewHandle(handle, fen, depth, multiPv) {
+  if (handle.multiPv !== multiPv) {
+    await sendCommandsToWorker(handle, [`setoption name MultiPV value ${multiPv}`, 'isready'], 'readyok', null, 10000);
+    handle.multiPv = multiPv;
+  }
+
+  handle.busy = true;
+  try {
+    const results = await sendCommandsToWorker(
+      handle,
+      [`position fen ${fen}`, `go depth ${depth}`],
+      'bestmove',
+      null,
+      45000
+    );
+    return parseEvaluationResults(results, fen);
+  } finally {
+    handle.busy = false;
+  }
+}
+
+function waitMs(ms) {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
 function getPaddedNumber(value) {
   return String(value).padStart(2, '0');
 }
@@ -1558,6 +1639,7 @@ function GameReview() {
   const puzzleConfettiTimerRef = useRef(null);
   const copiedTimerRef = useRef(null);
   const isMountedRef = useRef(true);
+  const poolRef = useRef({ handles: [], initPromise: null, runPromise: null, disposed: false });
 
   const currentPosition = gameData && gameData.positions ? gameData.positions[currentPly] : null;
   const currentMove = gameData && gameData.moves && currentPly > 0 ? gameData.moves[currentPly - 1] : null;
@@ -1689,6 +1771,8 @@ function GameReview() {
     : 'working';
   const packTrainingLabel = trainingSource === 'pack' ? 'Training from recent games' : 'Training from this game';
   const canCreateRecentPack = Boolean(remoteUsername.trim() && remoteGames.length) && !packBuilding && !remoteLoading;
+  const mistakePuzzleCount = hasFullReview && trainingSource !== 'pack' ? puzzleQueue.length : 0;
+  const showPracticeAttention = mistakePuzzleCount > 0 && !isPuzzleMode;
   const shellProgressStyle = { '--gr-top-progress': `${topProgressPercent}%` };
   const sidebarPanelStyle = { '--gr-sidebar-target-height': `${boardWidth + 26}px` };
   const puzzlePlayedMarkerId = useMemo(() => `grPuzzleArrowHeadPlayed-${Math.random().toString(36).slice(2, 9)}`, []);
@@ -1702,6 +1786,12 @@ function GameReview() {
     setGameProgress(1);
     setStatusMessage('Starting full review...');
     setAutoReviewQueued(true);
+  }, []);
+
+  const handlePracticeThisGame = useCallback(() => {
+    setTrainingSource('single');
+    setPuzzleIndex(0);
+    setSidebarMode('puzzles');
   }, []);
 
   const setPuzzleOutcome = useCallback((puzzleId, outcome) => {
@@ -1833,6 +1923,36 @@ function GameReview() {
     return initPromiseRef.current;
   }, [multiPv]);
 
+  const ensureWorkerPool = useCallback(() => {
+    const pool = poolRef.current;
+    if (pool.disposed) return Promise.reject(new Error('pool disposed'));
+    if (pool.initPromise) return pool.initPromise;
+
+    const size = getReviewWorkerCount();
+    const startedMultiPv = multiPv;
+    pool.initPromise = Promise.all(
+      Array.from({ length: size }, () => createReviewWorkerHandle(startedMultiPv).catch(() => null))
+    ).then((handles) => {
+      const ready = handles.filter(Boolean);
+      if (pool.disposed) {
+        ready.forEach(disposeReviewWorkerHandle);
+        throw new Error('pool disposed');
+      }
+      if (!ready.length) {
+        pool.initPromise = null;
+        throw new Error('no review workers started');
+      }
+      pool.handles = ready;
+      return ready;
+    });
+
+    return pool.initPromise;
+  }, [multiPv]);
+
+  const stopPoolSearches = useCallback(() => {
+    poolRef.current.handles.forEach(stopReviewWorkerHandle);
+  }, []);
+
   const stopSearch = useCallback(async () => {
     const engine = engineRef.current;
     if (!engine) return;
@@ -1937,27 +2057,110 @@ function GameReview() {
     setStatusMessage('Analyzing every position…');
 
     try {
-      const evaluatedPositions = [];
+      const positions = gameData.positions;
+      const evaluatedPositions = new Array(positions.length);
+      let completed = 0;
+      const markDone = () => {
+        completed += 1;
+        setGameProgress(Math.max(1, Math.round((completed / positions.length) * 100)));
+      };
 
-      for (let i = 0; i < gameData.positions.length; i += 1) {
+      // Cached / trivial (mate, stalemate) positions cost nothing, fill them first.
+      const pending = [];
+      for (let i = 0; i < positions.length; i += 1) {
+        const fen = positions[i].fen;
+        const cached = cacheRef.current.get(`${fen}|d${depth}|pv${multiPv}`);
+        if (cached) {
+          evaluatedPositions[i] = cached;
+          markDone();
+          continue;
+        }
+        const whoIsCheckmated = getWhoIsCheckmated(fen);
+        if (whoIsCheckmated) {
+          const mateEval = { lines: [{ pv: [], depth: 0, multiPv: 1, mate: whoIsCheckmated === 'w' ? -1 : 1 }] };
+          cacheRef.current.set(`${fen}|d${depth}|pv${multiPv}`, mateEval);
+          evaluatedPositions[i] = mateEval;
+          markDone();
+          continue;
+        }
+        if (getIsStalemate(fen)) {
+          const drawEval = { lines: [{ pv: [], depth: 0, multiPv: 1, cp: 0 }] };
+          cacheRef.current.set(`${fen}|d${depth}|pv${multiPv}`, drawEval);
+          evaluatedPositions[i] = drawEval;
+          markDone();
+          continue;
+        }
+        pending.push(i);
+      }
+
+      if (pending.length) {
+        const pool = poolRef.current;
+
+        // If a previous review is still winding down, tell its workers to stop and let it finish.
+        if (pool.runPromise) {
+          stopPoolSearches();
+          await Promise.race([pool.runPromise.catch(() => {}), waitMs(2500)]);
+          if (requestId !== runRequestRef.current) return;
+        }
+
+        let handles = null;
+        try {
+          handles = await ensureWorkerPool();
+        } catch (_) {
+          handles = null;
+        }
         if (requestId !== runRequestRef.current) return;
 
-        const position = gameData.positions[i];
-        const result = await evaluateFen(position.fen, {
-          depth,
-          multiPv,
-          requestId,
-          partialCallback: i === currentPly
-            ? (partial) => {
-                if (requestId !== runRequestRef.current) return;
-                setPositionEval(partial);
-              }
-            : null,
-        });
+        if (handles && handles.length) {
+          let nextPending = 0;
+          let workerFailed = false;
 
-        setEngineState('analyzing-game');
-        evaluatedPositions.push(result);
-        setGameProgress(Math.round(((i + 1) / gameData.positions.length) * 100));
+          const runWorker = async (handle) => {
+            while (!workerFailed) {
+              if (requestId !== runRequestRef.current) return;
+              const pendingIndex = nextPending;
+              nextPending += 1;
+              if (pendingIndex >= pending.length) return;
+
+              const positionIndex = pending[pendingIndex];
+              const fen = positions[positionIndex].fen;
+              try {
+                const result = await evaluateOnReviewHandle(handle, fen, depth, multiPv);
+                if (requestId !== runRequestRef.current) return;
+                cacheRef.current.set(`${fen}|d${depth}|pv${multiPv}`, result);
+                evaluatedPositions[positionIndex] = result;
+                markDone();
+              } catch (error) {
+                // Leave this position for the sequential fallback below.
+                workerFailed = true;
+                return;
+              }
+            }
+          };
+
+          const runPromise = Promise.all(handles.map(runWorker));
+          pool.runPromise = runPromise;
+          try {
+            await runPromise;
+          } finally {
+            if (pool.runPromise === runPromise) pool.runPromise = null;
+          }
+          if (requestId !== runRequestRef.current) return;
+        }
+
+        // Fallback: anything still missing (pool unavailable or a worker died) runs one at a time.
+        for (let i = 0; i < positions.length; i += 1) {
+          if (evaluatedPositions[i]) continue;
+          if (requestId !== runRequestRef.current) return;
+          const result = await evaluateFen(positions[i].fen, {
+            depth,
+            multiPv,
+            requestId,
+            partialCallback: null,
+          });
+          evaluatedPositions[i] = result;
+          markDone();
+        }
       }
 
       if (requestId !== runRequestRef.current) return;
@@ -1990,15 +2193,16 @@ function GameReview() {
       setEngineError('Full game analysis failed.');
       setStatusMessage('Full game analysis failed.');
     }
-  }, [currentPly, depth, evaluateFen, gameData, multiPv]);
+  }, [currentPly, depth, ensureWorkerPool, evaluateFen, gameData, multiPv, stopPoolSearches]);
 
   const handleStop = useCallback(async () => {
     runRequestRef.current += 1;
     positionRequestRef.current += 1;
+    stopPoolSearches();
     await stopSearch();
     setEngineState(engineRef.current ? 'ready' : 'idle');
     setStatusMessage(engineRef.current ? 'Analysis stopped.' : 'Stockfish is idle.');
-  }, [stopSearch]);
+  }, [stopPoolSearches, stopSearch]);
 
   const resetReviewStateFromParsed = useCallback((parsed, nextPgn, nextOrientation) => {
     setEngineError('');
@@ -2815,7 +3019,20 @@ function GameReview() {
       try { engine.worker.postMessage('quit'); } catch (_) {}
       try { engine.worker.terminate(); } catch (_) {}
     }
+    const pool = poolRef.current;
+    pool.disposed = true;
+    pool.handles.forEach(disposeReviewWorkerHandle);
+    pool.handles = [];
   }, []);
+
+  // Warm up the review workers while the person is still picking a game,
+  // so clicking a game doesn't wait on engine startup.
+  useEffect(() => {
+    const timerId = window.setTimeout(() => {
+      ensureWorkerPool().catch(() => {});
+    }, 250);
+    return () => window.clearTimeout(timerId);
+  }, [ensureWorkerPool]);
 
   useEffect(() => {
     if (!showEngineBoard) return undefined;
@@ -3137,13 +3354,14 @@ function GameReview() {
                 </button>
                 <button
                   type="button"
-                  className={`${isPuzzleMode ? 'gr-panel-gear is-active' : 'gr-panel-gear'} gr-tooltip-anchor`}
+                  className={`${isPuzzleMode ? 'gr-panel-gear is-active' : 'gr-panel-gear'}${showPracticeAttention ? ' is-attention' : ''} gr-tooltip-anchor`}
                   onClick={() => (hasLoadedGame || activePuzzleQueue.length) && setSidebarMode('puzzles')}
-                  aria-label="Create practice puzzles from your mistakes"
-                  data-tooltip="Practice mistakes"
+                  aria-label={mistakePuzzleCount ? `Practice ${mistakePuzzleCount} mistakes from this game` : 'Create practice puzzles from your mistakes'}
+                  data-tooltip={mistakePuzzleCount ? `Practice your mistakes (${mistakePuzzleCount})` : 'Practice mistakes'}
                   disabled={!hasLoadedGame && !activePuzzleQueue.length}
                 >
                   <FontAwesomeIcon icon={faChessKnight} />
+                  {showPracticeAttention ? <span className="gr-gear-badge" aria-hidden="true">{mistakePuzzleCount}</span> : null}
                 </button>
                 <button
                   type="button"
@@ -3517,10 +3735,28 @@ function GameReview() {
               ) : shouldShowOverviewView ? (
                 <div className="gr-sidebar-view gr-sidebar-view-overview">
                   <section className="gr-view-section gr-loader-summary-card gr-overview-card">
-                    <button type="button" className="gr-button gr-button-primary gr-open-review-btn gr-open-review-btn-top" onClick={() => setSidebarMode('moves')} disabled={!hasLoadedGame}>
-                      <FontAwesomeIcon icon={faListOl} />
-                      <span>{hasFullReview ? 'Open review' : 'Open moves'}</span>
-                    </button>
+                    <div className="gr-overview-actions">
+                      <button
+                        type="button"
+                        className={`gr-button ${mistakePuzzleCount > 0 ? '' : 'gr-button-primary '}gr-open-review-btn gr-open-review-btn-top`}
+                        onClick={() => setSidebarMode('moves')}
+                        disabled={!hasLoadedGame}
+                      >
+                        <FontAwesomeIcon icon={faListOl} />
+                        <span>{hasFullReview ? 'Open review' : 'Open moves'}</span>
+                      </button>
+                      {!hasFullReview ? (
+                        <button type="button" className="gr-button gr-overview-practice-btn is-waiting" disabled aria-label="Practice puzzles unlock when the review finishes">
+                          <FontAwesomeIcon icon={faChessKnight} />
+                          <span>Practice mistakes</span>
+                        </button>
+                      ) : mistakePuzzleCount > 0 ? (
+                        <button type="button" className="gr-button gr-button-primary gr-overview-practice-btn is-ready" onClick={handlePracticeThisGame} aria-label={`Practice ${mistakePuzzleCount} mistakes from this game`}>
+                          <FontAwesomeIcon icon={faChessKnight} />
+                          <span>Practice mistakes</span>
+                        </button>
+                      ) : null}
+                    </div>
 
                     {!hasFullReview || isFullReviewProgressActive || engineError ? (
                       <div className={`gr-status-strip is-${statusTone}`}>
@@ -3574,6 +3810,12 @@ function GameReview() {
                       </div>
                     ) : null}
                   </section>
+
+                  {hasFullReview && canCreateRecentPack ? (
+                    <button type="button" className="gr-practice-recent-link" onClick={handleBuildPersonalPack} aria-label="Create puzzles from mistakes in recent games">
+                      {mistakePuzzleCount > 0 ? 'Or build puzzles from my last' : 'Build puzzles from my last'} {Math.min(packBatchSize, remoteGames.length)} games
+                    </button>
+                  ) : null}
                 </div>
               ) : (
                 <div className="gr-sidebar-view gr-sidebar-view-moves">
@@ -3592,16 +3834,12 @@ function GameReview() {
                       <div className="gr-review-practice-row">
                         <button
                           type="button"
-                          className="gr-button"
-                          onClick={() => {
-                            setTrainingSource('single');
-                            setPuzzleIndex(0);
-                            setSidebarMode('puzzles');
-                          }}
+                          className="gr-button gr-button-primary gr-practice-inline-btn"
+                          onClick={handlePracticeThisGame}
                           aria-label="Practice missed moves from this game"
                         >
                           <FontAwesomeIcon icon={faChessKnight} />
-                          <span>Practice this game</span>
+                          <span>Practice my mistakes ({puzzleQueue.length})</span>
                         </button>
                       </div>
                     ) : null}

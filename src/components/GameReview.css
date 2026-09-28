@@ -3765,3 +3765,105 @@
     width: 100%;
   }
 }
+
+
+/* Mistake practice call-to-action (overview top row + tab rail) */
+.gr-overview-actions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.gr-overview-actions:has(.gr-overview-practice-btn) {
+  grid-template-columns: 1fr 1fr;
+}
+
+.gr-overview-actions .gr-open-review-btn {
+  margin: 0;
+  justify-content: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.gr-overview-practice-btn {
+  position: relative;
+  justify-content: center;
+  gap: 8px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.gr-overview-practice-btn.is-waiting {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.gr-overview-practice-btn.is-ready {
+  animation: gr-cta-glow 2.4s ease-in-out 4;
+}
+
+.gr-practice-recent-link {
+  align-self: center;
+  margin: 2px 0 4px;
+  padding: 6px 10px;
+  border: 0;
+  background: none;
+  color: rgba(198, 176, 255, 0.95);
+  font-size: 0.84rem;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.gr-practice-recent-link:hover {
+  color: #fff;
+}
+
+@media (max-width: 420px) {
+  .gr-overview-actions:has(.gr-overview-practice-btn) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.gr-practice-inline-btn {
+  min-height: 42px;
+  justify-content: center;
+  gap: 8px;
+  font-weight: 800;
+}
+
+.gr-panel-gear.is-attention {
+  border-color: rgba(137, 97, 255, 0.8);
+  background: rgba(137, 97, 255, 0.22);
+  animation: gr-cta-glow 2.4s ease-in-out 3;
+}
+
+.gr-gear-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #f2c14e;
+  color: #1a1405;
+  font-size: 0.68rem;
+  font-weight: 800;
+  line-height: 18px;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+@keyframes gr-cta-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(137, 97, 255, 0); }
+  50% { box-shadow: 0 0 0 6px rgba(137, 97, 255, 0.28); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gr-overview-practice-btn.is-ready,
+  .gr-panel-gear.is-attention {
+    animation: none;
+  }
+}
