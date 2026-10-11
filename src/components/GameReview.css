@@ -3867,3 +3867,14 @@
     animation: none;
   }
 }
+
+/* Puzzle explanation */
+.gr-puzzle-explain { margin-top: 12px; padding: 12px; background: rgba(127, 110, 176, .075); border: 1px solid rgba(142, 125, 199, .26); border-radius: 14px; display: grid; gap: 10px; }
+.gr-puzzle-explain-toggle { width: 100%; justify-content: center; }
+.gr-puzzle-explain-switch { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+.gr-puzzle-explain-switch button { border: 1px solid rgba(155, 155, 185, .2); background: rgba(255,255,255,.035); color: inherit; border-radius: 9px; padding: 9px 6px; cursor: pointer; font: inherit; font-size: 12px; }
+.gr-puzzle-explain-switch button.is-active { border-color: #855ddf; background: rgba(132,90,225,.22); }
+.gr-puzzle-explain-copy { line-height: 1.5; font-size: 13px; color: #e1e2eb; }
+.gr-puzzle-explain-nav { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.gr-puzzle-explain-nav .gr-button { padding: 8px 12px; }
+.gr-puzzle-explain-note { color: #a3a5b6; font-size: 11px; line-height: 1.4; }

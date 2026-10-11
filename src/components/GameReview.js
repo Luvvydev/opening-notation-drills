@@ -66,6 +66,44 @@ const DEFAULT_PACK_BATCH = 10;
 const PACK_SEED_PUZZLES = 2;
 const MAX_PACK_PUZZLES = 24;
 const REVIEW_SETTINGS_KEY = 'notation_trainer_opening_settings_v1';
+const REVIEWED_PUZZLES_KEY = 'chessdrills_reviewed_mistakes_v1';
+
+function loadReviewedMistakes() {
+  try {
+    const value = JSON.parse(window.localStorage.getItem(REVIEWED_PUZZLES_KEY) || '[]');
+    return Array.isArray(value) ? value : [];
+  } catch (_) { return []; }
+}
+
+function puzzleReviewKey(puzzle) {
+  return puzzle ? `${puzzle.beforeFen}|${puzzle.playedMove}|${puzzle.bestMove}` : '';
+}
+
+function buildExplanationLine(fen, firstSan, continuation) {
+  const game = new Chess(fen);
+  const steps = [{ fen, move: '', san: '', note: 'Start position' }];
+  [firstSan, ...(continuation || []).slice(0, 5)].forEach((san) => {
+    try {
+      const move = game.move(san, { sloppy: true });
+      if (move) steps.push({ fen: game.fen(), move: moveToUci(move), san: move.san });
+    } catch (_) { /* Ignore an incomplete engine variation. */ }
+  });
+  return steps;
+}
+
+function explainEngineReply(line, side) {
+  if (!line || !line[2]) return `See how ${side} can respond in the engine line.`;
+  const response = line[2];
+  const move = line[1];
+  const chess = new Chess(move.fen);
+  const reply = chess.move(response.san, { sloppy: true });
+  if (!reply) return `The engine's reply is ${response.san}.`;
+  if (chess.in_checkmate()) return `${side} plays ${response.san}, delivering checkmate.`;
+  if (reply.captured) return `${side} plays ${response.san}, capturing a ${({p:'pawn',n:'knight',b:'bishop',r:'rook',q:'queen'})[reply.captured] || 'piece'}.`;
+  if (chess.in_check()) return `${side} plays ${response.san}, putting your king in check.`;
+  return `${side} replies ${response.san}. Follow the arrows to see the continuation.`;
+}
+
 const SAMPLE_PGN = `[Event "Rated Blitz game"]
 [Site "https://lichess.org/"]
 [Date "2026.04.02"]
@@ -1612,6 +1650,12 @@ function GameReview() {
   const [puzzleStatus, setPuzzleStatus] = useState('idle');
   const [puzzleFeedback, setPuzzleFeedback] = useState('Load a game to start training.');
   const [puzzleResults, setPuzzleResults] = useState({});
+  const [reviewedMistakes, setReviewedMistakes] = useState(loadReviewedMistakes);
+  const [puzzleExplanation, setPuzzleExplanation] = useState(null);
+  const [explanationLoading, setExplanationLoading] = useState(false);
+  const [explanationBranch, setExplanationBranch] = useState('played');
+  const [explanationStep, setExplanationStep] = useState(0);
+  const explanationRequestRef = useRef(0);
   const [puzzleHintOpen, setPuzzleHintOpen] = useState(false);
   const [puzzleShowSolution, setPuzzleShowSolution] = useState(false);
   const [puzzleSelectedSquare, setPuzzleSelectedSquare] = useState(null);
@@ -1771,10 +1815,17 @@ function GameReview() {
     : 'working';
   const packTrainingLabel = trainingSource === 'pack' ? 'Training from recent games' : 'Training from this game';
   const canCreateRecentPack = Boolean(remoteUsername.trim() && remoteGames.length) && !packBuilding && !remoteLoading;
-  const mistakePuzzleCount = hasFullReview && trainingSource !== 'pack' ? puzzleQueue.length : 0;
+  const mistakePuzzleCount = hasFullReview && trainingSource !== 'pack'
+    ? puzzleQueue.filter((puzzle) => !reviewedMistakes.includes(puzzleReviewKey(puzzle))).length : 0;
+  const explanationSteps = puzzleExplanation ? puzzleExplanation[explanationBranch] : null;
+  const explanationPosition = explanationSteps && explanationSteps[explanationStep];
+  const explanationActive = Boolean(puzzleExplanation && currentPuzzle &&
+    puzzleExplanation.key === puzzleReviewKey(currentPuzzle));
   const showPracticeAttention = mistakePuzzleCount > 0 && !isPuzzleMode;
   const shellProgressStyle = { '--gr-top-progress': `${topProgressPercent}%` };
   const sidebarPanelStyle = { '--gr-sidebar-target-height': `${boardWidth + 26}px` };
+  // Hook calls below are unconditional; preserve their order across every render.
+  /* eslint-disable react-hooks/rules-of-hooks */
   const puzzlePlayedMarkerId = useMemo(() => `grPuzzleArrowHeadPlayed-${Math.random().toString(36).slice(2, 9)}`, []);
   const puzzleBestMarkerId = useMemo(() => `grPuzzleArrowHeadBest-${Math.random().toString(36).slice(2, 9)}`, []);
   const sidebarHeading = !hasLoadedGame && !activePuzzleQueue.length ? 'Import' : sidebarMode === 'overview' ? 'Overview' : sidebarMode === 'moves' ? 'Move Review' : sidebarMode === 'puzzles' ? (trainingSource === 'pack' ? 'Personal Pack' : 'Mistake Training') : 'Import';
@@ -1807,6 +1858,17 @@ function GameReview() {
         ...previous,
         [puzzleId]: outcome,
       };
+    });
+  }, []);
+
+  const markPuzzleReviewed = useCallback((puzzle) => {
+    const key = puzzleReviewKey(puzzle);
+    if (!key) return;
+    setReviewedMistakes((previous) => {
+      if (previous.includes(key)) return previous;
+      const next = [...previous, key].slice(-5000);
+      try { window.localStorage.setItem(REVIEWED_PUZZLES_KEY, JSON.stringify(next)); } catch (_) {}
+      return next;
     });
   }, []);
 
@@ -2008,6 +2070,43 @@ function GameReview() {
     cacheRef.current.set(cacheKey, parsed);
     return parsed;
   }, [ensureEngineReady, stopSearch]);
+
+  const handleExplainPuzzle = useCallback(async () => {
+    if (!currentPuzzle || explanationLoading) return;
+    if (explanationActive) {
+      setPuzzleExplanation(null);
+      return;
+    }
+    const key = puzzleReviewKey(currentPuzzle);
+    const request = ++explanationRequestRef.current;
+    setExplanationLoading(true);
+    setPuzzleShowSolution(true);
+    setPuzzleFen(currentPuzzle.beforeFen);
+    try {
+      const afterPlayed = new Chess(currentPuzzle.beforeFen);
+      const played = afterPlayed.move(uciToMoveObject(currentPuzzle.playedMove));
+      const afterBest = new Chess(currentPuzzle.beforeFen);
+      const best = afterBest.move(uciToMoveObject(currentPuzzle.bestMove));
+      if (!played || !best) throw new Error('Invalid puzzle move');
+      const analysisDepth = Math.max(14, depth);
+      const playedAnalysis = await evaluateFen(afterPlayed.fen(), { depth: analysisDepth, multiPv: 1 });
+      const bestAnalysis = await evaluateFen(afterBest.fen(), { depth: analysisDepth, multiPv: 1 });
+      if (request !== explanationRequestRef.current) return;
+      const playedSteps = buildExplanationLine(currentPuzzle.beforeFen, played.san, playedAnalysis.lines[0] && playedAnalysis.lines[0].pv);
+      const bestSteps = buildExplanationLine(currentPuzzle.beforeFen, best.san, bestAnalysis.lines[0] && bestAnalysis.lines[0].pv);
+      setPuzzleExplanation({ key, played: playedSteps, best: bestSteps,
+        playedText: explainEngineReply(playedSteps, currentPuzzle.color === 'w' ? 'Black' : 'White'),
+        bestText: explainEngineReply(bestSteps, currentPuzzle.color === 'w' ? 'Black' : 'White') });
+      setExplanationBranch('played');
+      setExplanationStep(0);
+    } catch (_) {
+      if (request === explanationRequestRef.current) {
+        setPuzzleExplanation({ key, error: 'Could not retrieve a verified engine continuation. Try again.', played: [], best: [] });
+      }
+    } finally {
+      if (request === explanationRequestRef.current) setExplanationLoading(false);
+    }
+  }, [currentPuzzle, depth, evaluateFen, explanationActive, explanationLoading]);
 
   const analyzeCurrentPosition = useCallback(async (plyOverride) => {
     if (!gameData || !gameData.positions) return;
@@ -2721,8 +2820,9 @@ function GameReview() {
     setPuzzleHintOpen(false);
     setPuzzleStatus('revealed');
     setPuzzleOutcome(currentPuzzle.id, 'failed');
+    markPuzzleReviewed(currentPuzzle);
     setPuzzleFeedback(`Best was ${currentPuzzle.bestSan}. In the game you played ${currentPuzzle.playedSan}.`);
-  }, [clearPuzzleSelection, currentPuzzle, setPuzzleOutcome]);
+  }, [clearPuzzleSelection, currentPuzzle, markPuzzleReviewed, setPuzzleOutcome]);
 
   const handlePuzzleDrop = useCallback(async ({ sourceSquare, targetSquare, piece }) => {
     if (!currentPuzzle || puzzleStatus === 'checking' || puzzleStatus === 'solved') {
@@ -2773,6 +2873,7 @@ function GameReview() {
       if (accepted) {
         setPuzzleStatus('solved');
         setPuzzleOutcome(currentPuzzle.id, 'solved');
+        markPuzzleReviewed(currentPuzzle);
         triggerPuzzleSolvedCelebration();
         setPuzzleFeedback(
           attemptedUci === currentPuzzle.bestMove
@@ -2792,7 +2893,7 @@ function GameReview() {
       setPuzzleFen(currentPuzzle.beforeFen);
       setPuzzleFeedback('That move could not be scored cleanly. Try again or reveal the solution.');
     }
-  }, [clearPuzzleSelection, currentPuzzle, depth, evaluateFen, playSfx, puzzleStatus, setPuzzleOutcome, triggerPuzzleSolvedCelebration]);
+  }, [clearPuzzleSelection, currentPuzzle, depth, evaluateFen, markPuzzleReviewed, playSfx, puzzleStatus, setPuzzleOutcome, triggerPuzzleSolvedCelebration]);
 
   const handlePuzzleSquareClick = useCallback((square) => {
     if (!currentPuzzle || puzzleStatus === 'checking' || puzzleStatus === 'solved') {
@@ -2895,6 +2996,10 @@ function GameReview() {
     setPuzzleHintOpen(false);
     setPuzzleShowSolution(false);
     setPuzzleFeedback(getPuzzleLeadText(currentPuzzle));
+    explanationRequestRef.current += 1;
+    setPuzzleExplanation(null);
+    setExplanationLoading(false);
+    setExplanationStep(0);
   }, [clearPuzzleSelection, currentPuzzle]);
 
   useEffect(() => {
@@ -2903,7 +3008,7 @@ function GameReview() {
       puzzleAdvanceTimerRef.current = null;
     }
 
-    if (puzzleStatus !== 'solved' || !currentPuzzle) {
+    if (puzzleStatus !== 'solved' || !currentPuzzle || explanationLoading || explanationActive) {
       return undefined;
     }
 
@@ -2914,7 +3019,7 @@ function GameReview() {
     puzzleAdvanceTimerRef.current = window.setTimeout(() => {
       goToNextPuzzle();
       puzzleAdvanceTimerRef.current = null;
-    }, 1250);
+    }, 8000);
 
     return () => {
       if (puzzleAdvanceTimerRef.current) {
@@ -2922,7 +3027,7 @@ function GameReview() {
         puzzleAdvanceTimerRef.current = null;
       }
     };
-  }, [activePuzzleQueue.length, currentPuzzle, goToNextPuzzle, puzzleIndex, puzzleStatus]);
+  }, [activePuzzleQueue.length, currentPuzzle, explanationActive, explanationLoading, goToNextPuzzle, puzzleIndex, puzzleStatus]);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -3228,8 +3333,9 @@ function GameReview() {
   }, [gameData, source, selectedRemoteGameId]);
 
   const moveCount = gameData && gameData.moves ? gameData.moves.length : 0;
+  /* eslint-enable react-hooks/rules-of-hooks */
   const reviewBoardFen = isPuzzleMode && currentPuzzle
-    ? puzzleFen
+    ? (explanationActive && explanationPosition ? explanationPosition.fen : puzzleFen)
     : currentMove
       ? (currentMove.afterFen || (currentPosition ? currentPosition.fen : currentMove.beforeFen))
       : currentPosition
@@ -3259,17 +3365,19 @@ function GameReview() {
                     width={boardWidth}
                     position={reviewBoardFen}
                     orientation={effectiveBoardOrientation}
-                    arePiecesDraggable={isPuzzleMode ? Boolean(currentPuzzle) && puzzleStatus !== 'checking' && puzzleStatus !== 'solved' : false}
+                    arePiecesDraggable={isPuzzleMode ? Boolean(currentPuzzle) && !explanationActive && puzzleStatus !== 'checking' && puzzleStatus !== 'solved' : false}
                     onDrop={isPuzzleMode ? handlePuzzleDrop : undefined}
-                    onSquareClick={isPuzzleMode ? handlePuzzleSquareClick : undefined}
+                    onSquareClick={isPuzzleMode && !explanationActive ? handlePuzzleSquareClick : undefined}
                     onSquareRightClick={isPuzzleMode ? clearPuzzleSelection : undefined}
                     showNotation
-                    squareStyles={isPuzzleMode ? puzzleSquareStyles : boardSquareStyles}
+                    squareStyles={isPuzzleMode ? (explanationActive && explanationPosition && explanationPosition.move
+                      ? { [explanationPosition.move.slice(0, 2)]: { backgroundColor: 'rgba(255,208,96,0.2)' }, [explanationPosition.move.slice(2, 4)]: { backgroundColor: 'rgba(255,208,96,0.32)' } }
+                      : puzzleSquareStyles) : boardSquareStyles}
                     pieceTheme={pieceThemeUrl}
                     {...boardThemeStyles}
                   />
                   {isPuzzleMode ? (
-                    puzzleFen === (currentPuzzle ? currentPuzzle.beforeFen : '') ? (
+                    (explanationActive || puzzleFen === (currentPuzzle ? currentPuzzle.beforeFen : '')) ? (
                       <div className="gr-board-overlay" aria-hidden="true">
                         <svg viewBox={`0 0 ${boardWidth} ${boardWidth}`} className="gr-board-arrow gr-board-arrow-puzzle">
                           <defs>
@@ -3281,7 +3389,8 @@ function GameReview() {
                             </marker>
                           </defs>
                           {currentPuzzle ? (() => {
-                            const playedArrow = getUciArrow(currentPuzzle.playedMove);
+                            const tutorialArrow = explanationActive && explanationPosition ? explanationPosition.move : '';
+                            const playedArrow = getUciArrow(tutorialArrow || currentPuzzle.playedMove);
                             const bestArrow = getUciArrow(currentPuzzle.bestMove);
                             const playedFrom = playedArrow ? getSquareCenter(playedArrow.from, effectiveBoardOrientation, boardWidth) : null;
                             const playedTo = playedArrow ? getSquareCenter(playedArrow.to, effectiveBoardOrientation, boardWidth) : null;
@@ -3296,14 +3405,14 @@ function GameReview() {
 
                             return (
                               <>
-                                {playedFrom && playedTo ? (
+                                {playedFrom && playedTo && (!explanationActive || tutorialArrow) ? (
                                   <path
                                     d={playedPath}
                                     className="gr-board-arrow-played-line"
                                     markerEnd={`url(#${puzzlePlayedMarkerId})`}
                                   />
                                 ) : null}
-                                {puzzleShowSolution && bestFrom && bestTo ? (
+                                {!explanationActive && puzzleShowSolution && bestFrom && bestTo ? (
                                   <path
                                     d={bestPath}
                                     className="gr-board-arrow-best-line"
@@ -3669,6 +3778,31 @@ function GameReview() {
                           <span>Solution</span>
                         </button>
                       </div>
+                      {currentPuzzle && (puzzleStatus === 'solved' || puzzleStatus === 'revealed' || currentPuzzleResult) ? (
+                        <section className="gr-puzzle-explain">
+                          <button type="button" className="gr-button gr-button-secondary gr-puzzle-explain-toggle" onClick={handleExplainPuzzle} disabled={explanationLoading}>
+                            {explanationLoading ? 'Analyzing with Stockfish...' : explanationActive ? 'Hide explanation' : 'Why is this better?'}
+                          </button>
+                          {explanationActive ? (
+                            puzzleExplanation.error ? <div className="gr-puzzle-explain-copy">{puzzleExplanation.error}</div> : (
+                              <>
+                                <div className="gr-puzzle-explain-switch">
+                                  <button type="button" className={explanationBranch === 'played' ? 'is-active' : ''} onClick={() => { setExplanationBranch('played'); setExplanationStep(0); }}>Your move: {currentPuzzle.playedSan}</button>
+                                  <button type="button" className={explanationBranch === 'best' ? 'is-active' : ''} onClick={() => { setExplanationBranch('best'); setExplanationStep(0); }}>Best: {currentPuzzle.bestSan}</button>
+                                </div>
+                                <div className="gr-puzzle-explain-copy">{explanationBranch === 'played' ? puzzleExplanation.playedText : puzzleExplanation.bestText}</div>
+                                <div className="gr-puzzle-explain-copy">{explanationStep === 0 ? 'Start here, then step forward to see what happens.' : `Move ${explanationStep}: ${explanationPosition && explanationPosition.san}. The arrow shows the move just played.`}</div>
+                                <div className="gr-puzzle-explain-nav">
+                                  <button type="button" className="gr-button gr-button-secondary" disabled={explanationStep === 0} onClick={() => setExplanationStep((value) => Math.max(0, value - 1))}>Previous</button>
+                                  <span>{explanationStep + 1}/{explanationSteps.length}</span>
+                                  <button type="button" className="gr-button gr-button-secondary" disabled={explanationStep >= explanationSteps.length - 1} onClick={() => setExplanationStep((value) => Math.min(explanationSteps.length - 1, value + 1))}>Next</button>
+                                </div>
+                                <div className="gr-puzzle-explain-note">Stockfish continuation, not a guaranteed human response. Different defenses can change the line.</div>
+                              </>
+                            )
+                          ) : null}
+                        </section>
+                      ) : null}
 
                       <section className="gr-puzzle-stat-card gr-puzzle-progress-card">
                         <div className="gr-puzzle-progress-title-row">
