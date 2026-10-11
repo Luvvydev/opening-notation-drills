@@ -646,8 +646,16 @@ this._countedSeenForRun = false;
       const vw = (window && window.innerWidth) ? window.innerWidth : 360;
       const usable = Math.max(260, vw - 100);
       if (vw < 550) return usable;
-      if (vw < 1800) return 500;
-      return 600;
+      if (vw <= 1100) return 500;
+
+      // Match the fixed desktop grid limits without measuring the board itself.
+      // This avoids resize feedback loops and keeps the board inside its column.
+      const mainWidth = Math.min(1200, vw - 36);
+      const sidebarWidth = Math.min(420, Math.max(340, vw * 0.32));
+      const availableBoardWidth = mainWidth - sidebarWidth - 14 - 26;
+      const scale = Math.max(0, Math.min(1, (vw - 1200) / 600));
+      const desiredBoardWidth = Math.round(500 + scale * 180);
+      return Math.max(260, Math.min(desiredBoardWidth, Math.floor(availableBoardWidth)));
     } catch (_) {
       return 500;
     }

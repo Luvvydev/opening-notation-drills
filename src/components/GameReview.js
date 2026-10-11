@@ -3232,8 +3232,9 @@ function GameReview() {
         const viewportWidth = typeof window !== 'undefined' ? Number(window.innerWidth) || 0 : 0;
         const frameWidth = node.clientWidth || 0;
         const mobileCap = Math.max(260, viewportWidth - 24);
-        let desktopCap = 500;
-        if (viewportWidth >= 1800) desktopCap = 600;
+        const desktopCap = viewportWidth >= 1500
+          ? Math.min(700, Math.max(500, Math.floor((window.innerHeight || 850) * 0.72)))
+          : 500;
 
         let nextWidth;
         if (viewportWidth && viewportWidth < 1100) {

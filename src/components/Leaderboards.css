@@ -284,3 +284,10 @@
     text-align: center;
   }
 }
+
+/* Allow wider desktop viewports without changing existing laptop/mobile layouts. */
+@media (min-width: 1600px) {
+  .lb-wrap {
+    max-width: 1440px;
+  }
+}
