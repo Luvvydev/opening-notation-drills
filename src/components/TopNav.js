@@ -375,7 +375,7 @@ function TopNav(props) {
                             setMenuOpen(false);
                           }}
                         >
-                          My Games
+                          Game Review
                         </Link>
 
                         <button

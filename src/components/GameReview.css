@@ -3443,10 +3443,6 @@
   margin-top: auto;
 }
 
-/* 2026-04-08 load view bottom offset */
-.gr-sidebar-view-load .gr-pack-builder {
-  margin-bottom: 64px;
-}
 
 
 /* 2026-04-08 engine board overlay cleanup: centered board-only modal */
@@ -3662,22 +3658,58 @@
 }
 
 .gr-sidebar-view-load .gr-remote-panel {
-  gap: 10px;
+  gap: 8px;
+  min-height: 0;
 }
 
+/* The game list scrolls; the pack remains below it. */
 .gr-sidebar-view-load .gr-remote-list {
-  max-height: 168px;
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none;
+  overflow-y: auto;
 }
 
-.gr-sidebar-view-load .gr-pack-builder {
-  margin-top: 8px;
-  margin-bottom: 0;
-  padding: 12px;
-  gap: 10px;
+.gr-sidebar-view-load .gr-remote-panel > .gr-pack-builder {
+  flex: 0 0 auto;
+  margin: auto 0 0;
+  padding: 10px;
+  gap: 8px;
 }
 
 .gr-sidebar-view-load .gr-pack-builder-head {
-  margin-bottom: 0;
+  gap: 0;
+  margin: 0;
+}
+
+.gr-sidebar-view-load .gr-pack-builder .gr-loader-summary-title {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.2;
+}
+
+.gr-sidebar-view-load .gr-pack-builder-grid {
+  gap: 6px;
+}
+
+.gr-sidebar-view-load .gr-pack-builder-grid .gr-compact-field {
+  min-width: 0;
+  grid-column: auto;
+  gap: 4px;
+}
+
+.gr-sidebar-view-load .gr-pack-builder-grid .gr-compact-field select {
+  width: 100%;
+  min-width: 0;
+  height: 35px;
+  padding: 0 7px;
+  font-size: 0.76rem;
+}
+
+.gr-sidebar-view-load .gr-pack-actions .gr-button {
+  height: 36px;
+  min-height: 36px;
+  font-size: 0.79rem;
 }
 
 .gr-review-practice-row {
@@ -3892,3 +3924,57 @@
 .gr-puzzle-explain-nav { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .gr-puzzle-explain-nav .gr-button { padding: 8px 12px; }
 .gr-puzzle-explain-note { color: #a3a5b6; font-size: 11px; line-height: 1.4; }
+
+/* Game Review modes and integrated computer training */
+.gr-mode-tabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 5px; padding: 8px 12px 10px; }
+.gr-mode-tab { padding: 10px 3px; border: 1px solid rgba(255,255,255,.1); border-radius: 10px; color: #b8bfca; background: #121723; font: inherit; font-size: 12px; font-weight: 750; cursor: pointer; }
+.gr-mode-tab:hover, .gr-mode-tab.is-active { color: #fff; border-color: #7560cf; background: #372b65; }
+.gr-training-panel { display: flex; flex-direction: column; gap: 12px; }
+.gr-training-scenarios { display: flex; flex-direction: column; gap: 8px; }
+.gr-training-scenario { display: flex; flex-direction: column; text-align: left; gap: 4px; border: 1px solid rgba(255,255,255,.12); border-radius: 12px; background: #141924; color: #edf0f9; padding: 12px; cursor: pointer; font: inherit; }
+.gr-training-scenario span { font-size: 12px; line-height: 1.4; color: #aeb5c4; }
+.gr-training-scenario.is-active { background: #252044; border-color: #8567ec; }
+.gr-play-start-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.gr-play-session { padding: 12px; border: 1px solid rgba(255,255,255,.12); border-radius: 12px; background: #131927; color: #e8ebf3; }
+.gr-play-session p { margin: 8px 0; color: #b9c0cc; }
+.gr-play-session-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.gr-play-moves { margin-top: 10px; font-size: 12px; line-height: 1.6; max-height: 115px; overflow: auto; color: #c2c8d3; }
+
+/* Keep Play controls scrollable within the board-height sidebar. */
+.gr-sidebar-view-play {
+  height: 100%;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 2px;
+}
+
+/* Opening selection within the existing computer-play sidebar. */
+.gr-play-opening-picker { display: flex; flex-direction: column; gap: 6px; margin: 4px 0 12px; font-size: 12px; font-weight: 700; }
+.gr-play-opening-picker select { width: 100%; min-width: 0; padding: 10px; border: 1px solid rgba(160,160,185,.22); border-radius: 10px; color: inherit; background: #090d19; }
+.gr-play-opening-note { margin: 0 0 12px; font-size: 12px; line-height: 1.5; opacity: .78; }
+
+.gr-training-scenario:disabled { opacity: .38; cursor: not-allowed; }
+.gr-play-start-actions > .gr-button:only-child { grid-column: 1 / -1; }
+
+/* Keep the import form above and Mistake Pack below a separately scrolling game list. */
+.gr-sidebar-view-load {
+  overflow: hidden;
+}
+.gr-sidebar-view-load .gr-view-section {
+  min-height: 0;
+  height: 100%;
+}
+.gr-sidebar-view-load .gr-remote-panel {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+@media (max-width: 720px) {
+  .gr-sidebar-view-load {
+    overflow-y: auto;
+  }
+  .gr-sidebar-view-load .gr-remote-list {
+    flex: 0 1 auto;
+    max-height: 180px;
+  }
+}

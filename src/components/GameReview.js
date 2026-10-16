@@ -25,6 +25,7 @@ import {
 import TopNav from './TopNav';
 import { OPENING_CATALOG } from '../openings/openingCatalog';
 import { BOARD_THEMES, DEFAULT_THEME, PIECE_THEMES } from '../theme/boardThemes';
+import { TRAINING_SCENARIOS, getScenarioReply, getScenarioStartMoves, getRepertoireReply, getAggressiveRepertoireReply, supportsOpeningAttack } from '../data/aggressionTraining';
 import './GameReview.css';
 
 function ReviewConfetti({ active }) {
@@ -718,17 +719,6 @@ function waitMs(ms) {
 
 function getPaddedNumber(value) {
   return String(value).padStart(2, '0');
-}
-
-function getEngineBoardSquares(orientation) {
-  const files = orientation === 'black'
-    ? ['h', 'g', 'f', 'e', 'd', 'c', 'b', 'a']
-    : ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
-  const ranks = orientation === 'black'
-    ? ['1', '2', '3', '4', '5', '6', '7', '8']
-    : ['8', '7', '6', '5', '4', '3', '2', '1'];
-
-  return ranks.flatMap((rank) => files.map((file) => `${file}${rank}`));
 }
 
 async function getChessComUserRecentGames(username, signal) {
@@ -1631,18 +1621,21 @@ function GameReview() {
   const [trainingSource, setTrainingSource] = useState('single');
   const [playOrientation, setPlayOrientation] = useState('white');
   const [playFen, setPlayFen] = useState('start');
-  const [, setPlayStatus] = useState('Choose a side and start a game.');
+  const [playStatus, setPlayStatus] = useState('Choose a side and start a game.');
   const [playThinking, setPlayThinking] = useState(false);
-  const [, setPlayMoveHistory] = useState([]);
+  const [playMoveHistory, setPlayMoveHistory] = useState([]);
   const [playLastMove, setPlayLastMove] = useState(null);
   const [playTimeMs, setPlayTimeMs] = useState(DEFAULT_PLAY_TIME);
   const [playResult, setPlayResult] = useState('');
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [sidebarMode, setSidebarMode] = useState('load');
   const [autoReviewQueued, setAutoReviewQueued] = useState(false);
-  const [showEngineBoard, setShowEngineBoard] = useState(false);
+  const [playScenario, setPlayScenario] = useState('normal');
+  const [playOpeningKey, setPlayOpeningKey] = useState('');
+  const [activePlayOpeningKey, setActivePlayOpeningKey] = useState('');
+  const [activePlayScenario, setActivePlayScenario] = useState('normal');
+  const [playStarted, setPlayStarted] = useState(false);
   const [boardWidth, setBoardWidth] = useState(500);
-  const [playBoardWidth, setPlayBoardWidth] = useState(560);
   const [playerVisuals, setPlayerVisuals] = useState({ white: null, black: null });
   const [reviewSettings, setReviewSettings] = useState(loadReviewSettings);
   const [puzzleIndex, setPuzzleIndex] = useState(0);
@@ -1724,7 +1717,6 @@ function GameReview() {
     return BOARD_THEMES[key] || BOARD_THEMES[DEFAULT_THEME] || {};
   }, [reviewSettings]);
   const pieceThemeUrl = useMemo(() => getPieceThemeUrl(reviewSettings && reviewSettings.pieceTheme), [reviewSettings]);
-  const engineBoardSquares = useMemo(() => getEngineBoardSquares(playOrientation), [playOrientation]);
   const playSquareStyles = useMemo(() => {
     const styles = {};
 
@@ -1780,13 +1772,16 @@ function GameReview() {
   }, [puzzleLegalTargets, puzzleSelectedSquare]);
   const hasLoadedGame = Boolean(gameData && gameData.moves && gameData.moves.length);
   const hasFullReview = Boolean(gameAnalysis && gameAnalysis.positions && gameAnalysis.positions.length);
+  // Hook calls in this component are unconditional; keep their order stable.
+  /* eslint-disable react-hooks/rules-of-hooks */
   const puzzleQueue = useMemo(() => buildPuzzleQueue(gameData), [gameData]);
   const activePuzzleQueue = trainingSource === 'pack' ? packPuzzles : puzzleQueue;
   const currentPuzzle = activePuzzleQueue[puzzleIndex] || null;
   const currentPuzzleResult = currentPuzzle ? puzzleResults[currentPuzzle.id] : '';
   const solvedPuzzleCount = activePuzzleQueue.filter((puzzle) => puzzleResults[puzzle.id] === 'solved').length;
   const canOpenSingleGameViews = hasLoadedGame && trainingSource !== 'pack';
-  const isPuzzleMode = (hasLoadedGame || activePuzzleQueue.length > 0) && sidebarMode === 'puzzles';
+  const isPlayMode = sidebarMode === 'play';
+  const isPuzzleMode = sidebarMode === 'puzzles';
   const stagePlayerSummary = trainingSource === 'pack' && currentPuzzle
     ? {
         white: {
@@ -1825,11 +1820,10 @@ function GameReview() {
   const shellProgressStyle = { '--gr-top-progress': `${topProgressPercent}%` };
   const sidebarPanelStyle = { '--gr-sidebar-target-height': `${boardWidth + 26}px` };
   // Hook calls below are unconditional; preserve their order across every render.
-  /* eslint-disable react-hooks/rules-of-hooks */
   const puzzlePlayedMarkerId = useMemo(() => `grPuzzleArrowHeadPlayed-${Math.random().toString(36).slice(2, 9)}`, []);
   const puzzleBestMarkerId = useMemo(() => `grPuzzleArrowHeadBest-${Math.random().toString(36).slice(2, 9)}`, []);
-  const sidebarHeading = !hasLoadedGame && !activePuzzleQueue.length ? 'Import' : sidebarMode === 'overview' ? 'Overview' : sidebarMode === 'moves' ? 'Move Review' : sidebarMode === 'puzzles' ? (trainingSource === 'pack' ? 'Personal Pack' : 'Mistake Training') : 'Import';
-  const shouldShowLoadView = (!hasLoadedGame && !activePuzzleQueue.length) || sidebarMode === 'load';
+  const sidebarHeading = sidebarMode === 'play' ? 'Play vs Computer' : !hasLoadedGame && !activePuzzleQueue.length && sidebarMode !== 'puzzles' ? 'Import Game' : sidebarMode === 'overview' ? 'Overview' : sidebarMode === 'moves' ? 'Move Review' : sidebarMode === 'puzzles' ? (trainingSource === 'pack' ? 'Mistake Pack' : 'Practice Mistakes') : 'Import Game';
+  const shouldShowLoadView = sidebarMode === 'load';
   const shouldShowOverviewView = canOpenSingleGameViews && sidebarMode === 'overview';
   const queueAutoReview = useCallback(() => {
     setSidebarMode('overview');
@@ -1899,7 +1893,7 @@ function GameReview() {
   }, []);
 
   const closeEngineBoard = useCallback(() => {
-    setShowEngineBoard(false);
+    setPlayStarted(false);
     clearPlaySelection();
     clearPlayDragState();
     setPlayThinking(false);
@@ -2705,7 +2699,7 @@ function GameReview() {
     setPlayStatus(statusText);
   }, []);
 
-  const makeEngineMove = useCallback(async () => {
+  const makeEngineMove = useCallback(async (scenarioOverride, sideOverride, openingOverride) => {
     const game = playGameRef.current;
     if (game.game_over()) return;
 
@@ -2713,8 +2707,13 @@ function GameReview() {
     setPlayStatus('Engine thinking…');
 
     try {
-      const bestMove = await getBestMoveForCurrentPosition(game.fen(), playTimeMs);
-      const applied = game.move(uciToMoveObject(bestMove));
+      const scenario = typeof scenarioOverride === 'string' ? scenarioOverride : activePlayScenario;
+      const openingKey = typeof openingOverride === 'string' ? openingOverride : activePlayOpeningKey;
+      const scriptedMove = openingKey
+        ? getAggressiveRepertoireReply(scenario, openingKey, game.history(), game.fen()) || getRepertoireReply(openingKey, game.history(), game.fen())
+        : getScenarioReply(scenario, game.history(), sideOverride || playOrientation);
+      const bestMove = scriptedMove || await getBestMoveForCurrentPosition(game.fen(), playTimeMs);
+      const applied = scriptedMove ? game.move(scriptedMove) : game.move(uciToMoveObject(bestMove));
       if (!applied) {
         throw new Error('Engine move was illegal.');
       }
@@ -2726,24 +2725,57 @@ function GameReview() {
     } finally {
       setPlayThinking(false);
     }
-  }, [getBestMoveForCurrentPosition, playSfx, playTimeMs, syncPlayState]);
+  }, [activePlayOpeningKey, activePlayScenario, getBestMoveForCurrentPosition, playOrientation, playSfx, playTimeMs, syncPlayState]);
 
-  const startPlayGame = useCallback(async (side) => {
+  const startPlayGame = useCallback(async (side, openingOverride, scenarioOverride) => {
     await handleStop();
-    playGameRef.current = new Chess();
+    const nextGame = new Chess();
+    const selectedOpening = OPENING_CATALOG.find((item) => item.key === (typeof openingOverride === 'string' ? openingOverride : playOpeningKey));
+    const requestedScenario = typeof scenarioOverride === 'string' ? scenarioOverride : playScenario;
+    const selectedScenario = selectedOpening && !supportsOpeningAttack(requestedScenario, selectedOpening.key) ? 'normal' : requestedScenario;
+    if (selectedOpening && (selectedOpening.playerColor || (selectedOpening.orientation === 'black' ? 'b' : 'w')) !== (side === 'white' ? 'w' : 'b')) {
+      setEngineError('Choose the matching side for your opening.');
+      return;
+    }
+    const setupMoves = selectedOpening ? [] : getScenarioStartMoves(selectedScenario, side);
+    // Black repertoires already contain White's first move. Apply that move
+    // before displaying the game, rather than waiting for a worker response.
+    if (selectedOpening && side === 'black') {
+      const firstReply = getAggressiveRepertoireReply(selectedScenario, selectedOpening.key, [], nextGame.fen())
+        || getRepertoireReply(selectedOpening.key, [], nextGame.fen());
+      if (firstReply && !nextGame.move(firstReply)) {
+        setEngineError('Could not start the selected opening.');
+        return;
+      }
+    }
+    for (const san of setupMoves) {
+      if (!nextGame.move(san)) {
+        setEngineError('Training position could not be loaded.');
+        return;
+      }
+    }
+    if (nextGame.turn() !== (side === 'white' ? 'w' : 'b')) {
+      setEngineError('Training position has the wrong side to move.');
+      return;
+    }
+    playGameRef.current = nextGame;
     setPlayOrientation(side);
     setPlayLastMove(null);
     clearPlaySelection();
     clearPlayDragState();
     setPlayThinking(false);
     setPlayResult('');
-    setShowEngineBoard(true);
-    syncPlayState(side === 'black' ? 'Engine to move first…' : 'Your move.');
+    setPlayStatus('Starting game...');
+    setActivePlayScenario(selectedScenario);
+    setActivePlayOpeningKey(selectedOpening ? selectedOpening.key : '');
+    setPlayStarted(true);
+    setSidebarMode('play');
+    syncPlayState(nextGame.turn() === 'b' && side === 'black' ? 'Your move.' : setupMoves.length ? 'Training position ready. Your move.' : (side === 'black' ? 'Engine to move first…' : 'Your move.'));
 
-    if (side === 'black') {
-      await makeEngineMove();
+    if (side === 'black' && !nextGame.history().length) {
+      await makeEngineMove(selectedScenario, side, selectedOpening ? selectedOpening.key : '');
     }
-  }, [clearPlayDragState, clearPlaySelection, handleStop, makeEngineMove, syncPlayState]);
+  }, [clearPlayDragState, clearPlaySelection, handleStop, makeEngineMove, playOpeningKey, playScenario, syncPlayState]);
 
   const handlePlayDrop = useCallback(async ({ sourceSquare, targetSquare }) => {
     if (playThinking || playResult) return;
@@ -3140,86 +3172,6 @@ function GameReview() {
   }, [ensureWorkerPool]);
 
   useEffect(() => {
-    if (!showEngineBoard) return undefined;
-
-    const update = () => {
-      const viewportWidth = typeof window !== 'undefined' ? Number(window.innerWidth) || 0 : 0;
-      const viewportHeight = typeof window !== 'undefined' ? Number(window.innerHeight) || 0 : 0;
-      const horizontalInset = viewportWidth < 720 ? 32 : 96;
-      const verticalInset = viewportWidth < 720 ? 160 : 180;
-      const maxByWidth = Math.max(280, viewportWidth - horizontalInset);
-      const maxByHeight = Math.max(280, viewportHeight - verticalInset);
-      const nextWidth = Math.floor(Math.max(280, Math.min(680, maxByWidth, maxByHeight)));
-      setPlayBoardWidth(nextWidth);
-    };
-
-    update();
-    window.addEventListener('resize', update);
-
-    return () => {
-      window.removeEventListener('resize', update);
-    };
-  }, [showEngineBoard]);
-
-  useEffect(() => {
-    if (!showEngineBoard) return undefined;
-
-    const preventNativeDrag = (event) => {
-      const target = event.target;
-      if (target && typeof target.closest === 'function' && target.closest('.gr-engine-board-wrap')) {
-        event.preventDefault();
-      }
-    };
-
-    const disablePieceDragging = () => {
-      const nodes = document.querySelectorAll('.gr-engine-board-wrap img, .gr-engine-board-wrap [draggable="true"]');
-      nodes.forEach((node) => {
-        node.setAttribute('draggable', 'false');
-        node.style.pointerEvents = 'none';
-        node.style.userSelect = 'none';
-        node.style.webkitUserDrag = 'none';
-      });
-    };
-
-    disablePieceDragging();
-    document.addEventListener('dragstart', preventNativeDrag, true);
-
-    return () => {
-      document.removeEventListener('dragstart', preventNativeDrag, true);
-    };
-  }, [playFen, playBoardWidth, showEngineBoard]);
-
-  useEffect(() => {
-    if (!showEngineBoard) return undefined;
-
-    const clear = () => {
-      setPlayDraggedSquare(null);
-    };
-
-    window.addEventListener('mouseup', clear);
-    window.addEventListener('dragend', clear);
-
-    return () => {
-      window.removeEventListener('mouseup', clear);
-      window.removeEventListener('dragend', clear);
-    };
-  }, [showEngineBoard]);
-
-  useEffect(() => {
-    if (!showEngineBoard) return undefined;
-
-    const onKeyDown = (event) => {
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        closeEngineBoard();
-      }
-    };
-
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [closeEngineBoard, showEngineBoard]);
-
-  useEffect(() => {
     const node = boardFrameRef.current;
     if (!node) return undefined;
 
@@ -3335,7 +3287,7 @@ function GameReview() {
 
   const moveCount = gameData && gameData.moves ? gameData.moves.length : 0;
   /* eslint-enable react-hooks/rules-of-hooks */
-  const reviewBoardFen = isPuzzleMode && currentPuzzle
+  const reviewBoardFen = isPlayMode && playStarted ? playFen : isPuzzleMode && currentPuzzle
     ? (explanationActive && explanationPosition ? explanationPosition.fen : puzzleFen)
     : currentMove
       ? (currentMove.afterFen || (currentPosition ? currentPosition.fen : currentMove.beforeFen))
@@ -3346,7 +3298,7 @@ function GameReview() {
 
   return (
     <div className="gr-page">
-      <TopNav title="My Games" hideHero />
+      <TopNav title="Game Review" hideHero />
 
       <div className="gr-shell gr-shell-review" style={shellProgressStyle}>
         <div className="gr-top-progress-shell" aria-hidden="true">
@@ -3362,22 +3314,22 @@ function GameReview() {
               <div className="gr-board-frame" ref={boardFrameRef}>
                 <div className="gr-board-stack" style={{ width: `${boardWidth}px` }}>
                   <Chessboard
-                    key={`review-board-${effectiveBoardOrientation}-${reviewBoardFen}`}
+                    key={`review-board-${isPlayMode ? playOrientation : effectiveBoardOrientation}-${reviewBoardFen}`}
                     width={boardWidth}
                     position={reviewBoardFen}
-                    orientation={effectiveBoardOrientation}
-                    arePiecesDraggable={isPuzzleMode ? Boolean(currentPuzzle) && !explanationActive && puzzleStatus !== 'checking' && puzzleStatus !== 'solved' : false}
-                    onDrop={isPuzzleMode ? handlePuzzleDrop : undefined}
-                    onSquareClick={isPuzzleMode && !explanationActive ? handlePuzzleSquareClick : undefined}
-                    onSquareRightClick={isPuzzleMode ? clearPuzzleSelection : undefined}
+                    orientation={isPlayMode && playStarted ? playOrientation : effectiveBoardOrientation}
+                    arePiecesDraggable={isPlayMode ? playStarted && !playThinking && !playResult : isPuzzleMode ? Boolean(currentPuzzle) && !explanationActive && puzzleStatus !== 'checking' && puzzleStatus !== 'solved' : false}
+                    onDrop={isPlayMode ? (playStarted ? handlePlayDrop : undefined) : isPuzzleMode ? handlePuzzleDrop : undefined}
+                    onSquareClick={isPlayMode ? (playStarted ? handlePlaySquareClick : undefined) : isPuzzleMode && !explanationActive ? handlePuzzleSquareClick : undefined}
+                    onSquareRightClick={isPlayMode ? clearPlaySelection : isPuzzleMode ? clearPuzzleSelection : undefined}
                     showNotation
-                    squareStyles={isPuzzleMode ? (explanationActive && explanationPosition && explanationPosition.move
+                    squareStyles={isPlayMode ? playSquareStyles : isPuzzleMode ? (explanationActive && explanationPosition && explanationPosition.move
                       ? { [explanationPosition.move.slice(0, 2)]: { backgroundColor: 'rgba(255,208,96,0.2)' }, [explanationPosition.move.slice(2, 4)]: { backgroundColor: 'rgba(255,208,96,0.32)' } }
                       : puzzleSquareStyles) : boardSquareStyles}
                     pieceTheme={pieceThemeUrl}
                     {...boardThemeStyles}
                   />
-                  {isPuzzleMode ? (
+                  {isPlayMode ? null : isPuzzleMode ? (
                     (explanationActive || puzzleFen === (currentPuzzle ? currentPuzzle.beforeFen : '')) ? (
                       <div className="gr-board-overlay" aria-hidden="true">
                         <svg viewBox={`0 0 ${boardWidth} ${boardWidth}`} className="gr-board-arrow gr-board-arrow-puzzle">
@@ -3439,7 +3391,7 @@ function GameReview() {
           <section className="gr-panel gr-sidebar-shell" style={sidebarPanelStyle}>
             <div className="gr-sidebar-topbar">
               <div className="gr-sidebar-title-wrap">
-                <div className="gr-panel-kicker">My Games</div>
+                <div className="gr-panel-kicker">Game Review</div>
                 <h2>{sidebarHeading}</h2>
               </div>
               <div className="gr-sidebar-actions">
@@ -3485,6 +3437,15 @@ function GameReview() {
                 </button>
                 <button
                   type="button"
+                  className={`${isPlayMode ? 'gr-panel-gear is-active' : 'gr-panel-gear'} gr-tooltip-anchor`}
+                  onClick={() => setSidebarMode('play')}
+                  aria-label="Play vs Computer"
+                  data-tooltip="Play vs Computer"
+                >
+                  <FontAwesomeIcon icon={faPlay} />
+                </button>
+                <button
+                  type="button"
                   className={`${settingsOpen ? 'gr-panel-gear is-active' : 'gr-panel-gear'} gr-tooltip-anchor`}
                   onClick={() => setSettingsOpen((value) => !value)}
                   aria-expanded={settingsOpen ? 'true' : 'false'}
@@ -3498,63 +3459,77 @@ function GameReview() {
 
             {settingsOpen ? (
               <div className="gr-settings-drawer gr-settings-drawer-shell">
-                <div className="gr-settings-row">
-                  <label className="gr-compact-field">
-                    <span>Depth</span>
-                    <select value={depth} onChange={(event) => setDepth(parseInt(event.target.value, 10))}>
-                      {[8, 10, 12, 14, 16].map((value) => (
-                        <option key={value} value={value}>{value}</option>
-                      ))}
-                    </select>
-                  </label>
-                  <label className="gr-compact-field">
-                    <span>Lines</span>
-                    <select value={multiPv} onChange={(event) => setMultiPv(parseInt(event.target.value, 10))}>
-                      {[1, 2, 3].map((value) => (
-                        <option key={value} value={value}>{value}</option>
-                      ))}
-                    </select>
-                  </label>
-                  <label className="gr-compact-field">
-                    <span>Engine time</span>
-                    <select value={playTimeMs} onChange={(event) => setPlayTimeMs(parseInt(event.target.value, 10))}>
-                      {[
-                        { label: 'Fast', value: 250 },
-                        { label: 'Normal', value: 500 },
-                        { label: 'Slow', value: 1000 },
-                      ].map((value) => (
-                        <option key={value.value} value={value.value}>{value.label}</option>
-                      ))}
-                    </select>
-                  </label>
-                </div>
-                <div className="gr-inline-actions">
-                  <button type="button" className="gr-button" onClick={handleUseSample}>
-                    <FontAwesomeIcon icon={faPlay} />
-                    <span>Sample</span>
-                  </button>
-                  <button type="button" className="gr-button" onClick={handleCopyPgn} disabled={!gameData || !gameData.pgn}>
-                    <FontAwesomeIcon icon={faCopy} />
-                    <span>{copied ? 'Copied' : 'Copy PGN'}</span>
-                  </button>
-                  <button type="button" className="gr-button" onClick={() => fileInputRef.current && fileInputRef.current.click()}>
-                    <FontAwesomeIcon icon={faUpload} />
-                    <span>Upload</span>
-                  </button>
-                  <button type="button" className="gr-button" onClick={() => startPlayGame('white')}>
-                    <FontAwesomeIcon icon={faChessKnight} />
-                    <span>Play White</span>
-                  </button>
-                  <button type="button" className="gr-button" onClick={() => startPlayGame('black')}>
-                    <FontAwesomeIcon icon={faChessKnight} />
-                    <span>Play Black</span>
-                  </button>
-                </div>
+                {sidebarMode === 'play' ? (
+                  <div className="gr-settings-row">
+                    <label className="gr-compact-field"><span>Computer thinking time</span>
+                      <select value={playTimeMs} onChange={(event) => setPlayTimeMs(parseInt(event.target.value, 10))}>
+                        <option value={250}>Fast</option><option value={500}>Normal</option><option value={1000}>Slow</option>
+                      </select>
+                    </label>
+                  </div>
+                ) : sidebarMode === 'overview' || sidebarMode === 'moves' || sidebarMode === 'puzzles' ? (
+                  <div className="gr-settings-row">
+                    <label className="gr-compact-field"><span>Depth</span><select value={depth} onChange={(event) => setDepth(parseInt(event.target.value, 10))}>{[8, 10, 12, 14, 16].map((value) => <option key={value} value={value}>{value}</option>)}</select></label>
+                    <label className="gr-compact-field"><span>Lines</span><select value={multiPv} onChange={(event) => setMultiPv(parseInt(event.target.value, 10))}>{[1, 2, 3].map((value) => <option key={value} value={value}>{value}</option>)}</select></label>
+                  </div>
+                ) : (
+                  <div className="gr-inline-actions">
+                    <button type="button" className="gr-button" onClick={handleUseSample}><FontAwesomeIcon icon={faPlay} /><span>Sample</span></button>
+                    <button type="button" className="gr-button" onClick={handleCopyPgn} disabled={!gameData || !gameData.pgn}><FontAwesomeIcon icon={faCopy} /><span>{copied ? 'Copied' : 'Copy PGN'}</span></button>
+                    <button type="button" className="gr-button" onClick={() => fileInputRef.current && fileInputRef.current.click()}><FontAwesomeIcon icon={faUpload} /><span>Upload</span></button>
+                  </div>
+                )}
               </div>
             ) : null}
 
             <div className="gr-sidebar-body">
-              {shouldShowLoadView ? (
+              {isPlayMode ? (
+                <div className="gr-sidebar-view gr-sidebar-view-play">
+                  <section className="gr-view-section gr-training-panel">
+                    <div className="gr-play-opening-picker">
+                      <select aria-label="Choose your opening" value={playOpeningKey} onChange={(event) => { setPlayOpeningKey(event.target.value); if (event.target.value && !supportsOpeningAttack(playScenario, event.target.value)) setPlayScenario('normal'); }}>
+                        <option value="">Any Opening</option>
+                        {OPENING_CATALOG.filter((item) => Array.isArray(item.lines) && item.lines.some((line) => Array.isArray(line.moves) && line.moves.length >= 2)).map((item) => (
+                          <option key={item.key} value={item.key}>{item.title} ({item.playerColor === 'b' || item.orientation === 'black' ? 'Black' : 'White'})</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="gr-training-scenarios">
+                      {TRAINING_SCENARIOS.map((scenario) => (
+                        <button key={scenario.id} type="button"
+                          className={`gr-training-scenario${playScenario === scenario.id ? ' is-active' : ''}`}
+                          onClick={() => setPlayScenario(scenario.id)}
+                          disabled={Boolean(playOpeningKey) && !supportsOpeningAttack(scenario.id, playOpeningKey)}>
+                          <strong>{scenario.title}</strong>
+                          <span>{scenario.description}</span>
+                        </button>
+                      ))}
+                    </div>
+                    <div className="gr-inline-actions gr-play-start-actions">
+                      {playOpeningKey ? (
+                        <button type="button" className="gr-button gr-button-primary" onClick={() => startPlayGame(OPENING_CATALOG.find((item) => item.key === playOpeningKey)?.playerColor === 'b' || OPENING_CATALOG.find((item) => item.key === playOpeningKey)?.orientation === 'black' ? 'black' : 'white')} disabled={playThinking}>Play my opening</button>
+                      ) : (
+                        <>
+                          <button type="button" className="gr-button gr-button-primary" onClick={() => startPlayGame('white')} disabled={playThinking}>Play White</button>
+                          <button type="button" className="gr-button gr-button-primary" onClick={() => startPlayGame('black')} disabled={playThinking}>Play Black</button>
+                        </>
+                      )}
+                    </div>
+                    {playStarted ? (
+                      <div className="gr-play-session">
+                        <strong>{activePlayOpeningKey ? `${OPENING_CATALOG.find((item) => item.key === activePlayOpeningKey)?.title || 'Your opening'} vs ${TRAINING_SCENARIOS.find((item) => item.id === activePlayScenario)?.title || 'Normal Game'}` : TRAINING_SCENARIOS.find((item) => item.id === activePlayScenario)?.title || 'Normal Game'}</strong>
+                        <p aria-live="polite">{playResult || playStatus}{playThinking ? ' ' : ''}</p>
+                        <div className="gr-play-session-actions">
+                          <button type="button" className="gr-button" disabled={playThinking} onClick={() => { setPlayOpeningKey(activePlayOpeningKey); setPlayScenario(activePlayScenario); startPlayGame(playOrientation, activePlayOpeningKey, activePlayScenario); }}>Restart</button>
+                          <button type="button" className="gr-button" disabled={playThinking || Boolean(playResult)} onClick={() => { setPlayResult('You resigned.'); setPlayStatus('You resigned.'); }}>Resign</button>
+                          <button type="button" className="gr-button" onClick={closeEngineBoard}>End game</button>
+                        </div>
+                        <div className="gr-play-moves">{playMoveHistory.length ? playMoveHistory.map((move, index) => `${index % 2 === 0 ? `${Math.floor(index / 2) + 1}. ` : ''}${move.san}`).join(' ') : 'Make the first move to begin.'}</div>
+                      </div>
+                    ) : null}
+                  </section>
+                </div>
+              ) : shouldShowLoadView ? (
                 <div className="gr-sidebar-view gr-sidebar-view-load">
                   <section className="gr-view-section">
                     <div className="gr-source-tabs">
@@ -3627,9 +3602,7 @@ function GameReview() {
 
                         <section className="gr-pack-builder">
                           <div className="gr-pack-builder-head">
-                            <div className="gr-pack-builder-kicker">Train from recent games</div>
                             <div className="gr-loader-summary-title">Mistake Pack</div>
-                            <div className="gr-pack-builder-meta">Turn missed moves into puzzles.</div>
                           </div>
 
                           <div className="gr-pack-builder-grid">
@@ -4065,60 +4038,7 @@ function GameReview() {
 
       <ReviewConfetti active={puzzleConfettiActive} />
 
-      {showEngineBoard ? (
-        <div
-          className="gr-engine-shell"
-          role="dialog"
-          aria-modal="true"
-          aria-label={playOrientation === 'white' ? 'Play as White' : 'Play as Black'}
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget) {
-              closeEngineBoard();
-            }
-          }}
-        >
-          <div className="gr-engine-board-shell">
-            <div className="gr-engine-board-topbar">
-              <button
-                type="button"
-                className="gr-engine-close"
-                onClick={closeEngineBoard}
-                aria-label="Close engine board"
-              >
-                ×
-              </button>
-            </div>
-            <div className="gr-engine-board-wrap" onMouseDown={(event) => event.stopPropagation()}>
-              <div className="gr-engine-board-visual" aria-hidden="true">
-                <Chessboard
-                  width={playBoardWidth}
-                  position={playFen}
-                  orientation={playOrientation}
-                  arePiecesDraggable={false}
-                  squareStyles={playSquareStyles}
-                  pieceTheme={pieceThemeUrl}
-                  {...boardThemeStyles}
-                />
-              </div>
-              <div className="gr-engine-input-grid" role="presentation">
-                {engineBoardSquares.map((square) => (
-                  <button
-                    key={square}
-                    type="button"
-                    className="gr-engine-square-hit"
-                    aria-label={`Select ${square}`}
-                    onClick={() => handlePlaySquareClick(square)}
-                    onContextMenu={(event) => {
-                      event.preventDefault();
-                      clearPlaySelection();
-                    }}
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : null}
+
     </div>
   );
 }

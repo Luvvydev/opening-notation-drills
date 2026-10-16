@@ -3903,7 +3903,7 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
             type="button"
             onClick={this.openMyGames}
           >
-            My Games
+            Game Review
           </button>
         </div>
       </div>

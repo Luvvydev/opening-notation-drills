@@ -922,7 +922,7 @@ renderHeroCarousel = (slides) => {
       {
         title: "Tools",
         links: [
-          { label: "My Games", href: "/my-games" },
+          { label: "Game Review", href: "/my-games" },
           { label: "Sign Up", href: "/signup" },
           { label: "Login", href: "/login" }
         ]
@@ -970,10 +970,10 @@ renderHeroCarousel = (slides) => {
         };
 
     const myGamesCard = {
-      eyebrow: "Mistake Pack",
-      title: "Turn your own mistakes into puzzles",
-      subtitle: "Import recent Chess.com or Lichess games and train the moves you missed.",
-      cta: "Build Mistake Pack →",
+      eyebrow: "Game Review",
+      title: "Review your games. Fix your mistakes.",
+      subtitle: "Analyze games, practice missed moves, or play against the computer.",
+      cta: "Open Game Review →",
       onClick: () => this.goToMyGames("home_personal_drill_pack"),
       pills: ["Chess.com", "Lichess", "Recent games"]
     };
@@ -985,7 +985,7 @@ renderHeroCarousel = (slides) => {
       },
       {
         title: "Fix one mistake",
-        copy: "Use My Games to convert recent Chess.com or Lichess games into drills."
+        copy: "Use Game Review to convert recent Chess.com or Lichess games into drills."
       },
       {
         title: "Return tomorrow",
@@ -999,8 +999,8 @@ renderHeroCarousel = (slides) => {
       {
         id: "instant-demo",
         kicker: "Free instant demo",
-        title: "Remember openings by making the moves yourself",
-        subtitle: "Try one London line before signup. Move, get corrected instantly, and see if the training loop fits.",
+        title: "Stop forgetting your openings",
+        subtitle: "Try a free London System drill. No account needed.",
         cta: "Try 1 line instantly →",
         onClick: () => this.goToDemo("home_hero_primary"),
         secondaryCta: "Import my games →",
@@ -1017,8 +1017,8 @@ renderHeroCarousel = (slides) => {
       {
         id: "overview",
         kicker: "Build stronger recall",
-        title: "Move, feedback, repeat",
-        subtitle: "Work through full lines with instant correction so your opening memory comes from reps.",
+        title: "Learn your openings",
+        subtitle: "Play through opening lines and get corrected when you are wrong.",
         cta: "Start training →",
         onClick: this.startFirstAvailable,
         pills: ["Learn", "Practice", "Drill"],
@@ -1107,10 +1107,10 @@ renderHeroCarousel = (slides) => {
       },
       {
         id: "my-games",
-        kicker: "MISTAKE PACK",
-        title: "Turn your own mistakes into puzzles",
-        subtitle: "Import recent Chess.com or Lichess games and train the moves you missed.",
-        cta: "Build Mistake Pack →",
+        kicker: "GAME REVIEW",
+        title: "Review your games. Fix your mistakes.",
+        subtitle: "Analyze games, practice missed moves, or play against the computer.",
+        cta: "Open Game Review →",
         onClick: () => this.goToMyGames("home_hero_my_games"),
         pills: ["Chess.com", "Lichess", "Recent games"],
         position: focusOpening ? _getPreviewFenForOpening(focusOpening) : "start",
@@ -1125,8 +1125,8 @@ renderHeroCarousel = (slides) => {
       {
         id: "notation",
         kicker: "SHARPEN BOARD VISION",
-        title: "Try Notation Drills!",
-        subtitle: "Improve square recognition, move reading, and input speed inside the same system you already use.",
+        title: "Practice notation",
+        subtitle: "Get faster at reading moves and finding squares.",
         cta: "Open notation drills →",
         onClick: () => this.goToRoute("/practice"),
         pills: ["Notation", "Board vision", "Speed"],
