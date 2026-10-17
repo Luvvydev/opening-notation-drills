@@ -646,15 +646,10 @@ async function syncPublicProfile(patch) {
 
   const saveProfile = async () => {
     setProfileError("");
-    const dn = displayName.trim();
     const un = normalizeUsername(username);
+    const dn = displayName.trim() || un;
 
     if (!user) return;
-
-    if (!dn) {
-      setProfileError("Display name is required.");
-      return;
-    }
 
     if (!un || un.length < 3) {
       setProfileError("Username must be at least 3 characters.");
@@ -906,11 +901,20 @@ const onChangeCoachTheme = async (nextCoachTheme) => {
                   <button onClick={() => setEditingUsername(true)}>✎</button>
                 </div>
               ) : (
+                <div className="profile-row">
                 <input
                   ref={usernameInputRef}
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.nativeEvent.isComposing) {
+                      e.preventDefault();
+                      saveProfile();
+                    }
+                  }}
+                  aria-label="Username"
                 />
+                </div>
               )}
 
               <div style={{ marginTop: 16 }}>

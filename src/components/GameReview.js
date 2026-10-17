@@ -27,6 +27,7 @@ import { OPENING_CATALOG } from '../openings/openingCatalog';
 import { BOARD_THEMES, DEFAULT_THEME, PIECE_THEMES } from '../theme/boardThemes';
 import { TRAINING_SCENARIOS, getScenarioReply, getScenarioStartMoves, getRepertoireReply, getAggressiveRepertoireReply, supportsOpeningAttack } from '../data/aggressionTraining';
 import './GameReview.css';
+import { trackEvent } from '../utils/trackEvent';
 
 function ReviewConfetti({ active }) {
   if (!active) return null;
@@ -1594,6 +1595,8 @@ function GameReview() {
   const [source, setSource] = useState(DEFAULT_SOURCE);
   const [pgnText, setPgnText] = useState('');
   const [gameData, setGameData] = useState(null);
+  const reviewTrackedRef = useRef(false);
+  const puzzleTrackedRef = useRef(false);
   const [currentPly, setCurrentPly] = useState(0);
   const [orientation, setOrientation] = useState('white');
   const [engineState, setEngineState] = useState('idle');
@@ -1772,8 +1775,19 @@ function GameReview() {
   }, [puzzleLegalTargets, puzzleSelectedSquare]);
   const hasLoadedGame = Boolean(gameData && gameData.moves && gameData.moves.length);
   const hasFullReview = Boolean(gameAnalysis && gameAnalysis.positions && gameAnalysis.positions.length);
-  // Hook calls in this component are unconditional; keep their order stable.
+  // The existing component uses an explicit lint scope for its subsequent hooks.
   /* eslint-disable react-hooks/rules-of-hooks */
+  useEffect(() => {
+    if (!hasFullReview || reviewTrackedRef.current) return;
+    reviewTrackedRef.current = true;
+    trackEvent('game_review_complete', { source: 'game_review' }, null, { persist: false });
+  }, [hasFullReview]);
+  useEffect(() => {
+    if (Object.keys(puzzleResults).length === 0 || puzzleTrackedRef.current) return;
+    puzzleTrackedRef.current = true;
+    trackEvent('mistake_puzzle_attempted', { source: trainingSource }, null, { persist: false });
+  }, [puzzleResults, trainingSource]);
+  // Hook calls in this component are unconditional; keep their order stable.
   const puzzleQueue = useMemo(() => buildPuzzleQueue(gameData), [gameData]);
   const activePuzzleQueue = trainingSource === 'pack' ? packPuzzles : puzzleQueue;
   const currentPuzzle = activePuzzleQueue[puzzleIndex] || null;
@@ -2306,6 +2320,9 @@ function GameReview() {
     setSidebarMode('overview');
     setOrientation(nextOrientation || parsed.orientation || 'white');
     setGameData(parsed);
+    reviewTrackedRef.current = false;
+    puzzleTrackedRef.current = false;
+    trackEvent('game_import_complete', { source: 'game_review' }, null, { persist: false });
     setPgnText(nextPgn);
     setTrainingSource('single');
     setPuzzleIndex(0);

@@ -600,3 +600,121 @@
   font-weight: 1000;
   line-height: 1.2;
 }
+
+/* Responsive premium page refresh. Existing payment controls retain their handlers. */
+.about-wrap {
+  padding: clamp(22px, 3.2vw, 62px) 18px 42px;
+}
+.about-card {
+  max-width: 1060px;
+  padding: clamp(26px, 3vw, 48px);
+  border-radius: 18px;
+  background: #15171d;
+  box-shadow: 0 16px 46px rgba(0,0,0,.32);
+}
+.about-title {
+  font-size: clamp(28px, 2.35vw, 42px);
+  line-height: 1.16;
+  font-weight: 800;
+  letter-spacing: -.035em;
+  margin-bottom: 10px;
+}
+.about-lead {font-size: clamp(14px, 1.05vw, 17px);font-weight: 450;max-width: none;}
+.about-section {margin-top: 28px;padding-top: 24px;}
+.about-section-title {font-size: 12px;letter-spacing: .055em;font-weight: 750;margin-bottom: 16px;}
+.about-tiers {gap: 16px;}
+.about-tier {min-height: 126px;padding: 23px 52px 23px 23px;background: #1c1f27;border-radius: 12px;}
+.about-tier.selected {background: #212633;border-color: #9ba5c2;box-shadow: none;}
+.about-tier-name {font-size: 18px;font-weight: 750;}
+.about-tier-price {font-size: 16px;font-weight: 700;color: #e9edf2;}
+.about-tier-desc {font-size: 14px;font-weight: 450;margin-bottom: 0;}
+.about-tier-tag {font-weight: 600;font-size: 11px;}
+.about-tier-btn {min-height: 48px;font-size: 15px;font-weight: 750;border-radius: 10px;}
+.about-cta-row {max-width: 100%;}
+.about-payment-methods {gap: 14px;margin-top: 14px;}
+.about-payment-method {padding: 16px 18px;border-radius: 10px;min-height: 70px;background: #1c1f27;}
+.about-payment-method-label {font-size: 15px;font-weight: 700;}
+.about-payment-method-detail {font-size: 13px;font-weight: 450;}
+.about-muted {font-size: 13px;font-weight: 400;max-width: 72ch;}
+.about-bullets {padding-left: 20px;display:grid;grid-template-columns: repeat(3,minmax(0,1fr));gap: 18px;font-size: 14px;line-height: 1.5;}
+.about-bullets li {margin: 0;padding-right: 8px;}
+.about-benefits-note {margin: 18px 0 0;color: #aeb7c5;font-size: 13px;}
+@media (max-width: 760px) {
+ .about-page {padding: 8px;}
+ .about-wrap {padding: 18px 6px 30px;}
+ .about-card {padding: 24px 18px;}
+ .about-tier {min-height: 105px;padding: 18px 46px 18px 17px;}
+ .about-bullets {grid-template-columns: 1fr;gap: 10px;}
+ .about-section {margin-top: 22px;padding-top: 20px;}
+}
+
+@media (min-width: 720px) {.about-cta-row {grid-template-columns: 1fr;}}
+
+/* Clear, equal-weight feature summary. No changes to payment controls. */
+.about-benefits-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(24px, 3vw, 44px);
+}
+.about-benefit-group { min-width: 0; }
+.about-benefit-group + .about-benefit-group {
+  border-left: 1px solid rgba(255,255,255,.12);
+  padding-left: clamp(24px, 3vw, 44px);
+}
+.about-benefit-heading {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  font-size: 18px;
+  line-height: 1.35;
+  font-weight: 750;
+  color: #e9edf2;
+}
+.about-benefit-access {
+  font-size: 11px;
+  font-weight: 650;
+  color: #b8c4d1;
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 6px;
+  padding: 3px 7px;
+  white-space: nowrap;
+}
+.about-benefit-access-premium { color: #e9d4a1; border-color: rgba(205,168,83,.36); }
+.about-benefit-description {
+  margin: 8px 0 16px;
+  color: #b8c0cb;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.about-benefit-list {
+  margin: 0;
+  padding-left: 18px;
+  color: #dce1e8;
+  font-size: 14px;
+  line-height: 1.55;
+}
+.about-benefit-list li + li { margin-top: 9px; }
+@media (max-width: 760px) {
+  .about-benefits-grid { grid-template-columns: 1fr; gap: 22px; }
+  .about-benefit-group + .about-benefit-group {
+    border-left: 0;
+    border-top: 1px solid rgba(255,255,255,.12);
+    padding-left: 0;
+    padding-top: 22px;
+  }
+}
+
+/* Payment decision flow: separate no-card trial from recurring checkout. */
+.about-trial-section { margin-top: 26px; }
+.about-trial-description { margin: -3px 0 14px; font-size: 14px; line-height: 1.5; color: #b8c0cb; }
+.about-trial-section .about-cta-row { margin-top: 0; }
+.about-trial-section .about-tier-btn { min-height: 52px; }
+.about-subscribe-section { margin-top: 25px; }
+.about-checkout-intro { margin: 18px 0 10px; font-size: 13px; color: #bac3ce; }
+.about-renewal-note { margin: 12px 0 0; font-size: 12px; line-height: 1.5; color: #9faab9; }
+.about-payment-method { min-height: 66px; }
+@media (max-width: 760px) {
+  .about-trial-description { font-size: 13px; }
+  .about-renewal-note { font-size: 12px; }
+}

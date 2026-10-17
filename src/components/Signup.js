@@ -263,6 +263,10 @@ export default function Signup(props) {
     ? "Create an account, then continue where you were headed."
     : "Create an account, then pick your plan on the next page.";
 
+  useEffect(() => {
+    trackEvent("signup_page_view", { source: signupSource, reason: gateReason || "", from: from || "" }, null, { persist: false });
+  }, [signupSource, gateReason, from]);
+
   const initialOnboarding = safeReadOnboarding();
 
   // Steps:
@@ -427,7 +431,9 @@ export default function Signup(props) {
 
         <h1 style={h1Style}>Start for free</h1>
         <p style={subStyle}>
-          Answer 3 quick questions. Then create your account and unlock your upgrade options.
+          {gateReason === "my_games_requires_account"
+            ? "Create a free account to review your games and practice mistakes."
+            : "Answer 3 optional questions, or skip straight to your free account."}
         </p>
 
         {gateReason ? (
@@ -450,7 +456,7 @@ export default function Signup(props) {
           <button
             type="button"
             style={primaryBtn(false)}
-            onClick={() => saveDraft(1)}
+            onClick={() => gateReason === "my_games_requires_account" ? skipToSignup() : saveDraft(1)}
             onMouseDown={(e) => {
               e.currentTarget.style.transform = "scale(0.99)";
             }}
@@ -458,11 +464,11 @@ export default function Signup(props) {
               e.currentTarget.style.transform = "scale(1)";
             }}
           >
-            Continue →
+            {gateReason === "my_games_requires_account" ? "Create free account →" : "Continue →"}
           </button>
 
-          <div style={smallLinkStyle} onClick={skipToSignup}>
-            Skip questions
+          <div style={smallLinkStyle} onClick={() => gateReason === "my_games_requires_account" ? saveDraft(1) : skipToSignup()}>
+            {gateReason === "my_games_requires_account" ? "Optional: answer 3 questions" : "Skip questions"}
           </div>
 
           <div style={{ marginTop: 14, textAlign: "center", color: "rgba(255,255,255,0.70)" }}>

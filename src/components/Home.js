@@ -971,8 +971,8 @@ renderHeroCarousel = (slides) => {
 
     const myGamesCard = {
       eyebrow: "Game Review",
-      title: "Review your games. Fix your mistakes.",
-      subtitle: "Analyze games, practice missed moves, or play against the computer.",
+      title: "Review your games. Practice your mistakes.",
+       subtitle: "Import a Chess.com or Lichess game, analyze your moves, and train the mistakes as puzzles. Free account required.",
       cta: "Open Game Review →",
       onClick: () => this.goToMyGames("home_personal_drill_pack"),
       pills: ["Chess.com", "Lichess", "Recent games"]
@@ -1012,6 +1012,22 @@ renderHeroCarousel = (slides) => {
           { value: "1", label: "free line" },
           { value: "0", label: "signup required" },
           { value: "Fast", label: "move feedback" }
+        ]
+      },
+      {
+        id: "my-games",
+        kicker: "GAME REVIEW",
+        title: "Review your games. Practice your mistakes.",
+        subtitle: "Import a game, review your moves, and practice mistakes as puzzles. Free account required.",
+        cta: "Open Game Review →",
+        onClick: () => this.goToMyGames("home_hero_my_games"),
+        pills: ["Chess.com", "Lichess", "Recent games"],
+        position: focusOpening ? _getPreviewFenForOpening(focusOpening) : "start",
+        orientation: (focusOpening && focusOpening.orientation) || "white",
+        stats: [
+          { value: "Import", label: "recent games" },
+          { value: "Solve", label: "mistake queue" },
+          { value: "Review", label: "better moves" }
         ]
       },
       {
@@ -1105,22 +1121,7 @@ renderHeroCarousel = (slides) => {
             ]
           : undefined
       },
-      {
-        id: "my-games",
-        kicker: "GAME REVIEW",
-        title: "Review your games. Fix your mistakes.",
-        subtitle: "Analyze games, practice missed moves, or play against the computer.",
-        cta: "Open Game Review →",
-        onClick: () => this.goToMyGames("home_hero_my_games"),
-        pills: ["Chess.com", "Lichess", "Recent games"],
-        position: focusOpening ? _getPreviewFenForOpening(focusOpening) : "start",
-        orientation: (focusOpening && focusOpening.orientation) || "white",
-        stats: [
-          { value: "Import", label: "recent games" },
-          { value: "Solve", label: "mistake queue" },
-          { value: "Review", label: "better moves" }
-        ]
-      },
+
 
       {
         id: "notation",
@@ -1149,7 +1150,7 @@ return (
 
       <SEO
         title="ChessDrills | Chess Opening Trainer and Drills"
-        description="ChessDrills helps you remember chess openings with structured drills, instant move feedback, and a no-signup demo line."
+        description="Train chess openings with instant feedback. Review Chess.com and Lichess games and turn your mistakes into personalized chess puzzles."
         canonical="https://chessdrills.net/"
         image="https://chessdrills.net/logo512.png"
       />
