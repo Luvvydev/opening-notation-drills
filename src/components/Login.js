@@ -49,67 +49,81 @@ export default function Login(props) {
   };
 
   const pageStyle = { minHeight: "100vh", background: "#0f1115" };
-
   const wrapStyle = {
-    padding: 18,
-    maxWidth: 520,
-    margin: "0 auto",
+    boxSizing: "border-box",
+    width: "100%",
+    maxWidth: 820,
+    padding: "clamp(16px, 2.5vw, 32px)",
+    margin: "clamp(12px, 2vw, 30px) auto 0"
   };
-
   const cardStyle = {
-    marginTop: 10,
-    padding: 16,
-    borderRadius: 14,
-    background: "rgba(20, 20, 25, 0.65)",
-    border: "1px solid rgba(255,255,255,0.12)",
+    padding: "clamp(26px, 3vw, 46px)",
+    borderRadius: 16,
+    background: "#15171d",
+    border: "1px solid rgba(255,255,255,0.12)"
   };
-
-  const labelStyle = { marginBottom: 6, fontWeight: 800 };
+  const h1Style = {
+    margin: "0 0 10px",
+    fontSize: "clamp(28px, 2.4vw, 40px)",
+    lineHeight: 1.16,
+    letterSpacing: "-0.03em",
+    color: "#c6d7eb"
+  };
+  const subStyle = {
+    margin: "0 0 24px",
+    color: "#b8c0cb",
+    fontSize: "clamp(14px, 1.1vw, 17px)",
+    lineHeight: 1.5
+  };
+  const labelStyle = { display: "block", marginBottom: 8, fontWeight: 700, color: "#e9edf2" };
   const inputStyle = {
+    boxSizing: "border-box",
     width: "100%",
-    padding: 10,
+    minHeight: 52,
+    padding: "12px 14px",
     borderRadius: 10,
-    border: "1px solid rgba(255,255,255,0.14)",
-    background: "rgba(255,255,255,0.04)",
+    border: "1px solid rgba(255,255,255,0.16)",
+    background: "#1c1f27",
     color: "#e9edf2",
-    outline: "none",
+    fontSize: 16
   };
-
-  const buttonStyle = {
+  const primaryBtn = {
     width: "100%",
+    minHeight: 52,
+    padding: "12px 16px",
+    borderRadius: 10,
+    border: "1px solid rgba(255,255,255,0.16)",
+    background: "#e9edf2",
+    color: "#0b0d12",
+    fontWeight: 800,
+    fontSize: 15,
+    cursor: busy ? "default" : "pointer",
+    opacity: busy ? 0.65 : 1
+  };
+  const errorStyle = {
+    margin: "0 0 18px",
     padding: 12,
     borderRadius: 10,
-    border: "1px solid rgba(244, 197, 66, 0.35)",
-    background: "rgba(244, 197, 66, 0.14)",
-    color: "#e9edf2",
-    fontWeight: 900,
-    cursor: busy ? "default" : "pointer",
-    opacity: busy ? 0.75 : 1,
-  };
-
-  const errorStyle = {
-    margin: "10px 0",
-    padding: 10,
-    borderRadius: 10,
-    border: "1px solid rgba(255,255,255,0.14)",
+    border: "1px solid rgba(255, 105, 105, 0.35)",
     background: "rgba(255, 90, 90, 0.10)",
-    color: "#e9edf2",
+    color: "#e9edf2"
   };
 
   return (
-    <div style={pageStyle}>
+    <div className="login-page" style={pageStyle}>
       <TopNav active="login" title="Chess Opening Drills" />
-
-      <div style={wrapStyle}>
+      <main style={wrapStyle}>
         <div style={cardStyle}>
-          <h2 style={{ marginTop: 0, marginBottom: 12 }}>Log In</h2>
+          <h1 style={h1Style}>Sign in to ChessDrills</h1>
+          <p style={subStyle}>Pick up where you left off.</p>
 
-          {error ? <div style={errorStyle}>{error}</div> : null}
+          {error ? <div role="alert" style={errorStyle}>{error}</div> : null}
 
           <form onSubmit={onSubmit}>
-            <div style={{ marginBottom: 10 }}>
-              <div style={labelStyle}>Email</div>
+            <div style={{ marginBottom: 18 }}>
+              <label htmlFor="chessdrills-login-email" style={labelStyle}>Email</label>
               <input
+                id="chessdrills-login-email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 type="email"
@@ -118,10 +132,10 @@ export default function Login(props) {
                 required
               />
             </div>
-
-            <div style={{ marginBottom: 12 }}>
-              <div style={labelStyle}>Password</div>
+            <div style={{ marginBottom: 24 }}>
+              <label htmlFor="chessdrills-login-password" style={labelStyle}>Password</label>
               <input
+                id="chessdrills-login-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 type="password"
@@ -130,17 +144,16 @@ export default function Login(props) {
                 required
               />
             </div>
-
-            <button disabled={busy} type="submit" style={buttonStyle}>
-              {busy ? "Logging in..." : "Log In"}
+            <button disabled={busy} type="submit" style={primaryBtn}>
+              {busy ? "Signing in..." : "Sign in"}
             </button>
           </form>
 
-          <div style={{ marginTop: 12, color: "rgba(255,255,255,0.75)" }}>
-            No account? <Link to="/signup">Sign Up</Link>
+          <div style={{ marginTop: 20, color: "#b8c0cb", textAlign: "center", fontSize: 14 }}>
+            No account? <Link to="/signup">Create an account</Link>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
