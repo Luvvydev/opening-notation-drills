@@ -113,6 +113,9 @@
 .home-footer-link-grid h3 { color: #a4acb7; font-size: 11px; font-weight: 600; margin-bottom: 12px; }
 .home-footer-link-grid a { color: #818b99; display: block; font-size: 11px; padding: 4px 0; }
 .home-footer-link-grid a:hover { color: #e4c565; }
+.home-back-to-top { grid-column: 1 / -1; justify-self: center; display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 10px 18px; border: 1px solid #30353f; border-radius: 6px; background: #15191f; color: #d5dbe4; cursor: pointer; }
+.home-back-to-top:hover { border-color: #ae9550; color: #f4d889; }
+.home-back-to-top:focus-visible { outline: 2px solid #e4bf58; outline-offset: 3px; }
 .home-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 @media (min-width: 1900px) {
   .home-workspace-hero { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); min-height: 550px; }
@@ -195,4 +198,14 @@
 }
 @media (max-width: 420px) {
   .home-opening-card { flex-direction: column; }
+}
+
+.home-demo-controls { display: flex; flex-wrap: wrap; gap: 6px; }
+.home-demo-controls button { flex: 1 1 auto; font-size: 11px; }
+.home-demo-controls button:disabled { opacity: .45; cursor: default; }
+.home-demo-controls button[aria-pressed="true"] { border-color: #ad9656; }
+.home-demo-hint { color: #9bcaff; font-size: 12px; line-height: 1.5; margin-top: 10px !important; }
+@media (max-width: 700px) {
+  .home-demo .home-demo-copy { display: flex; }
+  .home-demo .home-demo-bottom { margin-top: 12px; padding-top: 10px; }
 }

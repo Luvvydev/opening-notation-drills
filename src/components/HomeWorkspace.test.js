@@ -10,7 +10,7 @@ jest.mock('../utils/trackEvent', () => ({ trackEvent: jest.fn() }));
 let mockBoardProps;
 jest.mock('chessboardjsx', () => (props) => { mockBoardProps = props; return <div data-testid="demo-board" data-fen={props.position} />; });
 
-beforeEach(() => { localStorage.clear(); useAuth.mockReturnValue({ user: null }); });
+beforeEach(() => { jest.spyOn(window.HTMLMediaElement.prototype, 'play').mockImplementation(() => Promise.resolve()); jest.spyOn(window.HTMLMediaElement.prototype, 'pause').mockImplementation(() => {}); localStorage.clear(); useAuth.mockReturnValue({ user: null }); });
 
 test('homepage demo rejects illegal and off-line moves, completes its London line, and resets', () => {
   jest.useFakeTimers();
@@ -26,11 +26,11 @@ test('homepage demo rejects illegal and off-line moves, completes its London lin
   expect(screen.getByRole('status').textContent).toMatch(/not legal/);
   expect(screen.getByTestId('demo-board').getAttribute('data-fen')).toBe(startingFen);
   play('Nf3');
-  expect(screen.getByRole('status').textContent).toMatch(/this line calls for Bf4/);
+  expect(screen.getByRole('status').textContent).toMatch(/try the idea in the instruction/);
   expect(screen.getByTestId('demo-board').getAttribute('data-fen')).toBe(startingFen);
   for (let ply = 2; ply < HOME_DEMO_LINE.moves.length; ply += 2) {
     play(HOME_DEMO_LINE.moves[ply]);
-    act(() => { jest.advanceTimersByTime(500); });
+    act(() => { jest.advanceTimersByTime(700); });
   }
   expect(screen.getByRole('status').textContent).toMatch(/Line complete/);
   expect(screen.getByText('Train the London System →').getAttribute('href')).toBe('/openings?opening=london');
@@ -49,7 +49,7 @@ test('reset cancels a pending automatic reply', () => {
   fireEvent.click(screen.getByText('Reset'));
   act(() => { jest.advanceTimersByTime(600); });
   expect(screen.getByTestId('demo-board').getAttribute('data-fen')).toBe(startingFen);
-  expect(screen.getByRole('status').textContent).toMatch(/Your move: Bf4/);
+  expect(screen.getByRole('status').textContent).toMatch(/The London Bishop/);
   screen.unmount();
   jest.useRealTimers();
 });
@@ -76,4 +76,25 @@ test('guest homepage shows the full opening library without a separate puzzle sh
   expect(screen.queryByText('Mistake Puzzles')).toBeNull();
   expect(screen.queryByLabelText('Move in chess notation')).toBeNull();
   expect(screen.getByText(/Enter your username, select a game/)).toBeTruthy();
+});
+
+test('lesson guidance hides the answer until Hint and waits before Black replies', () => {
+  jest.useFakeTimers();
+  const screen = render(<MemoryRouter><HomeOpeningDemo /></MemoryRouter>);
+  expect(screen.getByRole('status').textContent).toContain(HOME_DEMO_LINE.explanations[2]);
+  expect(screen.queryByText(/Play Bf4:/)).toBeNull();
+  fireEvent.click(screen.getByRole('button', { name: 'Hint' }));
+  expect(screen.getByText('Play Bf4: c1 → f4.')).toBeTruthy();
+  expect(mockBoardProps.squareStyles.f4).toBeTruthy();
+  act(() => { mockBoardProps.onDrop({ sourceSquare: 'c1', targetSquare: 'f4' }); });
+  const playerFen = mockBoardProps.position;
+  expect(window.HTMLMediaElement.prototype.play).toHaveBeenCalled();
+  act(() => { jest.advanceTimersByTime(600); });
+  expect(mockBoardProps.position).toBe(playerFen);
+  act(() => { jest.advanceTimersByTime(100); });
+  expect(mockBoardProps.position).not.toBe(playerFen);
+  expect(screen.getByRole('status').textContent).toContain('Solidify!');
+  expect(screen.queryByText(/Play Bf4:/)).toBeNull();
+  screen.unmount();
+  jest.useRealTimers();
 });
