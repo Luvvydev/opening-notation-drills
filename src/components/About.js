@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import Chessboard from 'chessboardjsx';
+import WorkspaceIcon from './WorkspaceIcon';
 import TopNav from './TopNav';
 import SEO from './SEO';
 import './About.css';
@@ -17,7 +19,7 @@ const PAYMENT_METHODS = [
 ];
 
 export default function About(props) {
-  const { user, hasPaidMembership, trialActive, trialEligible, trialExpired } = useAuth();
+  const { user, hasPaidMembership, trialActive, trialEligible } = useAuth();
   const [trialBusy, setTrialBusy] = useState(false);
   const [checkoutBusy, setCheckoutBusy] = useState(false);
   const [checkoutError, setCheckoutError] = useState("");
@@ -155,166 +157,79 @@ export default function About(props) {
   };
 
   return (
-    <div className="about-page">
-      <SEO
-        title="ChessDrills Premium | ChessDrills"
-        description="Start a ChessDrills free trial or join premium to unlock more opening training features."
-        canonical="https://chessdrills.net/about"
-        image="https://chessdrills.net/logo512.png"
-      />
-
+    <div className="about-page membership-page">
+      <SEO title="ChessDrills Premium | ChessDrills" description="Review your games, practice your mistakes, and remember your openings with ChessDrills Premium." canonical="https://chessdrills.net/about" image="https://chessdrills.net/logo512.png" />
       <TopNav active="about" title="Chess Opening Drills" />
-
-      <div className="about-wrap">
-        <div className="about-card">
-          <div className="about-hero">
-            
-            <h2 className="about-title">ChessDrills Premium</h2>
-            <p className="about-lead">Try every Premium feature for 3 days, or subscribe now.</p>
-
+      <div className="membership-wrap">
+        <section className="membership-hero" aria-labelledby="membership-heading">
+          <div>
+            <p className="membership-eyebrow">CHESSDRILLS PREMIUM</p>
+            <h1 id="membership-heading">Turn your mistakes into your next practice session.</h1>
+            <p className="membership-lead">Review your games. Practice the moves you missed. Remember your openings.</p>
+            <ul className="membership-highlights"><li>Game Review</li><li>Puzzles from your games</li><li>Opening training</li></ul>
           </div>
+          <MembershipPreview />
+        </section>
 
-          {showLockedNote ? (
-            <div className="about-note">
-              <div className="about-note-title">That feature is Premium only.</div>
-              <div className="about-note-sub">Start the free trial to unlock it right away, or join now with a payment method.</div>
-            </div>
-          ) : null}
+        {showLockedNote && <div className="about-note"><div className="about-note-title">That feature is included with Premium.</div><div className="about-note-sub">Choose a membership below{!user || trialEligible ? ', or start your free trial.' : '.'}</div></div>}
 
-          <div className="about-section about-trial-section">
-            <div className="about-section-title">Try Premium free</div>
-            <p className="about-trial-description">3 days of full access. No card required. The trial ends automatically.</p>
-            <div className="about-cta-row">
-              <button
-                className="about-tier-btn"
-                type="button"
-                onClick={startFreeTrial}
-                disabled={trialBusy || checkoutBusy || hasPaidMembership || (!trialActive && !trialEligible)}
-              >
-                {trialBusy
-                  ? "Starting trial..."
-                  : hasPaidMembership
-                  ? "Already subscribed"
-                  : trialActive
-                  ? "Trial active"
-                  : trialEligible
-                  ? (
-                    "Start 3-day free trial"
-                  )
-                  : "Trial already used"}
-              </button>
+        <section className="membership-trial" aria-label="Membership access">
+          <WorkspaceIcon name="info" />
+          <div><h2>{hasPaidMembership ? 'Your Premium membership is active' : trialActive ? 'Your free trial is active' : !user || trialEligible ? 'Try Premium free for 3 days' : 'Your free trial has ended'}</h2><p>{hasPaidMembership ? 'Keep reviewing games and practicing with full access.' : trialActive ? 'Enjoy full access during your trial. It ends automatically.' : !user || trialEligible ? 'No card required. Ends automatically.' : 'Choose a plan below to continue your Premium training.'}</p></div>
+          {(hasPaidMembership || trialActive || !user || trialEligible) && <button type="button" className="membership-primary" onClick={startFreeTrial} disabled={trialBusy || checkoutBusy}>{trialBusy ? 'Starting trial...' : hasPaidMembership || trialActive ? 'Continue training' : 'Start free trial'}</button>}
+        </section>
 
-            </div>
-
+        {!hasPaidMembership && <section className="membership-pricing" aria-labelledby="membership-pricing-heading">
+          <h2 id="membership-pricing-heading">One membership. All your training.</h2>
+          <div className="membership-plans" aria-label="Membership plans">
+            <button type="button" className={'membership-plan ' + (selectedPlan === 'yearly' ? 'is-selected' : '')} aria-pressed={selectedPlan === 'yearly'} onClick={() => selectPlan('yearly')} disabled={checkoutBusy || trialBusy}>
+              <span className="membership-value">BEST VALUE</span><span className="membership-plan-name">Yearly</span><span className="membership-selector" aria-hidden="true" />
+              <span className="membership-price">$39 <small>/ year</small></span><span className="membership-plan-detail">$3.25 per month, billed annually.</span><span className="membership-savings">Save 46% compared with monthly.</span>
+            </button>
+            <button type="button" className={'membership-plan ' + (selectedPlan === 'monthly' ? 'is-selected' : '')} aria-pressed={selectedPlan === 'monthly'} onClick={() => selectPlan('monthly')} disabled={checkoutBusy || trialBusy}>
+              <span className="membership-plan-name">Monthly</span><span className="membership-selector" aria-hidden="true" />
+              <span className="membership-price">$5.99 <small>/ month</small></span><span className="membership-plan-detail">Billed monthly. Cancel anytime.</span>
+            </button>
           </div>
-
-          <div className="about-section about-subscribe-section">
-            <div className="about-section-title">Or subscribe now</div>
-
-            <div className="about-tiers">
-              <button
-                type="button"
-                className={"about-tier " + (selectedPlan === "yearly" ? "selected" : "")}
-                onClick={() => selectPlan("yearly")}
-              >
-                <div className="about-tier-top">
-                  <div className="about-tier-name">
-                    Yearly
-                    <span className="about-tier-tag">Lower monthly cost</span>
-                  </div>
-                  <div className="about-tier-price">$39 / year</div>
-                </div>
-                <div className="about-tier-desc">
-                  Only $3.25/month.
-                </div>
-                <div className="about-tier-check" aria-hidden="true">
-                  <span className="about-tier-check-dot" />
-                </div>
-              </button>
-
-              <button
-                type="button"
-                className={"about-tier " + (selectedPlan === "monthly" ? "selected" : "")}
-                onClick={() => selectPlan("monthly")}
-              >
-                <div className="about-tier-top">
-                  <div className="about-tier-name">Monthly</div>
-                  <div className="about-tier-price">$5.99 / month</div>
-                </div>
-                <div className="about-tier-desc">
-                  More flexible. Cancel anytime.
-                </div>
-                <div className="about-tier-check" aria-hidden="true">
-                  <span className="about-tier-check-dot" />
-                </div>
-              </button>
-            </div>
-
-            <p className="about-checkout-intro">Choose how to pay for your selected plan:</p>
-            <div className="about-payment-methods" aria-label="Payment methods">
-              {paymentOptions.map((method) => (
-                <button
-                  key={method.key}
-                  className="about-payment-method"
-                  type="button"
-                  onClick={() => openPaymentLink(method)}
-                  disabled={trialBusy || checkoutBusy || hasPaidMembership}
-                >
-                  <span className="about-payment-method-label">{method.label}</span>
-                  <span className="about-payment-method-detail">{checkoutBusy ? "Opening checkout..." : method.detail}</span>
-                </button>
-              ))}
-            </div>
-
-            <p className="about-renewal-note">Paid subscriptions renew automatically at the selected rate until canceled. Checkout is processed by PayPal.</p>
-
-            {checkoutError ? (
-              <div className="about-inline-note warning">
-                <div className="about-inline-note-title">Checkout could not start</div>
-                <div className="about-inline-note-sub">{checkoutError}</div>
-              </div>
-            ) : null}
-
-            {trialActive ? (
-              <div className="about-inline-note">
-                <div className="about-inline-note-title">Free trial is active</div>
-                <div className="about-inline-note-sub">Your trial is running now. Join before it ends to keep access without interruption.</div>
-              </div>
-            ) : null}
-
-            {trialExpired ? (
-              <div className="about-inline-note warning">
-                <div className="about-inline-note-title">Free trial ended</div>
-                <div className="about-inline-note-sub">This account already used its 3 day trial. Join now to unlock premium features again.</div>
-              </div>
-            ) : null}
+          <div className="membership-checkout">
+            <p className="membership-checkout-heading">Continue with {selectedPlan} membership</p>
+            <p className="membership-payment-prompt">Choose your payment method</p>
+            <div className="membership-methods" aria-label="Payment methods">{paymentOptions.map((method) => <button key={method.key} className={'membership-method ' + (method.key === 'card' ? 'membership-primary' : '')} type="button" onClick={() => openPaymentLink(method)} disabled={trialBusy || checkoutBusy}><span>{checkoutBusy ? 'Opening checkout...' : method.label}</span><small>{method.detail}</small></button>)}</div>
+            <p className="membership-renewal">Paid subscriptions renew automatically at the selected rate until canceled. Checkout is processed by PayPal.</p>
+            {checkoutError && <div className="about-inline-note warning" role="alert"><div className="about-inline-note-title">Checkout could not start</div><div className="about-inline-note-sub">{checkoutError}</div></div>}
           </div>
-        <div className="about-section about-benefits">
-          <div className="about-section-title">Included with Premium</div>
-          <div className="about-benefits-grid">
-            <div className="about-benefit-group">
-              <div className="about-benefit-heading">Review your games</div>
-              <p className="about-benefit-description">Find your mistakes. Practice the moves you missed.</p>
-              <ul className="about-benefit-list">
-                <li>Import games from Chess.com or Lichess</li>
-                <li>Analyze your moves with Stockfish</li>
-                <li>Solve puzzles from your own mistakes</li>
-              </ul>
-            </div>
-            <div className="about-benefit-group">
-              <div className="about-benefit-heading">Master your openings</div>
-              <p className="about-benefit-description">Build recall through repetition and practice.</p>
-              <ul className="about-benefit-list">
-                <li>All opening courses and training modes</li>
-                <li>Practice and scored drills for both colors</li>
-                <li>Spaced repetition and saved progress</li>
-              </ul>
-            </div>
-          </div>
-        </div>
+        </section>}
 
-        </div>
+        <section className="membership-benefits" aria-label="Included with Premium">
+          <div><WorkspaceIcon name="review" /><div><h2>Review your games</h2><p>Import from Chess.com or Lichess. Analyze your moves with Stockfish and see where you went wrong.</p></div></div>
+          <div><WorkspaceIcon name="puzzles" /><div><h2>Train your mistakes</h2><p>Select a game and practice puzzles from your own mistakes.</p></div></div>
+          <div><WorkspaceIcon name="openings" /><div><h2>Build your repertoire</h2><p>All opening courses and training modes, with hints, spaced repetition, and saved progress.</p></div></div>
+        </section>
+        <section className="membership-faq" aria-label="Membership questions">
+          <h2>Questions about membership?</h2>
+          <details><summary>How does the free trial work?</summary><p>Create an account to start 3 days of Premium access. No card is required. The trial ends automatically and does not turn into a paid subscription.</p></details>
+          <details><summary>What is included?</summary><p>Game Review, puzzles from your selected games, all opening courses and training modes, and saved training progress.</p></details>
+          <details><summary>How am I billed?</summary><p>The yearly plan is $39 billed once per year. The monthly plan is $5.99 billed each month. Paid subscriptions renew automatically until canceled. Card and PayPal payments are processed through PayPal.</p></details>
+          <details><summary>Do I need an account?</summary><p>Yes. An account is required for the Premium trial and membership, game review, and saving your progress.</p></details>
+        </section>
       </div>
     </div>
   );
+}
+
+function MembershipPreview() {
+  const frame = useRef(null);
+  const [width, setWidth] = useState(240);
+  useEffect(() => {
+    const measure = () => { if (frame.current && frame.current.clientWidth) setWidth(Math.floor(Math.min(280, frame.current.clientWidth) / 8) * 8); };
+    measure();
+    const observer = window.ResizeObserver ? new window.ResizeObserver(measure) : null;
+    if (observer) observer.observe(frame.current);
+    window.addEventListener('resize', measure);
+    return () => { if (observer) observer.disconnect(); window.removeEventListener('resize', measure); };
+  }, []);
+  return <div className="membership-preview" aria-label="Example training preview">
+    <div className="membership-preview-board" ref={frame}><Chessboard width={width} position="rnbqkb1r/ppp1pppp/5n2/3p4/3P1B2/4P3/PPP2PPP/RN1QKBNR b KQkq - 0 3" draggable={false} showNotation squareStyles={{ e3: { backgroundColor: 'rgba(244,197,66,.45)' } }} /><span>Example training position</span></div>
+    <div className="membership-preview-copy"><div className="membership-preview-step"><WorkspaceIcon name="review" /><span>Game Review</span></div><h2>Your game. Your practice.</h2><p>Find the moves you missed, then practice them on the board.</p><div className="membership-preview-flow"><span>1</span> Import your games<span>2</span> Select a game to review<span>3</span> Train your mistakes</div><div className="membership-preview-opening"><WorkspaceIcon name="openings" /><div><strong>Opening training</strong><p>Learn the plan. Play the moves. Use a hint when you need one.</p></div></div></div>
+  </div>;
 }
