@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import TopNav from "./TopNav";
 import { getSignupSourceFromReason, trackEvent } from "../utils/trackEvent";
+import "./Signup.css";
 
 export default function Signup(props) {
   const { signUp } = useAuth();
@@ -96,7 +97,7 @@ export default function Signup(props) {
   const wrapStyle = {
     boxSizing: "border-box",
     width: "100%",
-    maxWidth: 820,
+    maxWidth: 1320,
     padding: "clamp(16px, 2.5vw, 32px)",
     margin: "clamp(12px, 2vw, 30px) auto 0"
   };
@@ -156,8 +157,8 @@ export default function Signup(props) {
   return (
     <div className="signup-page" style={pageStyle}>
       <TopNav active="signup" title="Chess Opening Drills" />
-      <main style={wrapStyle}>
-        <div style={cardStyle}>
+      <main className="signup-layout" style={wrapStyle}>
+        <div className="signup-card" style={cardStyle}>
           <h1 style={h1Style}>Create your account</h1>
           <p style={subStyle}>{signupCopy}</p>
 
@@ -193,11 +194,93 @@ export default function Signup(props) {
             </button>
           </form>
 
+          <p className="signup-trial-note">
+            No card required. Try opening training for 3 days, plus one Game Review preview with puzzles.
+            {" "}Additional reviews and Mistake Packs require <Link to="/about">Premium</Link>.
+          </p>
+
           <div style={{ marginTop: 20, color: "#b8c0cb", textAlign: "center", fontSize: 14 }}>
             Already have an account? <Link to="/login">Sign in</Link>
           </div>
         </div>
+        <SignupIntro source={signupSource} />
       </main>
     </div>
+  );
+}
+
+function SignupIntro({ source }) {
+  const [watching, setWatching] = useState(false);
+  const [videoError, setVideoError] = useState(false);
+  const videoRef = useRef(null);
+  const trackedStart = useRef(false);
+  const trackedEnd = useRef(false);
+  const mediaBase = `${process.env.PUBLIC_URL || ""}/media/chessdrills-intro`;
+
+  useEffect(() => {
+    if (!watching || !videoRef.current) return;
+    videoRef.current.focus();
+    const playback = videoRef.current.play();
+    if (playback && playback.catch) playback.catch(() => {});
+  }, [watching]);
+
+  const onPlay = () => {
+    if (trackedStart.current) return;
+    trackedStart.current = true;
+    trackEvent("signup_video_start", { source }, null, { persist: false });
+  };
+
+  const onEnded = () => {
+    if (trackedEnd.current) return;
+    trackedEnd.current = true;
+    trackEvent("signup_video_complete", { source }, null, { persist: false });
+  };
+
+  return (
+    <section className="signup-intro" aria-labelledby="signup-intro-title">
+      <p className="signup-intro-eyebrow">YOUR GAME. YOUR NEXT MOVE.</p>
+      <h2 id="signup-intro-title">Stop missing the moves <span>that win games.</span></h2>
+      <p className="signup-intro-description">See how the mistakes from your own games become your next practice session.</p>
+
+      <div className="signup-video-frame">
+        {watching ? (
+          <video
+            ref={videoRef}
+            className="signup-video"
+            aria-label="How ChessDrills works"
+            controls
+            playsInline
+            preload="metadata"
+            poster={`${mediaBase}.jpg`}
+            src={`${mediaBase}.mp4`}
+            tabIndex={0}
+            onPlay={onPlay}
+            onEnded={onEnded}
+            onError={() => setVideoError(true)}
+          >
+            <track kind="captions" src={`${mediaBase}.vtt`} srcLang="en" label="English" />
+            <a href={`${mediaBase}.mp4`}>Watch the ChessDrills introduction</a>
+          </video>
+        ) : (
+          <button
+            className="signup-video-poster"
+            type="button"
+            onClick={() => setWatching(true)}
+            aria-label="Watch how ChessDrills works, 3 minutes 58 seconds"
+          >
+            <img src={`${mediaBase}.jpg`} alt="You missed this: a highlighted queen on a chessboard" width="1280" height="720" />
+            <span className="signup-video-play" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg></span>
+            <span className="signup-video-label">Watch the training overview <span>3:58</span></span>
+          </button>
+        )}
+      </div>
+      {videoError && <p className="signup-video-error" role="status">The video could not load. <a href={`${mediaBase}.mp4`}>Open the video</a>, or continue with your account.</p>}
+
+      <ol className="signup-training-flow" aria-label="Your training routine">
+        <li><span>01</span><div><strong>Review your game</strong><p>Find the moves you missed.</p></div></li>
+        <li><span>02</span><div><strong>Practice your mistakes</strong><p>Play those positions yourself.</p></div></li>
+        <li><span>03</span><div><strong>Train your openings</strong><p>Recall the moves on the board.</p></div></li>
+      </ol>
+    </section>
   );
 }
