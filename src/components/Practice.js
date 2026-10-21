@@ -8,7 +8,9 @@ import './Board.css';
 import './Practice.css';
 
 const calcWidth = ({ screenWidth, screenHeight }) => {
-  return (screenWidth || screenHeight) < 1800 ? ((screenWidth || screenHeight) < 550 ? screenWidth : 500) : 600;
+  const main = document.querySelector(".workspace-main");
+  const available = main ? main.clientWidth : (screenWidth || screenHeight);
+  return Math.max(8, Math.floor(Math.min(available - 32, 500) / 8) * 8);
 }
 
 class Practice extends Component {
@@ -61,7 +63,7 @@ class Practice extends Component {
 
   render() {
     return (
-      <div className="page-dark">
+      <div className="page-dark notation-practice-page">
         <SEO
           title="Chess Practice Board | ChessDrills"
           description="Use the ChessDrills practice board to play out moves, flip the board, and train notation visually."

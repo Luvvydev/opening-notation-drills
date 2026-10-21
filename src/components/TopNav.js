@@ -1,9 +1,11 @@
 // TopNav.js
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { httpsCallable } from "firebase/functions";
 import { functions } from "../firebase";
 import './TopNav.css';
+import { WorkspaceContext } from './WorkspaceShell';
+import WorkspaceIcon from './WorkspaceIcon';
 import { getStreakState, ymdLocal } from '../utils/streak';
 import { getActivityDays } from '../utils/activityDays';
 import { useAuth } from "../auth/AuthProvider";
@@ -72,6 +74,7 @@ function buildCurrentWeek(activityDays) {
 }
 
 function TopNav(props) {
+  const workspace = useContext(WorkspaceContext);
   const title = props.title || 'Chess Opening Drills';
   const hideHero = props.hideHero !== false;
 
@@ -236,10 +239,13 @@ function TopNav(props) {
     ? "You've done your line for today!"
     : 'Complete a line today to keep it going.';
 
+  if (workspace && !props.shellHeader) return null;
+
   return (
     <>
       <div className="topnav">
         <div className="topnav-inner">
+          {workspace && <button ref={workspace.toggle} type="button" className="workspace-icon-button workspace-menu-trigger" aria-label="Open navigation menu" aria-haspopup="dialog" onClick={workspace.openMenu}><WorkspaceIcon name="menu" /></button>}
           <Link to="/" className="topnav-logo-link" aria-label="Home">
             <img src={logo} alt="chessdrills.net" className="topnav-logo" />
           </Link>
@@ -270,7 +276,7 @@ function TopNav(props) {
                   aria-expanded={streakOpen ? 'true' : 'false'}
                 >
                   <span className="topnav-streak-text">
-                    <span className="topnav-streak-flame" role="img" aria-label="streak">🔥</span>
+                    <span className="topnav-streak-flame" role="img" aria-label="streak"><WorkspaceIcon name="streak" /></span>
                     <span>{streak.current || 0}</span>
                   </span>
                 </button>
@@ -321,13 +327,13 @@ function TopNav(props) {
                     trialActive ? "Trial active" : isMember ? "Member" : "Free"
                   }
                 >
-                  {trialActive ? "⏳" : isMember ? "⭐" : "🆓"}
+                  {trialActive ? "Trial" : isMember ? "Member" : "Free"}
                 </div>
               ) : null}
 
               <Link to="/leaderboards" title="Leaderboards" className="topnav-icon-link" aria-label="Leaderboards">
                 <div className={`topnav-profile ${props.active === "leaderboards" ? "active" : ""}`}>
-                  <span className="topnav-profile-icon" aria-hidden="true">🏆</span>
+                  <span className="topnav-profile-icon" aria-hidden="true"><WorkspaceIcon name="trophy" /></span>
                 </div>
               </Link>
 
@@ -342,7 +348,7 @@ function TopNav(props) {
                       aria-expanded={menuOpen ? "true" : "false"}
                       title="Profile"
                     >
-                      <span className="topnav-profile-icon" aria-hidden="true">👤</span>
+                      <span className="topnav-profile-icon" aria-hidden="true"><WorkspaceIcon name="profile" /></span>
                     </button>
 
                     {menuOpen ? (
@@ -426,10 +432,10 @@ function TopNav(props) {
                     ) : null}
                   </>
                 ) : (
-                  <Link to={profileHref} className="topnav-profile-link" title="Sign up">
-                    <div className="topnav-profile">
-                      <span className="topnav-profile-icon" aria-hidden="true">👤</span>
-                    </div>
+                  <Link to={workspace ? "/login" : profileHref} className={workspace ? "workspace-login-link" : "topnav-profile-link"} title={workspace ? "Log in" : "Sign up"}>
+                    {workspace ? "Log in" : <div className="topnav-profile">
+                      <span className="topnav-profile-icon" aria-hidden="true"><WorkspaceIcon name="profile" /></span>
+                    </div>}
                   </Link>
                 )}
               </div>
@@ -440,7 +446,7 @@ function TopNav(props) {
                 className="topnav-icon-link"
               >
                 <div className={`topnav-profile ${props.active === 'about' ? 'active' : ''}`}>
-                  <span className="topnav-profile-icon" aria-hidden="true">ⓘ</span>
+                  <span className="topnav-profile-icon" aria-hidden="true"><WorkspaceIcon name="info" /></span>
                 </div>
               </Link>
             </div>

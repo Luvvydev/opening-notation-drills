@@ -643,15 +643,17 @@ this._countedSeenForRun = false;
 
   computeBoardSize = () => {
     try {
-      const vw = (window && window.innerWidth) ? window.innerWidth : 360;
+      const viewportWidth = (window && window.innerWidth) ? window.innerWidth : 360;
+      const workspace = document.querySelector(".workspace-main");
+      const vw = (workspace && workspace.clientWidth) || viewportWidth;
       const usable = Math.max(260, vw - 100);
-      if (vw < 550) return usable;
-      if (vw <= 1100) return 500;
+      if (viewportWidth < 550) return usable;
+      if (viewportWidth <= 1100) return Math.min(500, usable);
 
       // Match the fixed desktop grid limits without measuring the board itself.
       // This avoids resize feedback loops and keeps the board inside its column.
       const mainWidth = Math.min(1200, vw - 36);
-      const sidebarWidth = Math.min(420, Math.max(340, vw * 0.32));
+      const sidebarWidth = Math.min(420, Math.max(340, viewportWidth * 0.32));
       const availableBoardWidth = mainWidth - sidebarWidth - 14 - 26;
       const scale = Math.max(0, Math.min(1, (vw - 1200) / 600));
       const desiredBoardWidth = Math.round(500 + scale * 180);
@@ -794,7 +796,9 @@ componentWillUnmount() {
       // Keep a little slack for borders and iOS safe areas.
       const safety = 10 + (typeof window !== "undefined" ? 0 : 0);
 
-      const availH = Math.max(0, h - topbarH - pillsH - coachH - dockH - safety);
+      const workspaceHeader = document.querySelector(".workspace-header");
+      const workspaceHeaderH = workspaceHeader ? Math.ceil(workspaceHeader.getBoundingClientRect().height) : 0;
+      const availH = Math.max(0, h - workspaceHeaderH - topbarH - pillsH - coachH - dockH - safety);
       const stageSidePad = 20; // matches .ot-mobile-stage padding: 0 10px
       const boardPad = 6; // prevents piece clipping against rounded containers
       const availW = Math.max(0, w - stageSidePad - boardPad * 2);

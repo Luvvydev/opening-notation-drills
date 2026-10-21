@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Chessboard from 'chessboardjsx';
-import * as Chess from 'chess.js';
+import { useLocation } from 'react-router-dom';
+import * as ChessModule from 'chess.js';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faBars,
@@ -28,6 +29,9 @@ import { BOARD_THEMES, DEFAULT_THEME, PIECE_THEMES } from '../theme/boardThemes'
 import { TRAINING_SCENARIOS, getScenarioReply, getScenarioStartMoves, getRepertoireReply, getAggressiveRepertoireReply, supportsOpeningAttack } from '../data/aggressionTraining';
 import './GameReview.css';
 import { trackEvent } from '../utils/trackEvent';
+
+// chess.js 0.11 exports a constructor in the browser and { Chess } in Node.
+const Chess = ChessModule.Chess || ChessModule.default || ChessModule;
 
 function ReviewConfetti({ active }) {
   if (!active) return null;
@@ -1591,7 +1595,9 @@ function RemoteGameList({ games, selectedId, onSelect, loading, error, emptyMess
   );
 }
 
-function GameReview() {
+function GameReview({ active = true }) {
+  const location = useLocation();
+  const routeModeKey = useRef(null);
   const [source, setSource] = useState(DEFAULT_SOURCE);
   const [pgnText, setPgnText] = useState('');
   const [gameData, setGameData] = useState(null);
@@ -1794,6 +1800,29 @@ function GameReview() {
   const currentPuzzleResult = currentPuzzle ? puzzleResults[currentPuzzle.id] : '';
   const solvedPuzzleCount = activePuzzleQueue.filter((puzzle) => puzzleResults[puzzle.id] === 'solved').length;
   const canOpenSingleGameViews = hasLoadedGame && trainingSource !== 'pack';
+  // Sidebar shortcuts select a view inside the current workspace, not a new
+  // GameReview instance. Opening Puzzles without data leads to its pack builder.
+  useEffect(() => {
+    if (!active) return;
+    const key = `${location.key || ''}:${location.pathname}:${location.search}`;
+    if (routeModeKey.current === key) return;
+    routeModeKey.current = key;
+    const mode = new URLSearchParams(location.search).get('mode');
+    if (mode === 'play') setSidebarMode('play');
+    else if (mode === 'puzzles') {
+      setPackBuilderOpen(true);
+      setSidebarMode(hasLoadedGame || activePuzzleQueue.length ? 'puzzles' : 'load');
+      if (!hasLoadedGame && !activePuzzleQueue.length) setStatusMessage('Import a game to practice its mistakes, or create a pack from recent games.');
+    } else setSidebarMode(canOpenSingleGameViews ? 'overview' : 'load');
+  }, [active, location.key, location.pathname, location.search, hasLoadedGame, activePuzzleQueue.length, canOpenSingleGameViews]);
+
+  useEffect(() => {
+    if (!active) return;
+    const requested = new URLSearchParams(location.search).get('mode');
+    const mode = sidebarMode === 'play' ? 'play' : sidebarMode === 'puzzles' || (sidebarMode === 'load' && packBuilderOpen && requested === 'puzzles') ? 'puzzles' : 'review';
+    window.dispatchEvent(new CustomEvent('chessdrills:review-mode', { detail: mode }));
+  }, [active, sidebarMode, packBuilderOpen, location.search]);
+
   const isPlayMode = sidebarMode === 'play';
   const isPuzzleMode = sidebarMode === 'puzzles';
   const stagePlayerSummary = trainingSource === 'pack' && currentPuzzle
@@ -3190,7 +3219,7 @@ function GameReview() {
 
   useEffect(() => {
     const node = boardFrameRef.current;
-    if (!node) return undefined;
+    if (!node || !active) return undefined;
 
     let frame = null;
     const update = () => {
@@ -3233,10 +3262,12 @@ function GameReview() {
         window.cancelAnimationFrame(frame);
       }
     };
-  }, []);
+  }, [active]);
 
   useEffect(() => {
+    if (!active) return undefined;
     const onKeyDown = (event) => {
+      if (event.target && event.target.closest && event.target.closest('[role="dialog"]')) return;
       const tagName = event.target && event.target.tagName ? event.target.tagName.toLowerCase() : '';
       if (tagName === 'input' || tagName === 'textarea' || tagName === 'select' || (event.target && event.target.isContentEditable)) {
         return;
@@ -3260,7 +3291,7 @@ function GameReview() {
 
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [gameData]);
+  }, [gameData, active]);
 
   useEffect(() => {
     const headers = gameData && gameData.headers ? gameData.headers : null;

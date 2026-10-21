@@ -15,7 +15,8 @@ import Profile from './components/Profile';
 import Leaderboards from './components/Leaderboards';
 import DiscordCallback from './components/DiscordCallback';
 import InstallAppPage from './components/InstallAppPage';
-import GameReview from './components/GameReview';
+import ReviewWorkspace from './components/ReviewWorkspace';
+import WorkspaceShell from './components/WorkspaceShell';
 import PaymentReturn from './components/PaymentReturn';
 
 import PublicProfile from './components/PublicProfile';
@@ -60,7 +61,9 @@ class App extends React.Component {
             <AnalyticsInstaller />
             <StreakModal />
 
+            <WorkspaceShell>
             <Route exact path='/' component={Home} />
+            <Route exact path='/openings/library' component={Home} />
             <Route path='/practice' component={Practice} />
             <Route
               exact
@@ -93,8 +96,8 @@ class App extends React.Component {
 
             {/* Private profile must be exact so it doesn't swallow /profile/u/:username */}
             <ProtectedRoute exact path='/profile' component={Profile} />
-            <ProtectedRoute exact path='/review' component={GameReview} />
-            <ProtectedRoute exact path='/my-games' component={GameReview} />
+            <ReviewWorkspace />
+            </WorkspaceShell>
           </AuthProvider>
         </BrowserRouter>
       </div>
