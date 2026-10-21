@@ -1886,6 +1886,16 @@ function GameReview({ active = true }) {
   const sidebarHeading = sidebarMode === 'play' ? 'Play vs Computer' : !hasLoadedGame && !activePuzzleQueue.length && sidebarMode !== 'puzzles' ? 'Import Game' : sidebarMode === 'overview' ? 'Overview' : sidebarMode === 'moves' ? 'Move Review' : sidebarMode === 'puzzles' ? (trainingSource === 'pack' ? 'Mistake Pack' : 'Practice Mistakes') : 'Import Game';
   const shouldShowLoadView = sidebarMode === 'load';
   const shouldShowOverviewView = canOpenSingleGameViews && sidebarMode === 'overview';
+  const isMobileSummary = shouldShowLoadView || shouldShowOverviewView;
+
+  useEffect(() => {
+    if (!active || !window.matchMedia('(max-width: 1100px)').matches) return undefined;
+    const frame = window.requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, behavior: 'auto' });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [active, sidebarMode]);
+
   const queueAutoReview = useCallback(() => {
     setSidebarMode('overview');
     setEngineState('analyzing-game');
@@ -3367,7 +3377,7 @@ function GameReview({ active = true }) {
   const statusTone = engineState === 'error' ? 'error' : engineState === 'ready' ? 'ready' : engineState === 'idle' ? 'idle' : 'working';
 
   return (
-    <div className={`gr-page gr-page-refresh${isCompactPractice ? ' gr-practice-active' : ''}${sidebarMode === 'moves' ? ' gr-moves-active' : ''}`}>
+    <div className={`gr-page gr-page-refresh${isCompactPractice ? ' gr-practice-active' : ''}${sidebarMode === 'moves' ? ' gr-moves-active' : ''}${isMobileSummary ? ' gr-mobile-summary' : ''}`}>
       <TopNav title="Game Review" hideHero />
 
       <div className="gr-shell gr-shell-review" style={shellProgressStyle} ref={workspaceRef}>

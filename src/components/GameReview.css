@@ -4144,3 +4144,16 @@
     display: none;
   }
 }
+
+/* Mobile import and accuracy overview do not need a board. */
+@media (max-width: 1100px) {
+  .gr-mobile-summary .gr-stage-shell {
+    display: none;
+  }
+  .gr-mobile-summary .gr-sidebar-body,
+  .gr-mobile-summary .gr-sidebar-view-overview {
+    height: auto;
+    max-height: none;
+    overflow: visible;
+  }
+}
