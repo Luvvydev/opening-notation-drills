@@ -37,7 +37,7 @@ service cloud.firestore {
     }
 
     function isClientAttemptingToWriteMembershipFields() {
-      return request.resource.data.keys().hasAny([
+      return request.resource.data.keys().toSet().union(resource.data.keys().toSet()).hasAny([
         "membershipActive",
         "membershipTier",
         "stripeCustomerId",
@@ -84,6 +84,25 @@ service cloud.firestore {
           "membershipPlan"
         ])
       );
+    }
+
+    // Preserve the opening trial, but prevent clients restarting or extending it.
+    function isValidTrialStart() {
+      return request.resource.data.trialUsed == true
+        && request.resource.data.trialStartedAt == request.time;
+    }
+
+    function isValidTrialCreate() {
+      return !request.resource.data.keys().hasAny(["trialUsed", "trialStartedAt"])
+        || isValidTrialStart();
+    }
+
+    function isValidTrialUpdate() {
+      return !request.resource.data.diff(resource.data).affectedKeys()
+          .hasAny(["trialUsed", "trialStartedAt"])
+        || ((!resource.data.keys().hasAny(["trialStartedAt"]))
+          && resource.data.get("trialUsed", false) == false
+          && isValidTrialStart());
     }
 
     function isMember(uid) {
@@ -174,6 +193,7 @@ service cloud.firestore {
 
       // Client can create their doc but cannot set membership fields.
       allow create: if isOwner(userId)
+        && isValidTrialCreate()
         && !request.resource.data.keys().hasAny([
           "membershipActive",
           "membershipTier",
@@ -199,7 +219,8 @@ service cloud.firestore {
 
       // Client can update non-membership fields only.
       allow update: if isOwner(userId)
-        && !isClientAttemptingToWriteMembershipFields();
+        && !isClientAttemptingToWriteMembershipFields()
+        && isValidTrialUpdate();
 
       allow delete: if false;
 

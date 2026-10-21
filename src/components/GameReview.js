@@ -1,6 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Chessboard from 'chessboardjsx';
-import { useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+import { httpsCallable } from 'firebase/functions';
+import { auth, functions } from '../firebase';
+import { useAuth } from '../auth/AuthProvider';
 import * as ChessModule from 'chess.js';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
@@ -1697,6 +1700,31 @@ function useReviewBoardState({
 
 function GameReview({ active = true }) {
   const location = useLocation();
+  const { user, hasPaidMembership } = useAuth();
+  const [accessMessage, setAccessMessage] = useState('');
+  const authorizedGamesRef = useRef(new Set());
+  const authorizeReview = useCallback(async (parsed, action = 'review') => {
+    const uid = user && user.uid;
+    const gameKey = parsed && parsed.moves ? parsed.moves.map((move) => move.uci).join(' ') : '';
+    const cacheKey = `${uid}:${gameKey}`;
+    if (action === 'review' && authorizedGamesRef.current.has(cacheKey)) return true;
+    try {
+      const authorize = httpsCallable(functions, 'authorizeGameReview');
+      const result = await authorize({ action, gameKey });
+      if (!result.data || result.data.allowed !== true) throw new Error('access_denied');
+      if (!auth.currentUser || auth.currentUser.uid !== uid) return false;
+      if (action === 'review' && result.data.paid === false) authorizedGamesRef.current.add(cacheKey);
+      setAccessMessage('');
+      return true;
+    } catch (error) {
+      setAccessMessage(error.code === 'functions/permission-denied'
+        ? action === 'pack'
+          ? 'Mistake Packs require a paid membership. Your free preview includes one game review and puzzles from that game. Select a game below to try it.'
+          : 'Your free game preview has been used. Choose monthly or yearly membership to review another game. Active lifetime members also have full access.'
+        : 'Could not verify review access. Check your connection and try again.');
+      return false;
+    }
+  }, [user]);
   const routeModeKey = useRef(null);
   const [source, setSource] = useState(DEFAULT_SOURCE);
   const [pgnText, setPgnText] = useState('');
@@ -2176,6 +2204,7 @@ function GameReview({ active = true }) {
   const analyzeCurrentPosition = useCallback(async (plyOverride) => {
     if (!gameData || !gameData.positions) return;
 
+    if (!await authorizeReview(gameData)) return;
     const targetPly = typeof plyOverride === 'number' ? plyOverride : currentPly;
     const position = gameData.positions[targetPly];
     if (!position) return;
@@ -2207,10 +2236,11 @@ function GameReview({ active = true }) {
       setEngineError('Position analysis failed.');
       setStatusMessage('Position analysis failed.');
     }
-  }, [currentPly, depth, evaluateFen, gameData, multiPv]);
+  }, [authorizeReview, currentPly, depth, evaluateFen, gameData, multiPv]);
 
   const analyzeWholeGame = useCallback(async () => {
     if (!gameData || !gameData.positions || !gameData.moves) return;
+    if (!await authorizeReview(gameData)) return;
 
     runRequestRef.current += 1;
     const requestId = runRequestRef.current;
@@ -2357,7 +2387,7 @@ function GameReview({ active = true }) {
       setEngineError('Full game analysis failed.');
       setStatusMessage('Full game analysis failed.');
     }
-  }, [currentPly, depth, ensureWorkerPool, evaluateFen, gameData, multiPv, stopPoolSearches]);
+  }, [authorizeReview, currentPly, depth, ensureWorkerPool, evaluateFen, gameData, multiPv, stopPoolSearches]);
 
   const handleStop = useCallback(async () => {
     runRequestRef.current += 1;
@@ -2392,38 +2422,41 @@ function GameReview({ active = true }) {
     setStatusMessage('Game loaded.');
   }, []);
 
-  const handleLoadPgn = useCallback(() => {
+  const handleLoadPgn = useCallback(async () => {
     const parsed = parsePgn(pgnText, orientation);
     if (!parsed.ok) {
       setEngineError(parsed.error || 'Could not parse that PGN.');
       return;
     }
+    if (!await authorizeReview(parsed)) return;
     resetReviewStateFromParsed(parsed, pgnText, orientation);
     queueAutoReview();
-  }, [orientation, pgnText, queueAutoReview, resetReviewStateFromParsed]);
+  }, [authorizeReview, orientation, pgnText, queueAutoReview, resetReviewStateFromParsed]);
 
-  const handleUseSample = useCallback(() => {
+  const handleUseSample = useCallback(async () => {
     const parsed = parsePgn(SAMPLE_PGN, 'white');
     if (parsed.ok) {
+      if (!await authorizeReview(parsed)) return;
       resetReviewStateFromParsed(parsed, SAMPLE_PGN, 'white');
       setEngineError('');
       setSource('pgn');
       queueAutoReview();
     }
-  }, [queueAutoReview, resetReviewStateFromParsed]);
+  }, [authorizeReview, queueAutoReview, resetReviewStateFromParsed]);
 
   const handleUpload = useCallback((event) => {
     const file = event.target.files && event.target.files[0];
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = () => {
+    reader.onload = async () => {
       const text = String(reader.result || '');
       const parsed = parsePgn(text, orientation);
       if (!parsed.ok) {
         setEngineError(parsed.error || 'Could not parse that file.');
         return;
       }
+      if (!await authorizeReview(parsed)) return;
       resetReviewStateFromParsed(parsed, text, orientation);
       setStatusMessage(`${file.name} loaded.`);
       setSource('pgn');
@@ -2431,7 +2464,7 @@ function GameReview({ active = true }) {
     };
     reader.readAsText(file);
     event.target.value = '';
-  }, [orientation, queueAutoReview, resetReviewStateFromParsed]);
+  }, [authorizeReview, orientation, queueAutoReview, resetReviewStateFromParsed]);
 
   const handleCopyPgn = useCallback(async () => {
     if (!gameData || !gameData.pgn) return;
@@ -2517,7 +2550,7 @@ function GameReview({ active = true }) {
     };
   }, [handleLoadRemoteGames, remoteUsername, source]);
 
-  const handleSelectRemoteGame = useCallback((game) => {
+  const handleSelectRemoteGame = useCallback(async (game) => {
     const username = remoteUsername.trim().toLowerCase();
     const nextOrientation = game.black.name.toLowerCase() === username ? 'black' : 'white';
     const parsed = parsePgn(game.pgn, nextOrientation);
@@ -2525,11 +2558,12 @@ function GameReview({ active = true }) {
       setEngineError(parsed.error || 'Could not parse that game.');
       return;
     }
+    if (!await authorizeReview(parsed)) return;
     setSelectedRemoteGameId(game.id);
     resetReviewStateFromParsed(parsed, game.pgn, nextOrientation);
     setStatusMessage(`${source === 'lichess' ? 'Lichess' : 'Chess.com'} game loaded.`);
     queueAutoReview();
-  }, [queueAutoReview, remoteUsername, resetReviewStateFromParsed, source]);
+  }, [authorizeReview, queueAutoReview, remoteUsername, resetReviewStateFromParsed, source]);
 
   const handleBuildPersonalPack = async () => {
     const username = remoteUsername.trim();
@@ -2552,6 +2586,7 @@ function GameReview({ active = true }) {
       return;
     }
 
+    if (!await authorizeReview(null, 'pack')) return;
     setPackBuilderOpen(false);
     runRequestRef.current += 1;
     const requestId = runRequestRef.current;
@@ -3379,6 +3414,12 @@ function GameReview({ active = true }) {
   return (
     <div className={`gr-page gr-page-refresh${isCompactPractice ? ' gr-practice-active' : ''}${sidebarMode === 'moves' ? ' gr-moves-active' : ''}${isMobileSummary ? ' gr-mobile-summary' : ''}`}>
       <TopNav title="Game Review" hideHero />
+      {sidebarMode !== 'play' && (!hasPaidMembership || accessMessage) && (
+        <div className="gr-access-note" role="status">
+          <span>{accessMessage || 'Free preview: one game review, including puzzles from that game. Your first imported game uses the preview. You can revisit it later. Additional games and Mistake Packs require paid membership.'}</span>
+          <Link className="gr-button gr-button-primary" to="/about">View membership</Link>
+        </div>
+      )}
 
       <div className="gr-shell gr-shell-review" style={shellProgressStyle} ref={workspaceRef}>
         <div className="gr-top-progress-shell" aria-hidden="true">

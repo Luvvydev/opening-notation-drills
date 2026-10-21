@@ -175,7 +175,7 @@ export default function About(props) {
 
         <section className="membership-trial" aria-label="Membership access">
           <WorkspaceIcon name="info" />
-          <div><h2>{hasPaidMembership ? 'Your Premium membership is active' : trialActive ? 'Your free trial is active' : !user || trialEligible ? 'Try Premium free for 3 days' : 'Your free trial has ended'}</h2><p>{hasPaidMembership ? 'Keep reviewing games and practicing with full access.' : trialActive ? 'Enjoy full access during your trial. It ends automatically.' : !user || trialEligible ? 'No card required. Ends automatically.' : 'Choose a plan below to continue your Premium training.'}</p></div>
+          <div><h2>{hasPaidMembership ? 'Your Premium membership is active' : trialActive ? 'Your free trial is active' : !user || trialEligible ? 'Try opening training free for 3 days' : 'Your free trial has ended'}</h2><p>{hasPaidMembership ? 'Keep reviewing games and practicing with full access.' : trialActive ? 'Your opening training trial ends automatically. Game Review includes one preview game and its puzzles.' : !user || trialEligible ? 'No card required. Includes one Game Review preview with puzzles. Additional reviews and Mistake Packs require paid membership.' : 'Choose a plan below to continue your Premium training.'}</p></div>
           {(hasPaidMembership || trialActive || !user || trialEligible) && <button type="button" className="membership-primary" onClick={startFreeTrial} disabled={trialBusy || checkoutBusy}>{trialBusy ? 'Starting trial...' : hasPaidMembership || trialActive ? 'Continue training' : 'Start free trial'}</button>}
         </section>
 
@@ -207,7 +207,7 @@ export default function About(props) {
         </section>
         <section className="membership-faq" aria-label="Membership questions">
           <h2>Questions about membership?</h2>
-          <details><summary>How does the free trial work?</summary><p>Create an account to start 3 days of Premium access. No card is required. The trial ends automatically and does not turn into a paid subscription.</p></details>
+          <details><summary>How does the free trial work?</summary><p>Create an account to try opening training for 3 days and review one game with puzzles from that game. Additional game reviews and Mistake Packs require paid membership, even during the trial. No card is required. The trial ends automatically and does not turn into a paid subscription.</p></details>
           <details><summary>What is included?</summary><p>Game Review, puzzles from your selected games, all opening courses and training modes, and saved training progress.</p></details>
           <details><summary>How am I billed?</summary><p>The yearly plan is $39 billed once per year. The monthly plan is $5.99 billed each month. Paid subscriptions renew automatically until canceled. Card and PayPal payments are processed through PayPal.</p></details>
           <details><summary>Do I need an account?</summary><p>Yes. An account is required for the Premium trial and membership, game review, and saving your progress.</p></details>

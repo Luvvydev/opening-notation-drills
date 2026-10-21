@@ -505,3 +505,46 @@ exports.paypalWebhook = functions.region(REGION).https.onRequest(async (req, res
     res.status(500).send("Webhook processing failed");
   }
 });
+
+
+// One preview game per account. Only the server can write this allowance.
+exports.authorizeGameReview = functions.region(REGION).https.onCall(async (data, context) => {
+  if (!context.auth || !context.auth.uid) {
+    throw new functions.https.HttpsError("unauthenticated", "sign_in_required");
+  }
+  const action = data && data.action;
+  const gameKey = data && data.gameKey;
+  if (action !== "review" && action !== "pack") {
+    throw new functions.https.HttpsError("invalid-argument", "invalid_review_action");
+  }
+  if (action === "review" && (typeof gameKey !== "string" || gameKey.length > 20000 ||
+      !/^[a-h][1-8][a-h][1-8][qrbn]?( [a-h][1-8][a-h][1-8][qrbn]?)*$/.test(gameKey))) {
+    throw new functions.https.HttpsError("invalid-argument", "invalid_review_game");
+  }
+  const userRef = db.collection("users").doc(context.auth.uid);
+  const previewRef = userRef.collection("reviewAccess").doc("preview");
+  return db.runTransaction(async (tx) => {
+    const userSnap = await tx.get(userRef);
+    const user = userSnap.exists ? userSnap.data() : {};
+    if (user.membershipActive === true &&
+        (user.membershipTier === "member" || user.membershipTier === "lifetime")) {
+      return { allowed: true, paid: true };
+    }
+    // The existing timed opening trial does not grant extra reviews or packs.
+    if (action === "pack") {
+      throw new functions.https.HttpsError("permission-denied", "membership_required");
+    }
+    const digest = crypto.createHash("sha256").update(gameKey).digest("hex");
+    const preview = await tx.get(previewRef);
+    if (preview.exists && preview.data().gameHash !== digest) {
+      throw new functions.https.HttpsError("permission-denied", "review_preview_used");
+    }
+    if (!preview.exists) {
+      tx.create(previewRef, {
+        gameHash: digest,
+        usedAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+    }
+    return { allowed: true, paid: false };
+  });
+});

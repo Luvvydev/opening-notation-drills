@@ -4157,3 +4157,29 @@
     overflow: visible;
   }
 }
+
+
+.gr-access-note {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  max-width: 1440px;
+  margin: 16px auto;
+  padding: 14px 20px;
+  box-sizing: border-box;
+  color: #e2e8f0;
+  background: #172033;
+  border: 1px solid #374151;
+  border-radius: 12px;
+}
+
+.gr-access-note > span {
+  flex: 1 1 260px;
+  line-height: 1.5;
+}
+
+.gr-access-note > a {
+  text-decoration: none;
+}
