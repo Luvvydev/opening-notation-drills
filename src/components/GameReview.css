@@ -3978,3 +3978,169 @@
     max-height: 180px;
   }
 }
+
+/* Board-centered review workspace, matching the site's charcoal and gold surfaces. */
+.gr-page-refresh { background: #0b0e10; }
+.gr-page-refresh::before { background: none; }
+.gr-page-refresh .gr-shell-review { max-width: 1240px; padding-top: 18px; gap: 16px; align-items: start; }
+.gr-page-refresh .gr-stage-card.gr-stage-card-board { padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none; }
+.gr-page-refresh .gr-panel { background: #111519; border-color: #30363e; border-radius: 8px; box-shadow: none; }
+.gr-page-refresh .gr-sidebar-shell { box-sizing: border-box; padding: 16px; }
+.gr-page-refresh .gr-sidebar-topbar { align-items: center; gap: 8px; padding-bottom: 12px; margin-bottom: 12px; }
+.gr-page-refresh .gr-panel-kicker { color: #c8b87e; letter-spacing: .12em; }
+.gr-workspace-heading-actions { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.gr-session-count { color: #bbc1ca; font-size: 12px; font-variant-numeric: tabular-nums; }
+.gr-page-refresh .gr-options-toggle { min-height: 40px; height: 40px; padding: 0 12px; }
+.gr-workspace-options { flex-shrink: 0; padding: 12px; margin-bottom: 12px; border: 1px solid #30363e; border-radius: 6px; background: #171c21; max-height: 280px; overflow-y: auto; }
+.gr-workspace-options .gr-sidebar-actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 12px; }
+.gr-workspace-options .gr-panel-gear { width: 100%; height: auto; min-height: 52px; flex-direction: column; gap: 6px; font-size: 12px; border-radius: 6px; }
+.gr-page-refresh .gr-button,
+.gr-page-refresh .gr-dock-btn,
+.gr-page-refresh .gr-source-tab,
+.gr-page-refresh .gr-puzzle-action-btn { border-radius: 6px; }
+.gr-page-refresh .gr-button-primary,
+.gr-page-refresh .gr-panel-gear.is-active,
+.gr-page-refresh .gr-dock-btn-primary { background: #f4ca42; border-color: #f4ca42; color: #17150c; box-shadow: none; }
+.gr-page-refresh .gr-button-primary:hover:not(:disabled) { background: #ffda60; }
+.gr-page-refresh .gr-source-tab.is-active,
+.gr-page-refresh .gr-move-cell.is-active,
+.gr-page-refresh .gr-training-scenario.is-active,
+.gr-page-refresh .gr-puzzle-explain-switch button.is-active { background: rgba(244, 202, 66, .1); border-color: #a68d42; }
+.gr-page-refresh .gr-top-progress-shell { width: 100%; margin: 0; }
+.gr-page-refresh .gr-top-progress-track { height: 4px; border: 0; background: #282d34; }
+.gr-page-refresh .gr-top-progress-fill { background: #f4ca42; box-shadow: none; }
+.gr-page-refresh .gr-puzzle-card,
+.gr-page-refresh .gr-puzzle-stat-card,
+.gr-page-refresh .gr-loader-summary-card,
+.gr-page-refresh .gr-insight-bubble,
+.gr-page-refresh .gr-puzzle-explain { background: transparent; border: 0; border-radius: 0; box-shadow: none; padding: 0; }
+.gr-page-refresh .gr-puzzle-card-primary { gap: 8px; }
+.gr-page-refresh .gr-puzzle-copy,
+.gr-page-refresh .gr-insight-body { font-weight: 400; line-height: 1.45; color: #bbc1ca; }
+.gr-page-refresh .gr-puzzle-title { font-size: 18px; }
+.gr-page-refresh .gr-puzzle-chip { padding: 3px 7px; font-size: 11px; }
+.gr-page-refresh .gr-puzzle-progress-card { margin-top: 12px; }
+.gr-page-refresh .gr-puzzle-action-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.gr-page-refresh .gr-puzzle-action-btn,
+.gr-page-refresh .gr-puzzle-next-btn { height: 44px; min-height: 44px; }
+.gr-page-refresh .gr-puzzle-footer { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.gr-page-refresh .gr-puzzle-build-toggle { background: #252a30; border-color: #675d39; color: #f4ca42; }
+.gr-page-refresh .gr-practice-recent-link { color: #e3ca7d; }
+.gr-page-refresh button:focus-visible,
+.gr-page-refresh select:focus-visible { outline: 2px solid #f4ca42; outline-offset: 3px; }
+@media (min-width: 1101px) {
+  .gr-page-refresh .gr-shell-review { grid-template-columns: minmax(0, 1fr) 380px; }
+  .gr-page-refresh .gr-sidebar-shell { height: var(--gr-sidebar-target-height); max-height: var(--gr-sidebar-target-height); }
+  .gr-page-refresh .gr-sidebar-view-puzzles { min-height: 0; height: auto; gap: 16px; }
+}
+@media (max-width: 1100px) {
+  .gr-page-refresh .gr-shell-review { max-width: 660px; padding: 8px 10px 16px; gap: 8px; }
+  .gr-practice-active .gr-shell-review,
+  .gr-moves-active .gr-shell-review { grid-template-columns: repeat(4, minmax(0, 1fr)); padding-bottom: max(12px, env(safe-area-inset-bottom)); }
+  .gr-practice-active .gr-sidebar,
+  .gr-practice-active .gr-sidebar-shell,
+  .gr-practice-active .gr-sidebar-body,
+  .gr-practice-active .gr-sidebar-view-puzzles,
+  .gr-practice-active .gr-puzzle-action-row,
+  .gr-practice-active .gr-puzzle-footer,
+  .gr-moves-active .gr-sidebar,
+  .gr-moves-active .gr-sidebar-shell,
+  .gr-moves-active .gr-sidebar-body,
+  .gr-moves-active .gr-sidebar-view-moves { display: contents; }
+  .gr-practice-active .gr-top-progress-shell,
+  .gr-moves-active .gr-top-progress-shell { display: none; }
+  .gr-practice-active .gr-sidebar-topbar,
+  .gr-moves-active .gr-sidebar-topbar { grid-column: 1 / -1; order: 0; margin: 0; padding: 0; border: 0; min-height: 40px; }
+  .gr-practice-active .gr-panel-kicker,
+  .gr-moves-active .gr-panel-kicker { display: none; }
+  .gr-practice-active .gr-workspace-options,
+  .gr-moves-active .gr-workspace-options { grid-column: 1 / -1; order: 1; margin: 0; }
+  .gr-practice-active .gr-puzzle-card-primary,
+  .gr-moves-active .gr-move-summary { grid-column: 1 / -1; order: 2; box-sizing: border-box; max-height: 112px; overflow-y: auto; padding: 8px 10px; background: #151a1f; border: 1px solid #30363e; border-radius: 6px; gap: 4px; }
+  .gr-practice-active .gr-puzzle-title { font-size: 15px; }
+  .gr-practice-active .gr-puzzle-copy,
+  .gr-practice-active .gr-puzzle-hint { font-size: 13px; margin: 0; }
+  .gr-practice-active .gr-puzzle-kicker { font-size: 10px; }
+  .gr-practice-active .gr-puzzle-chip-row { gap: 4px; margin: 0; }
+  .gr-practice-active .gr-stage-shell,
+  .gr-moves-active .gr-stage-shell { grid-column: 1 / -1; order: 3; }
+  .gr-practice-active .gr-puzzle-footer > button:first-child { order: 4; }
+  .gr-practice-active .gr-puzzle-action-row > button:first-child { order: 5; }
+  .gr-practice-active .gr-puzzle-action-row > button:last-child { order: 6; }
+  .gr-practice-active .gr-puzzle-footer > button:last-child { order: 7; }
+  .gr-practice-active .gr-puzzle-action-btn,
+  .gr-practice-active .gr-puzzle-next-btn { width: 100%; min-width: 0; padding: 0 4px; font-size: 12px; gap: 4px; }
+  .gr-practice-active .gr-puzzle-progress-card { grid-column: 1 / -1; order: 8; margin: 0; gap: 4px; }
+  .gr-practice-active .gr-puzzle-progress-title-row { margin: 0; }
+  .gr-practice-active .gr-puzzle-progress-cells { margin-top: 0; flex-wrap: nowrap; gap: 4px; }
+  .gr-practice-active .gr-puzzle-progress-cell { min-width: 0; min-height: 14px; flex: 1 1 0; width: auto; padding: 0; }
+  .gr-practice-active .gr-puzzle-explain,
+  .gr-practice-active .gr-pack-live-card { grid-column: 1 / -1; order: 10; margin: 0; }
+  .gr-moves-active .gr-control-dock { grid-column: 1 / -1; order: 4; margin: 0; }
+  .gr-moves-active .gr-control-dock .gr-dock-btn { min-height: 44px; }
+  .gr-moves-active .gr-moves-head { grid-column: 1 / -1; order: 5; }
+  .gr-moves-active .gr-move-list { grid-column: 1 / -1; order: 6; max-height: 180px; overflow-y: auto; }
+}
+.gr-page-refresh .gr-puzzle-footer .gr-puzzle-next-btn { min-width: 0; padding: 0 8px; font-size: 12px; white-space: nowrap; }
+.gr-page-refresh .gr-puzzle-footer { gap: 6px; }
+.gr-puzzle-details { color: #aeb6c0; font-size: 12px; }
+.gr-puzzle-details summary { padding: 6px 0; cursor: pointer; }
+.gr-puzzle-details .gr-puzzle-chip-row { margin-top: 6px; }
+@media (max-width: 1100px) {
+  .gr-practice-active .gr-puzzle-details { grid-column: 1 / -1; order: 11; }
+  .gr-practice-active .gr-puzzle-card-primary { min-height: 94px; }
+}
+@media (max-width: 1100px) {
+  .gr-practice-active .gr-puzzle-kicker { order: 0; }
+  .gr-practice-active .gr-puzzle-title { order: 1; }
+  .gr-practice-active .gr-puzzle-hint { order: 2; }
+  .gr-practice-active .gr-puzzle-copy { order: 3; }
+}
+
+/* Align practice status, completed count and progress across the full panel. */
+.gr-page-refresh .gr-puzzle-progress-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.gr-page-refresh .gr-puzzle-progress-meta .gr-puzzle-status-pill {
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  font-size: 12px;
+  line-height: 1.4;
+}
+.gr-page-refresh .gr-puzzle-progress-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.gr-page-refresh .gr-puzzle-progress-cells {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 6px;
+  margin-top: 0;
+  padding: 2px;
+}
+.gr-page-refresh .gr-puzzle-progress-cell {
+  flex: 1 1 0;
+  width: auto;
+  min-width: 0;
+  padding: 0;
+  height: 12px;
+}
+.gr-page-refresh .gr-puzzle-footer .gr-puzzle-next-btn {
+  width: 100%;
+}
+@media (max-width: 1100px) {
+  .gr-practice-active .gr-puzzle-progress-card { margin-top: 4px; }
+  .gr-practice-active .gr-puzzle-details { margin-top: 4px; }
+}
+@media (max-width: 1100px) {
+  .gr-practice-active .gr-puzzle-progress-meta .gr-puzzle-status-pill.is-idle:not(.has-failed) {
+    display: none;
+  }
+}

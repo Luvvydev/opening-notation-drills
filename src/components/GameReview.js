@@ -1595,98 +1595,11 @@ function RemoteGameList({ games, selectedId, onSelect, loading, error, emptyMess
   );
 }
 
-function GameReview({ active = true }) {
-  const location = useLocation();
-  const routeModeKey = useRef(null);
-  const [source, setSource] = useState(DEFAULT_SOURCE);
-  const [pgnText, setPgnText] = useState('');
-  const [gameData, setGameData] = useState(null);
-  const reviewTrackedRef = useRef(false);
-  const puzzleTrackedRef = useRef(false);
-  const [currentPly, setCurrentPly] = useState(0);
-  const [orientation, setOrientation] = useState('white');
-  const [engineState, setEngineState] = useState('idle');
-  const [engineError, setEngineError] = useState('');
-  const [depth, setDepth] = useState(DEFAULT_DEPTH);
-  const [multiPv, setMultiPv] = useState(DEFAULT_MULTI_PV);
-  const [positionEval, setPositionEval] = useState(null);
-  const [gameAnalysis, setGameAnalysis] = useState(null);
-  const [gameProgress, setGameProgress] = useState(0);
-  const [statusMessage, setStatusMessage] = useState('Load a game to start review.');
-  const [copied, setCopied] = useState(false);
-  const [remoteUsername, setRemoteUsername] = useState('');
-  const [remoteGames, setRemoteGames] = useState([]);
-  const [remoteLoading, setRemoteLoading] = useState(false);
-  const [remoteError, setRemoteError] = useState('');
-  const [selectedRemoteGameId, setSelectedRemoteGameId] = useState('');
-  const [packBatchSize, setPackBatchSize] = useState(DEFAULT_PACK_BATCH);
-  const [packBuilderOpen, setPackBuilderOpen] = useState(false);
-  const [packSideFilter, setPackSideFilter] = useState('all');
-  const [packSpeedFilter, setPackSpeedFilter] = useState('all');
-  const [packBuilding, setPackBuilding] = useState(false);
-  const [packProgress, setPackProgress] = useState({ current: 0, total: 0, label: '' });
-  const [, setPackSummary] = useState(null);
-  const [packPuzzles, setPackPuzzles] = useState([]);
-  const [trainingSource, setTrainingSource] = useState('single');
-  const [playOrientation, setPlayOrientation] = useState('white');
-  const [playFen, setPlayFen] = useState('start');
-  const [playStatus, setPlayStatus] = useState('Choose a side and start a game.');
-  const [playThinking, setPlayThinking] = useState(false);
-  const [playMoveHistory, setPlayMoveHistory] = useState([]);
-  const [playLastMove, setPlayLastMove] = useState(null);
-  const [playTimeMs, setPlayTimeMs] = useState(DEFAULT_PLAY_TIME);
-  const [playResult, setPlayResult] = useState('');
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  const [sidebarMode, setSidebarMode] = useState('load');
-  const [autoReviewQueued, setAutoReviewQueued] = useState(false);
-  const [playScenario, setPlayScenario] = useState('normal');
-  const [playOpeningKey, setPlayOpeningKey] = useState('');
-  const [activePlayOpeningKey, setActivePlayOpeningKey] = useState('');
-  const [activePlayScenario, setActivePlayScenario] = useState('normal');
-  const [playStarted, setPlayStarted] = useState(false);
-  const [boardWidth, setBoardWidth] = useState(500);
-  const [playerVisuals, setPlayerVisuals] = useState({ white: null, black: null });
-  const [reviewSettings, setReviewSettings] = useState(loadReviewSettings);
-  const [puzzleIndex, setPuzzleIndex] = useState(0);
-  const [puzzleFen, setPuzzleFen] = useState('start');
-  const [puzzleStatus, setPuzzleStatus] = useState('idle');
-  const [puzzleFeedback, setPuzzleFeedback] = useState('Load a game to start training.');
-  const [puzzleResults, setPuzzleResults] = useState({});
-  const [reviewedMistakes, setReviewedMistakes] = useState(loadReviewedMistakes);
-  const [puzzleExplanation, setPuzzleExplanation] = useState(null);
-  const [explanationLoading, setExplanationLoading] = useState(false);
-  const [explanationBranch, setExplanationBranch] = useState('played');
-  const [explanationStep, setExplanationStep] = useState(0);
-  const explanationRequestRef = useRef(0);
-  const [puzzleHintOpen, setPuzzleHintOpen] = useState(false);
-  const [puzzleShowSolution, setPuzzleShowSolution] = useState(false);
-  const [puzzleSelectedSquare, setPuzzleSelectedSquare] = useState(null);
-  const [puzzleLegalTargets, setPuzzleLegalTargets] = useState([]);
-  const [playSelectedSquare, setPlaySelectedSquare] = useState(null);
-  const [playLegalTargets, setPlayLegalTargets] = useState([]);
-  const [playDraggedSquare, setPlayDraggedSquare] = useState(null);
-  const [puzzleConfettiActive, setPuzzleConfettiActive] = useState(false);
-
-  const fileInputRef = useRef(null);
-  const engineRef = useRef(null);
-  const initPromiseRef = useRef(null);
-  const positionRequestRef = useRef(0);
-  const runRequestRef = useRef(0);
-  const cacheRef = useRef(new Map());
-  const remoteAbortRef = useRef(null);
-  const remoteAutoLoadKeyRef = useRef('');
-  const playGameRef = useRef(new Chess());
-  const boardFrameRef = useRef(null);
-  const autoReviewRunningRef = useRef('');
-  const sfxRef = useRef({});
-  const lastReviewPlySoundRef = useRef(0);
-  const puzzleRequestRef = useRef(0);
-  const puzzleAdvanceTimerRef = useRef(null);
-  const puzzleConfettiTimerRef = useRef(null);
-  const copiedTimerRef = useRef(null);
-  const isMountedRef = useRef(true);
-  const poolRef = useRef({ handles: [], initPromise: null, runPromise: null, disposed: false });
-
+// Keep board-derived hooks separate from the workspace render branches so legacy
+// React Hooks lint versions can verify their unconditional call order.
+function useReviewBoardState({
+  gameData, currentPly, reviewSettings, playLastMove, playDraggedSquare, playSelectedSquare, playLegalTargets, puzzleSelectedSquare, puzzleLegalTargets,
+}) {
   const currentPosition = gameData && gameData.positions ? gameData.positions[currentPly] : null;
   const currentMove = gameData && gameData.moves && currentPly > 0 ? gameData.moves[currentPly - 1] : null;
   const currentClassification = currentMove && currentMove.classification ? CLASSIFICATION_META[currentMove.classification] : null;
@@ -1779,6 +1692,106 @@ function GameReview({ active = true }) {
 
     return styles;
   }, [puzzleLegalTargets, puzzleSelectedSquare]);
+  return { currentPosition, currentMove, currentClassification, playerSummary, classificationCounts, currentInsight, boardSquareStyles, boardThemeStyles, pieceThemeUrl, playSquareStyles, puzzleSquareStyles };
+}
+
+function GameReview({ active = true }) {
+  const location = useLocation();
+  const routeModeKey = useRef(null);
+  const [source, setSource] = useState(DEFAULT_SOURCE);
+  const [pgnText, setPgnText] = useState('');
+  const [gameData, setGameData] = useState(null);
+  const reviewTrackedRef = useRef(false);
+  const puzzleTrackedRef = useRef(false);
+  const [currentPly, setCurrentPly] = useState(0);
+  const [orientation, setOrientation] = useState('white');
+  const [engineState, setEngineState] = useState('idle');
+  const [engineError, setEngineError] = useState('');
+  const [depth, setDepth] = useState(DEFAULT_DEPTH);
+  const [multiPv, setMultiPv] = useState(DEFAULT_MULTI_PV);
+  const [positionEval, setPositionEval] = useState(null);
+  const [gameAnalysis, setGameAnalysis] = useState(null);
+  const [gameProgress, setGameProgress] = useState(0);
+  const [statusMessage, setStatusMessage] = useState('Load a game to start review.');
+  const [copied, setCopied] = useState(false);
+  const [remoteUsername, setRemoteUsername] = useState('');
+  const [remoteGames, setRemoteGames] = useState([]);
+  const [remoteLoading, setRemoteLoading] = useState(false);
+  const [remoteError, setRemoteError] = useState('');
+  const [selectedRemoteGameId, setSelectedRemoteGameId] = useState('');
+  const [packBatchSize, setPackBatchSize] = useState(DEFAULT_PACK_BATCH);
+  const [packBuilderOpen, setPackBuilderOpen] = useState(false);
+  const [packSideFilter, setPackSideFilter] = useState('all');
+  const [packSpeedFilter, setPackSpeedFilter] = useState('all');
+  const [packBuilding, setPackBuilding] = useState(false);
+  const [packProgress, setPackProgress] = useState({ current: 0, total: 0, label: '' });
+  const [, setPackSummary] = useState(null);
+  const [packPuzzles, setPackPuzzles] = useState([]);
+  const [trainingSource, setTrainingSource] = useState('single');
+  const [playOrientation, setPlayOrientation] = useState('white');
+  const [playFen, setPlayFen] = useState('start');
+  const [playStatus, setPlayStatus] = useState('Choose a side and start a game.');
+  const [playThinking, setPlayThinking] = useState(false);
+  const [playMoveHistory, setPlayMoveHistory] = useState([]);
+  const [playLastMove, setPlayLastMove] = useState(null);
+  const [playTimeMs, setPlayTimeMs] = useState(DEFAULT_PLAY_TIME);
+  const [playResult, setPlayResult] = useState('');
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [optionsOpen, setOptionsOpen] = useState(false);
+  const [sidebarMode, setSidebarMode] = useState('load');
+  const [autoReviewQueued, setAutoReviewQueued] = useState(false);
+  const [playScenario, setPlayScenario] = useState('normal');
+  const [playOpeningKey, setPlayOpeningKey] = useState('');
+  const [activePlayOpeningKey, setActivePlayOpeningKey] = useState('');
+  const [activePlayScenario, setActivePlayScenario] = useState('normal');
+  const [playStarted, setPlayStarted] = useState(false);
+  const [boardWidth, setBoardWidth] = useState(500);
+  const [playerVisuals, setPlayerVisuals] = useState({ white: null, black: null });
+  const [reviewSettings, setReviewSettings] = useState(loadReviewSettings);
+  const [puzzleIndex, setPuzzleIndex] = useState(0);
+  const [puzzleFen, setPuzzleFen] = useState('start');
+  const [puzzleStatus, setPuzzleStatus] = useState('idle');
+  const [puzzleFeedback, setPuzzleFeedback] = useState('Load a game to start training.');
+  const [puzzleResults, setPuzzleResults] = useState({});
+  const [reviewedMistakes, setReviewedMistakes] = useState(loadReviewedMistakes);
+  const [puzzleExplanation, setPuzzleExplanation] = useState(null);
+  const [explanationLoading, setExplanationLoading] = useState(false);
+  const [explanationBranch, setExplanationBranch] = useState('played');
+  const [explanationStep, setExplanationStep] = useState(0);
+  const explanationRequestRef = useRef(0);
+  const [puzzleHintOpen, setPuzzleHintOpen] = useState(false);
+  const [puzzleShowSolution, setPuzzleShowSolution] = useState(false);
+  const [puzzleSelectedSquare, setPuzzleSelectedSquare] = useState(null);
+  const [puzzleLegalTargets, setPuzzleLegalTargets] = useState([]);
+  const [playSelectedSquare, setPlaySelectedSquare] = useState(null);
+  const [playLegalTargets, setPlayLegalTargets] = useState([]);
+  const [playDraggedSquare, setPlayDraggedSquare] = useState(null);
+  const [puzzleConfettiActive, setPuzzleConfettiActive] = useState(false);
+
+  const fileInputRef = useRef(null);
+  const engineRef = useRef(null);
+  const initPromiseRef = useRef(null);
+  const positionRequestRef = useRef(0);
+  const runRequestRef = useRef(0);
+  const cacheRef = useRef(new Map());
+  const remoteAbortRef = useRef(null);
+  const remoteAutoLoadKeyRef = useRef('');
+  const playGameRef = useRef(new Chess());
+  const boardFrameRef = useRef(null);
+  const workspaceRef = useRef(null);
+  const autoReviewRunningRef = useRef('');
+  const sfxRef = useRef({});
+  const lastReviewPlySoundRef = useRef(0);
+  const puzzleRequestRef = useRef(0);
+  const puzzleAdvanceTimerRef = useRef(null);
+  const puzzleConfettiTimerRef = useRef(null);
+  const copiedTimerRef = useRef(null);
+  const isMountedRef = useRef(true);
+  const poolRef = useRef({ handles: [], initPromise: null, runPromise: null, disposed: false });
+
+  const { currentPosition, currentMove, currentClassification, playerSummary, classificationCounts, currentInsight, boardSquareStyles, boardThemeStyles, pieceThemeUrl, playSquareStyles, puzzleSquareStyles } = useReviewBoardState({
+    gameData, currentPly, reviewSettings, playLastMove, playDraggedSquare, playSelectedSquare, playLegalTargets, puzzleSelectedSquare, puzzleLegalTargets,
+  });
   const hasLoadedGame = Boolean(gameData && gameData.moves && gameData.moves.length);
   const hasFullReview = Boolean(gameAnalysis && gameAnalysis.positions && gameAnalysis.positions.length);
   // The existing component uses an explicit lint scope for its subsequent hooks.
@@ -1825,6 +1838,11 @@ function GameReview({ active = true }) {
 
   const isPlayMode = sidebarMode === 'play';
   const isPuzzleMode = sidebarMode === 'puzzles';
+  const isCompactPractice = isPuzzleMode && activePuzzleQueue.length > 0;
+
+  useEffect(() => {
+    setOptionsOpen(false);
+  }, [sidebarMode]);
   const stagePlayerSummary = trainingSource === 'pack' && currentPuzzle
     ? {
         white: {
@@ -3229,15 +3247,17 @@ function GameReview({ active = true }) {
       frame = window.requestAnimationFrame(() => {
         const viewportWidth = typeof window !== 'undefined' ? Number(window.innerWidth) || 0 : 0;
         const frameWidth = node.clientWidth || 0;
-        const mobileCap = Math.max(260, viewportWidth - 24);
-        const desktopCap = viewportWidth >= 1500
-          ? Math.min(700, Math.max(500, Math.floor((window.innerHeight || 850) * 0.72)))
-          : 500;
+        const mobileCap = Math.max(160, viewportWidth - 20);
+        const viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+        const workspaceTop = workspaceRef.current ? Math.max(0, workspaceRef.current.getBoundingClientRect().top) : 80;
+        // Reserve space for instructions, progress and touch controls before sizing the board.
+        const practiceCap = Math.max(160, Math.floor(viewportHeight - workspaceTop - 230));
+        const desktopCap = Math.min(720, Math.max(320, (window.innerHeight || 850) - 160));
 
         let nextWidth;
-        if (viewportWidth && viewportWidth < 1100) {
+        if (viewportWidth && viewportWidth <= 1100) {
           const mobileWidth = frameWidth || mobileCap;
-          nextWidth = Math.max(260, Math.min(mobileCap, mobileWidth));
+          nextWidth = Math.max(160, Math.min(mobileCap, mobileWidth, isCompactPractice || sidebarMode === 'moves' ? practiceCap : 620));
         } else {
           const desktopWidth = frameWidth || desktopCap;
           nextWidth = Math.max(260, Math.min(desktopCap, desktopWidth));
@@ -3254,15 +3274,17 @@ function GameReview({ active = true }) {
       observer.observe(node);
     }
     window.addEventListener('resize', update);
+    if (window.visualViewport) window.visualViewport.addEventListener('resize', update);
 
     return () => {
       window.removeEventListener('resize', update);
+      if (window.visualViewport) window.visualViewport.removeEventListener('resize', update);
       if (observer) observer.disconnect();
       if (frame) {
         window.cancelAnimationFrame(frame);
       }
     };
-  }, [active]);
+  }, [active, isCompactPractice, sidebarMode]);
 
   useEffect(() => {
     if (!active) return undefined;
@@ -3345,10 +3367,10 @@ function GameReview({ active = true }) {
   const statusTone = engineState === 'error' ? 'error' : engineState === 'ready' ? 'ready' : engineState === 'idle' ? 'idle' : 'working';
 
   return (
-    <div className="gr-page">
+    <div className={`gr-page gr-page-refresh${isCompactPractice ? ' gr-practice-active' : ''}${sidebarMode === 'moves' ? ' gr-moves-active' : ''}`}>
       <TopNav title="Game Review" hideHero />
 
-      <div className="gr-shell gr-shell-review" style={shellProgressStyle}>
+      <div className="gr-shell gr-shell-review" style={shellProgressStyle} ref={workspaceRef}>
         <div className="gr-top-progress-shell" aria-hidden="true">
           <div className="gr-top-progress-track">
             <div className="gr-top-progress-fill" />
@@ -3442,91 +3464,137 @@ function GameReview({ active = true }) {
                 <div className="gr-panel-kicker">Game Review</div>
                 <h2>{sidebarHeading}</h2>
               </div>
-              <div className="gr-sidebar-actions">
-                <button
-                  type="button"
-                  className={`${sidebarMode === 'load' || (!hasLoadedGame && !activePuzzleQueue.length) ? 'gr-panel-gear is-active' : 'gr-panel-gear'} gr-tooltip-anchor`}
-                  onClick={() => setSidebarMode('load')}
-                  aria-label="Load games or paste PGN"
-                  data-tooltip="Load games or PGN"
-                >
-                  <FontAwesomeIcon icon={faUpload} />
-                </button>
-                <button
-                  type="button"
-                  className={`${shouldShowOverviewView ? 'gr-panel-gear is-active' : 'gr-panel-gear'} gr-tooltip-anchor`}
-                  onClick={() => canOpenSingleGameViews && setSidebarMode('overview')}
-                  aria-label="Show accuracy overview"
-                  data-tooltip="Accuracy overview"
-                  disabled={!canOpenSingleGameViews}
-                >
-                  <FontAwesomeIcon icon={faBars} />
-                </button>
-                <button
-                  type="button"
-                  className={`${isPuzzleMode ? 'gr-panel-gear is-active' : 'gr-panel-gear'}${showPracticeAttention ? ' is-attention' : ''} gr-tooltip-anchor`}
-                  onClick={() => (hasLoadedGame || activePuzzleQueue.length) && setSidebarMode('puzzles')}
-                  aria-label={mistakePuzzleCount ? `Practice ${mistakePuzzleCount} mistakes from this game` : 'Create practice puzzles from your mistakes'}
-                  data-tooltip={mistakePuzzleCount ? `Practice your mistakes (${mistakePuzzleCount})` : 'Practice mistakes'}
-                  disabled={!hasLoadedGame && !activePuzzleQueue.length}
-                >
-                  <FontAwesomeIcon icon={faChessKnight} />
-                  {showPracticeAttention ? <span className="gr-gear-badge" aria-hidden="true">{mistakePuzzleCount}</span> : null}
-                </button>
-                <button
-                  type="button"
-                  className={`${canOpenSingleGameViews && sidebarMode === 'moves' ? 'gr-panel-gear is-active' : 'gr-panel-gear'} gr-tooltip-anchor`}
-                  onClick={() => canOpenSingleGameViews && setSidebarMode('moves')}
-                  aria-label="Open Move Review"
-                  data-tooltip="Move Review"
-                  disabled={!canOpenSingleGameViews}
-                >
-                  <FontAwesomeIcon icon={faListOl} />
-                </button>
-                <button
-                  type="button"
-                  className={`${isPlayMode ? 'gr-panel-gear is-active' : 'gr-panel-gear'} gr-tooltip-anchor`}
-                  onClick={() => setSidebarMode('play')}
-                  aria-label="Play vs Computer"
-                  data-tooltip="Play vs Computer"
-                >
-                  <FontAwesomeIcon icon={faPlay} />
-                </button>
-                <button
-                  type="button"
-                  className={`${settingsOpen ? 'gr-panel-gear is-active' : 'gr-panel-gear'} gr-tooltip-anchor`}
-                  onClick={() => setSettingsOpen((value) => !value)}
-                  aria-expanded={settingsOpen ? 'true' : 'false'}
-                  aria-label="Review settings"
-                  data-tooltip="Review settings"
-                >
-                  <FontAwesomeIcon icon={faCog} />
-                </button>
+              <div className="gr-workspace-heading-actions">
+                {isCompactPractice ? <span className="gr-session-count">{puzzleIndex + 1} / {activePuzzleQueue.length}</span> : null}
+                <button type="button" className="gr-button gr-options-toggle" onClick={() => setOptionsOpen((value) => !value)} aria-expanded={optionsOpen} aria-controls="gr-workspace-options">Options</button>
               </div>
             </div>
+            {optionsOpen ? (
+              <div id="gr-workspace-options" className="gr-workspace-options">
+                <div className="gr-sidebar-actions">
+                  <button
+                    type="button"
+                    className={`${sidebarMode === 'load' || (!hasLoadedGame && !activePuzzleQueue.length) ? 'gr-panel-gear is-active' : 'gr-panel-gear'} gr-tooltip-anchor`}
+                    onClick={() => setSidebarMode('load')}
+                    aria-label="Load games or paste PGN"
+                    data-tooltip="Load games or PGN"
+                  >
+                    <FontAwesomeIcon icon={faUpload} /><span>Import</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={`${shouldShowOverviewView ? 'gr-panel-gear is-active' : 'gr-panel-gear'} gr-tooltip-anchor`}
+                    onClick={() => canOpenSingleGameViews && setSidebarMode('overview')}
+                    aria-label="Show accuracy overview"
+                    data-tooltip="Accuracy overview"
+                    disabled={!canOpenSingleGameViews}
+                  >
+                    <FontAwesomeIcon icon={faBars} /><span>Overview</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={`${isPuzzleMode ? 'gr-panel-gear is-active' : 'gr-panel-gear'}${showPracticeAttention ? ' is-attention' : ''} gr-tooltip-anchor`}
+                    onClick={() => (hasLoadedGame || activePuzzleQueue.length) && setSidebarMode('puzzles')}
+                    aria-label={mistakePuzzleCount ? `Practice ${mistakePuzzleCount} mistakes from this game` : 'Create practice puzzles from your mistakes'}
+                    data-tooltip={mistakePuzzleCount ? `Practice your mistakes (${mistakePuzzleCount})` : 'Practice mistakes'}
+                    disabled={!hasLoadedGame && !activePuzzleQueue.length}
+                  >
+                    <FontAwesomeIcon icon={faChessKnight} /><span>Practice</span>
+                    {showPracticeAttention ? <span className="gr-gear-badge" aria-hidden="true">{mistakePuzzleCount}</span> : null}
+                  </button>
+                  <button
+                    type="button"
+                    className={`${canOpenSingleGameViews && sidebarMode === 'moves' ? 'gr-panel-gear is-active' : 'gr-panel-gear'} gr-tooltip-anchor`}
+                    onClick={() => canOpenSingleGameViews && setSidebarMode('moves')}
+                    aria-label="Open Move Review"
+                    data-tooltip="Move Review"
+                    disabled={!canOpenSingleGameViews}
+                  >
+                    <FontAwesomeIcon icon={faListOl} /><span>Moves</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={`${isPlayMode ? 'gr-panel-gear is-active' : 'gr-panel-gear'} gr-tooltip-anchor`}
+                    onClick={() => setSidebarMode('play')}
+                    aria-label="Play vs Computer"
+                    data-tooltip="Play vs Computer"
+                  >
+                    <FontAwesomeIcon icon={faPlay} /><span>Computer</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={`${settingsOpen ? 'gr-panel-gear is-active' : 'gr-panel-gear'} gr-tooltip-anchor`}
+                    onClick={() => setSettingsOpen((value) => !value)}
+                    aria-expanded={settingsOpen ? 'true' : 'false'}
+                    aria-label="Review settings"
+                    data-tooltip="Review settings"
+                  >
+                    <FontAwesomeIcon icon={faCog} /><span>Settings</span>
+                  </button>
+                </div>
 
-            {settingsOpen ? (
-              <div className="gr-settings-drawer gr-settings-drawer-shell">
-                {sidebarMode === 'play' ? (
-                  <div className="gr-settings-row">
-                    <label className="gr-compact-field"><span>Computer thinking time</span>
-                      <select value={playTimeMs} onChange={(event) => setPlayTimeMs(parseInt(event.target.value, 10))}>
-                        <option value={250}>Fast</option><option value={500}>Normal</option><option value={1000}>Slow</option>
-                      </select>
-                    </label>
+                {settingsOpen ? (
+                  <div className="gr-settings-drawer gr-settings-drawer-shell">
+                    {sidebarMode === 'play' ? (
+                      <div className="gr-settings-row">
+                        <label className="gr-compact-field"><span>Computer thinking time</span>
+                          <select value={playTimeMs} onChange={(event) => setPlayTimeMs(parseInt(event.target.value, 10))}>
+                            <option value={250}>Fast</option><option value={500}>Normal</option><option value={1000}>Slow</option>
+                          </select>
+                        </label>
+                      </div>
+                    ) : sidebarMode === 'overview' || sidebarMode === 'moves' || sidebarMode === 'puzzles' ? (
+                      <div className="gr-settings-row">
+                        <label className="gr-compact-field"><span>Depth</span><select value={depth} onChange={(event) => setDepth(parseInt(event.target.value, 10))}>{[8, 10, 12, 14, 16].map((value) => <option key={value} value={value}>{value}</option>)}</select></label>
+                        <label className="gr-compact-field"><span>Lines</span><select value={multiPv} onChange={(event) => setMultiPv(parseInt(event.target.value, 10))}>{[1, 2, 3].map((value) => <option key={value} value={value}>{value}</option>)}</select></label>
+                      </div>
+                    ) : (
+                      <div className="gr-inline-actions">
+                        <button type="button" className="gr-button" onClick={handleUseSample}><FontAwesomeIcon icon={faPlay} /><span>Sample</span></button>
+                        <button type="button" className="gr-button" onClick={handleCopyPgn} disabled={!gameData || !gameData.pgn}><FontAwesomeIcon icon={faCopy} /><span>{copied ? 'Copied' : 'Copy PGN'}</span></button>
+                        <button type="button" className="gr-button" onClick={() => fileInputRef.current && fileInputRef.current.click()}><FontAwesomeIcon icon={faUpload} /><span>Upload</span></button>
+                      </div>
+                    )}
                   </div>
-                ) : sidebarMode === 'overview' || sidebarMode === 'moves' || sidebarMode === 'puzzles' ? (
-                  <div className="gr-settings-row">
-                    <label className="gr-compact-field"><span>Depth</span><select value={depth} onChange={(event) => setDepth(parseInt(event.target.value, 10))}>{[8, 10, 12, 14, 16].map((value) => <option key={value} value={value}>{value}</option>)}</select></label>
-                    <label className="gr-compact-field"><span>Lines</span><select value={multiPv} onChange={(event) => setMultiPv(parseInt(event.target.value, 10))}>{[1, 2, 3].map((value) => <option key={value} value={value}>{value}</option>)}</select></label>
-                  </div>
-                ) : (
-                  <div className="gr-inline-actions">
-                    <button type="button" className="gr-button" onClick={handleUseSample}><FontAwesomeIcon icon={faPlay} /><span>Sample</span></button>
-                    <button type="button" className="gr-button" onClick={handleCopyPgn} disabled={!gameData || !gameData.pgn}><FontAwesomeIcon icon={faCopy} /><span>{copied ? 'Copied' : 'Copy PGN'}</span></button>
-                    <button type="button" className="gr-button" onClick={() => fileInputRef.current && fileInputRef.current.click()}><FontAwesomeIcon icon={faUpload} /><span>Upload</span></button>
-                  </div>
-                )}
+                ) : null}
+                {isCompactPractice ? (
+                  <section className="gr-view-section gr-puzzle-build-pack">
+                    <div className="gr-puzzle-build-topline">
+                      <span>{packTrainingLabel}</span>
+                      <button
+                        type="button"
+                        className="gr-puzzle-build-toggle"
+                        onClick={() => setPackBuilderOpen((value) => !value)}
+                        aria-expanded={packBuilderOpen ? 'true' : 'false'}
+                      >
+                        Build Pack
+                      </button>
+                    </div>
+
+                    {packBuilderOpen ? (
+                      <div className="gr-puzzle-build-controls">
+                        <label className="gr-puzzle-build-field">
+                          <span>Recent games</span>
+                          <select value={packBatchSize} onChange={(event) => setPackBatchSize(parseInt(event.target.value, 10))} aria-label="Recent games for Mistake Pack">
+                            {[10, 20, 30].map((value) => (
+                              <option key={value} value={value}>Last {value}</option>
+                            ))}
+                          </select>
+                        </label>
+                        <button
+                          type="button"
+                          className="gr-button gr-button-primary gr-puzzle-build-btn"
+                          onClick={handleBuildPersonalPack}
+                          disabled={!canCreateRecentPack}
+                          aria-label="Create Mistake Pack from recent games"
+                        >
+                          <FontAwesomeIcon icon={packBuilding ? faSpinner : faChessKnight} spin={packBuilding} />
+                          <span>{packBuilding ? 'Building...' : 'Create Pack'}</span>
+                        </button>
+                      </div>
+                    ) : null}
+                      </section>
+                ) : null}
               </div>
             ) : null}
 
@@ -3726,42 +3794,7 @@ function GameReview({ active = true }) {
                     </section>
                   ) : (
                     <>
-                      <section className="gr-view-section gr-puzzle-build-pack">
-                        <div className="gr-puzzle-build-topline">
-                          <span>{packTrainingLabel}</span>
-                          <button
-                            type="button"
-                            className="gr-puzzle-build-toggle"
-                            onClick={() => setPackBuilderOpen((value) => !value)}
-                            aria-expanded={packBuilderOpen ? 'true' : 'false'}
-                          >
-                            Build Pack
-                          </button>
-                        </div>
 
-                        {packBuilderOpen ? (
-                          <div className="gr-puzzle-build-controls">
-                            <label className="gr-puzzle-build-field">
-                              <span>Recent games</span>
-                              <select value={packBatchSize} onChange={(event) => setPackBatchSize(parseInt(event.target.value, 10))} aria-label="Recent games for Mistake Pack">
-                                {[10, 20, 30].map((value) => (
-                                  <option key={value} value={value}>Last {value}</option>
-                                ))}
-                              </select>
-                            </label>
-                            <button
-                              type="button"
-                              className="gr-button gr-button-primary gr-puzzle-build-btn"
-                              onClick={handleBuildPersonalPack}
-                              disabled={!canCreateRecentPack}
-                              aria-label="Create Mistake Pack from recent games"
-                            >
-                              <FontAwesomeIcon icon={packBuilding ? faSpinner : faChessKnight} spin={packBuilding} />
-                              <span>{packBuilding ? 'Building...' : 'Create Pack'}</span>
-                            </button>
-                          </div>
-                        ) : null}
-                      </section>
 
                       {isPersonalPackPopulating ? (
                         <section className="gr-view-section gr-pack-live-card">
@@ -3776,10 +3809,14 @@ function GameReview({ active = true }) {
                       <section className="gr-view-section gr-puzzle-card gr-puzzle-card-primary">
                         <div className="gr-puzzle-kicker">{currentPuzzle ? `${currentPuzzle.sideLabel} to move` : 'Training spot'}</div>
                         <div className="gr-puzzle-title">{currentPuzzle ? currentPuzzle.goalLabel : 'Find the move'}</div>
-                        <div className="gr-puzzle-copy">{puzzleFeedback}</div>
+                        <div className="gr-puzzle-copy" role="status" aria-live="polite">{puzzleFeedback}</div>
                         {puzzleHintOpen && currentPuzzle ? (
                           <div className="gr-puzzle-hint">{getPuzzleHintText(currentPuzzle)}</div>
                         ) : null}
+                      </section>
+
+                      <details className="gr-puzzle-details">
+                        <summary>Position details</summary>
                         {currentPuzzle ? (
                           <div className="gr-puzzle-chip-row">
                             <span className={`gr-puzzle-chip gr-puzzle-chip-${currentPuzzle.classification}`}>{CLASSIFICATION_META[currentPuzzle.classification] ? CLASSIFICATION_META[currentPuzzle.classification].label : currentPuzzle.classification}</span>
@@ -3788,7 +3825,7 @@ function GameReview({ active = true }) {
                             {currentPuzzle.themeLabel ? <span className="gr-puzzle-chip">{currentPuzzle.themeLabel}</span> : null}
                           </div>
                         ) : null}
-                      </section>
+                      </details>
 
                       <div className="gr-puzzle-action-row">
                         <button type="button" className="gr-button gr-button-secondary gr-puzzle-action-btn" onClick={() => setPuzzleHintOpen((value) => !value)} disabled={!currentPuzzle}>
@@ -3829,7 +3866,20 @@ function GameReview({ active = true }) {
                       <section className="gr-puzzle-stat-card gr-puzzle-progress-card">
                         <div className="gr-puzzle-progress-title-row">
                           <div className="gr-puzzle-stat-label">Progress</div>
-                          <div className="gr-puzzle-progress-mini-count">{solvedPuzzleCount}/{activePuzzleQueue.length}</div>
+                          <div className="gr-puzzle-progress-meta">
+                            <div className={`gr-puzzle-status-pill is-${puzzleStatus}${currentPuzzleResult ? ` has-${currentPuzzleResult}` : ''}`}>
+                              {puzzleStatus === 'checking'
+                                ? 'Checking...'
+                                : puzzleStatus === 'solved'
+                                  ? 'Solved'
+                                  : puzzleStatus === 'revealed'
+                                    ? 'Shown'
+                                    : currentPuzzleResult === 'failed'
+                                      ? 'Missed'
+                                      : 'Live'}
+                            </div>
+                            <div className="gr-puzzle-progress-mini-count">{solvedPuzzleCount}/{activePuzzleQueue.length}</div>
+                          </div>
                         </div>
                         
                         <div className="gr-puzzle-progress-cells">
@@ -3847,6 +3897,8 @@ function GameReview({ active = true }) {
                                 key={puzzle.id}
                                 type="button"
                                 className={`gr-puzzle-progress-cell ${className}${isActive ? ' is-active' : ''}`}
+                                aria-label={`Puzzle ${index + 1}: ${result || 'not completed'}`}
+                                aria-current={isActive ? 'step' : undefined}
                                 onClick={() => setPuzzleIndex(index)}
                               />
                             );
@@ -3864,24 +3916,14 @@ function GameReview({ active = true }) {
                           <FontAwesomeIcon icon={faStepBackward} />
                           <span>Previous</span>
                         </button>
-                        <div className={`gr-puzzle-status-pill is-${puzzleStatus}${currentPuzzleResult ? ` has-${currentPuzzleResult}` : ''}`}>
-                          {puzzleStatus === 'checking'
-                            ? 'Checking...'
-                            : puzzleStatus === 'solved'
-                              ? 'Solved'
-                              : puzzleStatus === 'revealed'
-                                ? 'Shown'
-                                : currentPuzzleResult === 'failed'
-                                  ? 'Missed'
-                                  : 'Live'}
-                        </div>
+
                         <button
                           type="button"
                           className="gr-button gr-button-primary gr-puzzle-next-btn"
                           onClick={goToNextPuzzle}
                           disabled={puzzleIndex >= activePuzzleQueue.length - 1}
                         >
-                          <span>Next Puzzle</span>
+                          <span>Next</span>
                           <FontAwesomeIcon icon={faStepForward} />
                         </button>
                       </div>
