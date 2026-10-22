@@ -443,7 +443,7 @@ class Home extends Component {
     const footerYear = new Date().getFullYear();
 
 
-    const library = this.props.location.pathname === "/openings/library";
+    const library = this.props.location.pathname.replace(/\/+$/, '') === "/openings/library";
     const hasFilters = !!q || colorActive || progressActive;
     const shown = sorted;
     const latest = OPENINGS.map((opening) => ({ opening, time: Math.max(Number((this.state.progress.openings[opening.key] || {}).lastPlayedAt) || 0, Number((this.state.learnProgress.openings[opening.key] || {}).lastPlayedAt) || 0) })).filter((item) => item.time > 0).sort((a, b) => b.time - a.time)[0];

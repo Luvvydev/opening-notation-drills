@@ -17,7 +17,7 @@ export default function ProtectedRoute({ component: Component, ...rest }) {
           const search =
             props.location && props.location.search ? props.location.search : "";
           const from = `${pathname}${search}`;
-          const signupFirst = pathname === "/my-games";
+          const signupFirst = pathname.replace(/\/+$/, '') === "/my-games";
           const reason = signupFirst ? "my_games_requires_account" : "protected_route";
           const signupSearch = signupFirst
             ? `?source=my_games&from=${encodeURIComponent(from)}&reason=${encodeURIComponent(reason)}`

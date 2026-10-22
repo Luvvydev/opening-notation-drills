@@ -19,6 +19,7 @@ const navigation = [
 
 export default function WorkspaceShell({ children }) {
   const location = useLocation();
+  const pathname = location.pathname.replace(/\/+$/, '') || '/';
   const { user } = useAuth();
   const [expanded, setExpanded] = useState(() => {
     try { return localStorage.getItem('chessdrills.sidebar.expanded') !== 'false'; } catch (_) { return true; }
@@ -28,7 +29,7 @@ export default function WorkspaceShell({ children }) {
   const [reviewMode, setReviewMode] = useState('review');
   const drawer = useRef(null);
   const toggle = useRef(null);
-  const reviewing = ['/my-games', '/review'].includes(location.pathname.replace(/\/+$/, ''));
+  const reviewing = ['/my-games', '/review'].includes(pathname);
   const activeMode = reviewMode;
 
   useEffect(() => {
@@ -73,8 +74,8 @@ export default function WorkspaceShell({ children }) {
 
   const selected = (item) => item.mode
     ? reviewing && activeMode === item.mode
-    : item.to === '/openings/library' ? location.pathname.startsWith('/openings') || location.pathname === '/demo'
-      : location.pathname === item.to;
+    : item.to === '/openings/library' ? pathname.startsWith('/openings') || pathname === '/demo'
+      : pathname === item.to;
   const toggleExpanded = () => {
     setExpanded((value) => {
       try { localStorage.setItem('chessdrills.sidebar.expanded', String(!value)); } catch (_) {}
@@ -98,7 +99,7 @@ export default function WorkspaceShell({ children }) {
             </Link>)}
           </nav>
           <div className="workspace-rail-bottom">
-            <Link to={user ? '/profile' : '/signup'} className={`workspace-nav-link ${location.pathname === '/profile' ? 'is-active' : ''}`} title={user ? 'Profile' : 'Create account'}><WorkspaceIcon name="profile" /><span>{user ? 'Profile' : 'Create account'}</span></Link>
+            <Link to={user ? '/profile' : '/signup'} className={`workspace-nav-link ${pathname === '/profile' ? 'is-active' : ''}`} title={user ? 'Profile' : 'Create account'}><WorkspaceIcon name="profile" /><span>{user ? 'Profile' : 'Create account'}</span></Link>
             <Link to="/about" className="workspace-nav-link" title="Membership"><WorkspaceIcon name="info" /><span>Membership</span></Link>
             {!mobile && <button type="button" className="workspace-nav-link workspace-collapse" title={expanded ? 'Collapse sidebar' : 'Expand sidebar'} aria-label={expanded ? 'Collapse sidebar' : 'Expand sidebar'} aria-expanded={expanded} onClick={toggleExpanded}><WorkspaceIcon name="collapse" /><span>Collapse</span></button>}
           </div>

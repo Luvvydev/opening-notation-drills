@@ -54,8 +54,10 @@ test('reset cancels a pending automatic reply', () => {
   jest.useRealTimers();
 });
 
-test('full library search and side filters combine, then clear without losing openings', () => {
-  const screen = render(<MemoryRouter initialEntries={['/openings/library']}><Route path="/openings/library" component={Home} /></MemoryRouter>);
+test.each(['/openings/library', '/openings/library/'])('full library search and filters work at %s', (pathname) => {
+  const screen = render(<MemoryRouter initialEntries={[pathname]}><Route path="/openings/library" component={Home} /></MemoryRouter>);
+  expect(screen.getByRole('heading', { name: 'Opening library' }).hidden).toBe(false);
+  expect(screen.container.querySelector('.home-workspace-hero')).toBeNull();
   const cards = () => screen.container.querySelectorAll('.home-opening-card');
   const total = cards().length;
   expect(total).toBeGreaterThan(20);

@@ -24,8 +24,8 @@ beforeEach(() => {
   window.matchMedia = () => ({ matches: false, addListener: jest.fn(), removeListener: jest.fn() });
 });
 
-test('review state survives section changes and is cleared when the account changes', () => {
-  const View = () => <MemoryRouter initialEntries={['/my-games']}><Link to="/">Home</Link><Link to="/my-games?mode=puzzles">Puzzles</Link><Route exact path="/" render={() => <p>Homepage</p>} /><ReviewWorkspace /></MemoryRouter>;
+test.each(['/my-games', '/my-games/', '/review/'])('review state at %s survives section and account changes correctly', (url) => {
+  const View = () => <MemoryRouter initialEntries={[url]}><Link to="/">Home</Link><Link to="/my-games?mode=puzzles">Puzzles</Link><Route exact path="/" render={() => <p>Homepage</p>} /><ReviewWorkspace /></MemoryRouter>;
   const screen = render(<View />);
   fireEvent.click(screen.getByText('Review session 0'));
   fireEvent.click(screen.getByText('Home'));
@@ -37,11 +37,25 @@ test('review state survives section changes and is cleared when the account chan
   expect(screen.getByText('Review session 0')).toBeTruthy();
 });
 
-test('guest review shortcut keeps the requested puzzle mode through signup', () => {
+test.each(['/my-games?mode=puzzles', '/my-games/?mode=puzzles'])('guest review shortcut %s keeps the puzzle mode through signup', (url) => {
   useAuth.mockReturnValue({ user: null, authLoading: false });
-  const screen = render(<MemoryRouter initialEntries={['/my-games?mode=puzzles']}><ReviewWorkspace /><Route path="/signup" render={({ location }) => <p>{location.search}</p>} /></MemoryRouter>);
+  const screen = render(<MemoryRouter initialEntries={[url]}><ReviewWorkspace /><Route path="/signup" render={({ location }) => <p>{location.search}</p>} /></MemoryRouter>);
   expect(screen.getByText(/from=.*mode%3Dpuzzles/)).toBeTruthy();
   expect(screen.queryByText('Review session 0')).toBeNull();
+});
+
+test.each([
+  ['/my-games/', 'Game Review'],
+  ['/review/', 'Game Review'],
+  ['/openings/library/', 'Openings'],
+  ['/demo/', 'Openings'],
+  ['/practice/', 'Notation Practice'],
+  ['/leaderboards/', 'Leaderboards'],
+  ['/profile/', 'Profile'],
+  ['/', 'Home']
+])('sidebar highlights the correct item at %s', (url, label) => {
+  const screen = render(<MemoryRouter initialEntries={[url]}><WorkspaceShell><p>Page content</p></WorkspaceShell></MemoryRouter>);
+  expect(screen.getByRole('link', { name: label }).classList.contains('is-active')).toBe(true);
 });
 
 test('desktop rail collapses and mobile drawer closes with Escape', () => {
