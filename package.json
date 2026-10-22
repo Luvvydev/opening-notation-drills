@@ -26,6 +26,7 @@
     "deploy": "gh-pages -d build --dotfiles",
     "start": "react-scripts start",
     "build": "react-scripts build",
+    "postbuild": "node scripts/create-route-pages.js",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
