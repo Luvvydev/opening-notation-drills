@@ -1542,10 +1542,10 @@ function PlayerAvatar({ name, avatarUrl, className }) {
   );
 }
 
-function RemoteGameList({ games, selectedId, onSelect, loading, error, emptyMessage, focusUsername }) {
+function RemoteGameList({ games, selectedId, onSelect, loading, openingId, error, emptyMessage, focusUsername }) {
   if (loading) {
     return (
-      <div className="gr-remote-state">
+      <div className="gr-remote-state" role="status" aria-live="polite">
         <FontAwesomeIcon icon={faSpinner} spin />
         <span>Loading recent games…</span>
       </div>
@@ -1572,6 +1572,8 @@ function RemoteGameList({ games, selectedId, onSelect, loading, error, emptyMess
             type="button"
             className={isActive ? 'gr-remote-item is-active' : 'gr-remote-item'}
             onClick={() => onSelect(game)}
+            disabled={Boolean(openingId)}
+            aria-busy={openingId === game.id}
             aria-label={`Review ${game.white.name} versus ${game.black.name}`}
           >
             <div className="gr-remote-avatars">
@@ -1586,6 +1588,7 @@ function RemoteGameList({ games, selectedId, onSelect, loading, error, emptyMess
                 <span className={`gr-remote-result gr-remote-result-${perspective.className}`}>{perspective.label}</span>
               </div>
               <div className="gr-remote-meta">
+                {openingId === game.id ? <span><FontAwesomeIcon icon={faSpinner} spin /> Opening review…</span> : null}
                 <span>{game.timeControl}</span>
                 <span>{game.movesNb || 0} plies</span>
                 <span>{game.date}</span>
@@ -1747,6 +1750,8 @@ function GameReview({ active = true }) {
   const [remoteLoading, setRemoteLoading] = useState(false);
   const [remoteError, setRemoteError] = useState('');
   const [selectedRemoteGameId, setSelectedRemoteGameId] = useState('');
+  const [openingRemoteGameId, setOpeningRemoteGameId] = useState('');
+  const remoteSelectionRef = useRef(false);
   const [packBatchSize, setPackBatchSize] = useState(DEFAULT_PACK_BATCH);
   const [packBuilderOpen, setPackBuilderOpen] = useState(false);
   const [packSideFilter, setPackSideFilter] = useState('all');
@@ -2484,6 +2489,7 @@ function GameReview({ active = true }) {
   }, [gameData]);
 
   const handleLoadRemoteGames = useCallback(async () => {
+    if (remoteSelectionRef.current) return;
     const username = remoteUsername.trim();
     if (!username) {
       setRemoteError('Enter a username first.');
@@ -2491,13 +2497,15 @@ function GameReview({ active = true }) {
       return;
     }
 
+    const requestKey = `${source}|${username.toLowerCase()}`;
+    if (remoteAbortRef.current && remoteAutoLoadKeyRef.current === requestKey) return;
     if (remoteAbortRef.current) {
       try { remoteAbortRef.current.abort(); } catch (_) {}
     }
     const controller = new window.AbortController();
     remoteAbortRef.current = controller;
 
-    remoteAutoLoadKeyRef.current = `${source}|${username.toLowerCase()}`;
+    remoteAutoLoadKeyRef.current = requestKey;
     setRemoteLoading(true);
     setRemoteError('');
     setRemoteGames([]);
@@ -2506,43 +2514,43 @@ function GameReview({ active = true }) {
     try {
       const loader = source === 'lichess' ? getLichessUserRecentGames : getChessComUserRecentGames;
       const games = await loader(username, controller.signal);
+      if (controller.signal.aborted || remoteAbortRef.current !== controller) return;
       setRemoteGames(games);
       if (!games.length) {
         setRemoteError(`No recent ${source === 'lichess' ? 'Lichess' : 'Chess.com'} games were found.`);
       }
     } catch (_) {
-      if (controller.signal.aborted) return;
+      if (controller.signal.aborted || remoteAbortRef.current !== controller) return;
       setRemoteError(`Could not load games from ${source === 'lichess' ? 'Lichess' : 'Chess.com'}.`);
     } finally {
       if (remoteAbortRef.current === controller) {
         remoteAbortRef.current = null;
+        setRemoteLoading(false);
       }
-      setRemoteLoading(false);
     }
   }, [remoteUsername, source]);
 
   useEffect(() => {
     const username = remoteUsername.trim();
-
-    if (!username) {
-      remoteAutoLoadKeyRef.current = '';
-      setRemoteError('');
-      setRemoteGames([]);
-      setSelectedRemoteGameId('');
-      return undefined;
-    }
-
-    if (username.length < 2) {
-      return undefined;
-    }
-
     const nextKey = `${source}|${username.toLowerCase()}`;
-    if (remoteAutoLoadKeyRef.current === nextKey) {
-      return undefined;
+    if (remoteAutoLoadKeyRef.current === nextKey) return undefined;
+
+    // Invalidate the old lookup before the debounce so it cannot publish stale
+    // games or clear the next lookup's loading indicator.
+    if (remoteAbortRef.current) {
+      try { remoteAbortRef.current.abort(); } catch (_) {}
+      remoteAbortRef.current = null;
     }
+    remoteAutoLoadKeyRef.current = '';
+    setRemoteError('');
+    setRemoteGames([]);
+    setSelectedRemoteGameId('');
+    setRemoteLoading(Boolean(username.length >= 2 && source !== 'pgn'));
+
+    if (username.length < 2 || source === 'pgn') return undefined;
 
     const timerId = window.setTimeout(() => {
-      handleLoadRemoteGames();
+      if (remoteAutoLoadKeyRef.current !== nextKey) handleLoadRemoteGames();
     }, 600);
 
     return () => {
@@ -2551,18 +2559,32 @@ function GameReview({ active = true }) {
   }, [handleLoadRemoteGames, remoteUsername, source]);
 
   const handleSelectRemoteGame = useCallback(async (game) => {
-    const username = remoteUsername.trim().toLowerCase();
-    const nextOrientation = game.black.name.toLowerCase() === username ? 'black' : 'white';
-    const parsed = parsePgn(game.pgn, nextOrientation);
-    if (!parsed.ok) {
-      setEngineError(parsed.error || 'Could not parse that game.');
-      return;
-    }
-    if (!await authorizeReview(parsed)) return;
+    if (remoteSelectionRef.current) return;
+    remoteSelectionRef.current = true;
+    setOpeningRemoteGameId(game.id);
     setSelectedRemoteGameId(game.id);
-    resetReviewStateFromParsed(parsed, game.pgn, nextOrientation);
-    setStatusMessage(`${source === 'lichess' ? 'Lichess' : 'Chess.com'} game loaded.`);
-    queueAutoReview();
+    setRemoteError('');
+    setAccessMessage('');
+    try {
+      // Yield so React can render the pending state before parsing and checking access.
+      await waitMs(0);
+      const username = remoteUsername.trim().toLowerCase();
+      const nextOrientation = game.black.name.toLowerCase() === username ? 'black' : 'white';
+      const parsed = parsePgn(game.pgn, nextOrientation);
+      if (!parsed.ok) {
+        setRemoteError(parsed.error || 'Could not parse that game.');
+        return;
+      }
+      if (!await authorizeReview(parsed) || !isMountedRef.current) return;
+      resetReviewStateFromParsed(parsed, game.pgn, nextOrientation);
+      setStatusMessage(`${source === 'lichess' ? 'Lichess' : 'Chess.com'} game loaded.`);
+      queueAutoReview();
+    } catch (_) {
+      if (isMountedRef.current) setRemoteError('Could not open that game. Please try again.');
+    } finally {
+      remoteSelectionRef.current = false;
+      if (isMountedRef.current) setOpeningRemoteGameId('');
+    }
   }, [authorizeReview, queueAutoReview, remoteUsername, resetReviewStateFromParsed, source]);
 
   const handleBuildPersonalPack = async () => {
@@ -3706,6 +3728,7 @@ function GameReview({ active = true }) {
                           type="button"
                           className={source === tab.key ? 'gr-source-tab is-active' : 'gr-source-tab'}
                           onClick={() => setSource(tab.key)}
+                          disabled={Boolean(openingRemoteGameId)}
                           aria-label={tab.key === 'pgn' ? 'Paste or upload PGN' : `Load recent ${tab.label} games`}
                         >
                           {tab.logoSrc ? (
@@ -3748,20 +3771,28 @@ function GameReview({ active = true }) {
                             <input
                               className="gr-text-input"
                               value={remoteUsername}
+                              disabled={Boolean(openingRemoteGameId)}
                               onChange={(event) => setRemoteUsername(event.target.value)}
                               placeholder={source === 'lichess' ? 'Enter a Lichess username' : 'Enter a Chess.com username'}
                             />
                           </label>
-                          <button type="submit" className="gr-button gr-button-primary" aria-label="Load recent games">
-                            <FontAwesomeIcon icon={faUser} />
-                            <span>Load</span>
+                          <button type="submit" className="gr-button gr-button-primary" aria-label="Load recent games" disabled={remoteLoading || Boolean(openingRemoteGameId)}>
+                            <FontAwesomeIcon icon={remoteLoading ? faSpinner : faUser} spin={remoteLoading} />
+                            <span>{remoteLoading ? 'Loading…' : 'Load'}</span>
                           </button>
                         </form>
+                        {openingRemoteGameId ? (
+                          <div className="gr-remote-state" role="status" aria-live="polite">
+                            <FontAwesomeIcon icon={faSpinner} spin />
+                            <span>Opening your game review…</span>
+                          </div>
+                        ) : null}
                         <RemoteGameList
                           games={remoteGames}
                           selectedId={selectedRemoteGameId}
                           onSelect={handleSelectRemoteGame}
                           loading={remoteLoading}
+                          openingId={openingRemoteGameId}
                           error={remoteError}
                           emptyMessage=""
                           focusUsername={remoteUsername}
