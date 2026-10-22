@@ -360,6 +360,64 @@ exports.syncPaypalMembership = functions.region(REGION).https.onCall(async (data
 });
 
 
+
+// Verify a recent checkout payment separately from membership activation.
+exports.getPaypalPurchase = functions.region(REGION).https.onCall(async (data, context) => {
+  if (!context.auth || !context.auth.uid) {
+    throw new functions.https.HttpsError("unauthenticated", "sign_in_required");
+  }
+
+  const uid = context.auth.uid;
+  const subscriptionId = String((data && data.subscriptionId) || "").trim();
+  if (!subscriptionId || subscriptionId.length > 128) {
+    throw new functions.https.HttpsError("invalid-argument", "invalid_subscription_id");
+  }
+
+  try {
+    const snap = await db.collection("users").doc(uid).get();
+    const account = snap.exists ? (snap.data() || {}) : {};
+    const createdAt = account.pendingPaypalCreatedAt;
+    const startedAt = createdAt && typeof createdAt.toMillis === "function" ? createdAt.toMillis() : 0;
+    const now = Date.now();
+    if (account.pendingPaypalSubscriptionId !== subscriptionId || !startedAt ||
+        startedAt >= now || now - startedAt > 7 * 24 * 60 * 60 * 1000) {
+      return { purchase: null };
+    }
+
+    const subscription = await getSubscription(subscriptionId);
+    if (await resolveUidForSubscription(subscription) !== uid) {
+      throw new functions.https.HttpsError("permission-denied", "subscription_owner_mismatch");
+    }
+
+    const query = new URLSearchParams({
+      start_time: new Date(startedAt).toISOString(),
+      end_time: new Date(now).toISOString()
+    });
+    const result = await paypalRequest(`/v1/billing/subscriptions/${encodeURIComponent(subscriptionId)}/transactions?${query}`);
+    const transactions = Array.isArray(result.transactions) ? result.transactions : [];
+    const paid = transactions.filter((transaction) => {
+      const amount = transaction.amount_with_breakdown && transaction.amount_with_breakdown.gross_amount;
+      const time = Date.parse(transaction.time);
+      return transaction.status === "COMPLETED" && transaction.id && amount &&
+        /^[A-Z]{3}$/.test(amount.currency_code || "") &&
+        Number.isFinite(Number(amount.value)) && Number(amount.value) > 0 &&
+        time >= startedAt && time <= now;
+    }).sort((a, b) => Date.parse(a.time) - Date.parse(b.time));
+    if (!paid.length) return { purchase: null };
+
+    const transaction = paid[0];
+    return { purchase: {
+      conversionId: String(transaction.id),
+      value: Number(transaction.amount_with_breakdown.gross_amount.value),
+      currency: transaction.amount_with_breakdown.gross_amount.currency_code,
+      itemCount: 1
+    } };
+  } catch (err) {
+    if (err instanceof functions.https.HttpsError) throw err;
+    throw mapFunctionError(err);
+  }
+});
+
 exports.cancelPaypalSubscription = functions.region(REGION).https.onCall(async (data, context) => {
   if (!context.auth || !context.auth.uid) {
     throw new functions.https.HttpsError("unauthenticated", "sign_in_required");

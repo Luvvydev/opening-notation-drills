@@ -132,6 +132,14 @@ function shouldPersist(user, persist) {
 export function trackEvent(name, params = {}, user = null, options = {}) {
   const eventName = sanitizeEventName(name);
   const eventParams = sanitizeParams(params);
+
+  if (eventName === "signup_complete") {
+    try {
+      if (typeof window !== "undefined" && typeof window.rdt === "function") {
+        window.rdt("track", "SignUp");
+      }
+    } catch (_) {}
+  }
   const visitorId = getVisitorId();
   const sessionId = getSessionId();
   const path = getWindowPath();
@@ -263,4 +271,26 @@ export function getSignupSourceFromReason(reason, fallback = "direct") {
   if (reason === "membership_requires_account") return "membership";
   if (reason === "protected_route") return "protected_route";
   return fallback || "direct";
+}
+
+// Called only with a completed transaction verified by the payment function.
+const redditPurchasesSent = new Set();
+export function trackRedditPurchase(purchase) {
+  if (typeof window === "undefined" || typeof window.rdt !== "function" || !purchase ||
+      typeof purchase.conversionId !== "string" || !purchase.conversionId ||
+      !Number.isFinite(purchase.value) || purchase.value <= 0 ||
+      !/^[A-Z]{3}$/.test(purchase.currency || "")) return;
+
+  const key = `chessdrills_reddit_purchase_${purchase.conversionId}`;
+  if (redditPurchasesSent.has(key) || safeLocalStorageGet(key)) return;
+  try {
+    window.rdt("track", "Purchase", {
+      conversionId: purchase.conversionId,
+      value: purchase.value,
+      currency: purchase.currency,
+      itemCount: 1
+    });
+    redditPurchasesSent.add(key);
+    safeLocalStorageSet(key, "1");
+  } catch (_) {}
 }

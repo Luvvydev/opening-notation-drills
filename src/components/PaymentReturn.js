@@ -5,6 +5,7 @@ import TopNav from "./TopNav";
 import SEO from "./SEO";
 import { functions } from "../firebase";
 import { useAuth } from "../auth/AuthProvider";
+import { trackRedditPurchase } from "../utils/trackEvent";
 import "./PaymentReturn.css";
 
 function getQueryParam(search, name) {
@@ -92,6 +93,36 @@ export default function PaymentReturn(props) {
       cancelled = true;
     };
   }, [authLoading, userDocLoading, hasPaidMembership, isCancel, subscriptionId, user]);
+
+  useEffect(() => {
+    if (isCancel || authLoading || !user || !subscriptionId) return undefined;
+    let cancelled = false;
+    let timer;
+    let attempts = 0;
+
+    async function verifyPurchase() {
+      attempts += 1;
+      try {
+        const getPaypalPurchase = httpsCallable(functions, "getPaypalPurchase");
+        const result = await getPaypalPurchase({ subscriptionId });
+        if (cancelled) return;
+        const purchase = result && result.data && result.data.purchase;
+        if (purchase) {
+          trackRedditPurchase(purchase);
+          return;
+        }
+      } catch (_) {
+        // Tracking must never interrupt payment confirmation or training.
+      }
+      if (!cancelled && attempts < 5) timer = window.setTimeout(verifyPurchase, 3000);
+    }
+
+    verifyPurchase();
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [authLoading, isCancel, subscriptionId, user]);
 
   return (
     <div className="payment-return-page">
