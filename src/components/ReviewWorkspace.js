@@ -10,7 +10,8 @@ import GameReview from './GameReview';
 export default function ReviewWorkspace() {
   const { user, authLoading } = useAuth();
   const location = useLocation();
-  const active = location.pathname === '/my-games' || location.pathname === '/review';
+  const pathname = location.pathname.replace(/\/+$/, '');
+  const active = pathname === '/my-games' || pathname === '/review';
   const [owner, setOwner] = useState(null);
   const uid = user && user.uid;
 

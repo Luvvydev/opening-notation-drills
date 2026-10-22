@@ -28,7 +28,7 @@ export default function WorkspaceShell({ children }) {
   const [reviewMode, setReviewMode] = useState('review');
   const drawer = useRef(null);
   const toggle = useRef(null);
-  const reviewing = ['/my-games', '/review'].includes(location.pathname);
+  const reviewing = ['/my-games', '/review'].includes(location.pathname.replace(/\/+$/, ''));
   const activeMode = reviewMode;
 
   useEffect(() => {
