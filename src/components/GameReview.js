@@ -30,6 +30,7 @@ import { BOARD_THEMES, DEFAULT_THEME, PIECE_THEMES } from '../theme/boardThemes'
 import { TRAINING_SCENARIOS, getScenarioReply, getScenarioStartMoves, getRepertoireReply, getAggressiveRepertoireReply, supportsOpeningAttack } from '../data/aggressionTraining';
 import './GameReview.css';
 import { trackEvent } from '../utils/trackEvent';
+import { isCriticalMove as classifyCriticalMove, getSacrificeCandidate as detectSacrificeCandidate } from '../review/tacticalClassification';
 
 // chess.js 0.11 exports a constructor in the browser and { Chess } in Node.
 const Chess = ChessModule.Chess || ChessModule.default || ChessModule;
@@ -474,47 +475,13 @@ function getLineWinPercentage(line) {
   return getPositionWinPercentage({ lines: [line] });
 }
 
+// Tactical candidate detection is shared independently of the UI.
 function isCriticalMove(beforeEval, move) {
-  if (!beforeEval || !beforeEval.lines || beforeEval.lines.length < 2 || !move) return false;
-  if (move.inBook || move.promotion) return false;
-  const before = new Chess(move.beforeFen);
-  if (before.in_check() || before.moves().length < 2) return false;
-  const [first, second] = beforeEval.lines;
-  if (!first.pv || !second.pv || !first.pv.length || !second.pv.length) return false;
-  const difference = (getLineWinPercentage(first) - getLineWinPercentage(second)) * (move.color === 'w' ? 1 : -1);
-  const moverWin = move.color === 'w' ? getLineWinPercentage(first) : 100 - getLineWinPercentage(first);
-  return difference >= 10 && moverWin >= 45 && moverWin <= 94;
+  return classifyCriticalMove(beforeEval, move, getLineWinPercentage);
 }
 
-// A conservative candidate filter. Engine validation takes place separately.
 function getSacrificeCandidate(beforeEval, afterEval, move) {
-  if (!move || !beforeEval || !afterEval || !move.beforeFen || !move.afterFen || move.inBook || move.promotion) return null;
-  // Shallow searches may miss sacrifices. Verify candidates with a deeper search below.
-  const before = new Chess(move.beforeFen);
-  const after = new Chess(move.afterFen);
-  const piece = after.get(move.to);
-  if (!piece || piece.color !== move.color || piece.type === 'p' || piece.type === 'k') return null;
-  const values = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 100 };
-  const responses = after.moves({ verbose: true });
-  const captures = responses.filter((reply) => reply.to === move.to && reply.captured === piece.type);
-  if (!captures.some((reply) => values[reply.piece] < values[piece.type])) return null;
-  // Exclude already-hanging pieces and equal trades before claiming a sacrifice.
-  const priorPiece = before.get(move.from);
-  if (!priorPiece || priorPiece.type !== piece.type) return null;
-  // The opponent cannot move in the previous position; use the reversed turn in a legal FEN.
-  const fenFields = move.beforeFen.split(' ');
-  fenFields[1] = move.color === 'w' ? 'b' : 'w';
-  fenFields[3] = '-';
-  const opponentBefore = new Chess();
-  try {
-    if (opponentBefore.load(fenFields.join(' '))) {
-      if (opponentBefore.moves({ verbose: true }).some((reply) => reply.to === move.from && reply.captured === piece.type && values[reply.piece] < values[piece.type])) return null;
-    }
-  } catch (_) { /* Skip this exclusion for invalid synthetic positions. */ }
-  const moverWinAfter = move.color === 'w' ? getPositionWinPercentage(afterEval) : 100 - getPositionWinPercentage(afterEval);
-  if (moverWinAfter < 40) return null;
-  // At a forced mate, win probability reaches 100%. Do not reject decisive sacrifices.
-  return { square: move.to, piece: piece.type };
+  return detectSacrificeCandidate(beforeEval, afterEval, move, getPositionWinPercentage);
 }
 
 // Preserve mate distance when classifying changes to a forced-mate position.
@@ -599,7 +566,9 @@ async function classifyEvaluatedGame(moves, evaluatedPositions, options) {
   const candidates = moves.map((move, index) => ({
     move, index,
     sacrifice: getSacrificeCandidate(evaluatedPositions[index], evaluatedPositions[index + 1], move),
-  })).filter((entry) => entry.sacrifice).slice(0, 12);
+  })).filter((entry) => entry.sacrifice)
+    .sort((a, b) => b.sacrifice.score - a.sacrifice.score)
+    .slice(0, 12);
 
   for (let candidateIndex = 0; candidateIndex < candidates.length; candidateIndex += 1) {
     if (!isCurrent()) return null;
