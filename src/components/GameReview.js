@@ -517,6 +517,28 @@ function getSacrificeCandidate(beforeEval, afterEval, move) {
   return { square: move.to, piece: piece.type };
 }
 
+// Preserve mate distance when classifying changes to a forced-mate position.
+function classifyMateTransition(beforeEval, afterEval, move) {
+  const before = beforeEval && beforeEval.lines && beforeEval.lines[0];
+  const after = afterEval && afterEval.lines && afterEval.lines[0];
+  if (!before || !after || (typeof before.mate !== 'number' && typeof after.mate !== 'number')) return null;
+  const sign = move.color === 'w' ? 1 : -1;
+  const prior = typeof before.mate === 'number' ? before.mate * sign : null;
+  const next = typeof after.mate === 'number' ? after.mate * sign : null;
+  // Lost a forced win, or allowed the opponent to force mate.
+  if (prior !== null && prior > 0 && (next === null || next < 0)) return 'blunder';
+  if (next !== null && next < 0 && (prior === null || prior >= 0)) return 'blunder';
+  // Mate preserved: distance may shorten naturally after making a move.
+  if (prior !== null && prior > 0 && next !== null && next > 0) {
+    return next <= prior ? 'best' : next <= prior + 2 ? 'excellent' : 'inaccuracy';
+  }
+  // Already getting mated: extending the defensive survival is still worthwhile.
+  if (prior !== null && prior < 0 && next !== null && next < 0) {
+    return Math.abs(next) > Math.abs(prior) ? 'excellent' : 'good';
+  }
+  return null;
+}
+
 function classifyMove(beforeEval, afterEval, move, verifiedBrilliant = false) {
   if (!beforeEval || !afterEval || !move) return 'good';
 
@@ -530,6 +552,9 @@ function classifyMove(beforeEval, afterEval, move, verifiedBrilliant = false) {
     if (isCriticalMove(beforeEval, move)) return 'critical';
     return 'best';
   }
+
+  const mateClassification = classifyMateTransition(beforeEval, afterEval, move);
+  if (mateClassification) return mateClassification;
 
   const before = getPositionWinPercentage(beforeEval);
   const after = getPositionWinPercentage(afterEval);
@@ -563,6 +588,62 @@ function classifyMissedOpportunities(moves, evaluations) {
     }
     return move;
   });
+}
+
+// Shared final classification for full reviews and personal Mistake Packs.
+// Each path supplies position evaluations; identical evaluations yield identical
+// labels, including the same deeper verification for sacrifice candidates.
+async function classifyEvaluatedGame(moves, evaluatedPositions, options) {
+  const { depth, multiPv, evaluateFen, requestId, isCurrent, onVerificationProgress } = options;
+  const verifiedSacrifices = new Map();
+  const candidates = moves.map((move, index) => ({
+    move, index,
+    sacrifice: getSacrificeCandidate(evaluatedPositions[index], evaluatedPositions[index + 1], move),
+  })).filter((entry) => entry.sacrifice).slice(0, 12);
+
+  for (let candidateIndex = 0; candidateIndex < candidates.length; candidateIndex += 1) {
+    if (!isCurrent()) return null;
+    const candidate = candidates[candidateIndex];
+    try {
+      const rootDepth = depth + 4;
+      const rootPv = Math.max(2, multiPv);
+      const beforeDeep = await evaluateFen(candidate.move.beforeFen, {
+        depth: rootDepth, multiPv: rootPv, requestId,
+      });
+      if (!isCurrent()) return null;
+      let playedLine = beforeDeep.lines.find((line) => line.pv && line.pv[0] === candidate.move.san);
+      if (!playedLine) {
+        const forced = await evaluateFen(candidate.move.beforeFen, {
+          depth: rootDepth, multiPv: 1, searchMoves: [candidate.move.uci], requestId,
+        });
+        if (!isCurrent()) return null;
+        playedLine = forced.lines[0];
+      }
+      const bestLine = beforeDeep.lines[0];
+      if (playedLine && bestLine) {
+        const playerWin = candidate.move.color === 'w'
+          ? getLineWinPercentage(playedLine) : 100 - getLineWinPercentage(playedLine);
+        const bestWin = candidate.move.color === 'w'
+          ? getLineWinPercentage(bestLine) : 100 - getLineWinPercentage(bestLine);
+        if (playerWin >= 45 && bestWin - playerWin <= 2.5) {
+          verifiedSacrifices.set(candidate.index, candidate.sacrifice);
+        }
+      }
+    } catch (_) { /* Unverified candidates keep their normal classification. */ }
+    if (!isCurrent()) return null;
+    if (onVerificationProgress) onVerificationProgress(candidateIndex + 1, candidates.length);
+  }
+
+  const classified = moves.map((move, index) => ({
+    ...move,
+    sacrificedSquare: verifiedSacrifices.has(index) ? verifiedSacrifices.get(index).square : null,
+    sacrificedPiece: verifiedSacrifices.has(index) ? verifiedSacrifices.get(index).piece : null,
+    classification: classifyMove(evaluatedPositions[index], evaluatedPositions[index + 1], move, verifiedSacrifices.has(index)),
+    bestMove: evaluatedPositions[index] && evaluatedPositions[index].bestMove ? evaluatedPositions[index].bestMove : null,
+    evaluationBefore: evaluatedPositions[index],
+    evaluationAfter: evaluatedPositions[index + 1],
+  }));
+  return classifyMissedOpportunities(classified, evaluatedPositions);
 }
 
 function getMatchSummary(sanMoves) {
@@ -2226,8 +2307,8 @@ function GameReview({ active = true }) {
   }, []);
 
   const evaluateFen = useCallback(async (fen, options) => {
-    const { depth: nextDepth, multiPv: nextMultiPv, partialCallback, requestId } = options;
-    const cacheKey = `${fen}|d${nextDepth}|pv${nextMultiPv}`;
+    const { depth: nextDepth, multiPv: nextMultiPv, partialCallback, requestId, searchMoves } = options;
+    const cacheKey = `${fen}|d${nextDepth}|pv${nextMultiPv}${searchMoves ? `|search:${searchMoves.join(",")}` : ""}`;
     const cached = cacheRef.current.get(cacheKey);
     if (cached) {
       if (partialCallback) partialCallback(cached);
@@ -2255,7 +2336,7 @@ function GameReview({ active = true }) {
 
     const results = await sendCommandsToWorker(
       engine,
-      [`position fen ${fen}`, `go depth ${nextDepth}`],
+      [`position fen ${fen}`, `go depth ${nextDepth}${searchMoves && searchMoves.length ? ` searchmoves ${searchMoves.join(" ")}` : ""}`],
       'bestmove',
       (messages) => {
         if (requestId !== undefined && requestId !== positionRequestRef.current && requestId !== runRequestRef.current) {
@@ -2367,7 +2448,7 @@ function GameReview({ active = true }) {
       const markDone = () => {
         if (requestId !== runRequestRef.current) return;
         completed += 1;
-        setGameProgress(Math.max(1, Math.round((completed / positions.length) * 100)));
+        setGameProgress(Math.max(1, Math.round((completed / positions.length) * 85)));
       };
 
       // Cached / trivial (mate, stalemate) positions cost nothing, fill them first.
@@ -2470,39 +2551,14 @@ function GameReview({ active = true }) {
 
       if (requestId !== runRequestRef.current) return;
 
-      const verifiedSacrifices = new Map();
-      // Limit extra work and require a deeper engine to confirm the proposed sacrifice.
-      const candidates = gameData.moves.map((move, index) => ({ move, index, sacrifice: getSacrificeCandidate(evaluatedPositions[index], evaluatedPositions[index + 1], move) }))
-        .filter((entry) => entry.sacrifice).slice(0, 12);
-      for (const candidate of candidates) {
-        if (requestId !== runRequestRef.current) return;
-        try {
-          const beforeDeep = await evaluateFen(candidate.move.beforeFen, { depth: depth + 4, multiPv: Math.max(2, multiPv), requestId });
-          const afterDeep = await evaluateFen(candidate.move.afterFen, { depth: depth + 4, multiPv: 1, requestId });
-          const playerWin = candidate.move.color === 'w' ? getPositionWinPercentage(afterDeep) : 100 - getPositionWinPercentage(afterDeep);
-          const originalWin = candidate.move.color === 'w' ? getPositionWinPercentage(evaluatedPositions[candidate.index + 1]) : 100 - getPositionWinPercentage(evaluatedPositions[candidate.index + 1]);
-          // The deep top move can differ in tactically sharp positions. Require
-          // the sacrifice to retain nearly the same expected score as the deep best line.
-          const deepBestWin = candidate.move.color === 'w'
-            ? getPositionWinPercentage(beforeDeep) : 100 - getPositionWinPercentage(beforeDeep);
-          if (playerWin >= 45 && playerWin >= originalWin - 5 && playerWin >= deepBestWin - 2.5
-            && (beforeDeep.bestMove === candidate.move.uci || isCriticalMove(beforeDeep, candidate.move) || deepBestWin - playerWin <= 1)) {
-            verifiedSacrifices.set(candidate.index, candidate.sacrifice);
-          }
-        } catch (_) { /* Unverified moves retain their normal classification. */ }
-      }
-      if (requestId !== runRequestRef.current) return;
-      const classifiedMoves = gameData.moves.map((move, index) => ({
-        ...move,
-        sacrificedSquare: verifiedSacrifices.has(index) ? verifiedSacrifices.get(index).square : null,
-        sacrificedPiece: verifiedSacrifices.has(index) ? verifiedSacrifices.get(index).piece : null,
-        classification: classifyMove(evaluatedPositions[index], evaluatedPositions[index + 1], move, verifiedSacrifices.has(index)),
-        bestMove: evaluatedPositions[index] && evaluatedPositions[index].bestMove ? evaluatedPositions[index].bestMove : null,
-        evaluationBefore: evaluatedPositions[index],
-        evaluationAfter: evaluatedPositions[index + 1],
-      }));
-
-      const enrichedMoves = classifyMissedOpportunities(classifiedMoves, evaluatedPositions);
+      const enrichedMoves = await classifyEvaluatedGame(gameData.moves, evaluatedPositions, {
+        depth, multiPv, evaluateFen, requestId,
+        isCurrent: () => requestId === runRequestRef.current,
+        onVerificationProgress: (completed, total) => {
+          setGameProgress(Math.min(98, 85 + Math.round(13 * completed / total)));
+        },
+      });
+      if (!enrichedMoves || requestId !== runRequestRef.current) return;
       const updatedGameData = {
         ...gameData,
         moves: enrichedMoves,
@@ -2515,6 +2571,7 @@ function GameReview({ active = true }) {
         accuracy: computeAccuracy(evaluatedPositions),
         acpl: computeAcpl(evaluatedPositions, enrichedMoves),
       });
+      setGameProgress(100);
       setEngineState('ready');
       setStatusMessage('Full review finished.');
     } catch (_) {
@@ -2752,7 +2809,6 @@ function GameReview({ active = true }) {
     setPackBuilderOpen(false);
     runRequestRef.current += 1;
     const requestId = runRequestRef.current;
-    const requestPrefix = `pack-${requestId}`;
 
     setEngineError('');
     setPackBuilding(true);
@@ -2817,20 +2873,16 @@ function GameReview({ active = true }) {
           const result = await evaluateFen(position.fen, {
             depth,
             multiPv,
-            requestId: `${requestPrefix}-${gameIndex}-${positionIndex}`,
+            requestId,
           });
           evaluatedPositions[positionIndex] = result;
         }
 
-        const classifiedMoves = parsed.moves.map((move, index) => ({
-          ...move,
-          classification: classifyMove(evaluatedPositions[index], evaluatedPositions[index + 1], move),
-          bestMove: evaluatedPositions[index] && evaluatedPositions[index].bestMove ? evaluatedPositions[index].bestMove : null,
-          evaluationBefore: evaluatedPositions[index],
-          evaluationAfter: evaluatedPositions[index + 1],
-        }));
-
-        const enrichedMoves = classifyMissedOpportunities(classifiedMoves, evaluatedPositions);
+        const enrichedMoves = await classifyEvaluatedGame(parsed.moves, evaluatedPositions, {
+          depth, multiPv, evaluateFen, requestId,
+          isCurrent: () => requestId === runRequestRef.current,
+        });
+        if (!enrichedMoves || requestId !== runRequestRef.current) return;
         analyzedGames.push({
           sourceGame: remoteGame,
           gameData: {
