@@ -4183,3 +4183,107 @@
 .gr-access-note > a {
   text-decoration: none;
 }
+
+/* Additional Game Review classification tones. */
+.gr-board-corner-badge-brilliant { background: #60cad5; color: #10272e; }
+.gr-board-corner-badge-critical { background: #db9eff; color: #261438; }
+.gr-insight-bubble-brilliant { border-color: rgba(96, 202, 213, 0.48); background: rgba(96, 202, 213, 0.09); }
+.gr-insight-bubble-critical { border-color: rgba(219, 158, 255, 0.4); background: rgba(219, 158, 255, 0.08); }
+.gr-move-badge-brilliant, .gr-count-icon-brilliant { color: #60cad5; }
+.gr-move-badge-critical, .gr-count-icon-critical { color: #db9eff; }
+
+/* Classification table: labels and direct navigation to classified moves. */
+.gr-count-row-button { width: 100%; border: 0; background: transparent; color: inherit; cursor: pointer; font: inherit; border-radius: 7px; }
+.gr-count-row-button.is-clickable:hover, .gr-count-row-button.is-clickable:focus-visible { background: rgba(255,255,255,.075); outline-offset: 2px; }
+.gr-count-row-button:disabled { cursor: default; opacity: .55; }
+.gr-count-middle { display: flex; align-items: center; justify-content: flex-start; gap: 9px; width: 144px; }
+.gr-count-label { font-size: .76rem; font-weight: 700; color: #d9e0e8; text-align: left; }
+.gr-count-row-button .gr-count-icon { flex-shrink: 0; font-weight: 900; font-size: .84rem; }
+.gr-count-icon-brilliant { background: rgba(96,202,213,.17); color: #60cad5; }
+.gr-count-icon-critical { background: rgba(219,158,255,.17); color: #db9eff; }
+.gr-move-cell.gr-tooltip-anchor::after { right: auto; left: 50%; transform: translate(-50%, -2px); }
+.gr-move-cell.gr-tooltip-anchor:hover::after, .gr-move-cell.gr-tooltip-anchor:focus-visible::after { transform: translate(-50%, 0); }
+
+/* Compact score breakdown: retain the original icon-only presentation. */
+.gr-count-row-compact { grid-template-columns: 1fr 42px 1fr; gap: 8px; padding: 2px 0; }
+.gr-count-side, .gr-count-icon-button { appearance: none; border: 0; background: transparent; color: #eef2f7; cursor: pointer; font: inherit; display: flex; align-items: center; justify-content: center; min-height: 36px; border-radius: 6px; }
+.gr-count-side { font-weight: 900; font-size: 1rem; }
+.gr-count-side:disabled, .gr-count-icon-button:disabled { opacity: .58; cursor: default; }
+.gr-count-side:not(:disabled):hover, .gr-count-icon-button:not(:disabled):hover, .gr-count-side:focus-visible, .gr-count-icon-button:focus-visible { background: rgba(255,255,255,.09); }
+.gr-count-icon-button .gr-count-icon { width: 34px; height: 34px; }
+.gr-count-icon-button.gr-tooltip-anchor::after, .gr-count-side.gr-tooltip-anchor::after { z-index: 20; white-space: nowrap; }
+.gr-move-cell:not(.is-empty):hover { background: rgba(255,255,255,.10); }
+.gr-move-badge-brilliant { background: rgba(96,202,213,.16); border-radius: 50%; }
+.gr-move-badge-critical { background: rgba(219,158,255,.14); border-radius: 50%; }
+
+/* v4: tighter review notation and independently styled classification colors. */
+.gr-page-refresh .gr-move-cell {
+  justify-content: flex-start;
+  gap: 5px;
+  text-align: left;
+}
+.gr-page-refresh .gr-move-san { flex: 0 0 auto; }
+.gr-page-refresh .gr-move-badge {
+  flex: 0 0 auto;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 2px;
+  line-height: 1;
+  font-size: 9px;
+}
+.gr-page-refresh .gr-move-badge-empty { opacity: 0; }
+.gr-count-icon-brilliant, .gr-move-badge-brilliant { color: #22bba5; background: rgba(34,187,165,.18); }
+.gr-count-icon-critical, .gr-move-badge-critical { color: #79a9d6; background: rgba(121,169,214,.18); }
+.gr-board-corner-badge-brilliant { background: #22bba5; color: #102c29; }
+.gr-board-corner-badge-critical { background: #79a9d6; color: #10202e; }
+.gr-insight-bubble-brilliant { border-color: rgba(34,187,165,.48); background: rgba(34,187,165,.08); }
+.gr-insight-bubble-critical { border-color: rgba(121,169,214,.4); background: rgba(121,169,214,.08); }
+.gr-count-icon-best, .gr-move-badge-best { color: #9bca54; }
+.gr-count-icon-excellent, .gr-move-badge-excellent { color: #a0d46b; }
+.gr-count-icon-inaccuracy, .gr-move-badge-inaccuracy { color: #f2bf47; }
+.gr-count-icon-mistake, .gr-move-badge-mistake { color: #f49a59; }
+.gr-count-icon-blunder, .gr-move-badge-blunder { color: #f06363; }
+
+/* v5: keep the compact badges visible for every supported move category. */
+.gr-count-icon-miss, .gr-move-badge-miss { color: #ff6868; background: rgba(255,104,104,.15); }
+.gr-count-icon-good, .gr-move-badge-good { color: #9ec67a; background: rgba(158,198,122,.13); }
+.gr-count-icon-forced, .gr-move-badge-forced { color: #a1aab5; background: rgba(161,170,181,.12); }
+.gr-page-refresh .gr-move-cell { gap: 4px; }
+.gr-page-refresh .gr-move-badge { margin-left: 0; }
+
+/* Keep ordinary moves uncluttered; celebrate standout moves at their destination. */
+.gr-board-special-badge { animation: gr-special-appear .5s ease-out both; }
+@keyframes gr-special-appear {
+  0% { opacity: 0; transform: translate(-50%, -70%) scale(.6); }
+  65% { opacity: 1; transform: translate(-50%, -60%) scale(1.2); }
+  100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+@media (prefers-reduced-motion: reduce) { .gr-board-special-badge { animation: none; } }
+
+/* Celebration text sits above the destination piece; standard board badges remain visible. */
+.gr-board-move-callout {
+  position: absolute;
+  z-index: 12;
+  transform: translate(-50%, -50%);
+  white-space: nowrap;
+  pointer-events: none;
+  border-radius: 7px;
+  padding: 6px 11px;
+  font-weight: 900;
+  font-size: clamp(12px, 1.8vw, 19px);
+  line-height: 1.1;
+  text-shadow: 0 1px 1px rgba(0,0,0,.25);
+  box-shadow: 0 5px 18px rgba(0,0,0,.35);
+  animation: gr-board-callout-pop 1.65s ease-out both;
+}
+.gr-board-move-callout-brilliant { color: #fff; background: #169f91; }
+.gr-board-move-callout-critical { color: #fff; background: #5488bf; }
+@keyframes gr-board-callout-pop {
+  0% { opacity: 0; transform: translate(-50%, -32%) scale(.65); }
+  15% { opacity: 1; transform: translate(-50%, -55%) scale(1.1); }
+  27%, 75% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -80%) scale(.94); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gr-board-move-callout { animation: none; opacity: 1; }
+}

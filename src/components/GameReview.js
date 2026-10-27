@@ -8,7 +8,6 @@ import * as ChessModule from 'chess.js';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faBars,
-  faBookOpen,
   faChartLine,
   faChessKnight,
   faCog,
@@ -22,7 +21,6 @@ import {
   faSpinner,
   faStepBackward,
   faStepForward,
-  faStopCircle,
   faUpload,
   faUser,
 } from '@fortawesome/free-solid-svg-icons';
@@ -124,11 +122,14 @@ const SAMPLE_PGN = `[Event "Rated Blitz game"]
 
 const CLASSIFICATION_META = {
   best: { label: 'Best', className: 'best' },
+  brilliant: { label: 'Brilliant', className: 'brilliant' },
+  critical: { label: 'Great', className: 'critical' },
   excellent: { label: 'Excellent', className: 'excellent' },
   good: { label: 'Good', className: 'good' },
   inaccuracy: { label: 'Inaccuracy', className: 'inaccuracy' },
   mistake: { label: 'Mistake', className: 'mistake' },
   blunder: { label: 'Blunder', className: 'blunder' },
+  miss: { label: 'Miss', className: 'miss' },
   forced: { label: 'Forced', className: 'forced' },
   book: { label: 'Book', className: 'book' },
 };
@@ -468,15 +469,65 @@ function computeAcpl(positions, moves) {
   };
 }
 
-function classifyMove(beforeEval, afterEval, move) {
+// Classify from engine evaluations and legal board state; no third-party classifier code.
+function getLineWinPercentage(line) {
+  return getPositionWinPercentage({ lines: [line] });
+}
+
+function isCriticalMove(beforeEval, move) {
+  if (!beforeEval || !beforeEval.lines || beforeEval.lines.length < 2 || !move) return false;
+  if (move.inBook || move.promotion) return false;
+  const before = new Chess(move.beforeFen);
+  if (before.in_check() || before.moves().length < 2) return false;
+  const [first, second] = beforeEval.lines;
+  if (!first.pv || !second.pv || !first.pv.length || !second.pv.length) return false;
+  const difference = (getLineWinPercentage(first) - getLineWinPercentage(second)) * (move.color === 'w' ? 1 : -1);
+  const moverWin = move.color === 'w' ? getLineWinPercentage(first) : 100 - getLineWinPercentage(first);
+  return difference >= 10 && moverWin >= 45 && moverWin <= 94;
+}
+
+// A conservative candidate filter. Engine validation takes place separately.
+function getSacrificeCandidate(beforeEval, afterEval, move) {
+  if (!move || !beforeEval || !afterEval || !move.beforeFen || !move.afterFen || move.inBook || move.promotion) return null;
+  // Shallow searches may miss sacrifices. Verify candidates with a deeper search below.
+  const before = new Chess(move.beforeFen);
+  const after = new Chess(move.afterFen);
+  const piece = after.get(move.to);
+  if (!piece || piece.color !== move.color || piece.type === 'p' || piece.type === 'k') return null;
+  const values = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 100 };
+  const responses = after.moves({ verbose: true });
+  const captures = responses.filter((reply) => reply.to === move.to && reply.captured === piece.type);
+  if (!captures.some((reply) => values[reply.piece] < values[piece.type])) return null;
+  // Exclude already-hanging pieces and equal trades before claiming a sacrifice.
+  const priorPiece = before.get(move.from);
+  if (!priorPiece || priorPiece.type !== piece.type) return null;
+  // The opponent cannot move in the previous position; use the reversed turn in a legal FEN.
+  const fenFields = move.beforeFen.split(' ');
+  fenFields[1] = move.color === 'w' ? 'b' : 'w';
+  fenFields[3] = '-';
+  const opponentBefore = new Chess();
+  try {
+    if (opponentBefore.load(fenFields.join(' '))) {
+      if (opponentBefore.moves({ verbose: true }).some((reply) => reply.to === move.from && reply.captured === piece.type && values[reply.piece] < values[piece.type])) return null;
+    }
+  } catch (_) { /* Skip this exclusion for invalid synthetic positions. */ }
+  const moverWinAfter = move.color === 'w' ? getPositionWinPercentage(afterEval) : 100 - getPositionWinPercentage(afterEval);
+  if (moverWinAfter < 40) return null;
+  // At a forced mate, win probability reaches 100%. Do not reject decisive sacrifices.
+  return { square: move.to, piece: piece.type };
+}
+
+function classifyMove(beforeEval, afterEval, move, verifiedBrilliant = false) {
   if (!beforeEval || !afterEval || !move) return 'good';
 
-  const beforeLine = beforeEval.lines && beforeEval.lines[0];
-  if (beforeLine && beforeEval.lines.length === 1) return 'forced';
+  if (move.beforeFen && new Chess(move.beforeFen).moves().length <= 1) return 'forced';
   if (move.inBook) return 'book';
+  if (move.afterFen && new Chess(move.afterFen).in_checkmate()) return 'best';
 
   const playedUci = move.uci;
+  if (verifiedBrilliant) return 'brilliant';
   if (playedUci && beforeEval.bestMove && playedUci === beforeEval.bestMove) {
+    if (isCriticalMove(beforeEval, move)) return 'critical';
     return 'best';
   }
 
@@ -489,6 +540,29 @@ function classifyMove(beforeEval, afterEval, move) {
   if (signedDiff < -5) return 'inaccuracy';
   if (signedDiff < -2) return 'good';
   return 'excellent';
+}
+
+// A missed opportunity is a large loss after the opponent just gave the mover
+// a tangible chance. This is an independent heuristic, not Chess.com's model.
+function classifyMissedOpportunities(moves, evaluations) {
+  return moves.map((move, index) => {
+    if (index === 0 || !move || !['inaccuracy', 'mistake', 'blunder'].includes(move.classification)) return move;
+    const prior = moves[index - 1];
+    if (!prior || !['inaccuracy', 'mistake', 'blunder'].includes(prior.classification)) return move;
+    const preOpponent = evaluations[index - 1];
+    const before = evaluations[index];
+    const after = evaluations[index + 1];
+    if (!preOpponent || !before || !after) return move;
+    const mover = move.color === 'w' ? 1 : -1;
+    const opportunityGained = (getPositionWinPercentage(before) - getPositionWinPercentage(preOpponent)) * mover;
+    const opportunityLost = (getPositionWinPercentage(before) - getPositionWinPercentage(after)) * mover;
+    const availableChance = mover === 1 ? getPositionWinPercentage(before) : 100 - getPositionWinPercentage(before);
+    // Do not label routine inaccuracies or hopeless positions as missed tactics.
+    if (opportunityGained >= 12 && opportunityLost >= 10 && availableChance >= 40) {
+      return { ...move, classification: 'miss' };
+    }
+    return move;
+  });
 }
 
 function getMatchSummary(sanMoves) {
@@ -891,6 +965,9 @@ function createEmptyClassificationBucket() {
     mistake: 0,
     blunder: 0,
     forced: 0,
+    brilliant: 0,
+    critical: 0,
+    miss: 0,
   };
 }
 
@@ -1354,6 +1431,20 @@ function getMoveInsight(move, classification, match) {
         tone: 'book',
         bestSan: '',
       };
+    case 'brilliant':
+      return {
+        title: `${san} is a brilliant sacrifice`,
+        body: `You offered your ${({ n: 'knight', b: 'bishop', r: 'rook', q: 'queen' })[move.sacrificedPiece] || 'piece'} on ${move.sacrificedSquare}. The engine confirmed this move remains strong after deeper analysis. Check the variation to see the continuation.`,
+        tone: 'brilliant',
+        bestSan,
+      };
+    case 'critical':
+      return {
+        title: `${san} is a great move`,
+        body: 'The engine rates the next-best option significantly worse here. This move preserved your chances.',
+        tone: 'critical',
+        bestSan,
+      };
     case 'best':
       return {
         title: `${san} is best`,
@@ -1499,7 +1590,11 @@ function BoardOverlay({ move, orientation, classification, boardSize }) {
     : getArrowPath(bestFrom, bestTo);
   const badgeText = move.classification === 'book'
     ? '📘'
-    : move.classification === 'best'
+    : move.classification === 'brilliant'
+      ? '!!'
+      : move.classification === 'critical'
+        ? '!'
+        : move.classification === 'best'
       ? '★'
       : move.classification === 'excellent'
         ? '!'
@@ -1527,9 +1622,16 @@ function BoardOverlay({ move, orientation, classification, boardSize }) {
           />
         </svg>
       ) : null}
-      <div className={`gr-board-corner-badge gr-board-corner-badge-${className}`} style={{ left: playedBadge.left, top: playedBadge.top }}>
-        {badgeText}
-      </div>
+      {classification ? (
+        <div key={`${move.ply}-${move.classification}`} className={`gr-board-corner-badge gr-board-corner-badge-${className}`} style={{ left: playedBadge.left, top: playedBadge.top }}>
+          {badgeText}
+        </div>
+      ) : null}
+      {['brilliant', 'critical'].includes(move.classification) ? (
+        <div key={`callout-${move.ply}-${move.classification}`} className={`gr-board-move-callout gr-board-move-callout-${className}`} style={{ left: playedTo.x, top: Math.max(cellSize * 0.48, playedTo.y - cellSize * 0.72) }}>
+          {move.classification === 'brilliant' ? 'Brilliant!' : 'Great Move!'}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -1890,7 +1992,9 @@ function GameReview({ active = true }) {
         },
       }
     : playerSummary;
-  const effectiveBoardOrientation = trainingSource === 'pack' && currentPuzzle ? (currentPuzzle.color === 'b' ? 'black' : 'white') : orientation;
+  const effectiveBoardOrientation = trainingSource === 'pack' && currentPuzzle
+    ? (currentPuzzle.color === 'b' ? 'black' : 'white')
+    : (gameData && gameData.orientation ? gameData.orientation : orientation);
   const isFullReviewProgressActive = engineState === 'analyzing-game'
     || (hasLoadedGame && !hasFullReview && gameProgress > 0 && (autoReviewQueued || engineState === 'starting'));
   const topProgressPercent = isFullReviewProgressActive
@@ -2245,7 +2349,8 @@ function GameReview({ active = true }) {
 
   const analyzeWholeGame = useCallback(async () => {
     if (!gameData || !gameData.positions || !gameData.moves) return;
-    if (!await authorizeReview(gameData)) return;
+    const importGeneration = runRequestRef.current;
+    if (!await authorizeReview(gameData) || importGeneration !== runRequestRef.current) return;
 
     runRequestRef.current += 1;
     const requestId = runRequestRef.current;
@@ -2260,6 +2365,7 @@ function GameReview({ active = true }) {
       const evaluatedPositions = new Array(positions.length);
       let completed = 0;
       const markDone = () => {
+        if (requestId !== runRequestRef.current) return;
         completed += 1;
         setGameProgress(Math.max(1, Math.round((completed / positions.length) * 100)));
       };
@@ -2364,14 +2470,39 @@ function GameReview({ active = true }) {
 
       if (requestId !== runRequestRef.current) return;
 
-      const enrichedMoves = gameData.moves.map((move, index) => ({
+      const verifiedSacrifices = new Map();
+      // Limit extra work and require a deeper engine to confirm the proposed sacrifice.
+      const candidates = gameData.moves.map((move, index) => ({ move, index, sacrifice: getSacrificeCandidate(evaluatedPositions[index], evaluatedPositions[index + 1], move) }))
+        .filter((entry) => entry.sacrifice).slice(0, 12);
+      for (const candidate of candidates) {
+        if (requestId !== runRequestRef.current) return;
+        try {
+          const beforeDeep = await evaluateFen(candidate.move.beforeFen, { depth: depth + 4, multiPv: Math.max(2, multiPv), requestId });
+          const afterDeep = await evaluateFen(candidate.move.afterFen, { depth: depth + 4, multiPv: 1, requestId });
+          const playerWin = candidate.move.color === 'w' ? getPositionWinPercentage(afterDeep) : 100 - getPositionWinPercentage(afterDeep);
+          const originalWin = candidate.move.color === 'w' ? getPositionWinPercentage(evaluatedPositions[candidate.index + 1]) : 100 - getPositionWinPercentage(evaluatedPositions[candidate.index + 1]);
+          // The deep top move can differ in tactically sharp positions. Require
+          // the sacrifice to retain nearly the same expected score as the deep best line.
+          const deepBestWin = candidate.move.color === 'w'
+            ? getPositionWinPercentage(beforeDeep) : 100 - getPositionWinPercentage(beforeDeep);
+          if (playerWin >= 45 && playerWin >= originalWin - 5 && playerWin >= deepBestWin - 2.5
+            && (beforeDeep.bestMove === candidate.move.uci || isCriticalMove(beforeDeep, candidate.move) || deepBestWin - playerWin <= 1)) {
+            verifiedSacrifices.set(candidate.index, candidate.sacrifice);
+          }
+        } catch (_) { /* Unverified moves retain their normal classification. */ }
+      }
+      if (requestId !== runRequestRef.current) return;
+      const classifiedMoves = gameData.moves.map((move, index) => ({
         ...move,
-        classification: classifyMove(evaluatedPositions[index], evaluatedPositions[index + 1], move),
+        sacrificedSquare: verifiedSacrifices.has(index) ? verifiedSacrifices.get(index).square : null,
+        sacrificedPiece: verifiedSacrifices.has(index) ? verifiedSacrifices.get(index).piece : null,
+        classification: classifyMove(evaluatedPositions[index], evaluatedPositions[index + 1], move, verifiedSacrifices.has(index)),
         bestMove: evaluatedPositions[index] && evaluatedPositions[index].bestMove ? evaluatedPositions[index].bestMove : null,
         evaluationBefore: evaluatedPositions[index],
         evaluationAfter: evaluatedPositions[index + 1],
       }));
 
+      const enrichedMoves = classifyMissedOpportunities(classifiedMoves, evaluatedPositions);
       const updatedGameData = {
         ...gameData,
         moves: enrichedMoves,
@@ -2404,14 +2535,23 @@ function GameReview({ active = true }) {
   }, [stopPoolSearches, stopSearch]);
 
   const resetReviewStateFromParsed = useCallback((parsed, nextPgn, nextOrientation) => {
+    // Invalidate every outstanding analysis before installing another game.
+    // Otherwise results from the previous import can overwrite this game.
+    runRequestRef.current += 1;
+    positionRequestRef.current += 1;
+    autoReviewRunningRef.current = '';
+    stopPoolSearches();
+    setAutoReviewQueued(false);
+    setEngineState('idle');
     setEngineError('');
     setGameAnalysis(null);
     setPositionEval(null);
     setGameProgress(0);
     setCurrentPly(0);
     setSidebarMode('overview');
-    setOrientation(nextOrientation || parsed.orientation || 'white');
-    setGameData(parsed);
+    const resolvedOrientation = nextOrientation || parsed.orientation || 'white';
+    setOrientation(resolvedOrientation);
+    setGameData({ ...parsed, orientation: resolvedOrientation });
     reviewTrackedRef.current = false;
     puzzleTrackedRef.current = false;
     trackEvent('game_import_complete', { source: 'game_review' }, null, { persist: false });
@@ -2425,7 +2565,7 @@ function GameReview({ active = true }) {
     setPuzzleHintOpen(false);
     setPuzzleShowSolution(false);
     setStatusMessage('Game loaded.');
-  }, []);
+  }, [stopPoolSearches]);
 
   const handleLoadPgn = useCallback(async () => {
     const parsed = parsePgn(pgnText, orientation);
@@ -2569,7 +2709,7 @@ function GameReview({ active = true }) {
       // Yield so React can render the pending state before parsing and checking access.
       await waitMs(0);
       const username = remoteUsername.trim().toLowerCase();
-      const nextOrientation = game.black.name.toLowerCase() === username ? 'black' : 'white';
+      const nextOrientation = getGameSideForUsername(game, username);
       const parsed = parsePgn(game.pgn, nextOrientation);
       if (!parsed.ok) {
         setRemoteError(parsed.error || 'Could not parse that game.');
@@ -2682,7 +2822,7 @@ function GameReview({ active = true }) {
           evaluatedPositions[positionIndex] = result;
         }
 
-        const enrichedMoves = parsed.moves.map((move, index) => ({
+        const classifiedMoves = parsed.moves.map((move, index) => ({
           ...move,
           classification: classifyMove(evaluatedPositions[index], evaluatedPositions[index + 1], move),
           bestMove: evaluatedPositions[index] && evaluatedPositions[index].bestMove ? evaluatedPositions[index].bestMove : null,
@@ -2690,6 +2830,7 @@ function GameReview({ active = true }) {
           evaluationAfter: evaluatedPositions[index + 1],
         }));
 
+        const enrichedMoves = classifyMissedOpportunities(classifiedMoves, evaluatedPositions);
         analyzedGames.push({
           sourceGame: remoteGame,
           gameData: {
@@ -3216,6 +3357,7 @@ function GameReview({ active = true }) {
         illegal: new Audio(base + '/sounds/illegal.mp3'),
         moveSelf: new Audio(base + '/sounds/move-self.mp3'),
         moveOpponent: new Audio(base + '/sounds/move-opponent.mp3'),
+        brilliant: new Audio(base + '/sounds/brilliant.wav'),
       };
 
       Object.values(sounds).forEach((audio) => {
@@ -3274,7 +3416,7 @@ function GameReview({ active = true }) {
     if (currentPly <= 0) return;
 
     const move = gameData.moves[currentPly - 1];
-    const key = getReviewMoveSoundKey(move, gameData);
+    const key = move && move.classification === 'brilliant' ? 'brilliant' : getReviewMoveSoundKey(move, gameData);
     if (key) playSfx(key);
   }, [currentPly, gameData, isPuzzleMode, playSfx]);
 
@@ -4060,23 +4202,47 @@ function GameReview({ active = true }) {
                       </div>
                     </div>
 
-                    <div className="gr-count-table">
+                    <div className="gr-count-table" aria-label="Move classification summary">
                       {[
-                        { key: 'book', icon: faBookOpen, label: 'Book' },
-                        { key: 'best', icon: faChessKnight, label: 'Best' },
-                        { key: 'excellent', icon: faChartLine, label: 'Excellent' },
-                        { key: 'inaccuracy', icon: faSearch, label: 'Inaccuracy' },
-                        { key: 'mistake', icon: faUser, label: 'Mistake' },
-                        { key: 'blunder', icon: faStopCircle, label: 'Blunder' },
-                      ].map((row) => (
-                        <div key={row.key} className="gr-count-row">
-                          <span className="gr-count-value">{classificationCounts.white[row.key]}</span>
-                          <span className={`gr-count-icon gr-count-icon-${row.key}`} aria-label={row.label}>
-                            <FontAwesomeIcon icon={row.icon} />
-                          </span>
-                          <span className="gr-count-value">{classificationCounts.black[row.key]}</span>
-                        </div>
-                      ))}
+                        { key: 'brilliant', label: 'Brilliant', symbol: '!!' },
+                        { key: 'critical', label: 'Great', symbol: '!' },
+                        { key: 'book', label: 'Book', symbol: '▣' },
+                        { key: 'best', label: 'Best', symbol: '★' },
+                        { key: 'excellent', label: 'Excellent', symbol: '👍' },
+                        { key: 'good', label: 'Good', symbol: '✓' },
+                        { key: 'inaccuracy', label: 'Inaccuracy', symbol: '?!' },
+                        { key: 'mistake', label: 'Mistake', symbol: '?' },
+                        { key: 'miss', label: 'Miss', symbol: '×' },
+                        { key: 'blunder', label: 'Blunder', symbol: '??' },
+                      ].map((row) => {
+                        const whiteCount = classificationCounts.white[row.key];
+                        const blackCount = classificationCounts.black[row.key];
+                        const jumpTo = (color) => {
+                          const target = gameData && gameData.moves && gameData.moves.find((move) => move.classification === row.key && move.color === color);
+                          if (target) { setCurrentPly(target.ply); setSidebarMode('moves'); }
+                        };
+                        return (
+                          <div key={row.key} className="gr-count-row gr-count-row-compact">
+                            <button type="button" className="gr-count-side gr-tooltip-anchor" disabled={!whiteCount}
+                              title={`${whiteCount} ${row.label.toLowerCase()} moves by White${whiteCount ? '. Click to inspect.' : ''}`}
+                              data-tooltip={`${whiteCount} White ${row.label.toLowerCase()} moves`}
+                              aria-label={`White: ${whiteCount} ${row.label} moves. Jump to first.`}
+                              onClick={() => jumpTo('w')}>{whiteCount}</button>
+                            <button type="button" className="gr-count-icon-button gr-tooltip-anchor" disabled={!whiteCount && !blackCount}
+                              title={`${row.label}: White ${whiteCount}, Black ${blackCount}. Click to inspect.`}
+                              data-tooltip={`${row.label}: White ${whiteCount}, Black ${blackCount}`}
+                              aria-label={`${row.label}: White ${whiteCount}, Black ${blackCount}. Jump to first.`}
+                              onClick={() => jumpTo(whiteCount ? 'w' : 'b')}>
+                              <span className={`gr-count-icon gr-count-icon-${row.key}`} aria-hidden="true">{row.symbol}</span>
+                            </button>
+                            <button type="button" className="gr-count-side gr-tooltip-anchor" disabled={!blackCount}
+                              title={`${blackCount} ${row.label.toLowerCase()} moves by Black${blackCount ? '. Click to inspect.' : ''}`}
+                              data-tooltip={`${blackCount} Black ${row.label.toLowerCase()} moves`}
+                              aria-label={`Black: ${blackCount} ${row.label} moves. Jump to first.`}
+                              onClick={() => jumpTo('b')}>{blackCount}</button>
+                          </div>
+                        );
+                      })}
                     </div>
 
                     {positionEval && positionEval.lines && positionEval.lines.length ? (
@@ -4105,10 +4271,12 @@ function GameReview({ active = true }) {
                       <div className="gr-insight-body">{currentInsight.body}</div>
                     </div>
 
-                    <div className={`gr-status-strip is-${statusTone}`}>
-                      <span>{hasFullReview ? 'Full review finished.' : statusMessage}</span>
-                      {engineState === 'analyzing-game' ? <span>{gameProgress}%</span> : null}
-                    </div>
+                    {!hasFullReview || isFullReviewProgressActive || engineError ? (
+                      <div className={`gr-status-strip is-${statusTone}`}>
+                        <span>{hasFullReview ? 'Full review finished.' : statusMessage}</span>
+                        {engineState === 'analyzing-game' ? <span>{gameProgress}%</span> : null}
+                      </div>
+                    ) : null}
                     {engineError ? <div className="gr-error">{engineError}</div> : null}
                     {hasFullReview && trainingSource !== 'pack' && puzzleQueue.length ? (
                       <div className="gr-review-practice-row">
@@ -4167,29 +4335,24 @@ function GameReview({ active = true }) {
 
                               const meta = move.classification ? CLASSIFICATION_META[move.classification] : null;
                               const isActive = currentPly === move.ply;
-                              const badge = move.classification === 'book'
-                                ? 'B'
-                                : move.classification === 'best'
-                                  ? '★'
-                                  : move.classification === 'excellent'
-                                    ? '!'
-                                    : move.classification === 'inaccuracy'
-                                      ? '?!'
-                                      : move.classification === 'mistake'
-                                        ? '?'
-                                        : move.classification === 'blunder'
-                                          ? '??'
-                                          : '';
+                              const badge = {
+                                brilliant: '!!', critical: '!', book: '▣', best: '★',
+                                excellent: '👍', good: '✓', forced: '→',
+                                inaccuracy: '?!', mistake: '?', miss: '×', blunder: '??',
+                              }[move.classification] || '·';
 
                               return (
                                 <button
                                   key={move.ply}
                                   type="button"
-                                  className={isActive ? 'gr-move-cell is-active' : 'gr-move-cell'}
+                                  className={isActive ? 'gr-move-cell is-active gr-tooltip-anchor' : 'gr-move-cell gr-tooltip-anchor'}
+                                  title={`${move.san}: ${meta ? meta.label : 'Not analysed'}`}
+                                  data-tooltip={`${move.san}: ${meta ? meta.label : 'Not classified'}`}
+                                  aria-label={`Move ${move.ply}: ${move.san}, ${meta ? meta.label : 'not classified'}`}
                                   onClick={() => setCurrentPly(move.ply)}
                                 >
                                   <span className="gr-move-san">{move.san}</span>
-                                  {meta ? <span className={`gr-move-badge gr-move-badge-${meta.className}`}>{badge}</span> : <span className="gr-move-badge gr-move-badge-empty" />}
+                                  {meta && ['brilliant', 'critical', 'book', 'inaccuracy', 'mistake', 'miss', 'blunder'].includes(move.classification) ? <span className={`gr-move-badge gr-move-badge-${meta.className}`}>{badge}</span> : null}
                                 </button>
                               );
                             })}
