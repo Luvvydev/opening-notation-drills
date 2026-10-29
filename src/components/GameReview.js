@@ -1218,10 +1218,11 @@ function shouldKeepPackPuzzle(puzzle) {
 
 function shouldKeepSingleGamePuzzle(puzzle) {
   if (!puzzle) return false;
+  if (puzzle.turnNumber <= 4) return false;
   if (puzzle.inBook) return false;
   if (puzzle.bestMove === puzzle.playedMove) return false;
 
-  // Practice the review's errors even in the opening or a losing position.
+  // Practice the review's errors after the first four moves, even in a losing position.
   // Packs keep their stricter selection; single games use a meaningful loss.
   return puzzle.cpLoss >= 40 && puzzle.winSwing >= 5;
 }
