@@ -1056,7 +1056,7 @@ function getPerspectiveWinPercentage(position, color) {
 
 function getPuzzleSeverityRank(classification) {
   if (classification === 'blunder') return 3;
-  if (classification === 'mistake') return 2;
+  if (classification === 'mistake' || classification === 'miss') return 2;
   if (classification === 'inaccuracy') return 1;
   return 0;
 }
@@ -1200,7 +1200,7 @@ function isForcingSan(value) {
 
 function shouldKeepPackPuzzle(puzzle) {
   if (!puzzle) return false;
-  if (puzzle.classification !== 'mistake' && puzzle.classification !== 'blunder') return false;
+  if (puzzle.classification !== 'mistake' && puzzle.classification !== 'blunder' && puzzle.classification !== 'miss') return false;
   if (puzzle.inBook) return false;
   if (puzzle.turnNumber <= 3) return false;
   if (puzzle.beforePerspectiveCp <= -260) return false;
@@ -1211,7 +1211,7 @@ function shouldKeepPackPuzzle(puzzle) {
 
   if (lineGap < 70 && !tactical) return false;
   if (puzzle.turnNumber <= 5 && (!tactical || lineGap < 120)) return false;
-  if (puzzle.classification === 'mistake' && !tactical && lineGap < 110) return false;
+  if ((puzzle.classification === 'mistake' || puzzle.classification === 'miss') && !tactical && lineGap < 110) return false;
 
   return true;
 }
@@ -1219,21 +1219,11 @@ function shouldKeepPackPuzzle(puzzle) {
 function shouldKeepSingleGamePuzzle(puzzle) {
   if (!puzzle) return false;
   if (puzzle.inBook) return false;
+  if (puzzle.bestMove === puzzle.playedMove) return false;
 
-  const tactical = Boolean(puzzle.isCapture || puzzle.isForcingBest || puzzle.isForcingPlayed);
-  const lineGap = Number(puzzle.lineGap || 0);
-  const openingTagged = Boolean(puzzle.openingKey || puzzle.lineName);
-
-  if (puzzle.turnNumber <= 6) {
-    if (puzzle.classification !== 'blunder') return false;
-    if (!tactical) return false;
-    if (lineGap < 160) return false;
-  }
-
-  if (puzzle.turnNumber <= 8 && openingTagged && !tactical) return false;
-  if (puzzle.turnNumber <= 8 && !tactical && lineGap < 140) return false;
-
-  return true;
+  // Practice the review's errors even in the opening or a losing position.
+  // Packs keep their stricter selection; single games use a meaningful loss.
+  return puzzle.cpLoss >= 40 && puzzle.winSwing >= 5;
 }
 
 function waitForNextPaint() {
@@ -1368,6 +1358,7 @@ function buildPuzzleQueue(gameData, options) {
   const thresholds = {
     blunder: 120,
     mistake: 75,
+    miss: 75,
     inaccuracy: 40,
   };
 
@@ -1378,7 +1369,7 @@ function buildPuzzleQueue(gameData, options) {
       move.bestMove &&
       move.evaluationBefore &&
       move.evaluationAfter &&
-      (move.classification === 'blunder' || move.classification === 'mistake' || move.classification === 'inaccuracy')
+      (move.classification === 'blunder' || move.classification === 'mistake' || move.classification === 'miss' || move.classification === 'inaccuracy')
     ))
     .map((move) => {
       const beforePerspectiveCp = getPerspectivePositionCp(move.evaluationBefore, focusColor);
@@ -1434,10 +1425,12 @@ function buildPuzzleQueue(gameData, options) {
     })
     .filter((puzzle) => (
       puzzle.bestSan &&
-      puzzle.beforePerspectiveCp > -320 &&
-      puzzle.cpLoss >= (thresholds[puzzle.classification] || 0) &&
-      puzzle.winSwing >= 4 &&
-      (settings.strictPackMode ? shouldKeepPackPuzzle(puzzle) : shouldKeepSingleGamePuzzle(puzzle))
+      (settings.strictPackMode
+        ? puzzle.beforePerspectiveCp > -320 &&
+          puzzle.cpLoss >= (thresholds[puzzle.classification] || 0) &&
+          puzzle.winSwing >= 4 &&
+          shouldKeepPackPuzzle(puzzle)
+        : shouldKeepSingleGamePuzzle(puzzle))
     ))
     .sort((a, b) => (
       getPuzzleSeverityRank(b.classification) - getPuzzleSeverityRank(a.classification) ||
