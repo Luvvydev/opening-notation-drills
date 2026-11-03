@@ -83,3 +83,6 @@
 }
 .workspace-header .topnav-profile-btn:hover { background: #ffffff0a; color: #fff; }
 .workspace-header .topnav-profile-btn:focus-visible { outline: 2px solid #e4bf58; outline-offset: 3px; }
+
+/* Public landing page sits outside the training navigation. */
+.workspace-shell.is-landing .workspace-main { margin-left: 0; }

@@ -7,7 +7,7 @@ const indexHtml = fs.readFileSync(path.join(buildDirectory, 'index.html'));
 
 // GitHub Pages serves these directories directly instead of its 404 fallback.
 const routes = [
-  'signup', 'my-games', 'review', 'login', 'profile',
+  'home', 'signup', 'my-games', 'review', 'login', 'profile',
   'openings', 'openings/library', 'practice', 'demo',
   'about', 'leaderboards', 'install', 'discord',
   'payment/success', 'payment/cancel'

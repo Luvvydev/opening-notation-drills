@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { BrowserRouter, Route } from 'react-router-dom';
 import './App.css';
 import Home from './components/Home';
+import PublicHome from './auth/PublicHome';
 import About from './components/About';
 import Practice from './components/Practice';
 import OpeningTrainer from './components/OpeningTrainer';
@@ -62,7 +63,8 @@ class App extends React.Component {
             <StreakModal />
 
             <WorkspaceShell>
-            <Route exact path='/' component={Home} />
+            <Route exact path='/' component={PublicHome} />
+            <Route exact path='/home' component={Home} />
             <Route exact path='/openings/library' component={Home} />
             <Route path='/practice' component={Practice} />
             <Route

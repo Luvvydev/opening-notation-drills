@@ -9,7 +9,7 @@ import './WorkspaceShell.css';
 export const WorkspaceContext = createContext(null);
 
 const navigation = [
-  { label: 'Home', icon: 'home', to: '/' },
+  { label: 'Home', icon: 'home', to: '/home' },
   { label: 'Game Review', icon: 'review', to: '/my-games', mode: 'review' },
   { label: 'Openings', icon: 'openings', to: '/openings/library' },
   { label: 'Notation Practice', icon: 'notation', to: '/practice', secondary: true },
@@ -29,6 +29,7 @@ export default function WorkspaceShell({ children }) {
   const [reviewMode, setReviewMode] = useState('review');
   const drawer = useRef(null);
   const toggle = useRef(null);
+  const landing = pathname === '/';
   const reviewing = ['/my-games', '/review'].includes(pathname);
   const activeMode = reviewMode;
 
@@ -85,12 +86,12 @@ export default function WorkspaceShell({ children }) {
 
   return (
     <WorkspaceContext.Provider value={{ toggle, openMenu: () => setOpen(true) }}>
-      <div className={`workspace-shell ${expanded ? 'is-expanded' : 'is-collapsed'}`}>
+      <div className={`workspace-shell ${expanded ? 'is-expanded' : 'is-collapsed'} ${landing ? 'is-landing' : ''}`}>
         <a className="workspace-skip" href="#workspace-content">Skip to content</a>
         {open && mobile && <button className="workspace-scrim" tabIndex={-1} aria-label="Close navigation" onClick={() => setOpen(false)} />}
-        {(!mobile || open) && <aside ref={drawer} className={`workspace-rail ${open ? 'is-open' : ''}`} role={mobile ? 'dialog' : undefined} aria-modal={mobile ? 'true' : undefined} aria-label="Main navigation">
+        {!landing && (!mobile || open) && <aside ref={drawer} className={`workspace-rail ${open ? 'is-open' : ''}`} role={mobile ? 'dialog' : undefined} aria-modal={mobile ? 'true' : undefined} aria-label="Main navigation">
           <div className="workspace-brand">
-            <Link to="/" aria-label="ChessDrills home" title="ChessDrills home"><img src={logo} alt="ChessDrills" /></Link>
+            <Link to={user ? '/home' : '/'} aria-label="ChessDrills home" title="ChessDrills home"><img src={logo} alt="ChessDrills" /></Link>
             {mobile && <button type="button" className="workspace-icon-button" aria-label="Close menu" onClick={() => setOpen(false)}><WorkspaceIcon name="close" /></button>}
           </div>
           <nav aria-label="Training">
@@ -105,7 +106,7 @@ export default function WorkspaceShell({ children }) {
           </div>
         </aside>}
         <div className="workspace-main">
-          <header className="workspace-header"><TopNav shellHeader hideHero /></header>
+          {!landing && <header className="workspace-header"><TopNav shellHeader hideHero /></header>}
           <main id="workspace-content" tabIndex={-1}>{children}</main>
         </div>
       </div>

@@ -34,7 +34,7 @@ export default function Login(props) {
         props.location.state &&
         props.location.state.from
           ? props.location.state.from
-          : "/profile";
+          : "/home";
 
       if (props && props.history) props.history.push(from);
     } catch (err) {

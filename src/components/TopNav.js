@@ -246,7 +246,7 @@ function TopNav(props) {
       <div className="topnav">
         <div className="topnav-inner">
           {workspace && <button ref={workspace.toggle} type="button" className="workspace-icon-button workspace-menu-trigger" aria-label="Open navigation menu" aria-haspopup="dialog" onClick={workspace.openMenu}><WorkspaceIcon name="menu" /></button>}
-          <Link to="/" className="topnav-logo-link" aria-label="Home">
+          <Link to={user ? "/home" : "/"} className="topnav-logo-link" aria-label="Home">
             <img src={logo} alt="chessdrills.net" className="topnav-logo" />
           </Link>
 

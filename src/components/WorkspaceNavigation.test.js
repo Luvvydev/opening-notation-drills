@@ -52,20 +52,20 @@ test.each([
   ['/practice/', 'Notation Practice'],
   ['/leaderboards/', 'Leaderboards'],
   ['/profile/', 'Profile'],
-  ['/', 'Home']
+  ['/home', 'Home']
 ])('sidebar highlights the correct item at %s', (url, label) => {
   const screen = render(<MemoryRouter initialEntries={[url]}><WorkspaceShell><p>Page content</p></WorkspaceShell></MemoryRouter>);
   expect(screen.getByRole('link', { name: label }).classList.contains('is-active')).toBe(true);
 });
 
 test('desktop rail collapses and mobile drawer closes with Escape', () => {
-  const screen = render(<MemoryRouter><WorkspaceShell><p>Page content</p></WorkspaceShell></MemoryRouter>);
+  const screen = render(<MemoryRouter initialEntries={['/home']}><WorkspaceShell><p>Page content</p></WorkspaceShell></MemoryRouter>);
   fireEvent.click(screen.getByRole('button', { name: 'Collapse sidebar' }));
   expect(screen.getByRole('button', { name: 'Expand sidebar' })).toBeTruthy();
   screen.unmount();
   const originalWidth = window.innerWidth;
   window.innerWidth = 390;
-  const mobile = render(<MemoryRouter><WorkspaceShell><p>Page content</p></WorkspaceShell></MemoryRouter>);
+  const mobile = render(<MemoryRouter initialEntries={['/home']}><WorkspaceShell><p>Page content</p></WorkspaceShell></MemoryRouter>);
   fireEvent.click(mobile.getByText('Open navigation menu'));
   expect(mobile.getByRole('dialog', { name: 'Main navigation' })).toBeTruthy();
   fireEvent.keyDown(document, { key: 'Escape' });
