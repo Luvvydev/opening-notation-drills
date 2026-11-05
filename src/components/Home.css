@@ -209,3 +209,13 @@
   .home-demo .home-demo-copy { display: flex; }
   .home-demo .home-demo-bottom { margin-top: 12px; padding-top: 10px; }
 }
+
+.home-library-access { margin: -4px 0 18px !important; color: #969eaa; font-size: 12px; font-weight: 400; }
+@media (min-width: 1600px) {
+  .home-opening-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+  .home-opening-card { gap: 16px; padding: 20px; }
+  .home-opening-card h3 { font-size: 19px; }
+  .home-opening-card p { font-size: 13px; }
+  .home-opening-thumb { flex-basis: 128px; width: 128px; height: 128px; }
+  .home-opening-thumb > div { transform: scale(.8); transform-origin: top left; }
+}

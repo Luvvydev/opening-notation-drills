@@ -315,6 +315,7 @@ class Home extends Component {
         {prestige > 0 && <span className="home-opening-prestige">Prestige {_toRomanNumeral(prestige)}</span>}
         {stats.total > 0 && stats.completed >= stats.total && <span className="home-opening-prestige">Prestige ready</span>}
         {opening.badge && <span className="home-opening-new">{opening.badge}</span>}
+
       <span className="home-opening-start">Start learning <WorkspaceIcon name="arrow" /></span></div>
     </Link>;
   };
@@ -456,7 +457,7 @@ class Home extends Component {
           <div className="home-hero-copy"><p className="home-eyebrow">YOUR GAMES. YOUR TRAINING.</p><h1 id="home-heading">Review your games.<br />Train your mistakes.</h1>
             <p className="home-hero-description">Review games from Chess.com or Lichess. Practice the moves you missed and build your repertoire.</p>
             <div className="home-hero-actions"><button className="home-primary-button" type="button" onClick={() => this.goToReview()}>Review a game <WorkspaceIcon name="arrow" /></button><Link className="home-text-link" to="/openings/library">Browse openings <WorkspaceIcon name="arrow" /></Link></div>
-            <p className="home-account-note">{this.props.user ? "Your game review and personal mistake training." : "Free account required for game review."}</p>
+            <p className="home-account-note">{this.props.user ? "Your game review and personal mistake training." : "Review a game free. Practice the moves you missed."}</p>
           </div>
           <HomeOpeningDemo boardTheme={this.state.boardTheme} />
         </section>

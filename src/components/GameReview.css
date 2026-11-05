@@ -4159,30 +4159,17 @@
 }
 
 
-.gr-access-note {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 12px;
-  max-width: 1440px;
-  margin: 16px auto;
-  padding: 14px 20px;
-  box-sizing: border-box;
-  color: #e2e8f0;
-  background: #172033;
-  border: 1px solid #374151;
-  border-radius: 12px;
-}
-
-.gr-access-note > span {
-  flex: 1 1 260px;
-  line-height: 1.5;
-}
-
-.gr-access-note > a {
-  text-decoration: none;
-}
+/* Access and save messages stay inside the review side panel. */
+.gr-session-tools { flex: 0 0 auto; min-width: 0; }
+.gr-session-tools:empty { display: none; }
+.gr-free-caption { margin: 0 0 12px; color: #909ba9; font-size: 11px; font-weight: 400; line-height: 1.5; }
+.gr-inline-notice, .gr-inline-offer { position: relative; margin: 0 0 12px; padding: 12px; background: #191d23; border: 1px solid #303640; border-radius: 7px; font-size: 12px; font-weight: 400; }
+.gr-inline-notice p, .gr-inline-offer p { margin: 0 0 8px; color: #b7bfca; line-height: 1.5; }
+.gr-inline-notice a, .gr-inline-offer a, .gr-saved-link { color: #dbc58b; font-size: 12px; font-weight: 500; text-decoration: none; }
+.gr-save-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin: 0 0 12px; }
+.gr-save-actions .gr-button { width: auto; flex: 0 0 auto; padding: 7px 10px; min-height: 32px; font-size: 11px; }
+.gr-save-status { flex: 1 0 100%; margin: 0; color: #aeb9a8; font-size: 11px; font-weight: 400; line-height: 1.5; }
+.gr-offer-dismiss { display: inline; margin-left: 10px; border: 0; padding: 4px 0; background: none; color: #929ca8; font-size: 11px; cursor: pointer; }
 
 /* Additional Game Review classification tones. */
 .gr-board-corner-badge-brilliant { background: #60cad5; color: #10272e; }

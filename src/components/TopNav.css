@@ -866,3 +866,15 @@
   width: 100%;
   max-width: 1100px;
 }
+
+/* Trial status belongs in the account controls, not in a page-wide banner. */
+.topnav-trial-status {
+  display: inline-flex; align-items: center; min-height: 32px; padding: 6px 11px;
+  border: 1px solid #4a4230; border-radius: 6px; background: #211e16;
+  color: #dbc58b; font-size: 12px; font-weight: 500; white-space: nowrap; text-decoration: none;
+}
+.topnav-trial-status:hover { background: #2a251a; color: #f4d889; }
+@media (max-width: 420px) {
+  .workspace-header .topnav-right { gap: 5px; }
+  .topnav-trial-status { padding-inline: 8px; font-size: 11px; }
+}

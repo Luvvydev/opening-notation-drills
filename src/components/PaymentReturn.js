@@ -5,7 +5,7 @@ import TopNav from "./TopNav";
 import SEO from "./SEO";
 import { functions } from "../firebase";
 import { useAuth } from "../auth/AuthProvider";
-import { trackRedditPurchase } from "../utils/trackEvent";
+import { trackRedditPurchase, trackEvent } from "../utils/trackEvent";
 import "./PaymentReturn.css";
 
 function getQueryParam(search, name) {
@@ -109,6 +109,13 @@ export default function PaymentReturn(props) {
         const purchase = result && result.data && result.data.purchase;
         if (purchase) {
           trackRedditPurchase(purchase);
+          try {
+            const key = "chessdrills.purchase_event." + purchase.conversionId;
+            if (!localStorage.getItem(key)) {
+              trackEvent("purchase_completed", { transaction_id: purchase.conversionId, value: purchase.value, currency: purchase.currency }, null, { persist: false });
+              localStorage.setItem(key, "1");
+            }
+          } catch (_) {}
           return;
         }
       } catch (_) {

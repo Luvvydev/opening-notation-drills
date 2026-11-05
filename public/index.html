@@ -75,9 +75,11 @@
     </script>
     <!-- Reddit Pixel -->
     <script>
+      if (!["localhost", "127.0.0.1", "[::1]"].includes(window.location.hostname)) {
       !function(w,d){if(!w.rdt){var p=w.rdt=function(){p.sendEvent?p.sendEvent.apply(p,arguments):p.callQueue.push(arguments)};p.callQueue=[];var t=d.createElement("script");t.src="https://www.redditstatic.com/ads/pixel.js?pixel_id=a2_iony618o0zdh",t.async=!0;var s=d.getElementsByTagName("script")[0];s.parentNode.insertBefore(t,s)}}(window,document);
       rdt('init', 'a2_iony618o0zdh');
       rdt('track', 'PageVisit');
+      }
     </script>
     <!-- End Reddit Pixel -->
     <title>ChessDrills | Chess Opening Trainer and Drills</title>

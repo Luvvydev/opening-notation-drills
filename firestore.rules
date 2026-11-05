@@ -106,12 +106,15 @@ service cloud.firestore {
     }
 
     function isMember(uid) {
-      return isSignedIn()
-        && get(/databases/$(database)/documents/users/$(uid)).data.membershipActive == true
-        && (
-          get(/databases/$(database)/documents/users/$(uid)).data.membershipTier == "member" ||
-          get(/databases/$(database)/documents/users/$(uid)).data.membershipTier == "lifetime"
-        );
+      let account = get(/databases/$(database)/documents/users/$(uid)).data;
+      return isSignedIn() && (
+        (account.get("membershipActive", false) == true
+          && account.get("membershipTier", "free") in ["member", "lifetime"])
+        || (account.get("trialUsed", false) == true
+          && account.get("trialStartedAt", null) is timestamp
+          && account.trialStartedAt <= request.time
+          && request.time < account.trialStartedAt + duration.value(3, "d"))
+      );
     }
 
     function usernameOwner(username) {
@@ -223,6 +226,21 @@ service cloud.firestore {
         && isValidTrialUpdate();
 
       allow delete: if false;
+
+      // Owner can retain access to saved history after expiry.
+      // Bounded writes and paid/trial checks are handled by Admin callables.
+      match /reviewSummaries/{reviewId} {
+        allow read: if isOwner(userId);
+        allow write: if false;
+      }
+      match /trainingItems/{itemId} {
+        allow read: if isOwner(userId);
+        allow write: if false;
+      }
+      match /trainingState/{stateId} {
+        allow read: if isOwner(userId);
+        allow write: if false;
+      }
 
       // Member-readable stats for public profile highlights
       match /memberStats/{docId} {

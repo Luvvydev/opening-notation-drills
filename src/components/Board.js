@@ -29,6 +29,7 @@ class Board extends Component {
 
   constructor(props) {
     super(props);
+    this.timeouts = new Set();
     this.state = { 
       fen: 'start', 
       randomGameIndex: 0, 
@@ -61,7 +62,7 @@ class Board extends Component {
       this.interval = setInterval(() => this.setState({ timerCount: this.state.timerCount+1 }), 1000); // Start timer
     
       // Call callbackEnd once timer stops
-      setTimeout(() => {
+      this.scheduleTimeout(() => {
         const finalBoardProps = {
           position: this.state.fen,
           squareStyles: this.state.squareStyles,
@@ -86,10 +87,19 @@ class Board extends Component {
   }
 
   componentWillUnmount() {
-    if(this.props.timed) {
-      clearInterval(this.interval);
-    } 
+    clearInterval(this.interval);
+    this.timeouts.forEach(clearTimeout);
+    this.timeouts.clear();
   }
+
+  scheduleTimeout = (callback, delay) => {
+    const timer = setTimeout(() => {
+      this.timeouts.delete(timer);
+      callback();
+    }, delay);
+    this.timeouts.add(timer);
+    return timer;
+  };
 
   /* ====================================== Component Methods ====================================== */
 
@@ -194,8 +204,8 @@ class Board extends Component {
       lastMove: null
     });
 
-    setTimeout(() => this.makeInitMove(), 100);
-    setTimeout(() => this.updateSquareStyling(), 800);
+    this.scheduleTimeout(() => this.makeInitMove(), 100);
+    this.scheduleTimeout(() => this.updateSquareStyling(), 800);
   }
 
   // For initMove animation
@@ -332,7 +342,7 @@ class Board extends Component {
     this.setState({ incorrect: false, correct: false });
 
     if(!this.props.timed) {
-      setTimeout(() => {
+      this.scheduleTimeout(() => {
         this.props.callbackDisableSettings(false)
       }, 800);
     }

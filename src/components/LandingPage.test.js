@@ -35,7 +35,7 @@ test('visitor can reveal a legal fork and reset the example', () => {
   fireEvent.click(screen.getByRole('button', { name: /Reset the example/ }));
   expect(screen.getByTestId('preview-board').getAttribute('data-fen')).toBe(before);
   expect(screen.getByRole('link', { name: /Try an opening/ }).getAttribute('href')).toBe('#opening-demo');
-  screen.getAllByRole('link', { name: /Try for free/ }).forEach((link) => expect(link.getAttribute('href')).toBe('/signup?source=landing&from=%2Fabout'));
+  screen.getAllByRole('link', { name: /Try opening training/ }).forEach((link) => expect(link.getAttribute('href')).toBe('/openings?opening=london'));
 });
 
 test('landing hides training navigation and existing home retains it', () => {
@@ -52,7 +52,7 @@ test('signed in visitors get a training shortcut and membership links', () => {
   useAuth.mockReturnValue({ user: { uid: 'member' } });
   const screen = render(<MemoryRouter><LandingPage /></MemoryRouter>);
   expect(screen.getByRole('link', { name: 'My training' }).getAttribute('href')).toBe('/home');
-  screen.getAllByRole('link', { name: /See membership/ }).forEach((link) => expect(link.getAttribute('href')).toBe('/about'));
+  screen.getAllByRole('link', { name: /See Premium/ }).forEach((link) => expect(link.getAttribute('href')).toBe('/about'));
 });
 
 

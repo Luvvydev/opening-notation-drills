@@ -1,5 +1,5 @@
 import { getAnalytics, isSupported, logEvent as firebaseLogEvent } from "firebase/analytics";
-import { addDoc, collection, doc, serverTimestamp, setDoc } from "firebase/firestore";
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { app, db } from "../firebase";
 
 const VISITOR_KEY = "chessdrills_visitor_id_v1";
@@ -11,6 +11,12 @@ const ONCE_KEY_PREFIX = "chessdrills_event_once_v1";
 const SESSION_MS = 30 * 60 * 1000;
 
 let analyticsPromise = null;
+
+function isLocalTest() {
+  return (process.env.NODE_ENV !== "production" && process.env.REACT_APP_USE_EMULATORS === "true") ||
+    String(app.options.projectId || "").startsWith("demo-") ||
+    (typeof window !== "undefined" && ["localhost", "127.0.0.1", "[::1]"].includes(window.location.hostname));
+}
 
 function nowMs() {
   return Date.now();
@@ -35,6 +41,15 @@ function safeLocalStorageSet(key, value) {
     if (typeof window === "undefined" || !window.localStorage) return;
     window.localStorage.setItem(key, value);
   } catch (_) {}
+}
+
+export function getExperimentVariant(name) {
+  const key = "chessdrills.experiment." + name;
+  const current = safeLocalStorageGet(key);
+  if (current === "A" || current === "B") return current;
+  const variant = Math.random() < 0.5 ? "A" : "B";
+  safeLocalStorageSet(key, variant);
+  return variant;
 }
 
 function randomId(prefix) {
@@ -83,7 +98,7 @@ function sanitizeEventName(name) {
 function sanitizeParamValue(value) {
   if (value == null) return undefined;
 
-  if (typeof value === "string") return value.slice(0, 500);
+  if (typeof value === "string") return value.split("?")[0].slice(0, 500);
   if (typeof value === "number") return Number.isFinite(value) ? value : undefined;
   if (typeof value === "boolean") return value;
 
@@ -126,10 +141,12 @@ function getAnalyticsClient() {
 }
 
 function shouldPersist(user, persist) {
-  return persist !== false && !!(user && user.uid);
+  // Behavioral analytics belongs in Analytics, not an unbounded user subcollection.
+  return false;
 }
 
 export function trackEvent(name, params = {}, user = null, options = {}) {
+  if (isLocalTest()) return;
   const eventName = sanitizeEventName(name);
   const eventParams = sanitizeParams(params);
 
@@ -150,6 +167,7 @@ export function trackEvent(name, params = {}, user = null, options = {}) {
     visitor_id: visitorId,
     session_id: sessionId,
     path,
+    offer_variant: getExperimentVariant("review_pack_offer_v1"),
     client_created_at: clientCreatedAt
   };
 
@@ -176,6 +194,7 @@ export function trackEvent(name, params = {}, user = null, options = {}) {
 }
 
 export function trackFirstVisit(user = null) {
+  if (isLocalTest()) return;
   const firstSeen = Number(safeLocalStorageGet(FIRST_SEEN_KEY)) || 0;
   const alreadyLogged = safeLocalStorageGet(FIRST_VISIT_LOGGED_KEY);
   const now = nowMs();
@@ -188,6 +207,7 @@ export function trackFirstVisit(user = null) {
 }
 
 export function trackDay2Return(user = null) {
+  if (isLocalTest()) return;
   const firstSeen = Number(safeLocalStorageGet(FIRST_SEEN_KEY)) || 0;
   const alreadyLogged = safeLocalStorageGet(DAY_2_LOGGED_KEY);
   const now = nowMs();
@@ -214,6 +234,7 @@ export function trackDay2Return(user = null) {
 }
 
 export function trackOncePerUser(user, name, params = {}) {
+  if (isLocalTest()) return;
   if (!user || !user.uid) return;
 
   const eventName = sanitizeEventName(name);
@@ -221,24 +242,7 @@ export function trackOncePerUser(user, name, params = {}) {
   if (safeLocalStorageGet(key)) return;
 
   const eventParams = sanitizeParams(params);
-  const visitorId = getVisitorId();
-  const sessionId = getSessionId();
-  const path = getWindowPath();
-  const clientCreatedAt = nowMs();
-
   trackEvent(eventName, eventParams, user, { persist: false });
-
-  try {
-    setDoc(doc(db, "users", user.uid, "analyticsEvents", eventName), {
-      name: eventName,
-      params: eventParams,
-      visitorId,
-      sessionId,
-      path,
-      createdAt: serverTimestamp(),
-      clientCreatedAt
-    }).catch(() => {});
-  } catch (_) {}
 
   safeLocalStorageSet(key, "1");
 }
@@ -257,7 +261,7 @@ export function trackMembershipMilestones(user, userDoc) {
   const paidActive = !!userDoc.membershipActive && (tier === "member" || tier === "lifetime");
 
   if (paidActive) {
-    trackOncePerUser(user, "paid_conversion", {
+    trackOncePerUser(user, "paid_membership_seen", {
       source: "membership_state",
       membership_tier: tier,
       membership_plan: userDoc.membershipPlan || "unknown"
@@ -276,6 +280,7 @@ export function getSignupSourceFromReason(reason, fallback = "direct") {
 // Called only with a completed transaction verified by the payment function.
 const redditPurchasesSent = new Set();
 export function trackRedditPurchase(purchase) {
+  if (isLocalTest()) return;
   if (typeof window === "undefined" || typeof window.rdt !== "function" || !purchase ||
       typeof purchase.conversionId !== "string" || !purchase.conversionId ||
       !Number.isFinite(purchase.value) || purchase.value <= 0 ||

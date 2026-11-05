@@ -1208,7 +1208,7 @@ const onChangeCoachTheme = async (nextCoachTheme) => {
                 </>
               ) : trialActive ? (
                 <div className="profile-membership-row">
-                  <div className="profile-membership-text">3 day free trial active. {trialRemainingLabel}</div>
+                  <div className="profile-membership-text">3 day Premium trial active. {trialRemainingLabel}</div>
                   <button
                     type="button"
                     className="profile-membership-btn"
@@ -1219,7 +1219,7 @@ const onChangeCoachTheme = async (nextCoachTheme) => {
                 </div>
               ) : trialEligible ? (
                 <div className="profile-membership-row">
-                  <div className="profile-membership-text">Start your 3 day free trial.</div>
+                  <div className="profile-membership-text">Try all Premium training free for 3 days.</div>
                   <button
                     type="button"
                     className="profile-membership-btn"
@@ -1230,7 +1230,7 @@ const onChangeCoachTheme = async (nextCoachTheme) => {
                 </div>
               ) : (
                 <div className="profile-membership-row">
-                  <div className="profile-membership-text">Your free trial has ended. Join now to unlock premium again.</div>
+                  <div className="profile-membership-text">Your Premium trial has ended. Free reviews and opening Learn remain available.</div>
                   <button
                     type="button"
                     className="profile-membership-btn"

@@ -317,7 +317,14 @@ function TopNav(props) {
                 ) : null}
               </div>
 
-              {user ? (
+              {showTrialBanner ? (
+                <Link className="topnav-trial-status" to={{ pathname: "/about", state: { from: window.location.pathname } }}
+                  title="Your Premium trial is active. View membership options.">
+                  Trial · {trialCountdown.remainingMs >= 86400000
+                    ? Math.ceil(trialCountdown.remainingMs / 86400000) + " days left"
+                    : Math.max(1, Math.ceil(trialCountdown.remainingMs / 3600000)) + " hours left"}
+                </Link>
+              ) : user ? (
                 <div
                   className={
                     "topnav-member-pill " +
@@ -459,32 +466,6 @@ function TopNav(props) {
           </div>
         </div>
       </div>
-
-      {showTrialBanner ? (
-        <div className="topnav-trial-banner">
-          <div className="topnav-trial-banner-inner">
-            <div className="topnav-trial-banner-copy">
-              <span className="topnav-trial-banner-label">Trial ends in:</span>
-            </div>
-
-            <div className="topnav-trial-banner-timer" aria-label="Trial countdown">
-              {trialCountdown.segments.map((segment) => (
-                <div key={segment.label} className="topnav-trial-banner-segment">
-                  <span className="topnav-trial-banner-value">{String(segment.value).padStart(2, '0')}</span>
-                  <span className="topnav-trial-banner-unit">{segment.label}</span>
-                </div>
-              ))}
-            </div>
-
-            <Link
-              to={{ pathname: "/about", state: { from: `${window.location.pathname || "/about"}${window.location.search || ""}` || "/about", reason: "upgrade_cta" } }}
-              className="topnav-trial-banner-btn"
-            >
-              Join Now
-            </Link>
-          </div>
-        </div>
-      ) : null}
 
       {!hideHero ? (
         <div className="page-hero">

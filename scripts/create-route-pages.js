@@ -9,7 +9,7 @@ const indexHtml = fs.readFileSync(path.join(buildDirectory, 'index.html'));
 const routes = [
   'home', 'signup', 'my-games', 'review', 'login', 'profile',
   'openings', 'openings/library', 'practice', 'demo',
-  'about', 'leaderboards', 'install', 'discord',
+  'training', 'about', 'leaderboards', 'install', 'discord',
   'payment/success', 'payment/cancel'
 ];
 

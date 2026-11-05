@@ -1,3 +1,4 @@
+import { prepareLocalAccount } from "./accountStorage";
 import { db, serverTimestamp } from "../firebase";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 
@@ -300,10 +301,11 @@ function mergeSettings(localRaw, remoteRaw) {
   return rHasAny ? r : l;
 }
 
-export async function syncAccountFromLocalAndCloud(user) {
+export async function syncAccountFromLocalAndCloud(user, isCurrent = () => true) {
   if (!user || !user.uid) return null;
 
   const uid = user.uid;
+  prepareLocalAccount(uid);
   const ref = doc(db, "users", uid);
 
   // Load local snapshots
@@ -316,6 +318,7 @@ export async function syncAccountFromLocalAndCloud(user) {
 
   // Load remote
   const snap = await getDoc(ref);
+  if (!isCurrent()) return null;
   const remote = snap.exists() ? asObj(snap.data()) : {};
 
   const remoteDailyStreak = asObj(remote.dailyStreak);

@@ -19,6 +19,7 @@ import InstallAppPage from './components/InstallAppPage';
 import ReviewWorkspace from './components/ReviewWorkspace';
 import WorkspaceShell from './components/WorkspaceShell';
 import PaymentReturn from './components/PaymentReturn';
+import TrainingPage from './components/TrainingPage';
 
 import PublicProfile from './components/PublicProfile';
 import { installCloudSync } from './utils/cloudSync';
@@ -67,6 +68,7 @@ class App extends React.Component {
             <Route exact path='/home' component={Home} />
             <Route exact path='/openings/library' component={Home} />
             <Route path='/practice' component={Practice} />
+            <Route exact path='/training' component={TrainingPage} />
             <Route
               exact
               path='/demo'

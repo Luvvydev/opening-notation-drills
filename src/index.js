@@ -8,6 +8,9 @@ if (typeof window !== "undefined") {
     window.global = window;
   }
 
+  const localTest = process.env.REACT_APP_USE_EMULATORS === 'true' ||
+    ['localhost', '127.0.0.1', '[::1]'].includes(window.location.hostname);
+  if (!localTest) {
   if (!document.querySelector('script[src="https://www.googletagmanager.com/gtag/js?id=AW-18021865313"]')) {
     const googleTagScript = document.createElement('script');
     googleTagScript.async = true;
@@ -20,6 +23,7 @@ if (typeof window !== "undefined") {
   window.gtag = window.gtag || gtag;
   window.gtag('js', new Date());
   window.gtag('config', 'AW-18021865313');
+  }
 }
 
 import React from 'react';

@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import Chessboard from "chessboardjsx";
-import * as Chess from "chess.js";
+import * as ChessModule from "chess.js";
 import { OPENING_SETS as CATALOG_OPENING_SETS } from "../openings/openingCatalog";
 import { buildMoveFeedback } from "../openings/feedback";
 import { useAuth } from "../auth/AuthProvider";
@@ -24,6 +24,8 @@ import { db } from "../firebase";
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { dayKeyFromDate, isoWeekKeyFromDate, monthKeyFromDate } from "../utils/periodKeys";
 import { trackEvent } from "../utils/trackEvent";
+
+const Chess = ChessModule.Chess || ChessModule.default || ChessModule;
 
 class BoardErrorBoundary extends Component {
   constructor(props) {
@@ -95,44 +97,10 @@ function toRomanNumeral(value) {
   return out || String(n);
 }
 
-// ---- Logged-out free drills limiter ----
-const FREE_DRILLS_KEY = "chessdrills_free_drills_v1";
+// Free samples use fixed course line IDs, never a completion quota.
 const DEMO_OPENING_KEY = "london";
-
-function loadFreeDrillsMap() {
-  try {
-    const raw = window.localStorage.getItem(FREE_DRILLS_KEY);
-    if (!raw) return {};
-    const parsed = JSON.parse(raw);
-    return parsed && typeof parsed === "object" ? parsed : {};
-  } catch (_) {
-    return {};
-  }
-}
-
-function saveFreeDrillsMap(map) {
-  try {
-    window.localStorage.setItem(FREE_DRILLS_KEY, JSON.stringify(map || {}));
-  } catch (_) {}
-}
-
-function getFreeDrillsCount(openingKey) {
-  const key = String(openingKey || "");
-  const map = loadFreeDrillsMap();
-  const n = map && typeof map[key] === "number" ? map[key] : 0;
-  return Math.max(0, n);
-}
-
-function incFreeDrillsCount(openingKey) {
-  const key = String(openingKey || "");
-  const map = loadFreeDrillsMap();
-  const cur = map && typeof map[key] === "number" ? map[key] : 0;
-  const next = Math.max(0, cur) + 1;
-  map[key] = next;
-  saveFreeDrillsMap(map);
-  return next;
-}
-
+const FREE_SAMPLE_OPENINGS = new Set(["london", "sicilian"]);
+const FREE_SAMPLE_LINES = 5;
 
 
 function pickDefaultLearnLineId(openingKey, lines, preferredId = null) {
@@ -377,7 +345,7 @@ class OpeningTrainer extends Component {
     const learnProgress = loadLearnProgress();
     const settings = loadSettings(DEFAULT_THEME);
     const shouldStartFromIntro = !demoMode && !sharedCustomLine && shouldStartLearnFromIntro(firstSetKey, firstLines, progress, learnProgress);
-    const firstId = demoMode
+    let firstId = demoMode
       ? pickDefaultLearnLineId(firstSetKey, firstLines)
       : sharedCustomLine
         ? pickDefaultLearnLineId(firstSetKey, firstLines, sharedCustomLine.id)
@@ -388,6 +356,17 @@ class OpeningTrainer extends Component {
               lines: firstLines,
               learnProgress
             });
+
+    const requested = new URLSearchParams((props.location && props.location.search) || "");
+    const requestedMode = requested.get("mode");
+    const sampleIds = getOrderedLineIdsForLines(firstSetKey, firstLinesBuiltIn).slice(0, FREE_SAMPLE_LINES);
+    const requestedLine = firstLines.find((line) => line.id === requested.get("line"));
+    const initialMode = !demoMode && ["practice", "drill"].includes(requestedMode)
+      && (props.membershipActive || FREE_SAMPLE_OPENINGS.has(firstSetKey)) ? requestedMode : "learn";
+    if (initialMode !== "learn") {
+      firstId = requestedLine && (props.membershipActive || sampleIds.includes(requestedLine.id))
+        ? requestedLine.id : props.membershipActive ? firstId : sampleIds[0];
+    }
 
     const drillStats = this.loadDrillStats();
 
@@ -400,8 +379,8 @@ class OpeningTrainer extends Component {
       prevPracticeLineId: null,
       prevLearnLineId: null,
       learnRecentLineIds: [],
-      linePicker: "random",
-      gameMode: "learn",
+      linePicker: requestedLine && initialMode !== "learn" ? firstId : "random",
+      gameMode: initialMode,
       modePanelVisible: !demoMode,
       userHasPlayedThisLine: false,
       helpUsed: false,
@@ -591,55 +570,19 @@ this._countedSeenForRun = false;
     return true;
   };
 
-  enforceLearnGate = () => {
-    if (this.props.authLoading) return false;
-    if (this.state && this.state.demoMode) return false;
-
-    const mode = this.state.gameMode || "learn";
-    const hasPaidAccess = !!(this.props.user && this.props.membershipActive === true);
-
-    // Practice + Drill are premium only.
-    if (mode === "practice" || mode === "drill") {
-      if (hasPaidAccess) return false;
-
-      if (this.props && this.props.history && this.props.history.replace) {
-        const pathname = this.props && this.props.location ? this.props.location.pathname : "/openings";
-        const search = this.props && this.props.location ? this.props.location.search : "";
-        const from = `${pathname}${search}`;
-
-        // Force them to About to start the premium trial or checkout.
-        this.props.history.replace({
-          pathname: "/about",
-          state: { from, reason: "membership_required" }
-        });
-      }
-      return true;
-    }
-
-    // Learn is free up to 3 completed drills per opening for non-members.
-    if (mode === "learn" && !hasPaidAccess) {
-      const openingKey = this.state.openingKey;
-      const used = getFreeDrillsCount(openingKey);
-
-      if (used >= 3) {
-        if (this.props && this.props.history && this.props.history.replace) {
-          const pathname = this.props && this.props.location ? this.props.location.pathname : "/openings";
-          const search = this.props && this.props.location ? this.props.location.search : "";
-          const from = `${pathname}${search}`;
-
-          this.props.history.replace({
-            pathname: "/about",
-            state: { from, reason: "trial_required" }
-          });
-        }
-        return true;
-      }
-    }
-
-    return false;
+  canTrainOpening = () => {
+    return !!this.props.membershipActive || FREE_SAMPLE_OPENINGS.has(this.state.openingKey);
   };
 
-
+  enforceLearnGate = () => {
+    if (this.props.authLoading || this.state.demoMode) return false;
+    const mode = this.state.gameMode || "learn";
+    if ((mode === "practice" || mode === "drill") && !this.canTrainOpening()) {
+      this.setState({ gameMode: "learn", memberGateOpen: true, memberGateMode: mode }, () => this.resetLine(false));
+      return true;
+    }
+    return false;
+  };
 
   computeBoardSize = () => {
     try {
@@ -687,6 +630,10 @@ this._countedSeenForRun = false;
 
   
   componentDidUpdate(prevProps, prevState) {
+    if (prevProps.membershipActive && !this.props.membershipActive && this.state.gameMode !== "learn") {
+      this.setState({ gameMode: "learn", linePicker: "random" }, () => this.resetLine(false));
+      return;
+    }
     if (prevProps.authLoading && !this.props.authLoading) {
       this.maybeRedirectForLockedOpening(this.state.openingKey);
     }
@@ -1109,6 +1056,10 @@ saveCustomModal = () => {
     const customAll = this.state.customLines || [];
     const customForOpening = customAll.filter((l) => l && l.openingKey === openingKey);
 
+    if (!this.props.membershipActive && (this.state.gameMode === "practice" || this.state.gameMode === "drill")) {
+      const ids = getOrderedLineIdsForLines(openingKey, builtIn).slice(0, FREE_SAMPLE_LINES);
+      return FREE_SAMPLE_OPENINGS.has(openingKey) ? ids.map((id) => builtIn.find((line) => line.id === id)).filter(Boolean) : [];
+    }
     return builtIn.concat(customForOpening);
   };
 
@@ -1639,8 +1590,7 @@ nextLine = () => {
       // reserved for future analytics hooks
     }
     const openingKey = this.state.openingKey;
-    const lineIdsRaw = getOrderedLineIds(openingKey);
-    const lineIds = (lineIdsRaw && lineIdsRaw.length) ? lineIdsRaw : this.getLines().map((l) => l.id);
+    const lineIds = getOrderedLineIdsForLines(openingKey, this.getLines());
     const shouldExcludeRecent = (_reason === "clean_complete" || _reason === "next_button")
       && !this.state.practiceForceRepeat;
 
@@ -1765,11 +1715,12 @@ nextLine = () => {
     const nextKey = e && e.target ? e.target.value : "london";
     if (this.maybeRedirectForLockedOpening(nextKey)) return;
     const nextSet = OPENING_SETS[nextKey] || OPENING_SETS.london;
-    const nextLines = nextSet.lines || [];
+    const nextLines = !this.props.membershipActive && ["practice", "drill"].includes(this.state.gameMode)
+      ? (FREE_SAMPLE_OPENINGS.has(nextKey) ? getOrderedLineIdsForLines(nextKey, nextSet.lines || []).slice(0, FREE_SAMPLE_LINES).map((id) => nextSet.lines.find((line) => line.id === id)) : [])
+      : nextSet.lines || [];
     const shouldStartFromIntro = shouldStartLearnFromIntro(nextKey, nextLines, this.state.progress, this.state.learnProgress);
 
-const orderedIdsRaw = getOrderedLineIds(nextKey);
-const orderedIds = (orderedIdsRaw && orderedIdsRaw.length) ? orderedIdsRaw : nextLines.map((l) => l.id);
+const orderedIds = getOrderedLineIdsForLines(nextKey, nextLines);
 
 let nextId = "";
 
@@ -2130,25 +2081,7 @@ onCompletedLine = () => {
   const prestigeIsReady = this.getOpeningPrestigeSummaryFor(nextProgressForPrestige, nextLearnProgressForPrestige, this.state.openingKey).isComplete;
   const prestigeJustUnlocked = !prestigeWasReady && prestigeIsReady;
 
-  const hasPaidAccess = !!(this.props.user && this.props.membershipActive === true);
-
-  if (!hasPaidAccess && mode === "learn") {
-    const nextCount = incFreeDrillsCount(this.state.openingKey);
-    if (nextCount >= 3) {
-      try {
-        if (this.props && this.props.history && this.props.history.replace) {
-          const pathname = this.props && this.props.location ? this.props.location.pathname : "/openings";
-          const search = this.props && this.props.location ? this.props.location.search : "";
-          const from = `${pathname}${search}`;
-
-          this.props.history.replace({
-            pathname: "/about",
-            state: { from, reason: "trial_required" }
-          });
-        }
-      } catch (_) {}
-    }
-  }
+  trackEvent("opening_line_completed", { opening: this.state.openingKey, mode, clean: wasClean }, this.props.user, { persist: false });
 
   if (mode === "practice" && !wasClean) {
     // Practice still advances, but unclean completions will be prioritized again soon.
@@ -3231,10 +3164,10 @@ renderPuzzleMode = () => {
       <button className={"ot-puzzle-modebtn" + (currentMode === "learn" ? " active" : "")} onClick={() => this.setGameMode("learn")} type="button">
         <span className="ot-puzzle-modebtn-label">Learn</span>
       </button>
-      <button className={"ot-puzzle-modebtn" + (currentMode === "practice" ? " active" : "") + (!this.props.isMember ? " locked" : "")} onClick={() => (this.props.isMember ? this.setGameMode("practice") : this.openMemberGate("practice"))} type="button">
+      <button className={"ot-puzzle-modebtn" + (currentMode === "practice" ? " active" : "") + (!this.canTrainOpening() ? " locked" : "")} onClick={() => (this.canTrainOpening() ? this.setGameMode("practice") : this.openMemberGate("practice"))} type="button">
         <span className="ot-puzzle-modebtn-label">Practice</span>
       </button>
-      <button className={"ot-puzzle-modebtn" + (currentMode === "drill" ? " active" : "") + (!this.props.isMember ? " locked" : "")} onClick={() => (this.props.isMember ? this.setGameMode("drill") : this.openMemberGate("drill"))} type="button">
+      <button className={"ot-puzzle-modebtn" + (currentMode === "drill" ? " active" : "") + (!this.canTrainOpening() ? " locked" : "")} onClick={() => (this.canTrainOpening() ? this.setGameMode("drill") : this.openMemberGate("drill"))} type="button">
         <span className="ot-puzzle-modebtn-label">Drill</span>
       </button>
       <button className={"ot-puzzle-modebtn" + (currentMode === "puzzles" ? " active" : "")} onClick={() => this.setGameMode("puzzles")} type="button">
@@ -3252,10 +3185,10 @@ renderPuzzleMode = () => {
             <button className={"ot-puzzle-mobile-menu-item" + (currentMode === "learn" ? " active" : "")} type="button" onClick={() => { this.setGameMode("learn"); this.closeMobileHeaderMenu(); }}>
               <span><span role="img" aria-label="learn">📘</span> Learn</span>
             </button>
-            <button className={"ot-puzzle-mobile-menu-item" + (currentMode === "practice" ? " active" : "") + (!this.props.isMember ? " locked" : "")} type="button" onClick={() => { if (this.props.isMember) this.setGameMode("practice"); else this.openMemberGate("practice"); this.closeMobileHeaderMenu(); }}>
+            <button className={"ot-puzzle-mobile-menu-item" + (currentMode === "practice" ? " active" : "") + (!this.canTrainOpening() ? " locked" : "")} type="button" onClick={() => { if (this.canTrainOpening()) this.setGameMode("practice"); else this.openMemberGate("practice"); this.closeMobileHeaderMenu(); }}>
               <span><span role="img" aria-label="practice">🎯</span> Practice</span>
             </button>
-            <button className={"ot-puzzle-mobile-menu-item" + (currentMode === "drill" ? " active" : "") + (!this.props.isMember ? " locked" : "")} type="button" onClick={() => { if (this.props.isMember) this.setGameMode("drill"); else this.openMemberGate("drill"); this.closeMobileHeaderMenu(); }}>
+            <button className={"ot-puzzle-mobile-menu-item" + (currentMode === "drill" ? " active" : "") + (!this.canTrainOpening() ? " locked" : "")} type="button" onClick={() => { if (this.canTrainOpening()) this.setGameMode("drill"); else this.openMemberGate("drill"); this.closeMobileHeaderMenu(); }}>
               <span><span role="img" aria-label="drill">🔥</span> Drill</span>
             </button>
             <button className={"ot-puzzle-mobile-menu-item" + (currentMode === "puzzles" ? " active" : "")} type="button" onClick={() => { this.setGameMode("puzzles"); this.closeMobileHeaderMenu(); }}>
@@ -3749,19 +3682,19 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
                 </button>
 
                 <button
-                  className={"ot-mode-item" + (!this.props.user || !this.props.isMember ? " locked" : "")}
+                  className={"ot-mode-item" + (!this.canTrainOpening() ? " locked" : "")}
                   onClick={() => { this.setGameMode("practice"); this.closeMobileHeaderMenu(); }}
                 >
                   <span><span role="img" aria-label="practice">🎯</span> Practice</span>
-                  <span>{!this.props.user || !this.props.isMember ? "Member" : ""}</span>
+                  <span>{!this.canTrainOpening() ? "Member" : ""}</span>
                 </button>
 
                 <button
-                  className={"ot-mode-item" + (!this.props.user || !this.props.isMember ? " locked" : "")}
+                  className={"ot-mode-item" + (!this.canTrainOpening() ? " locked" : "")}
                   onClick={() => { this.setGameMode("drill"); this.closeMobileHeaderMenu(); }}
                 >
                   <span><span role="img" aria-label="drill">🔥</span> Drill</span>
-                  <span>{!this.props.user || !this.props.isMember ? "Member" : ""}</span>
+                  <span>{!this.canTrainOpening() ? "Member" : ""}</span>
                 </button>
 
                 <button
@@ -4067,43 +4000,9 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
     if (this.state.demoMode) return;
     const mode = nextMode || "learn";
 
-    const hasPaidAccess = !!(this.props.user && this.props.membershipActive === true);
-
-    // Practice and Drill are always premium. Trial access counts as premium.
-    if ((mode === "practice" || mode === "drill") && !hasPaidAccess) {
-      if (this.props && this.props.history && this.props.history.replace) {
-        const pathname = this.props && this.props.location ? this.props.location.pathname : "/openings";
-        const search = this.props && this.props.location ? this.props.location.search : "";
-        const from = `${pathname}${search}`;
-
-        this.props.history.replace({
-          pathname: "/about",
-          state: { from, reason: "membership_required" }
-        });
-      } else {
-        this.openMemberGate(mode);
-      }
+    if ((mode === "practice" || mode === "drill") && !this.canTrainOpening()) {
+      this.openMemberGate(mode);
       return;
-    }
-
-    // Free users (logged out or free account) get up to 3 completed Learn drills per opening.
-    if (mode === "learn" && !hasPaidAccess) {
-      const openingKey = this.state.openingKey;
-      const used = getFreeDrillsCount(openingKey);
-
-      if (used >= 3) {
-        if (this.props && this.props.history && this.props.history.replace) {
-          const pathname = this.props && this.props.location ? this.props.location.pathname : "/openings";
-          const search = this.props && this.props.location ? this.props.location.search : "";
-          const from = `${pathname}${search}`;
-
-          this.props.history.replace({
-            pathname: "/about",
-            state: { from, reason: "trial_required" }
-          });
-        }
-        return;
-      }
     }
 
     if (mode === this.state.gameMode) {
@@ -4139,6 +4038,10 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
       () => {
         if (mode === "puzzles") {
           this.loadPuzzleForOpening(this.state.openingKey, { resetIndex: true });
+          return;
+        }
+        if ((mode === "practice" || mode === "drill") && !this.props.membershipActive) {
+          this.startRandomLine();
           return;
         }
         if (mode === "practice" && this.state.linePicker === "random") {
@@ -4270,7 +4173,7 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
     return (
       <div className="ot-mode-panel">
         <button
-          className={"ot-mode-card ot-mode-card-big" + (mode === "learn" ? " active" : "") + ((!this.props.user || (!this.props.isMember && !false)) ? " locked" : "")}
+          className={"ot-mode-card ot-mode-card-big" + (mode === "learn" ? " active" : "") + ""}
           onClick={() => this.setGameMode("learn")}
           type="button"
         >
@@ -4279,8 +4182,8 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
         </button>
 
         <button
-          className={"ot-mode-card" + (mode === "practice" ? " active" : "") + (!this.props.isMember ? " locked" : "")}
-          onClick={() => (this.props.isMember ? this.setGameMode("practice") : this.openMemberGate("practice"))}
+          className={"ot-mode-card" + (mode === "practice" ? " active" : "") + (!this.canTrainOpening() ? " locked" : "")}
+          onClick={() => (this.canTrainOpening() ? this.setGameMode("practice") : this.openMemberGate("practice"))}
           type="button"
 
         >
@@ -4289,8 +4192,8 @@ renderCoachArea = (line, doneYourMoves, totalYourMoves, expectedSan) => {
         </button>
 
         <button
-          className={"ot-mode-card" + (mode === "drill" ? " active" : "") + (!this.props.isMember ? " locked" : "")}
-          onClick={() => (this.props.isMember ? this.setGameMode("drill") : this.openMemberGate("drill"))}
+          className={"ot-mode-card" + (mode === "drill" ? " active" : "") + (!this.canTrainOpening() ? " locked" : "")}
+          onClick={() => (this.canTrainOpening() ? this.setGameMode("drill") : this.openMemberGate("drill"))}
           type="button"
 
         >
@@ -4410,7 +4313,7 @@ renderDemoPanel = () => {
       <div>
         <div className="ot-demo-kicker">Instant demo</div>
         <div className="ot-demo-title">{mobile ? "Demo complete." : "Make the move yourself, then read the feedback."}</div>
-        <div className="ot-demo-copy">{mobile ? "Create an account to save progress." : "No account required. Create one after the demo to save progress and keep training."}</div>
+        <div className="ot-demo-copy">{mobile ? "Create an account to save progress." : "No account required. Create a free account to save your progress."}</div>
       </div>
       <div className="ot-demo-actions">
         <button type="button" className="ot-button ot-button-small" onClick={this.retryLine}>
@@ -4651,9 +4554,9 @@ render() {
         {this.state.memberGateOpen ? (
           <div className="ot-gate-overlay" role="dialog" aria-modal="true">
             <div className="ot-gate-card">
-              <div className="ot-gate-title">Members only. Upgrade to access Practice and Drill.</div>
+              <div className="ot-gate-title">Full opening Practice and Drill are included with Premium.</div>
               <div className="ot-gate-sub">
-                {this.state.memberGateMode === "practice" ? "Practice Mode" : "Drill Mode"} requires a paid membership.
+                {this.state.memberGateMode === "practice" ? "Practice Mode" : "Drill Mode"} includes a free five line sample for London and Sicilian. Premium and the free trial include every line.
               </div>
               <div className="ot-gate-actions">
                 <button type="button" className="ot-gate-btn" onClick={this.goToUpgrade}>
@@ -5123,19 +5026,19 @@ render() {
                             </button>
 
                             <button
-                              className={"ot-mode-item" + (!this.props.user || !this.props.isMember ? " locked" : "")}
+                              className={"ot-mode-item" + (!this.canTrainOpening() ? " locked" : "")}
                               onClick={() => { this.setGameMode("practice"); this.closeMobileHeaderMenu(); }}
                             >
                               <span><span role="img" aria-label="practice">🎯</span> Practice</span>
-                              <span>{!this.props.user || !this.props.isMember ? "Member" : ""}</span>
+                              <span>{!this.canTrainOpening() ? "Member" : ""}</span>
                             </button>
 
                             <button
-                              className={"ot-mode-item" + (!this.props.user || !this.props.isMember ? " locked" : "")}
+                              className={"ot-mode-item" + (!this.canTrainOpening() ? " locked" : "")}
                               onClick={() => { this.setGameMode("drill"); this.closeMobileHeaderMenu(); }}
                             >
                               <span><span role="img" aria-label="drill">🔥</span> Drill</span>
-                              <span>{!this.props.user || !this.props.isMember ? "Member" : ""}</span>
+                              <span>{!this.canTrainOpening() ? "Member" : ""}</span>
                             </button>
 
                             <button
@@ -5679,9 +5582,11 @@ render() {
 }
 
 function OpeningTrainerWithAuth(props) {
-  const { user, authLoading, isMember, membershipTier, membershipActive } = useAuth();
+  const { user, authLoading, syncing, userDocLoading, isMember, membershipTier, membershipActive } = useAuth();
+  if (authLoading || syncing || (user && userDocLoading)) return <p role="status">Loading opening progress…</p>;
   return (
     <OpeningTrainer
+      key={(user && user.uid) || "guest"}
       {...props}
       user={user}
       authLoading={authLoading}
@@ -5693,3 +5598,6 @@ function OpeningTrainerWithAuth(props) {
 }
 
 export default OpeningTrainerWithAuth;
+
+// Named export supports access-policy regression tests without changing app routing.
+export { OpeningTrainer };

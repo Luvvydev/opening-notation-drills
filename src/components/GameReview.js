@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Chessboard from 'chessboardjsx';
 import { Link, useLocation } from 'react-router-dom';
 import { httpsCallable } from 'firebase/functions';
-import { auth, functions } from '../firebase';
+import { functions } from '../firebase';
 import { useAuth } from '../auth/AuthProvider';
 import * as ChessModule from 'chess.js';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -29,7 +29,8 @@ import { OPENING_CATALOG } from '../openings/openingCatalog';
 import { BOARD_THEMES, DEFAULT_THEME, PIECE_THEMES } from '../theme/boardThemes';
 import { TRAINING_SCENARIOS, getScenarioReply, getScenarioStartMoves, getRepertoireReply, getAggressiveRepertoireReply, supportsOpeningAttack } from '../data/aggressionTraining';
 import './GameReview.css';
-import { trackEvent } from '../utils/trackEvent';
+import { trackEvent, getExperimentVariant } from '../utils/trackEvent';
+import { buildSavedReview, trainingRequest } from '../training/workspace';
 import { isCriticalMove as classifyCriticalMove, getSacrificeCandidate as detectSacrificeCandidate } from '../review/tacticalClassification';
 
 // chess.js 0.11 exports a constructor in the browser and { Chess } in Node.
@@ -1849,31 +1850,33 @@ function useReviewBoardState({
 
 function GameReview({ active = true }) {
   const location = useLocation();
-  const { user, hasPaidMembership } = useAuth();
+  const { user, membershipActive, userDocLoading } = useAuth();
   const [accessMessage, setAccessMessage] = useState('');
-  const authorizedGamesRef = useRef(new Set());
+  const [saveStatus, setSaveStatus] = useState("");
+  const [saveBusy, setSaveBusy] = useState(false);
+  const [offerDismissed, setOfferDismissed] = useState(false);
+  const offerVariant = getExperimentVariant("review_pack_offer_v1");
   const authorizeReview = useCallback(async (parsed, action = 'review') => {
-    const uid = user && user.uid;
-    const gameKey = parsed && parsed.moves ? parsed.moves.map((move) => move.uci).join(' ') : '';
-    const cacheKey = `${uid}:${gameKey}`;
-    if (action === 'review' && authorizedGamesRef.current.has(cacheKey)) return true;
-    try {
-      const authorize = httpsCallable(functions, 'authorizeGameReview');
-      const result = await authorize({ action, gameKey });
-      if (!result.data || result.data.allowed !== true) throw new Error('access_denied');
-      if (!auth.currentUser || auth.currentUser.uid !== uid) return false;
-      if (action === 'review' && result.data.paid === false) authorizedGamesRef.current.add(cacheKey);
+    // Free analysis and current-game puzzles do not depend on Firebase.
+    if (action === 'review') {
       setAccessMessage('');
       return true;
-    } catch (error) {
-      setAccessMessage(error.code === 'functions/permission-denied'
-        ? action === 'pack'
-          ? 'Mistake Packs require a paid membership. Your free preview includes one game review and puzzles from that game. Select a game below to try it.'
-          : 'Your free game preview has been used. Choose monthly or yearly membership to review another game. Active lifetime members also have full access.'
-        : 'Could not verify review access. Check your connection and try again.');
+    }
+    if (!user || !membershipActive) {
+      setAccessMessage('Combine mistakes from 10, 20 or 30 games with Premium or the free trial. Practice this game free.');
+      trackEvent('premium_offer_viewed', { source: 'pack_request' }, null, { persist: false });
       return false;
     }
-  }, [user]);
+    try {
+      const result = await httpsCallable(functions, 'authorizeGameReview')({ action: 'pack' });
+      if (!result.data || result.data.allowed !== true) throw new Error('access_denied');
+      setAccessMessage('');
+      return true;
+    } catch (_) {
+      setAccessMessage('Could not verify pack access. Check your connection or membership. Free reviews still work.');
+      return false;
+    }
+  }, [user, membershipActive]);
   const routeModeKey = useRef(null);
   const [source, setSource] = useState(DEFAULT_SOURCE);
   const [pgnText, setPgnText] = useState('');
@@ -1978,8 +1981,8 @@ function GameReview({ active = true }) {
   useEffect(() => {
     if (!hasFullReview || reviewTrackedRef.current) return;
     reviewTrackedRef.current = true;
-    trackEvent('game_review_complete', { source: 'game_review' }, null, { persist: false });
-  }, [hasFullReview]);
+    trackEvent('game_review_complete', { source: 'game_review', engine: 'stockfish_11', depth, multi_pv: multiPv }, null, { persist: false });
+  }, [hasFullReview, depth, multiPv]);
   useEffect(() => {
     if (Object.keys(puzzleResults).length === 0 || puzzleTrackedRef.current) return;
     puzzleTrackedRef.current = true;
@@ -1992,6 +1995,11 @@ function GameReview({ active = true }) {
   const currentPuzzleResult = currentPuzzle ? puzzleResults[currentPuzzle.id] : '';
   const solvedPuzzleCount = activePuzzleQueue.filter((puzzle) => puzzleResults[puzzle.id] === 'solved').length;
   const canOpenSingleGameViews = hasLoadedGame && trainingSource !== 'pack';
+  useEffect(() => {
+    if (solvedPuzzleCount > 0 && !membershipActive && !offerDismissed) {
+      trackEvent('premium_offer_viewed', { source: 'puzzle_complete', variant: offerVariant }, null, { persist: false });
+    }
+  }, [solvedPuzzleCount, membershipActive, offerDismissed, offerVariant]);
   // Sidebar shortcuts select a view inside the current workspace, not a new
   // GameReview instance. Opening Puzzles without data leads to its pack builder.
   useEffect(() => {
@@ -2540,6 +2548,7 @@ function GameReview({ active = true }) {
     } catch (_) {
       if (requestId !== runRequestRef.current) return;
       setEngineState('error');
+      trackEvent('review_failed', { reason: 'engine_failure' }, null, { persist: false });
       setEngineError('Full game analysis failed.');
       setStatusMessage('Full game analysis failed.');
     }
@@ -2565,6 +2574,8 @@ function GameReview({ active = true }) {
     setEngineState('idle');
     setEngineError('');
     setGameAnalysis(null);
+    setSaveStatus('');
+    setOfferDismissed(false);
     setPositionEval(null);
     setGameProgress(0);
     setCurrentPly(0);
@@ -2586,6 +2597,41 @@ function GameReview({ active = true }) {
     setPuzzleShowSolution(false);
     setStatusMessage('Game loaded.');
   }, [stopPoolSearches]);
+
+  const saveToTraining = async () => {
+    if (!user || !membershipActive || !hasFullReview || saveBusy) return;
+    setSaveBusy(true);
+    try {
+      const result = await trainingRequest({ action: 'save_review', review: buildSavedReview(gameData, puzzleQueue, depth, multiPv) });
+      setSaveStatus(result.itemLimitReached ? 'Summary saved. Your 500 position limit is full; some positions were not added.' : 'Saved to your training history.');
+      trackEvent('review_saved', { source: 'game_review' }, null, { persist: false });
+    } catch (error) {
+      setSaveStatus(error.code === 'functions/resource-exhausted'
+        ? 'Your 200 review summary limit is full. Existing training stays available.'
+        : 'Could not save this review. Check your connection and Premium or trial access, then retry.');
+    } finally { if (isMountedRef.current) setSaveBusy(false); }
+  };
+
+  const preserveGuestReview = () => {
+    try {
+      sessionStorage.setItem('chessdrills.guest_review', JSON.stringify({ pgn: gameData.pgn, orientation: gameData.orientation }));
+    } catch (_) {}
+  };
+  useEffect(() => {
+    if (!user || !active || hasLoadedGame) return;
+    let pending;
+    try {
+      pending = JSON.parse(sessionStorage.getItem('chessdrills.guest_review') || 'null');
+      if (!pending || pending.uid !== user.uid) return;
+      sessionStorage.removeItem('chessdrills.guest_review');
+    } catch (_) { return; }
+    const parsed = parsePgn(pending.pgn, pending.orientation);
+    if (parsed.ok) {
+      setSource('pgn');
+      resetReviewStateFromParsed(parsed, pending.pgn, pending.orientation);
+      queueAutoReview();
+    }
+  }, [user, active, hasLoadedGame, resetReviewStateFromParsed, queueAutoReview]);
 
   const handleLoadPgn = useCallback(async () => {
     const parsed = parsePgn(pgnText, orientation);
@@ -3593,13 +3639,6 @@ function GameReview({ active = true }) {
   return (
     <div className={`gr-page gr-page-refresh${isCompactPractice ? ' gr-practice-active' : ''}${sidebarMode === 'moves' ? ' gr-moves-active' : ''}${isMobileSummary ? ' gr-mobile-summary' : ''}`}>
       <TopNav title="Game Review" hideHero />
-      {sidebarMode !== 'play' && (!hasPaidMembership || accessMessage) && (
-        <div className="gr-access-note" role="status">
-          <span>{accessMessage || 'Free preview: one game review, including puzzles from that game. Your first imported game uses the preview. You can revisit it later. Additional games and Mistake Packs require paid membership.'}</span>
-          <Link className="gr-button gr-button-primary" to="/about">View membership</Link>
-        </div>
-      )}
-
       <div className="gr-shell gr-shell-review" style={shellProgressStyle} ref={workspaceRef}>
         <div className="gr-top-progress-shell" aria-hidden="true">
           <div className="gr-top-progress-track">
@@ -3699,6 +3738,25 @@ function GameReview({ active = true }) {
                 <button type="button" className="gr-button gr-options-toggle" onClick={() => setOptionsOpen((value) => !value)} aria-expanded={optionsOpen} aria-controls="gr-workspace-options">Options</button>
               </div>
             </div>
+            {sidebarMode !== 'play' && (
+              <div className="gr-session-tools">
+                {accessMessage && <div className="gr-inline-notice" role="status"><p>{accessMessage}</p><Link to={{ pathname: "/about", state: { from: "/my-games?mode=puzzles" } }}>View Premium</Link></div>}
+                {hasFullReview && <div className="gr-save-actions">
+                  {user && membershipActive
+                    ? <button type="button" className="gr-button" disabled={saveBusy || userDocLoading} onClick={saveToTraining}>{saveBusy ? 'Saving…' : 'Save to training'}</button>
+                    : !user ? <Link className="gr-button" to="/signup?from=%2Fmy-games&source=save_review" onClick={preserveGuestReview}>Create account</Link>
+                    : <Link className="gr-button" to={{ pathname: "/about", state: { from: "/my-games" } }}>Save with Premium</Link>}
+                  <Link className="gr-saved-link" to="/training">Saved training</Link>
+                  {saveStatus && <p className="gr-save-status" role="status">{saveStatus}</p>}
+                </div>}
+                {solvedPuzzleCount > 0 && !membershipActive && !offerDismissed && <div className="gr-inline-offer">
+                  <p>Build a practice pack from more of your games.</p>
+                  <Link to={{ pathname: "/about", state: { from: "/my-games?mode=puzzles" } }}
+                    onClick={() => trackEvent('premium_offer_clicked', { source: 'puzzle_complete', variant: offerVariant }, null, { persist: false })}>{offerVariant === 'B' ? 'Train mistakes from more games' : 'See Premium'}</Link>
+                  <button type="button" className="gr-offer-dismiss" aria-label="Dismiss Premium suggestion" onClick={() => { setOfferDismissed(true); trackEvent('premium_offer_dismissed', { source: 'puzzle_complete' }, null, { persist: false }); }}>Not now</button>
+                </div>}
+              </div>
+            )}
             {optionsOpen ? (
               <div id="gr-workspace-options" className="gr-workspace-options">
                 <div className="gr-sidebar-actions">

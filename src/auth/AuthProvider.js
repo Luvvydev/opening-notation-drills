@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { releaseLocalAccount } from "../utils/accountStorage";
 import { auth, db } from "../firebase";
 import { doc, onSnapshot } from "firebase/firestore";
 import { syncAccountFromLocalAndCloud } from "../utils/accountSync";
@@ -22,30 +23,44 @@ function toMillis(value) {
 }
 
 export function AuthProvider({ children }) {
+  const authGeneration = useRef(0);
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [userDoc, setUserDoc] = useState(null);
   const [userDocLoading, setUserDocLoading] = useState(true);
+  const [userDocOwner, setUserDocOwner] = useState(null);
   const [nowMs, setNowMs] = useState(() => Date.now());
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (u) => {
+      const generation = ++authGeneration.current;
+      // Do not render account data from the preceding identity while sync runs.
+      setUserDoc(null);
+      setUserDocLoading(!!u);
+      setSyncing(!!u);
       setUser(u || null);
       setAuthLoading(false);
 
+      if (!u) {
+        releaseLocalAccount();
+        try { window.dispatchEvent(new Event("account:synced")); } catch (_) {}
+      }
       if (u && u.uid) {
         try {
           setSyncing(true);
-          await syncAccountFromLocalAndCloud(u);
+          await syncAccountFromLocalAndCloud(u, () => authGeneration.current === generation);
+          if (authGeneration.current !== generation) return;
 
           // Let the app know data may have changed locally after sync
           try {
             window.dispatchEvent(new Event("account:synced"));
             window.dispatchEvent(new Event("streak:updated"));
           } catch (_) {}
+        } catch (_) {
+          // A later login can retry cloud sync; local review remains available.
         } finally {
-          setSyncing(false);
+          if (authGeneration.current === generation) setSyncing(false);
         }
       }
     });
@@ -66,6 +81,7 @@ export function AuthProvider({ children }) {
     const off = onSnapshot(
       ref,
       (snap) => {
+        setUserDocOwner(user.uid);
         setUserDoc(snap.exists() ? snap.data() : null);
         setUserDocLoading(false);
       },
@@ -110,11 +126,12 @@ const signIn = (email, password) => {
 
 const signOut = () => firebaseSignOut(auth);
 
-  const membershipTier = (userDoc && userDoc.membershipTier) || "free";
-  const hasPaidMembership = !!(userDoc && userDoc.membershipActive) && (membershipTier === "member" || membershipTier === "lifetime");
+  const currentUserDoc = user && userDocOwner === user.uid ? userDoc : null;
+  const membershipTier = (currentUserDoc && currentUserDoc.membershipTier) || "free";
+  const hasPaidMembership = !!(currentUserDoc && currentUserDoc.membershipActive) && (membershipTier === "member" || membershipTier === "lifetime");
 
-  const trialUsed = !!(userDoc && userDoc.trialUsed);
-  const trialStartedAtMs = toMillis(userDoc && userDoc.trialStartedAt);
+  const trialUsed = !!(currentUserDoc && currentUserDoc.trialUsed);
+  const trialStartedAtMs = toMillis(currentUserDoc && currentUserDoc.trialStartedAt);
   const trialEndsAtMs = trialStartedAtMs ? trialStartedAtMs + TRIAL_MS : 0;
   const trialActive = !hasPaidMembership && trialUsed && trialStartedAtMs > 0 && nowMs < trialEndsAtMs;
   const trialExpired = !hasPaidMembership && trialUsed && trialStartedAtMs > 0 && nowMs >= trialEndsAtMs;
@@ -128,7 +145,7 @@ const signOut = () => firebaseSignOut(auth);
       user,
       authLoading,
       syncing,
-      userDoc,
+      userDoc: currentUserDoc,
       userDocLoading,
       membershipTier,
       membershipActive,
@@ -144,7 +161,7 @@ const signOut = () => firebaseSignOut(auth);
       signIn,
       signOut
     };
-  }, [user, authLoading, syncing, userDoc, userDocLoading, membershipTier, membershipActive, isMember, hasPaidMembership, trialUsed, trialActive, trialExpired, trialEligible, trialStartedAtMs, trialEndsAtMs]);
+  }, [user, authLoading, syncing, currentUserDoc, userDocLoading, membershipTier, membershipActive, isMember, hasPaidMembership, trialUsed, trialActive, trialExpired, trialEligible, trialStartedAtMs, trialEndsAtMs]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

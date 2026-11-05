@@ -310,7 +310,7 @@ export default function Leaderboards() {
         <div className="lb-card">
           {!user ? (
             <div className="lb-paywall">
-              <div className="lb-paywall-title">Create a free account to upgrade.</div>
+              <div className="lb-paywall-title">Premium includes Drill leaderboards.</div>
               <div className="lb-paywall-sub">Leaderboards are members only. You need an account to purchase a membership.</div>
               <div className="lb-paywall-actions">
                 <a className="lb-paywall-btn" href="/signup">Sign up</a>

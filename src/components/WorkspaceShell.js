@@ -11,6 +11,7 @@ export const WorkspaceContext = createContext(null);
 const navigation = [
   { label: 'Home', icon: 'home', to: '/home' },
   { label: 'Game Review', icon: 'review', to: '/my-games', mode: 'review' },
+  { label: 'Daily Training', icon: 'puzzles', to: '/training' },
   { label: 'Openings', icon: 'openings', to: '/openings/library' },
   { label: 'Notation Practice', icon: 'notation', to: '/practice', secondary: true },
   { label: 'Play vs Computer', icon: 'computer', to: '/my-games?mode=play', mode: 'play' },

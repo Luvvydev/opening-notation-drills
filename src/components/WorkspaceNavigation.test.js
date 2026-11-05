@@ -37,11 +37,11 @@ test.each(['/my-games', '/my-games/', '/review/'])('review state at %s survives 
   expect(screen.getByText('Review session 0')).toBeTruthy();
 });
 
-test.each(['/my-games?mode=puzzles', '/my-games/?mode=puzzles'])('guest review shortcut %s keeps the puzzle mode through signup', (url) => {
+test.each(['/my-games?mode=puzzles', '/my-games/?mode=puzzles'])('guest review shortcut %s opens without a signup gate', (url) => {
   useAuth.mockReturnValue({ user: null, authLoading: false });
   const screen = render(<MemoryRouter initialEntries={[url]}><ReviewWorkspace /><Route path="/signup" render={({ location }) => <p>{location.search}</p>} /></MemoryRouter>);
-  expect(screen.getByText(/from=.*mode%3Dpuzzles/)).toBeTruthy();
-  expect(screen.queryByText('Review session 0')).toBeNull();
+  expect(screen.getByText('Review session 0')).toBeTruthy();
+  expect(screen.queryByText(/from=.*mode%3Dpuzzles/)).toBeNull();
 });
 
 test.each([

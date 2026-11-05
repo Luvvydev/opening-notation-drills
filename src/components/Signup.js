@@ -66,6 +66,10 @@ export default function Signup(props) {
     try {
       const credential = await signUp(email, password);
       const createdUser = credential && credential.user ? credential.user : null;
+      try {
+        const pending = JSON.parse(sessionStorage.getItem("chessdrills.guest_review") || "null");
+        if (pending && createdUser && !pending.uid) sessionStorage.setItem("chessdrills.guest_review", JSON.stringify({ ...pending, uid: createdUser.uid }));
+      } catch (_) {}
 
       trackEvent(
         "signup_complete",
@@ -79,7 +83,7 @@ export default function Signup(props) {
       );
 
       if (props && props.history) {
-        const destination = from && from.charAt(0) === "/" ? from : "/about";
+        const destination = from && from.charAt(0) === "/" && from.charAt(1) !== "/" ? from : "/home";
         props.history.push(destination);
       }
     } catch (err) {
@@ -195,20 +199,32 @@ export default function Signup(props) {
           </form>
 
           <p className="signup-trial-note">
-            No card required. Try opening training for 3 days, plus one Game Review preview with puzzles.
-            {" "}Additional reviews and Mistake Packs require <Link to="/about">Premium</Link>.
+            Create a free account to save your opening progress. Game reviews and practice from each game work without an account.
+            {" "}Full opening practice, combined Mistake Packs, daily training and saved review history are included with <Link to="/about">Premium</Link>.
           </p>
 
           <div style={{ marginTop: 20, color: "#b8c0cb", textAlign: "center", fontSize: 14 }}>
             Already have an account? <Link to="/login">Sign in</Link>
           </div>
         </div>
-        <SignupIntro source={signupSource} />
+        {/* Keep the old overview media unmounted until its narration matches free access. */}
+        <section className="signup-intro" aria-labelledby="signup-free-heading">
+          <p className="signup-intro-eyebrow">OPENINGS AND YOUR OWN GAMES</p>
+          <h2 id="signup-free-heading">Learn the moves.<br /><span>Practice what you miss.</span></h2>
+          <p className="signup-intro-description">Learn every opening course and review your games free. Create an account to save your opening progress.</p>
+          <ol className="signup-training-flow">
+            <li><span>01</span><div><strong>Learn free</strong><p>Opening explanations, unlimited reviews and practice from each game.</p></div></li>
+            <li><span>02</span><div><strong>Try active recall</strong><p>Five repeatable Practice and Drill lines in London and Sicilian.</p></div></li>
+            <li><span>03</span><div><strong>Build a routine</strong><p>Premium adds full opening practice, combined Mistake Packs and saved training history.</p></div></li>
+          </ol>
+          <p><Link to="/my-games">Review a game without an account</Link></p>
+        </section>
       </main>
     </div>
   );
 }
 
+// eslint-disable-next-line no-unused-vars
 function SignupIntro({ source }) {
   const [watching, setWatching] = useState(false);
   const [videoError, setVideoError] = useState(false);

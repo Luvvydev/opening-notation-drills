@@ -52,3 +52,12 @@ test('existing membership shows continue training instead of checkout', () => {
   expect(screen.getByRole('button', { name: 'Continue training' })).toBeTruthy();
   expect(screen.queryByRole('button', { name: /Continue with Card/ })).toBeNull();
 });
+
+
+test('trial copy has no retired review quota', () => {
+  const screen = render(<About />);
+  expect(screen.getByRole('heading', { name: 'Try Premium free for 3 days' })).toBeTruthy();
+  expect(screen.queryByText('No card required.')).toBeNull();
+  expect(screen.queryByText(/one Game Review preview/i)).toBeNull();
+  expect(screen.queryByText(/Additional.*reviews.*require/i)).toBeNull();
+});

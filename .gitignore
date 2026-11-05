@@ -7,3 +7,11 @@ backupsbeforestripe/
 functions/node_modules/
 functions/.env*
 *.zip
+
+# Local environment files
+.env*.local
+
+# Firebase emulator logs
+firebase-debug*.log
+firestore-debug*.log
+ui-debug*.log
