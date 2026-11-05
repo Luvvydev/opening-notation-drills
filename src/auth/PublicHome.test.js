@@ -18,11 +18,10 @@ test('signed out visitors see the landing page after the session check', () => {
   expect(screen.queryByText('Training home')).toBeNull();
 });
 
-test('restoring a signed in session never flashes the landing page', () => {
+test('a restored signed in session redirects to the training home', () => {
   useAuth.mockReturnValue({ user: null, authLoading: true });
   const screen = render(<View />);
-  expect(screen.getByRole('status')).toBeTruthy();
-  expect(screen.queryByText('Public landing page')).toBeNull();
+  expect(screen.getByText('Public landing page')).toBeTruthy();
   useAuth.mockReturnValue({ user: { uid: 'member' }, authLoading: false });
   screen.rerender(<View />);
   expect(screen.getByText('Training home')).toBeTruthy();
@@ -32,10 +31,10 @@ test('restoring a signed in session never flashes the landing page', () => {
   expect(screen.queryByText('Public landing page')).toBeNull();
 });
 
-test('an unresolved signed out session shows the landing only after it finishes', () => {
+test('the landing page is visible while a signed out session resolves', () => {
   useAuth.mockReturnValue({ user: null, authLoading: true });
   const screen = render(<View />);
-  expect(screen.queryByText('Public landing page')).toBeNull();
+  expect(screen.getByText('Public landing page')).toBeTruthy();
   useAuth.mockReturnValue({ user: null, authLoading: false });
   screen.rerender(<View />);
   expect(screen.getByText('Public landing page')).toBeTruthy();

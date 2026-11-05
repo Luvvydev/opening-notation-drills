@@ -4,10 +4,9 @@ import { useAuth } from './AuthProvider';
 import LandingPage from '../components/LandingPage';
 
 export default function PublicHome() {
-  const { user, authLoading } = useAuth();
+  const { user } = useAuth();
 
-  // Wait for the saved session before choosing the public or signed in home.
-  if (authLoading) return <p className="workspace-review-loading" role="status">Loading…</p>;
+  // Show the public page while Firebase restores a saved session.
   if (user) return <Redirect to="/home" />;
 
   return <LandingPage />;
