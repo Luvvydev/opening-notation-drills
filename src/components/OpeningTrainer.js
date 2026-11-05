@@ -593,14 +593,12 @@ this._countedSeenForRun = false;
       if (viewportWidth < 550) return usable;
       if (viewportWidth <= 1100) return Math.min(500, usable);
 
-      // Match the fixed desktop grid limits without measuring the board itself.
-      // This avoids resize feedback loops and keeps the board inside its column.
-      const mainWidth = Math.min(1200, vw - 36);
-      const sidebarWidth = Math.min(420, Math.max(340, viewportWidth * 0.32));
-      const availableBoardWidth = mainWidth - sidebarWidth - 14 - 26;
-      const scale = Math.max(0, Math.min(1, (vw - 1200) / 600));
-      const desiredBoardWidth = Math.round(500 + scale * 180);
-      return Math.max(260, Math.min(desiredBoardWidth, Math.floor(availableBoardWidth)));
+      // Match Game Review's desktop sizing while leaving room for the trainer panel.
+      // Derived from the viewport rather than the board element to avoid resize loops.
+      const viewportHeight = Number(window.innerHeight) || 800;
+      const panelWidth = 380;
+      const desktopSpace = Math.max(260, Math.min(vw - panelWidth - 64, viewportWidth - 490));
+      return Math.max(260, Math.floor(Math.min(viewportHeight - 145, desktopSpace)));
     } catch (_) {
       return 500;
     }

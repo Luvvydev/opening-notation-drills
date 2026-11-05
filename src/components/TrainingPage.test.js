@@ -27,7 +27,7 @@ beforeEach(() => {
 test("guests see the paid offer while review stays available without signup", () => {
   useAuth.mockReturnValue({ user: null, membershipActive: false });
   const screen = render(<MemoryRouter><TrainingPage /></MemoryRouter>);
-  expect(screen.getByRole("heading", { name: "Your training, saved." })).toBeTruthy();
+  expect(screen.getByRole("heading", { name: /Make your mistakes/ })).toBeTruthy();
   expect(trainingRequest).not.toHaveBeenCalled();
 });
 test("a correct saved move records an attempt and updates progress", async () => {
@@ -49,13 +49,13 @@ test("expired accounts retain history without enabling saved puzzle writes", asy
   const screen = render(<MemoryRouter><TrainingPage /></MemoryRouter>);
   await waitForElement(() => screen.getByText("Positions"));
   expect(screen.queryByText("Saved board")).toBeNull();
-  expect(screen.getByText(/Your saved training is here/)).toBeTruthy();
+  expect(screen.getByText(/Saved sessions, opening progress and history/)).toBeTruthy();
 });
 
 test("new members see one useful starter panel instead of empty statistics and history", async () => {
   trainingRequest.mockResolvedValue({ reviews: [], items: [] });
   const screen = render(<MemoryRouter><TrainingPage /></MemoryRouter>);
-  await waitForElement(() => screen.getByRole("heading", { name: "No saved positions yet" }));
+  await waitForElement(() => screen.getByRole("heading", { name: "Your training starts with one game." }));
   expect(screen.queryByLabelText("Training progress")).toBeNull();
   expect(screen.queryByRole("heading", { name: "Recurring themes" })).toBeNull();
   expect(screen.queryByRole("heading", { name: "Review history" })).toBeNull();

@@ -132,3 +132,9 @@
 }
 .notation-practice-page .settingsContainer { max-width: 500px; width: 100%; }
 .notation-practice-page #movePrompt { text-align: center; margin: 18px 0 0; }
+
+/* Let Notation Practice use the same desktop board scale as Game Review. */
+@media (min-width: 1101px) {
+  .notation-practice-page .page-body { padding-top: 18px; }
+  .notation-practice-page .settingsContainer { max-width: min(calc(100vh - 145px), calc(100vw - 250px)); }
+}

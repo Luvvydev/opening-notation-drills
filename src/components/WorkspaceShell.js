@@ -32,6 +32,7 @@ export default function WorkspaceShell({ children }) {
   const toggle = useRef(null);
   const landing = pathname === '/';
   const reviewing = ['/my-games', '/review'].includes(pathname);
+  const boardWorkspace = reviewing || pathname === '/openings' || pathname === '/demo';
   const activeMode = reviewMode;
 
   useEffect(() => {
@@ -44,6 +45,14 @@ export default function WorkspaceShell({ children }) {
   }, []);
 
   useEffect(() => { setOpen(false); }, [location.pathname, location.search]);
+
+  useEffect(() => {
+    if (!boardWorkspace || window.innerWidth < 1101) return undefined;
+    const frame = window.requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [boardWorkspace, pathname]);
 
   useEffect(() => {
     // Existing trainers listen for resize; recalculate after the rail changes width.
@@ -87,7 +96,7 @@ export default function WorkspaceShell({ children }) {
 
   return (
     <WorkspaceContext.Provider value={{ toggle, openMenu: () => setOpen(true) }}>
-      <div className={`workspace-shell ${expanded ? 'is-expanded' : 'is-collapsed'} ${landing ? 'is-landing' : ''}`}>
+      <div className={`workspace-shell ${expanded ? 'is-expanded' : 'is-collapsed'} ${landing ? 'is-landing' : ''} ${boardWorkspace ? 'is-board-workspace' : ''}`}>
         <a className="workspace-skip" href="#workspace-content">Skip to content</a>
         {open && mobile && <button className="workspace-scrim" tabIndex={-1} aria-label="Close navigation" onClick={() => setOpen(false)} />}
         {!landing && (!mobile || open) && <aside ref={drawer} className={`workspace-rail ${open ? 'is-open' : ''}`} role={mobile ? 'dialog' : undefined} aria-modal={mobile ? 'true' : undefined} aria-label="Main navigation">

@@ -212,20 +212,42 @@ export default function TrainingPage() {
   return <div className="training-page">
     {celebrating && <div className="training-celebration" aria-hidden="true">{Array.from({ length: 28 }, (_, i) => <i key={i} style={{ left: (10 + (i * 17 % 80)) + "%", animationDelay: (i % 5 * .04) + "s", backgroundColor: ["#f4c542", "#56c482", "#e5e9ef"][i % 3] }} />)}</div>}
     <header className="training-heading">
-      <h1>Daily training</h1>
+      <div><div className="training-page-eyebrow">TRAINING WORKSPACE</div><h1>Daily training</h1>{membershipActive && <p>Turn your game reviews into a practice routine.</p>}</div>
       {hasHistory && <Link className="training-action training-action-secondary" to="/my-games"><WorkspaceIcon name="review" />Review a game</Link>}
     </header>
 
-    {!membershipActive && <section className="training-offer">
-      <span className="training-panel-icon"><WorkspaceIcon name="puzzles" /></span>
-      <div><h2>Your training, saved.</h2>
-        {user && hasHistory && <p>Your saved training is here when you return.</p>}
-        <div className="training-actions">
-          <Link className="training-action" to={{ pathname: "/about", state: { from: "/training" } }}>Try Premium</Link>
-          <Link className="training-text-link" to={!user ? "/signup?from=%2Ftraining&source=training" : "/my-games"}>{!user ? "Create free account" : "Review free"}</Link>
+    {!membershipActive && <>
+      <section className="training-landing" aria-label="Daily training introduction">
+        <div className="training-landing-copy">
+          <div className="training-overline"><span className="training-live-dot" /> YOUR PERSONAL CHESS WORKOUT</div>
+          <h2>Make your mistakes <em>worth something.</em></h2>
+          <p>Review your games, find the moves you missed, and build a practice routine around your own positions.</p>
+          <div className="training-landing-actions">
+            <Link className="training-action training-action-main" to="/my-games"><WorkspaceIcon name="review" /> Review a game free</Link>
+            <Link className="training-action training-action-outline" to={!user ? "/signup?from=%2Ftraining&source=training" : "/about"}>{!user ? "Create free account" : "Unlock Daily Training"}<WorkspaceIcon name="arrow" /></Link>
+          </div>
+          <div className="training-landing-note">{!user ? "No account required to review a game or practice its mistakes." : "Game review is free. Saved daily practice is included with Premium."}</div>
         </div>
-      </div>
-    </section>}
+        <div className="training-preview" aria-label="Example daily training dashboard">
+          <div className="training-preview-top"><span className="training-preview-title"><WorkspaceIcon name="puzzles" /> YOUR TRAINING PLAN</span><span className="training-preview-example">PREVIEW</span></div>
+          <div className="training-preview-progress"><span>Today's practice</span><strong>3 positions</strong></div>
+          <div className="training-preview-track" aria-hidden="true"><span /><span /><span /></div>
+          <div className="training-preview-lesson"><div className="training-preview-symbol">?</div><div><strong>Find the stronger move</strong><small>Turn your last blunder into a puzzle</small></div><span className="training-preview-tag">01</span></div>
+          <div className="training-preview-lesson"><div className="training-preview-symbol training-preview-symbol-green"><WorkspaceIcon name="openings" /></div><div><strong>Practice an opening</strong><small>Repeat the lines that need work</small></div><span className="training-preview-tag">02</span></div>
+          <div className="training-preview-lesson"><div className="training-preview-symbol training-preview-symbol-purple"><WorkspaceIcon name="review" /></div><div><strong>Review your progress</strong><small>See what keeps showing up in your games</small></div><span className="training-preview-tag">03</span></div>
+          <div className="training-preview-footer">Example of a personalized session</div>
+        </div>
+      </section>
+      <section className="training-feature-grid" aria-label="How Daily Training works">
+        <div className="training-feature"><span>01 <WorkspaceIcon name="review" /></span><h3>Review</h3><p>Import a game and find the positions that matter.</p></div>
+        <div className="training-feature"><span>02 <WorkspaceIcon name="puzzles" /></span><h3>Practice</h3><p>Play the better move instead of just reading about it.</p></div>
+        <div className="training-feature"><span>03 <WorkspaceIcon name="openings" /></span><h3>Repeat</h3><p>Build consistency with saved positions and recurring themes.</p></div>
+      </section>
+      <section className="training-membership-strip">
+        <div><strong>{user ? "Keep your training in one place" : "Start for free. Save your progress when you're ready."}</strong><p>{user ? "Saved sessions, opening progress and history are available with Premium." : "Free game review and mistake practice are available without signing in."}</p></div>
+        <Link className="training-action training-action-secondary" to={{ pathname: "/about", state: { from: "/training" } }}>See Premium features <WorkspaceIcon name="arrow" /></Link>
+      </section>
+    </>}
 
     {loading && <p className="training-status" role="status">Loading saved reviews…</p>}
     {error && <p className="training-status" role="alert">{error} <button onClick={() => setReload((value) => value + 1)}>Retry</button></p>}
@@ -239,8 +261,9 @@ export default function TrainingPage() {
 
       {membershipActive && !hasHistory && <section className="training-start">
         <span className="training-panel-icon"><WorkspaceIcon name="review" /></span>
-        <h2>No saved positions yet</h2>
-        <Link className="training-action" to="/my-games">Review a game<WorkspaceIcon name="arrow" /></Link>
+        <h2>Your training starts with one game.</h2>
+        <p>Review a recent game to find missed moves and build your first personal practice session.</p>
+        <Link className="training-action" to="/my-games">Review a game <WorkspaceIcon name="arrow" /></Link>
       </section>}
 
       {membershipActive && (openings.length > 0 || hasHistory) && <section className="training-section">

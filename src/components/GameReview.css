@@ -4274,3 +4274,279 @@
 @media (prefers-reduced-motion: reduce) {
   .gr-board-move-callout { animation: none; opacity: 1; }
 }
+
+/* In-review variation controls appear only while exploring an alternate line. */
+.gr-variation-return { border: 1px solid rgba(130, 150, 170, .45); border-radius: 7px; background: transparent; color: inherit; font: inherit; font-size: 12px; padding: 5px 9px; cursor: pointer; }
+.gr-variation-return:hover { background: rgba(130, 150, 170, .13); }
+.gr-variation-line { display: flex; align-items: center; flex-wrap: wrap; gap: 5px; padding: 8px 10px; font-size: 12px; }
+.gr-variation-line > span { opacity: .72; margin-right: 4px; }
+.gr-variation-line button { border: 0; border-radius: 4px; background: rgba(130, 150, 170, .12); color: inherit; padding: 3px 7px; cursor: pointer; }
+.gr-variation-line button.is-active { background: rgba(130, 150, 170, .35); }
+.gr-variation-evaluation { margin: 4px 10px 8px; }
+
+/* Compact variation layout. Keep the move list in a bounded scroll region. */
+.gr-page-refresh .gr-sidebar-view-moves:has(.gr-variation-line) {
+  grid-template-rows: auto auto auto auto auto minmax(0, 1fr);
+  gap: 5px;
+}
+.gr-page-refresh .gr-sidebar-view-moves:has(.gr-variation-line) .gr-move-summary { min-height: 0; }
+.gr-page-refresh .gr-sidebar-view-moves:has(.gr-variation-line) .gr-move-list { min-height: 0; overflow-y: auto; }
+.gr-page-refresh .gr-sidebar-view-moves .gr-moves-head { display: flex; justify-content: space-between; gap: 8px; align-items: center; margin: 0; }
+.gr-page-refresh .gr-variation-return { font-size: 11px; padding: 4px 7px; white-space: nowrap; }
+.gr-page-refresh .gr-variation-line { flex-wrap: nowrap; overflow-x: auto; min-width: 0; padding: 2px 0 4px; gap: 4px; scrollbar-width: thin; }
+.gr-page-refresh .gr-variation-line > span { flex: 0 0 auto; font-size: 10px; }
+.gr-page-refresh .gr-variation-line button { white-space: nowrap; flex: 0 0 auto; font-size: 11px; padding: 4px 5px; }
+.gr-variation-move-number { opacity: .65; font-size: 10px; }
+.gr-variation-engine { display: flex; justify-content: space-between; align-items: center; gap: 5px; padding: 5px 8px; background: rgba(255,255,255,.035); border: 1px solid rgba(255,255,255,.07); border-radius: 6px; color: #b9c3cd; font-size: 11px; min-width: 0; }
+.gr-variation-engine strong { color: #eff1f4; }
+.gr-variation-engine-score { color: #8cd14f; font-weight: 700; white-space: nowrap; }
+.gr-page-refresh .gr-sidebar-view-moves:has(.gr-variation-line) .gr-control-dock { grid-template-columns: repeat(4,minmax(0,1fr)); gap: 4px; margin: 0; }
+.gr-page-refresh .gr-save-actions { margin: 0 0 6px; gap: 7px; align-items: center; }
+.gr-page-refresh .gr-save-actions .gr-button { min-height: 24px; padding: 3px 7px; font-size: 10px; background: transparent; border: 1px solid #373d45; color: #aab4c0; }
+.gr-page-refresh .gr-save-actions .gr-saved-link { font-size: 10px; color: #8d98a5; }
+.gr-page-refresh .gr-review-practice-row { margin: 0; }
+.gr-page-refresh .gr-review-practice-row .gr-button { min-height: 30px; padding: 5px 8px; font-size: 11px; }
+@media (max-width: 1100px) {
+  .gr-page-refresh .gr-moves-active .gr-sidebar-view-moves:has(.gr-variation-line) { display: contents; }
+  .gr-moves-active .gr-variation-line { grid-column: 1 / -1; order: 5; }
+  .gr-moves-active .gr-variation-engine { grid-column: 1 / -1; order: 6; }
+  .gr-page-refresh .gr-moves-active .gr-move-list { order: 7; }
+}
+
+/* Review save action belongs with Options, not in a separate toolbar. */
+.gr-page-refresh .gr-save-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 29px; height: 29px; min-width: 29px;
+  padding: 0; border: 1px solid transparent; border-radius: 6px;
+  background: transparent; color: #9da7b5; text-decoration: none;
+  cursor: pointer; font-size: 13px;
+}
+.gr-page-refresh .gr-save-icon:hover { color: #f8cb4a; background: rgba(255,255,255,.07); }
+.gr-page-refresh .gr-save-icon:disabled { opacity: .45; cursor: wait; }
+.gr-page-refresh .gr-save-status { margin: 0 0 6px; padding: 4px 8px; }
+.gr-variation-rating { font-weight: 700; color: #aebac9; }
+.gr-variation-rating-best, .gr-variation-rating-excellent { color: #8cd14f; }
+.gr-variation-rating-brilliant { color: #60cad5; }
+.gr-variation-rating-critical { color: #db9eff; }
+.gr-variation-rating-good { color: #a8c88a; }
+.gr-variation-rating-inaccuracy { color: #f3ac62; }
+.gr-variation-rating-mistake { color: #ff8a4f; }
+.gr-variation-rating-blunder { color: #ff5b56; }
+
+/* Responsive desktop review workspace. Keep the existing mobile layout. */
+@media (min-width: 1101px) {
+  .gr-page-refresh .gr-shell-review {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: none;
+    padding: 16px clamp(12px, 1.25vw, 28px) 24px;
+    grid-template-columns: minmax(0, 1fr) clamp(340px, 26vw, 440px);
+    gap: clamp(12px, 1.3vw, 24px);
+  }
+  .gr-page-refresh .gr-board-stack { max-width: none; }
+  .gr-page-refresh .gr-sidebar-shell {
+    min-height: var(--gr-sidebar-target-height);
+    height: var(--gr-sidebar-target-height);
+    max-height: var(--gr-sidebar-target-height);
+  }
+  .gr-page-refresh .gr-sidebar-view-overview .gr-scoreboard-players-overview {
+    margin: 12px 0 18px;
+    gap: 14px;
+  }
+  .gr-page-refresh .gr-sidebar-view-overview .gr-score-avatar {
+    width: 58px;
+    height: 58px;
+  }
+  .gr-page-refresh .gr-sidebar-view-overview .gr-count-table { gap: 4px; }
+  .gr-page-refresh .gr-sidebar-view-overview .gr-count-row-compact { padding: 4px 0; }
+  .gr-page-refresh .gr-sidebar-view-overview .gr-count-icon-button .gr-count-icon { width: 38px; height: 38px; }
+}
+
+/* Evaluation rail follows the board's actual height and keeps the board centered. */
+.gr-page-refresh .gr-board-frame { gap: 8px; }
+.gr-page-refresh .gr-live-eval {
+  position: relative;
+  flex: 0 0 20px;
+  align-self: stretch;
+  border-radius: 3px;
+  overflow: hidden;
+  background: #202327;
+  border: 1px solid #414750;
+  box-sizing: border-box;
+}
+.gr-page-refresh .gr-live-eval-white {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: #f1f1ed;
+  transition: height 230ms ease;
+}
+.gr-page-refresh .gr-live-eval-value {
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  writing-mode: vertical-rl;
+  transform: translateX(-50%);
+  font-size: 10px;
+  font-weight: 800;
+  color: #f9f9f9;
+  text-shadow: 0 1px 2px #111;
+}
+.gr-page-refresh .gr-coach-message { display: flex; align-items: flex-start; gap: 10px; min-width: 0; }
+.gr-page-refresh .gr-coach-avatar {
+  display: block;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  border-radius: 8px;
+  object-fit: contain;
+  background: #20252b;
+}
+.gr-page-refresh .gr-coach-message .gr-insight-bubble {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 1px solid #343b44;
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: #1d2329;
+}
+.gr-page-refresh .gr-coach-message .gr-insight-bubble::before { display: none; }
+.gr-page-refresh .gr-review-engine-lines {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  border: 1px solid #39424c;
+  background: #171d23;
+  padding: 8px 25px 8px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  color: #cbd3dd;
+}
+.gr-page-refresh .gr-review-engine-lines > button {
+  position: absolute;
+  right: 6px;
+  top: 4px;
+  border: 0;
+  background: transparent;
+  color: #e2e6ec;
+  cursor: pointer;
+}
+.gr-page-refresh .gr-review-engine-lines strong { color: #9dd27b; margin-right: 5px; }
+@media (max-width: 720px) {
+  .gr-page-refresh .gr-live-eval { flex-basis: 12px; }
+  .gr-page-refresh .gr-live-eval-value { display: none; }
+  .gr-page-refresh .gr-coach-avatar { width: 34px; height: 34px; flex-basis: 34px; }
+}
+
+/* Alternative lines live inside the PGN move list, under their starting move. */
+.gr-page-refresh .gr-sidebar-view-moves:has(.gr-inline-variation) { grid-template-rows: auto auto auto minmax(0,1fr); gap: 7px; }
+.gr-page-refresh .gr-sidebar-view-moves:has(.gr-inline-variation) .gr-move-list { min-height: 0; overflow-y: auto; }
+.gr-inline-variation { grid-column: 1 / -1; margin: 3px 0 7px 24px; padding: 7px 8px 7px 10px; border-left: 3px solid #dbb84b; border-radius: 0 6px 6px 0; background: rgba(244,202,66,.065); color: #cad2dc; }
+.gr-inline-variation-trunk { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-bottom: 5px; }
+.gr-inline-variation-label { font-size: 10px; font-weight: 700; color: #e9c85a; text-transform: uppercase; letter-spacing: .05em; }
+.gr-inline-variation-moves { display: flex; flex-wrap: wrap; gap: 4px; }
+.gr-inline-variation button { border: 1px solid rgba(201,214,228,.13); background: #222931; color: #e5eaf0; border-radius: 4px; padding: 4px 7px; cursor: pointer; font-size: 11px; }
+.gr-inline-variation button.is-active { border-color: #ebc552; background: rgba(244,202,66,.18); }
+.gr-inline-variation button span { color: #98a6b5; font-size: 10px; }
+.gr-inline-variation button b { margin-left: 3px; font-size: 11px; }
+.gr-page-refresh .gr-sidebar-view-moves .gr-coach-message { min-width: 0; }
+.gr-page-refresh .gr-sidebar-view-moves .gr-coach-message .gr-insight-bubble { padding: 9px 10px; }
+@media(max-width:1100px) { .gr-moves-active .gr-inline-variation { order: 7; } }
+
+/* Keep the board, evaluation rail, and review panel as one centered desktop unit.
+   The previous 1fr stage column left a large empty gap on wide monitors. */
+@media (min-width: 1101px) {
+  .gr-page-refresh .gr-shell-review {
+    grid-template-columns: minmax(0, min(calc(100vh - 112px), calc(100vw - 490px))) 380px;
+    justify-content: center;
+    column-gap: 16px;
+    padding-inline: 18px;
+  }
+  .gr-page-refresh .gr-stage-shell,
+  .gr-page-refresh .gr-stage-card.gr-stage-card-board {
+    min-width: 0;
+  }
+  .gr-page-refresh .gr-stage-board-only,
+  .gr-page-refresh .gr-board-frame {
+    justify-content: flex-end;
+  }
+  .gr-page-refresh .gr-board-stack {
+    margin: 0;
+  }
+}
+
+/* Desktop board fits slightly below viewport height, leaving breathing room. */
+@media (min-width: 1101px) {
+  .gr-page-refresh .gr-shell-review {
+    grid-template-columns: minmax(0, min(calc(100vh - 145px), calc(100vw - 490px))) 380px;
+  }
+}
+/* Larger notation and classification markers, without widening the move columns. */
+.gr-page-refresh .gr-sidebar-view-moves .gr-move-san { font-size: 12px; font-weight: 700; }
+.gr-page-refresh .gr-sidebar-view-moves .gr-move-cell { min-height: 23px; }
+.gr-page-refresh .gr-sidebar-view-moves .gr-move-badge { min-width: 18px; height: 18px; font-size: 10px; }
+.gr-page-refresh .gr-board-corner-badge { min-width: 26px; height: 26px; font-size: 0.77rem; padding: 0 6px; }
+
+/* Keep optional engine lines beneath the scrollable notation instead of competing with it. */
+.gr-page-refresh .gr-sidebar-view-moves:has(.gr-review-engine-lines) {
+  grid-template-rows: auto auto auto minmax(0, 1fr) auto;
+}
+.gr-page-refresh .gr-sidebar-view-moves .gr-review-engine-lines {
+  min-height: 0;
+  max-height: 98px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex: 0 0 auto;
+  margin-top: 5px;
+  scrollbar-width: thin;
+}
+.gr-page-refresh .gr-sidebar-view-moves .gr-review-engine-lines > div {
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+}
+@media (max-width: 1100px) {
+  .gr-page-refresh .gr-sidebar-view-moves .gr-review-engine-lines { max-height: 112px; }
+}
+
+/* Mobile move view uses display:contents, so each direct child must have an
+   explicit grid placement. Without this, the optional engine lines jump to
+   the top of the page and can overlap the review heading. */
+@media (max-width: 1100px) {
+  .gr-page-refresh.gr-moves-active .gr-sidebar-view-moves .gr-review-engine-lines {
+    grid-column: 1 / -1;
+    order: 8;
+    position: relative;
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    max-height: 112px;
+    margin: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+  .gr-page-refresh.gr-moves-active .gr-sidebar-view-moves .gr-move-list {
+    grid-column: 1 / -1;
+    order: 6;
+    min-width: 0;
+  }
+  .gr-page-refresh.gr-moves-active .gr-shell-review {
+    min-width: 0;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .gr-page-refresh.gr-moves-active .gr-sidebar-topbar,
+  .gr-page-refresh.gr-moves-active .gr-move-summary,
+  .gr-page-refresh.gr-moves-active .gr-control-dock {
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+}
+
+/* Desktop review uses the workspace sidebar for navigation. Keeping the
+   redundant top header out of the layout lets the board fit on first load. */
+@media (min-width: 1101px) {
+  .gr-page-refresh > .topnav { display: none; }
+}

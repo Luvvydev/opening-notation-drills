@@ -10,7 +10,11 @@ import './Practice.css';
 const calcWidth = ({ screenWidth, screenHeight }) => {
   const main = document.querySelector(".workspace-main");
   const available = main ? main.clientWidth : (screenWidth || screenHeight);
-  return Math.max(8, Math.floor(Math.min(available - 32, 500) / 8) * 8);
+  // Keep the original compact sizing on mobile and tablets.
+  const desktop = (screenWidth || window.innerWidth) > 1100;
+  const height = screenHeight || window.innerHeight;
+  const maxBoard = desktop ? Math.min(height - 145, available - 64) : Math.min(available - 32, 500);
+  return Math.max(8, Math.floor(Math.max(8, maxBoard) / 8) * 8);
 }
 
 class Practice extends Component {

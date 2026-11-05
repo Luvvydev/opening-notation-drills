@@ -3438,3 +3438,24 @@
 .ot-hint-arrow-svg path {
   fill: currentColor;
 }
+
+/* Match the Game Review board and sidebar proportions on desktop only. */
+@media (min-width: 1101px) {
+  .ot-main {
+    width: fit-content;
+    max-width: calc(100% - 36px);
+    grid-template-columns: minmax(0, auto) 380px;
+    justify-content: center;
+    align-items: start;
+    gap: 16px;
+  }
+  .ot-main > .ot-board,
+  .ot-main > .ot-side { min-width: 0; }
+  .ot-top-line { max-width: min(calc(100vh - 145px + 396px), calc(100% - 36px)); }
+}
+
+/* On desktop the persistent workspace sidebar already provides navigation.
+   Remove the redundant top header so the enlarged board fits without scrolling. */
+@media (min-width: 1101px) {
+  .ot-container > .topnav { display: none; }
+}

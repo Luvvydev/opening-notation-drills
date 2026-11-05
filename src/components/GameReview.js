@@ -18,6 +18,7 @@ import {
   faPaste,
   faPlay,
   faSearch,
+  faSave,
   faSpinner,
   faStepBackward,
   faStepForward,
@@ -715,6 +716,14 @@ function parsePgn(rawText, orientationOverride) {
       uci: move.uci,
     });
   }
+
+  // The opening catalog is a training repertoire, not an exhaustive opening book.
+  // Recognize a small set of standard first moves even when the repertoire omits them.
+  // Do not excuse arbitrary early moves: unusual moves still use engine classification.
+  const standardFirstMoves = new Set(['e4', 'd4', 'c4', 'Nf3', 'Nc3', 'g3', 'b3', 'f4']);
+  const standardReplies = new Set(['e5', 'd5', 'c5', 'Nf6', 'e6', 'c6', 'g6', 'd6', 'b6', 'f5']);
+  if (moves[0] && standardFirstMoves.has(moves[0].san)) moves[0].inBook = true;
+  if (moves[0]?.inBook && moves[1] && standardReplies.has(moves[1].san)) moves[1].inBook = true;
 
   const match = getMatchSummary(moves.map((move) => move.san));
   if (match && match.matchedPlies > 0) {
@@ -1470,9 +1479,15 @@ function getMoveInsight(move, classification, match) {
     case 'book':
       return {
         title: `${san} is a book move`,
-        body: match && match.lineName
-          ? `Still inside ${match.lineName}.`
-          : 'Still inside your saved opening path.',
+        body: san === 'Nf3' && move.ply === 1
+          ? 'Develops a knight and controls e5 and d4. This is a standard opening move.'
+          : san === 'd4' && move.ply === 1
+            ? 'Claims central space and opens lines for the queen and bishop.'
+            : san === 'e4' && move.ply === 1
+              ? 'Claims the center and opens lines for the bishop and queen.'
+              : match && match.lineName
+                ? `Still inside ${match.lineName}.`
+                : 'A recognized opening move. The game is still in its opening phase.',
         tone: 'book',
         bestSan: '',
       };
@@ -1884,6 +1899,12 @@ function GameReview({ active = true }) {
   const reviewTrackedRef = useRef(false);
   const puzzleTrackedRef = useRef(false);
   const [currentPly, setCurrentPly] = useState(0);
+  // A variation never modifies the imported game or its classified moves.
+  const [reviewVariation, setReviewVariation] = useState(null);
+  const [variationSelectedSquare, setVariationSelectedSquare] = useState(null);
+  const [variationEval, setVariationEval] = useState(null);
+  const [variationBestMove, setVariationBestMove] = useState(null);
+  const [variationFeedback, setVariationFeedback] = useState(null);
   const [orientation, setOrientation] = useState('white');
   const [engineState, setEngineState] = useState('idle');
   const [engineError, setEngineError] = useState('');
@@ -1928,6 +1949,7 @@ function GameReview({ active = true }) {
   const [activePlayScenario, setActivePlayScenario] = useState('normal');
   const [playStarted, setPlayStarted] = useState(false);
   const [boardWidth, setBoardWidth] = useState(500);
+  const [showPositionLines, setShowPositionLines] = useState(false);
   const [playerVisuals, setPlayerVisuals] = useState({ white: null, black: null });
   const [reviewSettings, setReviewSettings] = useState(loadReviewSettings);
   const [puzzleIndex, setPuzzleIndex] = useState(0);
@@ -1954,6 +1976,7 @@ function GameReview({ active = true }) {
   const engineRef = useRef(null);
   const initPromiseRef = useRef(null);
   const positionRequestRef = useRef(0);
+  const variationRequestRef = useRef(0);
   const runRequestRef = useRef(0);
   const cacheRef = useRef(new Map());
   const remoteAbortRef = useRef(null);
@@ -2025,6 +2048,7 @@ function GameReview({ active = true }) {
 
   const isPlayMode = sidebarMode === 'play';
   const isPuzzleMode = sidebarMode === 'puzzles';
+  const isReviewVariation = Boolean(reviewVariation) && !isPlayMode && !isPuzzleMode;
   const isCompactPractice = isPuzzleMode && activePuzzleQueue.length > 0;
 
   useEffect(() => {
@@ -2068,7 +2092,9 @@ function GameReview({ active = true }) {
     puzzleExplanation.key === puzzleReviewKey(currentPuzzle));
   const showPracticeAttention = mistakePuzzleCount > 0 && !isPuzzleMode;
   const shellProgressStyle = { '--gr-top-progress': `${topProgressPercent}%` };
-  const sidebarPanelStyle = { '--gr-sidebar-target-height': `${boardWidth + 26}px` };
+  const sidebarPanelStyle = { '--gr-sidebar-target-height': `${boardWidth}px` };
+  const displayedEvaluation = isReviewVariation ? (variationEval || (variationFeedback && variationFeedback.evaluationAfter)) : (gameAnalysis && gameAnalysis.positions && gameAnalysis.positions[currentPly]) || positionEval;
+  const evaluationPercent = displayedEvaluation && displayedEvaluation.lines && displayedEvaluation.lines.length ? getPositionWinPercentage(displayedEvaluation) : 50;
   // Hook calls below are unconditional; preserve their order across every render.
   const puzzlePlayedMarkerId = useMemo(() => `grPuzzleArrowHeadPlayed-${Math.random().toString(36).slice(2, 9)}`, []);
   const puzzleBestMarkerId = useMemo(() => `grPuzzleArrowHeadBest-${Math.random().toString(36).slice(2, 9)}`, []);
@@ -2362,6 +2388,134 @@ function GameReview({ active = true }) {
     }
   }, [currentPuzzle, depth, evaluateFen, explanationActive, explanationLoading]);
 
+  const variationFen = reviewVariation
+    ? reviewVariation.fens[reviewVariation.cursor]
+    : null;
+  const variationLegalTargets = useMemo(() => (
+    variationSelectedSquare && !isPlayMode && !isPuzzleMode
+      ? getLegalTargetsForFen(variationFen || gameData?.positions?.[currentPly]?.fen, variationSelectedSquare) : []
+  ), [currentPly, gameData, getLegalTargetsForFen, isPlayMode, isPuzzleMode, variationFen, variationSelectedSquare]);
+
+  const exitReviewVariation = useCallback(() => {
+    variationRequestRef.current += 1;
+    setReviewVariation(null);
+    setVariationSelectedSquare(null);
+    setVariationEval(null);
+    setVariationBestMove(null);
+    setVariationFeedback(null);
+  }, []);
+
+  const handleReviewMove = useCallback(({ sourceSquare, targetSquare }) => {
+    if (!gameData || !gameData.positions || isPlayMode || isPuzzleMode || engineState === 'analyzing-game') return;
+    const startingFen = reviewVariation ? variationFen : gameData.positions[currentPly]?.fen;
+    if (!startingFen) return;
+    const game = new Chess(startingFen);
+    let move;
+    try {
+      move = game.move({ from: sourceSquare, to: targetSquare, promotion: 'q' });
+    } catch (_) { return; }
+    if (!move) return;
+    setVariationSelectedSquare(null);
+    if (!reviewVariation) {
+      const nextGameMove = gameData.moves?.[currentPly];
+      if (nextGameMove && game.fen() === gameData.positions[currentPly + 1]?.fen) {
+        setCurrentPly(currentPly + 1);
+        return;
+      }
+      setReviewVariation({ originPly: currentPly, fens: [startingFen, game.fen()], moves: [move.san], cursor: 1 });
+      setSidebarMode('moves');
+    } else {
+      setReviewVariation((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          fens: [...prev.fens.slice(0, prev.cursor + 1), game.fen()],
+          moves: [...prev.moves.slice(0, prev.cursor), move.san],
+          cursor: prev.cursor + 1,
+        };
+      });
+    }
+    playSfx(isCaptureLike(move) ? 'capture' : 'moveSelf');
+  }, [currentPly, engineState, gameData, isPlayMode, isPuzzleMode, playSfx, reviewVariation, variationFen]);
+
+  const handleReviewSquareClick = useCallback((square) => {
+    if (!gameData || isPlayMode || isPuzzleMode) return;
+    const fen = variationFen || gameData.positions?.[currentPly]?.fen;
+    if (!fen) return;
+    const game = new Chess(fen);
+    const piece = game.get(square);
+    if (piece && piece.color === game.turn()) {
+      setVariationSelectedSquare((previous) => previous === square ? null : square);
+      return;
+    }
+    if (!variationSelectedSquare) return;
+    handleReviewMove({ sourceSquare: variationSelectedSquare, targetSquare: square });
+    setVariationSelectedSquare(null);
+  }, [currentPly, gameData, handleReviewMove, isPlayMode, isPuzzleMode, variationFen, variationSelectedSquare]);
+
+  // Analyze the position before the selected branch move first. This lets us
+  // report the engine's preferred alternative, not its reply to the move played.
+  useEffect(() => {
+    if (!isReviewVariation || !variationFen || engineState === 'analyzing-game') return undefined;
+    const request = ++variationRequestRef.current;
+    setVariationEval(null);
+    setVariationBestMove(null);
+    setVariationFeedback(null);
+    const timer = window.setTimeout(async () => {
+      try {
+        if (reviewVariation.cursor > 0) {
+          const beforeFen = reviewVariation.fens[reviewVariation.cursor - 1];
+          const before = await evaluateFen(beforeFen, { depth, multiPv: 1 });
+          if (request !== variationRequestRef.current) return;
+          const bestSan = before.lines?.[0]?.pv?.[0] || null;
+          setVariationBestMove(bestSan);
+          const moveIndex = reviewVariation.cursor - 1;
+          const playedSan = reviewVariation.moves[moveIndex];
+          const moveGame = new Chess(beforeFen);
+          let playedMove = null;
+          let bestMove = null;
+          try { playedMove = moveGame.move(playedSan); } catch (_) { /* Keep branch usable. */ }
+          if (bestSan) {
+            try { bestMove = new Chess(beforeFen).move(bestSan); } catch (_) { /* Engine line may be incomplete. */ }
+          }
+          // The result belongs to the position AFTER the played move.
+          const after = await evaluateFen(variationFen, {
+            depth, multiPv,
+            partialCallback: (partial) => {
+              if (request === variationRequestRef.current) setVariationEval(partial);
+            },
+          });
+          if (request !== variationRequestRef.current) return;
+          setVariationEval(after);
+          if (playedMove) {
+            const reviewedMove = {
+              ...playedMove, ply: reviewVariation.originPly + reviewVariation.cursor,
+              uci: moveToUci(playedMove), beforeFen, afterFen: variationFen,
+              bestMove: bestMove ? moveToUci(bestMove) : '',
+            };
+            reviewedMove.classification = classifyMove(before, after, reviewedMove);
+            setVariationFeedback({ cursor: reviewVariation.cursor, move: reviewedMove, evaluationAfter: after });
+          }
+          return;
+        }
+        if (request !== variationRequestRef.current) return;
+        const result = await evaluateFen(variationFen, {
+          depth, multiPv,
+          partialCallback: (partial) => {
+            if (request === variationRequestRef.current) setVariationEval(partial);
+          },
+        });
+        if (request === variationRequestRef.current) setVariationEval(result);
+      } catch (_) {
+        // Leave exploratory moves available even when Stockfish is unavailable.
+      }
+    }, 180);
+    return () => {
+      window.clearTimeout(timer);
+      variationRequestRef.current += 1;
+    };
+  }, [depth, engineState, evaluateFen, isReviewVariation, multiPv, reviewVariation, variationFen]);
+
   const analyzeCurrentPosition = useCallback(async (plyOverride) => {
     if (!gameData || !gameData.positions) return;
 
@@ -2410,7 +2564,7 @@ function GameReview({ active = true }) {
     setEngineState('analyzing-game');
     setEngineError('');
     setGameProgress(1);
-    setStatusMessage('Analyzing every position…');
+    setStatusMessage('Analyzing positions with Stockfish. Move review will be ready when analysis finishes.');
 
     try {
       const positions = gameData.positions;
@@ -2579,6 +2733,7 @@ function GameReview({ active = true }) {
     setPositionEval(null);
     setGameProgress(0);
     setCurrentPly(0);
+    exitReviewVariation();
     setSidebarMode('overview');
     const resolvedOrientation = nextOrientation || parsed.orientation || 'white';
     setOrientation(resolvedOrientation);
@@ -2596,7 +2751,7 @@ function GameReview({ active = true }) {
     setPuzzleHintOpen(false);
     setPuzzleShowSolution(false);
     setStatusMessage('Game loaded.');
-  }, [stopPoolSearches]);
+  }, [exitReviewVariation, stopPoolSearches]);
 
   const saveToTraining = async () => {
     if (!user || !membershipActive || !hasFullReview || saveBusy) return;
@@ -3522,14 +3677,15 @@ function GameReview({ active = true }) {
         const workspaceTop = workspaceRef.current ? Math.max(0, workspaceRef.current.getBoundingClientRect().top) : 80;
         // Reserve space for instructions, progress and touch controls before sizing the board.
         const practiceCap = Math.max(160, Math.floor(viewportHeight - workspaceTop - 230));
-        const desktopCap = Math.min(720, Math.max(320, (window.innerHeight || 850) - 160));
+        // Let the board use the viewport, reserving only the header and progress rail.
+        const desktopCap = Math.max(320, (window.innerHeight || 850) - 145);
 
         let nextWidth;
         if (viewportWidth && viewportWidth <= 1100) {
           const mobileWidth = frameWidth || mobileCap;
           nextWidth = Math.max(160, Math.min(mobileCap, mobileWidth, isCompactPractice || sidebarMode === 'moves' ? practiceCap : 620));
         } else {
-          const desktopWidth = frameWidth || desktopCap;
+          const desktopWidth = frameWidth ? frameWidth - (hasLoadedGame && sidebarMode !== 'play' && sidebarMode !== 'puzzles' ? 30 : 0) : desktopCap;
           nextWidth = Math.max(260, Math.min(desktopCap, desktopWidth));
         }
 
@@ -3554,7 +3710,7 @@ function GameReview({ active = true }) {
         window.cancelAnimationFrame(frame);
       }
     };
-  }, [active, isCompactPractice, sidebarMode]);
+  }, [active, hasLoadedGame, isCompactPractice, sidebarMode]);
 
   useEffect(() => {
     if (!active) return undefined;
@@ -3566,6 +3722,15 @@ function GameReview({ active = true }) {
       }
 
       const totalMoves = gameData && gameData.moves ? gameData.moves.length : 0;
+      if (reviewVariation && !isPlayMode && !isPuzzleMode) {
+        if (['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) {
+          event.preventDefault();
+          const origin = reviewVariation.originPly;
+          exitReviewVariation();
+          setCurrentPly(event.key === 'Home' ? 0 : event.key === 'End' ? totalMoves : Math.max(0, Math.min(totalMoves, origin + (event.key === 'ArrowLeft' ? -1 : 1))));
+        }
+        return;
+      }
       if (event.key === 'ArrowLeft') {
         event.preventDefault();
         setCurrentPly((value) => Math.max(0, value - 1));
@@ -3583,7 +3748,7 @@ function GameReview({ active = true }) {
 
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [gameData, active]);
+  }, [gameData, active, reviewVariation, isPlayMode, isPuzzleMode, exitReviewVariation]);
 
   useEffect(() => {
     const headers = gameData && gameData.headers ? gameData.headers : null;
@@ -3627,7 +3792,7 @@ function GameReview({ active = true }) {
 
   const moveCount = gameData && gameData.moves ? gameData.moves.length : 0;
   /* eslint-enable react-hooks/rules-of-hooks */
-  const reviewBoardFen = isPlayMode && playStarted ? playFen : isPuzzleMode && currentPuzzle
+  const reviewBoardFen = isReviewVariation && variationFen ? variationFen : isPlayMode && playStarted ? playFen : isPuzzleMode && currentPuzzle
     ? (explanationActive && explanationPosition ? explanationPosition.fen : puzzleFen)
     : currentMove
       ? (currentMove.afterFen || (currentPosition ? currentPosition.fen : currentMove.beforeFen))
@@ -3651,24 +3816,38 @@ function GameReview({ active = true }) {
           <section className="gr-stage-card gr-stage-card-board">
             <div className="gr-stage-board-only">
               <div className="gr-board-frame" ref={boardFrameRef}>
+                {!isPlayMode && !isPuzzleMode && hasLoadedGame && (
+                  <div className="gr-live-eval" role="progressbar" aria-label="White position evaluation" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(evaluationPercent)} title={`White winning chances: ${Math.round(evaluationPercent)}%`}>
+                    <div className="gr-live-eval-white" style={{ height: `${evaluationPercent}%` }} />
+                    <span className="gr-live-eval-value">{displayedEvaluation && displayedEvaluation.lines && displayedEvaluation.lines.length ? getPositionLabel(displayedEvaluation) : '…'}</span>
+                  </div>
+                )}
                 <div className="gr-board-stack" style={{ width: `${boardWidth}px` }}>
                   <Chessboard
-                    key={`review-board-${isPlayMode ? playOrientation : effectiveBoardOrientation}-${reviewBoardFen}`}
+                    key={`review-board-${isPlayMode ? playOrientation : effectiveBoardOrientation}${isPuzzleMode ? `-puzzle-${currentPuzzle?.id || puzzleIndex}` : ''}`}
                     width={boardWidth}
+                    transitionDuration={125}
                     position={reviewBoardFen}
                     orientation={isPlayMode && playStarted ? playOrientation : effectiveBoardOrientation}
-                    arePiecesDraggable={isPlayMode ? playStarted && !playThinking && !playResult : isPuzzleMode ? Boolean(currentPuzzle) && !explanationActive && puzzleStatus !== 'checking' && puzzleStatus !== 'solved' : false}
-                    onDrop={isPlayMode ? (playStarted ? handlePlayDrop : undefined) : isPuzzleMode ? handlePuzzleDrop : undefined}
-                    onSquareClick={isPlayMode ? (playStarted ? handlePlaySquareClick : undefined) : isPuzzleMode && !explanationActive ? handlePuzzleSquareClick : undefined}
-                    onSquareRightClick={isPlayMode ? clearPlaySelection : isPuzzleMode ? clearPuzzleSelection : undefined}
+                    arePiecesDraggable={isPlayMode ? playStarted && !playThinking && !playResult : isPuzzleMode ? Boolean(currentPuzzle) && !explanationActive && puzzleStatus !== 'checking' && puzzleStatus !== 'solved' : hasLoadedGame && engineState !== 'analyzing-game'}
+                    onDrop={isPlayMode ? (playStarted ? handlePlayDrop : undefined) : isPuzzleMode ? handlePuzzleDrop : handleReviewMove}
+                    onSquareClick={isPlayMode ? (playStarted ? handlePlaySquareClick : undefined) : isPuzzleMode && !explanationActive ? handlePuzzleSquareClick : handleReviewSquareClick}
+                    onSquareRightClick={isPlayMode ? clearPlaySelection : isPuzzleMode ? clearPuzzleSelection : () => setVariationSelectedSquare(null)}
                     showNotation
                     squareStyles={isPlayMode ? playSquareStyles : isPuzzleMode ? (explanationActive && explanationPosition && explanationPosition.move
                       ? { [explanationPosition.move.slice(0, 2)]: { backgroundColor: 'rgba(255,208,96,0.2)' }, [explanationPosition.move.slice(2, 4)]: { backgroundColor: 'rgba(255,208,96,0.32)' } }
-                      : puzzleSquareStyles) : boardSquareStyles}
+                      : puzzleSquareStyles) : isReviewVariation || variationSelectedSquare ? { ...(isReviewVariation ? {} : boardSquareStyles), ...(variationSelectedSquare ? { [variationSelectedSquare]: { backgroundColor: 'rgba(255, 208, 96, 0.35)' } } : {}), ...Object.fromEntries(variationLegalTargets.map((sq) => [sq, { backgroundColor: 'rgba(78, 178, 112, 0.3)' }])) } : boardSquareStyles}
                     pieceTheme={pieceThemeUrl}
                     {...boardThemeStyles}
                   />
-                  {isPlayMode ? null : isPuzzleMode ? (
+                  {isPlayMode ? null : isReviewVariation ? (
+                    <BoardOverlay
+                      move={variationFeedback && variationFeedback.cursor === reviewVariation.cursor ? variationFeedback.move : null}
+                      orientation={effectiveBoardOrientation}
+                      classification={variationFeedback && variationFeedback.cursor === reviewVariation.cursor ? CLASSIFICATION_META[variationFeedback.move.classification] : null}
+                      boardSize={boardWidth}
+                    />
+                  ) : isPuzzleMode ? (
                     (explanationActive || puzzleFen === (currentPuzzle ? currentPuzzle.beforeFen : '')) ? (
                       <div className="gr-board-overlay" aria-hidden="true">
                         <svg viewBox={`0 0 ${boardWidth} ${boardWidth}`} className="gr-board-arrow gr-board-arrow-puzzle">
@@ -3735,20 +3914,18 @@ function GameReview({ active = true }) {
               </div>
               <div className="gr-workspace-heading-actions">
                 {isCompactPractice ? <span className="gr-session-count">{puzzleIndex + 1} / {activePuzzleQueue.length}</span> : null}
+                {hasFullReview && (user && membershipActive
+                  ? <button type="button" className="gr-save-icon gr-tooltip-anchor" disabled={saveBusy || userDocLoading} onClick={saveToTraining} title="Save this game and its mistakes to Daily Training" aria-label={saveBusy ? 'Saving to Daily Training' : 'Save game and mistakes to Daily Training'} data-tooltip="Save to Daily Training"><FontAwesomeIcon icon={saveBusy ? faSpinner : faSave} spin={saveBusy} /></button>
+                  : !user
+                    ? <Link className="gr-save-icon gr-tooltip-anchor" to="/signup?from=%2Fmy-games&source=save_review" onClick={preserveGuestReview} title="Sign up to save games and mistakes to Daily Training" aria-label="Sign up to save to Daily Training" data-tooltip="Save to Daily Training"><FontAwesomeIcon icon={faSave} /></Link>
+                    : <Link className="gr-save-icon gr-tooltip-anchor" to={{ pathname: "/about", state: { from: "/my-games" } }} title="Premium required to save games and mistakes to Daily Training" aria-label="Premium required to save to Daily Training" data-tooltip="Save to Daily Training"><FontAwesomeIcon icon={faSave} /></Link>)}
                 <button type="button" className="gr-button gr-options-toggle" onClick={() => setOptionsOpen((value) => !value)} aria-expanded={optionsOpen} aria-controls="gr-workspace-options">Options</button>
               </div>
             </div>
             {sidebarMode !== 'play' && (
               <div className="gr-session-tools">
                 {accessMessage && <div className="gr-inline-notice" role="status"><p>{accessMessage}</p><Link to={{ pathname: "/about", state: { from: "/my-games?mode=puzzles" } }}>View Premium</Link></div>}
-                {hasFullReview && <div className="gr-save-actions">
-                  {user && membershipActive
-                    ? <button type="button" className="gr-button" disabled={saveBusy || userDocLoading} onClick={saveToTraining}>{saveBusy ? 'Saving…' : 'Save to training'}</button>
-                    : !user ? <Link className="gr-button" to="/signup?from=%2Fmy-games&source=save_review" onClick={preserveGuestReview}>Create account</Link>
-                    : <Link className="gr-button" to={{ pathname: "/about", state: { from: "/my-games" } }}>Save with Premium</Link>}
-                  <Link className="gr-saved-link" to="/training">Saved training</Link>
-                  {saveStatus && <p className="gr-save-status" role="status">{saveStatus}</p>}
-                </div>}
+                {saveStatus && <p className="gr-save-status" role="status">{saveStatus}</p>}
                 {solvedPuzzleCount > 0 && !membershipActive && !offerDismissed && <div className="gr-inline-offer">
                   <p>Build a practice pack from more of your games.</p>
                   <Link to={{ pathname: "/about", state: { from: "/my-games?mode=puzzles" } }}
@@ -3794,11 +3971,11 @@ function GameReview({ active = true }) {
                     type="button"
                     className={`${canOpenSingleGameViews && sidebarMode === 'moves' ? 'gr-panel-gear is-active' : 'gr-panel-gear'} gr-tooltip-anchor`}
                     onClick={() => canOpenSingleGameViews && setSidebarMode('moves')}
-                    aria-label="Open Move Review"
-                    data-tooltip="Move Review"
+                    aria-label="Open Game Review"
+                    data-tooltip="Game Review"
                     disabled={!canOpenSingleGameViews}
                   >
-                    <FontAwesomeIcon icon={faListOl} /><span>Moves</span>
+                    <FontAwesomeIcon icon={faListOl} /><span>Review</span>
                   </button>
                   <button
                     type="button"
@@ -4339,10 +4516,33 @@ function GameReview({ active = true }) {
               ) : (
                 <div className="gr-sidebar-view gr-sidebar-view-moves">
                   <div className="gr-move-summary">
-                    <div className={`gr-insight-bubble gr-insight-bubble-${currentInsight.tone || 'neutral'}`}>
-                      <div className="gr-insight-title">{currentInsight.title}</div>
-                      <div className="gr-insight-body">{currentInsight.body}</div>
-                    </div>
+                    {isReviewVariation ? (
+                      <div className="gr-coach-message" role="status" aria-live="polite">
+                        <img className="gr-coach-avatar" src={`/coaches/${reviewSettings.coachTheme === 'princess' ? 'princess-coach' : 'learn-coach'}.svg`} alt="ChessDrills coach" />
+                        <div className={`gr-insight-bubble gr-insight-bubble-${variationFeedback && variationFeedback.cursor === reviewVariation.cursor ? variationFeedback.move.classification : 'neutral'}`}>
+                          <div className="gr-insight-title">
+                            {reviewVariation.cursor === 0 ? 'Try a different move' : variationFeedback && variationFeedback.cursor === reviewVariation.cursor
+                              ? `${reviewVariation.moves[reviewVariation.cursor - 1]} ${({blunder: 'was a blunder', mistake: 'was a mistake', inaccuracy: 'was an inaccuracy', good: 'was a good move', excellent: 'was excellent', best: 'was the best move', critical: 'was a great move', book: 'was a book move', forced: 'was forced', miss: 'missed an opportunity'})[variationFeedback.move.classification] || 'has been analyzed'}.`
+                              : `Analyzing ${reviewVariation.moves[reviewVariation.cursor - 1]}…`}
+                          </div>
+                          <div className="gr-insight-body">
+                            {reviewVariation.cursor === 0 ? 'Play either side to explore a different continuation.' : variationFeedback && variationFeedback.cursor === reviewVariation.cursor
+                              ? variationBestMove && normalizeSan(variationBestMove) !== normalizeSan(reviewVariation.moves[reviewVariation.cursor - 1])
+                                ? `The engine preferred ${variationBestMove}. The green arrow shows the stronger move.`
+                                : 'This matches the engine’s preferred move.'
+                              : 'Evaluating your move and checking the strongest alternative…'}
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="gr-coach-message">
+                        <img className="gr-coach-avatar" src={`/coaches/${reviewSettings.coachTheme === 'princess' ? 'princess-coach' : 'learn-coach'}.svg`} alt="ChessDrills coach" />
+                        <div className={`gr-insight-bubble gr-insight-bubble-${currentInsight.tone || 'neutral'}`}>
+                          <div className="gr-insight-title">{currentInsight.title}</div>
+                          <div className="gr-insight-body">{currentInsight.body}</div>
+                        </div>
+                      </div>
+                    )}
 
                     {!hasFullReview || isFullReviewProgressActive || engineError ? (
                       <div className={`gr-status-strip is-${statusTone}`}>
@@ -4360,46 +4560,58 @@ function GameReview({ active = true }) {
                           aria-label="Practice missed moves from this game"
                         >
                           <FontAwesomeIcon icon={faChessKnight} />
-                          <span>Practice my mistakes ({puzzleQueue.length})</span>
+                          <span>Practice mistakes ({puzzleQueue.length})</span>
                         </button>
                       </div>
                     ) : null}
                   </div>
 
                   <div className="gr-moves-head">
-                    <span>Moves</span>
-                    <span>{currentPly === 0 ? 'Start' : `${currentPly}/${moveCount}`}</span>
+                    <span>Review</span>
+                    {isReviewVariation ? (
+                      <button type="button" className="gr-variation-return" onClick={exitReviewVariation}>
+                        ↩ Game
+                      </button>
+                    ) : <span>{currentPly === 0 ? 'Start' : `${currentPly}/${moveCount}`}</span>}
                   </div>
 
                   <div className="gr-control-dock">
-                    <button type="button" className="gr-dock-btn gr-tooltip-anchor" onClick={() => setCurrentPly(0)} aria-label="Jump to the first move" data-tooltip="Jump to first move">
+                    <button type="button" className="gr-dock-btn gr-tooltip-anchor" onClick={() => { if (isReviewVariation) exitReviewVariation(); setCurrentPly(0); }} aria-label="Jump to the first move" data-tooltip="Jump to first move">
                       <FontAwesomeIcon icon={faFastBackward} />
                     </button>
-                    <button type="button" className="gr-dock-btn gr-tooltip-anchor" onClick={() => setCurrentPly((value) => Math.max(0, value - 1))} aria-label="Review the previous move" data-tooltip="Previous move">
+                    <button type="button" className="gr-dock-btn gr-tooltip-anchor" onClick={() => { const origin = isReviewVariation ? reviewVariation.originPly : currentPly; if (isReviewVariation) exitReviewVariation(); setCurrentPly(Math.max(0, origin - 1)); }} aria-label="Review the previous move" data-tooltip="Previous move">
                       <FontAwesomeIcon icon={faStepBackward} />
                     </button>
-                    <button type="button" className="gr-dock-btn gr-dock-btn-primary gr-tooltip-anchor" onClick={() => analyzeCurrentPosition()} aria-label="Analyze current position" data-tooltip="Analyze position">
+                    {!isReviewVariation && <button type="button" className="gr-dock-btn gr-dock-btn-primary gr-tooltip-anchor" onClick={() => { if (showPositionLines) setShowPositionLines(false); else { setShowPositionLines(true); analyzeCurrentPosition(); } }} aria-label={showPositionLines ? "Hide engine lines" : "Show engine lines for this position"} aria-pressed={showPositionLines} data-tooltip={showPositionLines ? "Hide engine lines" : "Show engine lines"}>
                       {engineState === 'analyzing-position' ? <FontAwesomeIcon icon={faSpinner} spin /> : <FontAwesomeIcon icon={faSearch} />}
-                    </button>
-                    <button type="button" className="gr-dock-btn gr-dock-btn-primary gr-tooltip-anchor" onClick={analyzeWholeGame} aria-label="Analyze full game" data-tooltip="Analyze full game">
+                    </button>}
+                    {!isReviewVariation && <button type="button" className="gr-dock-btn gr-dock-btn-primary gr-tooltip-anchor" onClick={() => { setShowPositionLines(false); analyzeWholeGame(); }} disabled={engineState === 'analyzing-game'} aria-label="Reanalyze full game" data-tooltip="Reanalyze game">
                       {engineState === 'analyzing-game' ? <FontAwesomeIcon icon={faSpinner} spin /> : <FontAwesomeIcon icon={faChartLine} />}
-                    </button>
-                    <button type="button" className="gr-dock-btn gr-tooltip-anchor" onClick={() => setCurrentPly((value) => Math.min(moveCount, value + 1))} aria-label="Review the next move" data-tooltip="Next move">
+                    </button>}
+                    <button type="button" className="gr-dock-btn gr-tooltip-anchor" onClick={() => { const origin = isReviewVariation ? reviewVariation.originPly : currentPly; if (isReviewVariation) exitReviewVariation(); setCurrentPly(Math.min(moveCount, origin + 1)); }} aria-label="Review the next move" data-tooltip="Next move">
                       <FontAwesomeIcon icon={faStepForward} />
                     </button>
-                    <button type="button" className="gr-dock-btn gr-tooltip-anchor" onClick={() => setCurrentPly(moveCount)} aria-label="Jump to the final move" data-tooltip="Final move">
+                    <button type="button" className="gr-dock-btn gr-tooltip-anchor" onClick={() => { if (isReviewVariation) exitReviewVariation(); setCurrentPly(moveCount); }} aria-label="Jump to the final move" data-tooltip="Final move">
                       <FontAwesomeIcon icon={faFastForward} />
                     </button>
                   </div>
 
                   <div className="gr-move-list">
+                    {isReviewVariation && reviewVariation.originPly === 0 ? (
+                      <div className="gr-inline-variation" aria-label="Alternative moves from the starting position">
+                        <div className="gr-inline-variation-trunk"><span className="gr-inline-variation-label">Alternative from start</span></div>
+                        <div className="gr-inline-variation-moves">{reviewVariation.moves.map((move, index) => <button key={index} type="button" className={reviewVariation.cursor === index + 1 ? 'is-active' : ''} onClick={() => setReviewVariation((prev) => ({ ...prev, cursor: index + 1 }))}>{Math.floor(index / 2) + 1}{index % 2 ? '...' : '.'} {move}</button>)}</div>
+                      </div>
+                    ) : null}
                     {gameData && gameData.moves && gameData.moves.length ? (
                       Array.from({ length: Math.ceil(gameData.moves.length / 2) }, (_, rowIndex) => {
                         const whiteMove = gameData.moves[rowIndex * 2];
                         const blackMove = gameData.moves[rowIndex * 2 + 1];
 
+                        const branch = isReviewVariation && Math.floor((reviewVariation.originPly - 1) / 2) === rowIndex && reviewVariation.originPly > 0;
                         return (
-                          <div key={rowIndex} className="gr-move-row">
+                          <React.Fragment key={rowIndex}>
+                          <div className="gr-move-row">
                             <div className="gr-move-number">{rowIndex + 1}</div>
                             {[whiteMove, blackMove].map((move) => {
                               if (!move) {
@@ -4407,7 +4619,7 @@ function GameReview({ active = true }) {
                               }
 
                               const meta = move.classification ? CLASSIFICATION_META[move.classification] : null;
-                              const isActive = currentPly === move.ply;
+                              const isActive = currentPly === move.ply && !isReviewVariation;
                               const badge = {
                                 brilliant: '!!', critical: '!', book: '▣', best: '★',
                                 excellent: '👍', good: '✓', forced: '→',
@@ -4422,7 +4634,7 @@ function GameReview({ active = true }) {
                                   title={`${move.san}: ${meta ? meta.label : 'Not analysed'}`}
                                   data-tooltip={`${move.san}: ${meta ? meta.label : 'Not classified'}`}
                                   aria-label={`Move ${move.ply}: ${move.san}, ${meta ? meta.label : 'not classified'}`}
-                                  onClick={() => setCurrentPly(move.ply)}
+                                  onClick={() => { exitReviewVariation(); setCurrentPly(move.ply); }}
                                 >
                                   <span className="gr-move-san">{move.san}</span>
                                   {meta && ['brilliant', 'critical', 'book', 'inaccuracy', 'mistake', 'miss', 'blunder'].includes(move.classification) ? <span className={`gr-move-badge gr-move-badge-${meta.className}`}>{badge}</span> : null}
@@ -4430,12 +4642,39 @@ function GameReview({ active = true }) {
                               );
                             })}
                           </div>
+                          {branch ? (
+                            <div className="gr-inline-variation" aria-label="Alternative moves from this position">
+                              <div className="gr-inline-variation-trunk">
+                                <span className="gr-inline-variation-label">Alternative</span>
+                                <button type="button" className={reviewVariation.cursor === 0 ? 'is-active' : ''} onClick={() => setReviewVariation((prev) => ({ ...prev, cursor: 0 }))} title="Return to the branch starting position">{gameData.moves[reviewVariation.originPly - 1]?.san || 'Start'}</button>
+                              </div>
+                              <div className="gr-inline-variation-moves">
+                                {reviewVariation.moves.map((move, index) => (
+                                  <button key={index} type="button" className={reviewVariation.cursor === index + 1 ? 'is-active' : ''}
+                                    onClick={() => setReviewVariation((prev) => ({ ...prev, cursor: index + 1 }))}
+                                    title={`Go to variation move ${index + 1}`}>
+                                    <span>{Math.floor((reviewVariation.originPly + index) / 2) + 1}{(reviewVariation.originPly + index) % 2 ? '...' : '.'}</span> {move}
+                                    {variationFeedback && variationFeedback.cursor === index + 1 ? <b className={`gr-variation-rating-${variationFeedback.move.classification}`}>{({best:'★',excellent:'!',good:'✓',inaccuracy:'?!',mistake:'?',blunder:'??',critical:'!'})[variationFeedback.move.classification] || ''}</b> : null}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          ) : null}
+                          </React.Fragment>
                         );
                       })
                     ) : (
                       <div className="gr-empty">Load a game to see the move list.</div>
                     )}
                   </div>
+                  {!isReviewVariation && showPositionLines && (
+                    <div className="gr-review-engine-lines" role="status">
+                      <button type="button" onClick={() => setShowPositionLines(false)} aria-label="Hide engine lines" title="Hide engine lines">×</button>
+                      {positionEval && positionEval.lines && positionEval.lines.length ? positionEval.lines.map((line, i) => (
+                        <div key={i}><strong>{getPositionLabel({ lines: [line] })}</strong> {line.pv.slice(0, 6).join(' ')}</div>
+                      )) : <span>{engineState === 'analyzing-position' ? 'Analyzing…' : 'Choose the magnifying glass to analyze this position.'}</span>}
+                    </div>
+                  )}
                 </div>
               )}
             </div>

@@ -24,6 +24,28 @@ function stripPieceProps(theme) {
 
 const game = new Chess();
 const orientations = ['white', 'black'];
+const NOTATION_SETTINGS_KEY = 'notation_trainer_opening_settings_v1';
+const CONFETTI_COLORS = ['#f4c542', '#ffffff', '#8cd14f', '#6bb8ee', '#bb8af7'];
+
+function notationFeedbackEnabled(key) {
+  try {
+    const settings = JSON.parse(window.localStorage.getItem(NOTATION_SETTINGS_KEY) || '{}');
+    return settings[key] !== false;
+  } catch (_) {
+    return true;
+  }
+}
+
+function makeNotationConfetti() {
+  return Array.from({ length: 48 }, (_, index) => ({
+    id: index,
+    left: `${4 + Math.random() * 92}%`,
+    delay: `${Math.random() * 0.18}s`,
+    duration: `${0.85 + Math.random() * 0.45}s`,
+    rotation: `${Math.round(Math.random() * 360)}deg`,
+    color: CONFETTI_COLORS[index % CONFETTI_COLORS.length]
+  }));
+}
 
 class Board extends Component {
 
@@ -49,13 +71,16 @@ class Board extends Component {
       correct: false,
       selectedSquare: null,
       legalTargets: [],
-      lastMove: null // { from, to, color }
+      lastMove: null, // { from, to, color }
+      confetti: []
     }
   }
 
   /* ====================================== Lifecylcle Methods ====================================== */
 
   componentDidMount() {
+    this.moveSound = new Audio(`${process.env.PUBLIC_URL || ''}/sounds/move-self.mp3`);
+    this.captureSound = new Audio(`${process.env.PUBLIC_URL || ''}/sounds/capture.mp3`);
     this.newPosition();
 
     if(this.props.timed) {
@@ -99,6 +124,21 @@ class Board extends Component {
     }, delay);
     this.timeouts.add(timer);
     return timer;
+  };
+
+  playCorrectMoveSound = (capture) => {
+    if (!notationFeedbackEnabled('playSounds')) return;
+    const sound = capture ? this.captureSound : this.moveSound;
+    if (!sound) return;
+    sound.currentTime = 0;
+    const playback = sound.play();
+    if (playback && typeof playback.catch === 'function') playback.catch(() => {});
+  };
+
+  showCorrectConfetti = () => {
+    if (!notationFeedbackEnabled('showConfetti')) return;
+    this.setState({ confetti: makeNotationConfetti() });
+    this.scheduleTimeout(() => this.setState({ confetti: [] }), 1450);
   };
 
   /* ====================================== Component Methods ====================================== */
@@ -229,6 +269,7 @@ class Board extends Component {
 
     game.undo();
     this.setState({ fen: game.fen(), initMoveData: initMoveData, nextMoveData: nextMoveData });
+    this.playCorrectMoveSound(!!initMoveData.captured);
   }
 
   // For initMove colors
@@ -249,7 +290,9 @@ class Board extends Component {
         if(!this.props.timed) {
           this.props.callbackDisableSettings(true);
         }
-        game.move(this.state.nextMove); 
+        game.move(this.state.nextMove);
+        this.playCorrectMoveSound(!!this.state.nextMoveData.captured);
+        this.showCorrectConfetti();
         this.setState({ 
           answer: 'correct', 
           fen: game.fen(), 
@@ -403,6 +446,23 @@ class Board extends Component {
 
     return (
       <div>
+        {this.state.confetti.length > 0 && (
+          <div className="notation-correct-confetti" aria-hidden="true">
+            {this.state.confetti.map((piece) => (
+              <span
+                key={piece.id}
+                className="notation-correct-confetti-piece"
+                style={{
+                  left: piece.left,
+                  animationDelay: piece.delay,
+                  animationDuration: piece.duration,
+                  transform: `rotate(${piece.rotation})`,
+                  backgroundColor: piece.color
+                }}
+              />
+            ))}
+          </div>
+        )}
         <Timer 
           time={this.state.time - this.state.timerCount} 
           display={this.props.timed ? 'block' : 'none'} />

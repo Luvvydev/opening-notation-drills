@@ -30,3 +30,33 @@
   70% { color: #3cff8f; }
   100% { color: #e9edf2; }
 }
+
+/* Notation Practice correct-answer celebration. Does not affect board layout. */
+.notation-correct-confetti {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 1100;
+}
+
+.notation-correct-confetti-piece {
+  position: absolute;
+  top: -16px;
+  width: 8px;
+  height: 12px;
+  border-radius: 1px;
+  animation: notation-confetti-fall 1.15s ease-in forwards;
+  opacity: 0;
+}
+
+@keyframes notation-confetti-fall {
+  0% { opacity: 0; translate: 0 0; }
+  8% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { opacity: 0; translate: 65px 105vh; rotate: 640deg; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .notation-correct-confetti-piece { animation: none; display: none; }
+}

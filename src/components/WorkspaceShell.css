@@ -86,3 +86,12 @@
 
 /* Public landing page sits outside the training navigation. */
 .workspace-shell.is-landing .workspace-main { margin-left: 0; }
+
+/* Full-height desktop chess workspaces use the sidebar for navigation.
+   Hide only the shared shell header on active board pages; retain it on the
+   opening library, homepage, other tools, and all mobile layouts. */
+@media (min-width: 1101px) {
+  .workspace-shell.is-board-workspace .workspace-header {
+    display: none;
+  }
+}
