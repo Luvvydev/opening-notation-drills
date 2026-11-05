@@ -1,4 +1,6 @@
-import * as Chess from "chess.js";
+import * as ChessModule from "chess.js";
+
+const Chess = ChessModule.Chess || ChessModule.default || ChessModule;
 
 export function uciToMove(uci) {
   const raw = String(uci || "").trim();

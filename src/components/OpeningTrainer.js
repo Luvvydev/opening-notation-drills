@@ -454,7 +454,8 @@ class OpeningTrainer extends Component {
       puzzleWrongAttempt: null,
       puzzleSelectedSquare: null,
       puzzleLegalTargets: [],
-      puzzleHintArmed: false
+      puzzleHintArmed: false,
+      puzzleBoardMaxSize: null
     
     };
     this._handleResize = () => {
@@ -463,6 +464,7 @@ class OpeningTrainer extends Component {
       if (size && size !== this.state.boardSize) {
         this.setState({ boardSize: size });
       }
+      this.measurePuzzleBoard();
     };
 
     // set an initial deterministic board size (prevents chessboardjsx internal null coord map)
@@ -628,6 +630,15 @@ this._countedSeenForRun = false;
 
   
   componentDidUpdate(prevProps, prevState) {
+    if (this.state.feedbackPreview && (
+      prevState.lastMoveFeedback !== this.state.lastMoveFeedback ||
+      prevState.fen !== this.state.fen ||
+      this.state.viewing ||
+      prevState.gameMode !== this.state.gameMode
+    )) {
+      this.closeFeedbackPreview();
+    }
+
     if (prevProps.membershipActive && !this.props.membershipActive && this.state.gameMode !== "learn") {
       this.setState({ gameMode: "learn", linePicker: "random" }, () => this.resetLine(false));
       return;
@@ -1184,16 +1195,18 @@ saveCustomModal = () => {
   };
 
 
-  getLineOptionLabel = (line, symbol) => {
+  getLineOptionLabel = (line, symbol, lineNumber) => {
     if (!line) return symbol || "";
-    const lineNumber = getLineNumberForLines(this.state.openingKey, this.getLines(), line.id);
     const prefix = lineNumber ? `#${lineNumber}` : "#?";
     const status = symbol ? `${symbol} ` : "";
     return `${status}${prefix} ${line.name || "Untitled line"}`;
   };
 
   renderLineSelectOptions = () => {
-    const grouped = groupLines(this.getLines());
+    const lines = this.getLines();
+    const grouped = groupLines(lines);
+    const orderedIds = getOrderedLineIdsForLines(this.state.openingKey, lines);
+    const lineNumbers = new Map(orderedIds.map((id, index) => [id, index + 1]));
 
     return grouped.cats.map((cat) => {
       const arr = grouped.map[cat] || [];
@@ -1204,7 +1217,7 @@ saveCustomModal = () => {
             const symbol = isCompleted(s) ? "✓" : s.timesSeen > 0 ? "•" : "○";
             return (
               <option key={l.id} value={l.id}>
-                {this.getLineOptionLabel(l, symbol)}
+                {this.getLineOptionLabel(l, symbol, lineNumbers.get(String(l.id || "")))}
               </option>
             );
           })}
@@ -1231,7 +1244,7 @@ saveCustomModal = () => {
   };
 
   renderHintArrowOverlay = (playerColor) => {
-    if ((!this.state.showHint && !this.state.solveArmed) || !this.state.hintFromSquare || !this.state.hintToSquare || this.state.completed) return null;
+    if (this.state.viewing || (!this.state.showHint && !this.state.solveArmed) || !this.state.hintFromSquare || !this.state.hintToSquare || this.state.completed) return null;
     if (this.state.isMobile && !this.state.mobileBoardSize) return null;
 
     const boardSize = this.state.isMobile && this.state.mobileBoardSize ? this.state.mobileBoardSize : this.state.boardSize;
@@ -1256,6 +1269,25 @@ saveCustomModal = () => {
     );
   };
 
+  renderWrongMoveMarker = (square, orientation, boardSize) => {
+    const center = this.getBoardSquareCenter(square, orientation, boardSize);
+    if (!center) return null;
+
+    const cellSize = boardSize / 8;
+    return (
+      <span
+        className="ot-wrong-move-marker"
+        aria-hidden="true"
+        style={{
+          left: center.x + cellSize * 0.3,
+          top: center.y - cellSize * 0.3,
+          width: cellSize * 0.32,
+          height: cellSize * 0.32,
+          backgroundImage: `url("${X_SVG_DATA_URI}")`
+        }}
+      />
+    );
+  };
 
   setSetting = (key, value) => {
     const next = { ...(this.state.settings || {}) };
@@ -2201,7 +2233,7 @@ onCompletedLine = () => {
 };
 
   onDrop = ({ sourceSquare, targetSquare }) => {
-    if (this.state.completed) return;
+    if (this.state.completed || this.state.viewing) return;
 
     const line = this.getLine();
     if (!line) return;
@@ -2220,7 +2252,10 @@ onCompletedLine = () => {
       promotion: "q"
     });
 
-    if (!move) return;
+    if (!move) {
+      this.clearSelection();
+      return;
+    }
 
     // Any legal move counts as activity (throttled to avoid spam)
     try { touchActivityToday(); } catch (_) {}
@@ -2294,8 +2329,8 @@ onCompletedLine = () => {
 
       this.playSfx("illegal");
 
-      this.bumpMistakeForMode();
       this.game.undo();
+      this.bumpMistakeForMode();
 
       const wrongFeedback = this.resolveMoveFeedback({
         line,
@@ -2408,7 +2443,6 @@ onCompletedLine = () => {
 
   allowDrag = ({ piece }) => {
     if (this.state.completed) return false;
-    if (this.state.wrongAttempt) return false;
     if (this.state.viewing) return false;
 
     const playerColor = this.getPlayerColor();
@@ -2436,7 +2470,6 @@ onCompletedLine = () => {
 
   onSquareClick = (square) => {
     if (this.state.completed) return;
-    if (this.state.wrongAttempt) return;
     if (this.state.viewing) return;
 
     const line = this.getLine();
@@ -2469,9 +2502,7 @@ onCompletedLine = () => {
     const from = this.state.selectedSquare;
     const to = square;
 
-    this.setState({ selectedSquare: null, legalTargets: [] }, () => {
-      this.onDrop({ sourceSquare: from, targetSquare: to });
-    });
+    this.onDrop({ sourceSquare: from, targetSquare: to });
   };
 
   onSquareRightClick = () => {
@@ -2707,6 +2738,7 @@ scheduleFeedbackPreviewReplay = (expectedSan) => {
 };
 
 openFeedbackPreview = (expectedSan) => {
+  if (this.state.viewing) return;
   const preview = this.getExpectedMovePreview(expectedSan);
   if (!preview) return;
 
@@ -2731,7 +2763,7 @@ closeFeedbackPreview = () => {
 
 renderFeedbackPreviewPopover = (expectedSan) => {
   const preview = this.state.feedbackPreview;
-  if (!preview || preview.san !== expectedSan) return null;
+  if (!preview || preview.san !== expectedSan || this.state.viewing) return null;
 
   const boardFen = this.state.feedbackPreviewPosition === "after"
     ? preview.afterFen
@@ -2763,8 +2795,10 @@ renderFeedbackPreviewPopover = (expectedSan) => {
       </div>
       <div className="ot-feedback-preview-board">
         <Chessboard
+          id="opening-feedback-preview"
           width={150}
           position={boardFen || "start"}
+          transitionDuration={125}
           orientation={this.getPlayerColor() === "b" ? "black" : "white"}
           draggable={false}
           allowDrag={() => false}
@@ -3073,11 +3107,37 @@ onPuzzleSquareClick = (square) => {
     return;
   }
 
-  let promotion;
-  if ((turn === "w" && selected && square.endsWith("8")) || (turn === "b" && selected && square.endsWith("1"))) {
-    promotion = "q";
+  const selectedPiece = new Chess(currentFen).get(selected);
+  if (!selectedPiece) return;
+  this.onPuzzleDrop({
+    sourceSquare: selected,
+    targetSquare: square,
+    piece: selectedPiece.color + selectedPiece.type.toUpperCase()
+  });
+};
+
+setPuzzleBoardElement = (element) => {
+  if (this._puzzleBoardObserver) this._puzzleBoardObserver.disconnect();
+  this._puzzleBoardElement = element;
+  if (!element) return;
+
+  this.measurePuzzleBoard();
+  if (typeof ResizeObserver !== "undefined") {
+    this._puzzleBoardObserver = new ResizeObserver(this.measurePuzzleBoard);
+    this._puzzleBoardObserver.observe(element);
   }
-  this.tryPuzzleMove({ from: selected, to: square, promotion });
+};
+
+measurePuzzleBoard = () => {
+  const element = this._puzzleBoardElement;
+  if (!element || !element.clientWidth) return;
+
+  const style = window.getComputedStyle(element);
+  const availableWidth = element.clientWidth - (parseFloat(style.paddingLeft) || 0) - (parseFloat(style.paddingRight) || 0);
+  const boardTop = element.getBoundingClientRect().top + window.scrollY + element.clientTop + (parseFloat(style.paddingTop) || 0);
+  const availableHeight = this.state.isMobile ? availableWidth : Math.max(260, window.innerHeight - boardTop - 16);
+  const puzzleBoardMaxSize = Math.max(1, Math.floor(Math.min(availableWidth, availableHeight)));
+  if (puzzleBoardMaxSize !== this.state.puzzleBoardMaxSize) this.setState({ puzzleBoardMaxSize });
 };
 
 renderPuzzleMode = () => {
@@ -3094,9 +3154,10 @@ renderPuzzleMode = () => {
   const mobilePuzzleBoardMaxWidth = this.state.isMobile
     ? Math.max(260, mobileViewportWidth - 40)
     : 0;
-  const boardWidth = this.state.isMobile
+  const preferredBoardWidth = this.state.isMobile
     ? Math.min(this.state.mobileBoardSize || this.state.boardSize, mobilePuzzleBoardMaxWidth || (this.state.mobileBoardSize || this.state.boardSize))
     : this.state.boardSize;
+  const boardWidth = Math.min(preferredBoardWidth, this.state.puzzleBoardMaxSize || preferredBoardWidth);
   const currentMode = this.state.gameMode || "learn";
   const modeClass = ` ot-mode-${currentMode}`;
   const hasPack = this.state.puzzlePackSize > 0;
@@ -3124,36 +3185,38 @@ renderPuzzleMode = () => {
   if (this.state.puzzleWrongAttempt && this.state.puzzleWrongAttempt.to) {
     squareStyles[this.state.puzzleWrongAttempt.to] = {
       ...(squareStyles[this.state.puzzleWrongAttempt.to] || {}),
-      backgroundImage: `url("${X_SVG_DATA_URI}")`,
-      backgroundRepeat: "no-repeat",
-      backgroundPosition: "center",
-      backgroundSize: "70%",
       boxShadow: "inset 0 0 0 999px rgba(255, 64, 64, 0.16)"
     };
   }
 
+  const orientation = (this.state.puzzlePlayerColor || "w") === "b" ? "black" : "white";
   const puzzleBoard = (
-    <div className="ot-board">
-      <BoardErrorBoundary onReset={this.resetBoardRender}>
-        <Chessboard
-          key={`puzzle:${this.state.puzzleRawId || "none"}:${this.state.puzzleMoveIndex || 0}:${this.state.puzzleFen || "start"}`}
-          width={boardWidth}
-          position={this.state.puzzleFen || "start"}
-          onDrop={this.onPuzzleDrop}
-          allowDrag={({ piece }) => {
-            if (this.state.puzzleWrongAttempt || this.state.puzzleSolved) return false;
-            const turn = this.state.puzzlePlayerColor || "w";
-            return !!piece && piece[0].toLowerCase() === turn;
-          }}
-          orientation={(this.state.puzzlePlayerColor || "w") === "b" ? "black" : "white"}
-          showNotation={true}
-          squareStyles={squareStyles}
-          onSquareClick={this.onPuzzleSquareClick}
-          onSquareRightClick={this.onSquareRightClick}
-          pieceTheme={this.getPieceThemeUrl()}
-          {...BOARD_THEMES[this.state.settings.boardTheme || DEFAULT_THEME]}
-        />
-      </BoardErrorBoundary>
+    <div className="ot-board ot-puzzle-board-frame" ref={this.setPuzzleBoardElement}>
+      <div className="ot-board-inner">
+        <BoardErrorBoundary onReset={this.resetBoardRender}>
+          <Chessboard
+            id="opening-puzzle-board"
+            key={`puzzle:${this.state.puzzleRawId || "none"}:${this.state.boardRenderToken}`}
+            width={boardWidth}
+            position={this.state.puzzleFen || "start"}
+            transitionDuration={125}
+            onDrop={this.onPuzzleDrop}
+            allowDrag={({ piece }) => {
+              if (this.state.puzzleWrongAttempt || this.state.puzzleSolved) return false;
+              const turn = this.state.puzzlePlayerColor || "w";
+              return !!piece && piece[0].toLowerCase() === turn;
+            }}
+            orientation={orientation}
+            showNotation={true}
+            squareStyles={squareStyles}
+            onSquareClick={this.onPuzzleSquareClick}
+            onSquareRightClick={this.onSquareRightClick}
+            pieceTheme={this.getPieceThemeUrl()}
+            {...BOARD_THEMES[this.state.settings.boardTheme || DEFAULT_THEME]}
+          />
+        </BoardErrorBoundary>
+        {this.renderWrongMoveMarker(this.state.puzzleWrongAttempt?.to, orientation, boardWidth)}
+      </div>
     </div>
   );
 
@@ -4361,12 +4424,19 @@ render() {
     const viewIndex = this.getViewIndex();
     const coachExpected = line.moves[viewIndex] || null;
     const boardFen = this.state.viewing ? this.state.viewFen : this.state.fen;
+    // History jumps can replace several pieces without an ordinary move transition.
+    const boardKey = this.state.viewing ? `history:${boardFen}` : "live";
+    const boardWidth = this.state.isMobile && this.state.mobileBoardSize ? this.state.mobileBoardSize : this.state.boardSize;
     const canViewBack = viewIndex > 0;
     const canViewForward = viewIndex < this.state.stepIndex;
 
     const canUndo = !!(this.state.lastMistake || this.state.wrongAttempt);
 
     const playerColor = this.getPlayerColor();
+    const orientation = playerColor === "b" ? "black" : "white";
+    const wrongMoveMarker = this.state.viewing || (this.state.isMobile && !this.state.mobileBoardSize)
+      ? null
+      : this.renderWrongMoveMarker(this.state.wrongAttempt?.to, orientation, boardWidth);
 
     const totalYourMoves = countMovesForSide(line.moves, playerColor);
     const doneYourMoves = countDoneMovesForSide(this.state.stepIndex, playerColor);
@@ -4379,18 +4449,10 @@ render() {
       : "Lines";
 
     const squareStyles = {};
-    const expectedPreview = this.state.lastMoveFeedback && this.state.lastMoveFeedback.kind === "wrong"
+    const showHint = !this.state.viewing && this.state.showHint;
+    const expectedPreview = !this.state.viewing && !showHint && this.state.lastMoveFeedback && this.state.lastMoveFeedback.kind === "wrong"
       ? this.getExpectedMovePreview(this.state.lastMoveFeedback.expected)
       : null;
-
-    if (this.state.wrongAttempt && this.state.wrongAttempt.to) {
-      squareStyles[this.state.wrongAttempt.to] = {
-        backgroundImage: `url("${X_SVG_DATA_URI}")`,
-        backgroundRepeat: "no-repeat",
-        backgroundPosition: "center",
-        backgroundSize: "70%"
-      };
-    }
 
     if (this.state.lastMove) {
       const { from, to } = this.state.lastMove;
@@ -4404,31 +4466,23 @@ render() {
       };
     }
 
-    if (this.state.showHint && this.state.hintFromSquare) {
+    if (showHint && this.state.hintFromSquare) {
       squareStyles[this.state.hintFromSquare] = {
         ...(squareStyles[this.state.hintFromSquare] || {}),
-        background: "rgba(80, 170, 255, 0.45)",
+        backgroundColor: "rgba(80, 170, 255, 0.45)",
         boxShadow: "inset 0 0 0 3px rgba(80, 170, 255, 0.9)"
       };
     }
 
-    if (this.state.showHint && this.state.hintToSquare) {
+    if (showHint && this.state.hintToSquare) {
       const existingHintTarget = squareStyles[this.state.hintToSquare] || {};
       const hintTargetGlow = "radial-gradient(circle at center, rgba(80, 170, 255, 0.95) 0 18%, rgba(80, 170, 255, 0.25) 19 38%, rgba(0,0,0,0) 39%)";
       squareStyles[this.state.hintToSquare] = {
         ...existingHintTarget,
-        backgroundImage: existingHintTarget.backgroundImage
-          ? `${existingHintTarget.backgroundImage}, ${hintTargetGlow}`
-          : hintTargetGlow,
-        backgroundRepeat: existingHintTarget.backgroundRepeat
-          ? `${existingHintTarget.backgroundRepeat}, no-repeat`
-          : "no-repeat",
-        backgroundPosition: existingHintTarget.backgroundPosition
-          ? `${existingHintTarget.backgroundPosition}, center`
-          : "center",
-        backgroundSize: existingHintTarget.backgroundSize
-          ? `${existingHintTarget.backgroundSize}, 100% 100%`
-          : "100% 100%",
+        backgroundImage: hintTargetGlow,
+        backgroundRepeat: "no-repeat",
+        backgroundPosition: "center",
+        backgroundSize: "100% 100%",
         boxShadow: "inset 0 0 0 3px rgba(80, 170, 255, 0.9)"
       };
     }
@@ -4445,18 +4499,10 @@ render() {
       const bestGlow = "radial-gradient(circle at center, rgba(255, 225, 120, 0.95) 0 18%, rgba(255, 225, 120, 0.28) 19 38%, rgba(0,0,0,0) 39%)";
       squareStyles[expectedPreview.to] = {
         ...existingTarget,
-        backgroundImage: existingTarget.backgroundImage
-          ? `${existingTarget.backgroundImage}, ${bestGlow}`
-          : bestGlow,
-        backgroundRepeat: existingTarget.backgroundRepeat
-          ? `${existingTarget.backgroundRepeat}, no-repeat`
-          : "no-repeat",
-        backgroundPosition: existingTarget.backgroundPosition
-          ? `${existingTarget.backgroundPosition}, center`
-          : "center",
-        backgroundSize: existingTarget.backgroundSize
-          ? `${existingTarget.backgroundSize}, 100% 100%`
-          : "100% 100%",
+        backgroundImage: bestGlow,
+        backgroundRepeat: "no-repeat",
+        backgroundPosition: "center",
+        backgroundSize: "100% 100%",
         boxShadow: "inset 0 0 0 3px rgba(255, 225, 120, 0.95), 0 0 22px rgba(255, 225, 120, 0.16)"
       };
     }
@@ -4471,14 +4517,14 @@ render() {
     if (this.state.legalTargets && this.state.legalTargets.length) {
       for (const toSq of this.state.legalTargets) {
         const existing = squareStyles[toSq] || {};
+        if (existing.backgroundImage) continue;
         const dot = "radial-gradient(circle at center, rgba(170, 80, 255, 0.55) 18%, rgba(0,0,0,0) 20%)";
-        const mergedBg = existing.backgroundImage ? (existing.backgroundImage + ", " + dot) : dot;
         squareStyles[toSq] = {
           ...existing,
-          backgroundImage: mergedBg,
-          backgroundRepeat: existing.backgroundRepeat ? existing.backgroundRepeat + ", no-repeat" : "no-repeat",
-          backgroundPosition: existing.backgroundPosition ? existing.backgroundPosition + ", center" : "center",
-          backgroundSize: existing.backgroundSize ? existing.backgroundSize + ", 100% 100%" : "100% 100%"
+          backgroundImage: dot,
+          backgroundRepeat: "no-repeat",
+          backgroundPosition: "center",
+          backgroundSize: "100% 100%"
         };
       }
     }
@@ -4491,10 +4537,10 @@ render() {
         const pieceGlow = "radial-gradient(circle at center, rgba(178, 132, 255, 0.52) 0 24%, rgba(178, 132, 255, 0.18) 25 54%, rgba(0,0,0,0) 55%)";
         squareStyles[highlightSquare] = {
           ...existing,
-          backgroundImage: existing.backgroundImage ? `${existing.backgroundImage}, ${pieceGlow}` : pieceGlow,
-          backgroundRepeat: existing.backgroundRepeat ? `${existing.backgroundRepeat}, no-repeat` : "no-repeat",
-          backgroundPosition: existing.backgroundPosition ? `${existing.backgroundPosition}, center` : "center",
-          backgroundSize: existing.backgroundSize ? `${existing.backgroundSize}, 100% 100%` : "100% 100%",
+          backgroundImage: existing.backgroundImage || pieceGlow,
+          backgroundRepeat: "no-repeat",
+          backgroundPosition: "center",
+          backgroundSize: "100% 100%",
           boxShadow: "inset 0 0 0 3px rgba(196, 157, 255, 0.95), 0 0 18px rgba(149, 102, 255, 0.18)"
         };
       } else {
@@ -5106,11 +5152,14 @@ render() {
                   <div className="ot-board-inner">
                   <BoardErrorBoundary onReset={this.resetBoardRender}>
                   <Chessboard
-                    width={this.state.isMobile && this.state.mobileBoardSize ? this.state.mobileBoardSize : this.state.boardSize}
+                    id="opening-trainer-board"
+                    key={boardKey}
+                    width={boardWidth}
                     position={boardFen || "start"}
+                    transitionDuration={125}
                     onDrop={this.onDrop}
                     allowDrag={this.allowDrag}
-                    orientation={playerColor === "b" ? "black" : "white"}
+                    orientation={orientation}
                     showNotation={true}
                     squareStyles={(this.state.isMobile && !this.state.mobileBoardSize) ? {} : squareStyles}
                     onSquareClick={this.onSquareClick}
@@ -5120,6 +5169,7 @@ render() {
                   />
                   </BoardErrorBoundary>
                   {this.renderHintArrowOverlay(playerColor)}
+                  {wrongMoveMarker}
                   </div>
                 </div>
               </div>
@@ -5362,11 +5412,14 @@ render() {
             <div className="ot-board-inner">
 <BoardErrorBoundary onReset={this.resetBoardRender}>
 <Chessboard
-  width={this.state.isMobile && this.state.mobileBoardSize ? this.state.mobileBoardSize : this.state.boardSize}
+  id="opening-trainer-board"
+  key={boardKey}
+  width={boardWidth}
   position={boardFen || "start"}
+  transitionDuration={125}
   onDrop={this.onDrop}
   allowDrag={this.allowDrag}
-  orientation={playerColor === "b" ? "black" : "white"}
+  orientation={orientation}
   showNotation={true}
   squareStyles={(this.state.isMobile && !this.state.mobileBoardSize) ? {} : squareStyles}
   onSquareClick={this.onSquareClick}
@@ -5376,6 +5429,7 @@ render() {
 />
 </BoardErrorBoundary>
 {this.renderHintArrowOverlay(playerColor)}
+{wrongMoveMarker}
             </div>
           </div>
 

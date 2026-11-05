@@ -2124,6 +2124,16 @@
   padding: 12px;
 }
 
+.ot-puzzle-board-frame {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.ot-puzzle-board-frame .ot-board-inner {
+  margin-inline: auto;
+}
+
 .ot-puzzle-board-head {
   display: flex;
   align-items: center;
@@ -2341,7 +2351,7 @@
   }
 
   .ot-puzzle-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 12px;
   }
 
@@ -3411,6 +3421,24 @@
 .ot-board-inner {
   position: relative;
   width: fit-content;
+}
+
+/* chessboardjsx draws a second, squareless piece over the board during captures. */
+.ot-container [data-boardid] [data-squareid] [data-testid$="-undefined"] {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.ot-wrong-move-marker {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 6;
+  border-radius: 50%;
+  background-color: #241719;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 78%;
 }
 
 .ot-hint-arrow-overlay {
