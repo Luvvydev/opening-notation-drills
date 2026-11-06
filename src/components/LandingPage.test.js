@@ -1,5 +1,5 @@
 import React from 'react';
-import { act, cleanup, fireEvent, render } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import LandingPage from './LandingPage';
 import WorkspaceShell from './WorkspaceShell';
@@ -34,8 +34,20 @@ test('visitor can reveal a legal fork and reset the example', () => {
   expect(game.get('a8')).toEqual({ type: 'r', color: 'b' });
   fireEvent.click(screen.getByRole('button', { name: /Reset the example/ }));
   expect(screen.getByTestId('preview-board').getAttribute('data-fen')).toBe(before);
-  expect(screen.getByRole('link', { name: /Try an opening/ }).getAttribute('href')).toBe('#opening-demo');
-  screen.getAllByRole('link', { name: /Try opening training/ }).forEach((link) => expect(link.getAttribute('href')).toBe('/openings?opening=london'));
+});
+
+test('landing navigation and opening buttons link to the training pages', () => {
+  const screen = render(<MemoryRouter><LandingPage /></MemoryRouter>);
+  const navigation = within(screen.getByRole('navigation', { name: 'Landing page navigation' }));
+  expect(navigation.getByRole('link', { name: 'Home' }).getAttribute('href')).toBe('/home');
+  expect(navigation.getByRole('link', { name: 'Openings' }).getAttribute('href')).toBe('/openings/library');
+  expect(navigation.getByRole('link', { name: 'Game Review' }).getAttribute('href')).toBe('/my-games');
+  expect(navigation.getByRole('link', { name: 'Log in' }).getAttribute('href')).toBe('/login');
+  expect(navigation.queryByRole('link', { name: 'How it works' })).toBeNull();
+  expect(screen.getByRole('link', { name: 'Try the London demo' }).getAttribute('href')).toBe('#opening-demo');
+  const openingButtons = screen.getAllByRole('link', { name: 'Try opening training' });
+  expect(openingButtons).toHaveLength(3);
+  openingButtons.forEach((link) => expect(link.getAttribute('href')).toBe('/openings/library'));
 });
 
 test('landing hides training navigation and existing home retains it', () => {
@@ -51,7 +63,7 @@ test('landing hides training navigation and existing home retains it', () => {
 test('signed in visitors get a training shortcut and membership links', () => {
   useAuth.mockReturnValue({ user: { uid: 'member' } });
   const screen = render(<MemoryRouter><LandingPage /></MemoryRouter>);
-  expect(screen.getByRole('link', { name: 'My training' }).getAttribute('href')).toBe('/home');
+  expect(screen.getByRole('link', { name: 'Home' }).getAttribute('href')).toBe('/home');
   screen.getAllByRole('link', { name: /See Premium/ }).forEach((link) => expect(link.getAttribute('href')).toBe('/about'));
 });
 

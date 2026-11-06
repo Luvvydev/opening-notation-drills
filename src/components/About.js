@@ -158,15 +158,15 @@ export default function About(props) {
 
   return (
     <div className="about-page membership-page">
-      <SEO title="ChessDrills Premium | ChessDrills" description="Review your games, practice your mistakes, and remember your openings with ChessDrills Premium." canonical="https://chessdrills.net/about" image="https://chessdrills.net/logo512.png" />
+      <SEO title="ChessDrills Premium | ChessDrills" description="Get full opening training, Mistake Packs from multiple games, and saved Daily Training with ChessDrills Premium." canonical="https://chessdrills.net/about" image="https://chessdrills.net/logo512.png" />
       <TopNav active="about" title="Chess Opening Drills" />
       <div className="membership-wrap">
         <section className="membership-hero" aria-labelledby="membership-heading">
           <div>
             <p className="membership-eyebrow">CHESSDRILLS PREMIUM</p>
             <h1 id="membership-heading">Turn your mistakes into your next practice session.</h1>
-            <p className="membership-lead">Review your games. Practice the moves you missed. Remember your openings.</p>
-            <ul className="membership-highlights"><li>Game Review</li><li>Puzzles from your games</li><li>Opening training</li></ul>
+            <p className="membership-lead">Review unlimited games and practice mistakes from each game for free. Premium adds full opening training, Mistake Packs, and saved Daily Training.</p>
+            <ul className="membership-highlights"><li>Full opening training</li><li>Mistake Packs</li><li>Daily Training</li></ul>
           </div>
           <MembershipPreview />
         </section>
@@ -175,7 +175,7 @@ export default function About(props) {
 
         <section className="membership-trial" aria-label="Membership access">
           <WorkspaceIcon name="info" />
-          <div><h2>{hasPaidMembership ? 'Your Premium membership is active' : trialActive ? 'Your free trial is active' : !user || trialEligible ? 'Try opening training free for 3 days' : 'Your free trial has ended'}</h2><p>{hasPaidMembership ? 'Keep reviewing games and practicing with full access.' : trialActive ? 'Your opening training trial ends automatically. Game Review includes one preview game and its puzzles.' : !user || trialEligible ? 'No card required. Includes one Game Review preview with puzzles. Additional reviews and Mistake Packs require paid membership.' : 'Choose a plan below to continue your Premium training.'}</p></div>
+          <div><h2>{hasPaidMembership ? 'Your Premium membership is active' : trialActive ? 'Your free trial is active' : !user || trialEligible ? 'Try Premium free for 3 days' : 'Your free trial has ended'}</h2><p>{hasPaidMembership ? 'Continue training with full access to Premium features.' : trialActive ? 'You have full access to Premium training until your trial ends automatically.' : !user || trialEligible ? 'Try full opening training, Mistake Packs, and Daily Training. No card required.' : 'Choose a plan below to continue your Premium training.'}</p></div>
           {(hasPaidMembership || trialActive || !user || trialEligible) && <button type="button" className="membership-primary" onClick={startFreeTrial} disabled={trialBusy || checkoutBusy}>{trialBusy ? 'Starting trial...' : hasPaidMembership || trialActive ? 'Continue training' : 'Start free trial'}</button>}
         </section>
 
@@ -201,16 +201,16 @@ export default function About(props) {
         </section>}
 
         <section className="membership-benefits" aria-label="Included with Premium">
-          <div><WorkspaceIcon name="review" /><div><h2>Review your games</h2><p>Import from Chess.com or Lichess. Analyze your moves with Stockfish and see where you went wrong.</p></div></div>
-          <div><WorkspaceIcon name="puzzles" /><div><h2>Train your mistakes</h2><p>Select a game and practice puzzles from your own mistakes.</p></div></div>
+          <div><WorkspaceIcon name="review" /><div><h2>Save reviews for Daily Training</h2><p>Save your review history and mistake positions, then revisit them in Daily Training.</p></div></div>
+          <div><WorkspaceIcon name="puzzles" /><div><h2>Build Mistake Packs</h2><p>Combine puzzles from mistakes across multiple recent games.</p></div></div>
           <div><WorkspaceIcon name="openings" /><div><h2>Build your repertoire</h2><p>All opening courses and training modes, with hints, spaced repetition, and saved progress.</p></div></div>
         </section>
         <section className="membership-faq" aria-label="Membership questions">
           <h2>Questions about membership?</h2>
-          <details><summary>How does the free trial work?</summary><p>Create an account to try opening training for 3 days and review one game with puzzles from that game. Additional game reviews and Mistake Packs require paid membership, even during the trial. No card is required. The trial ends automatically and does not turn into a paid subscription.</p></details>
-          <details><summary>What is included?</summary><p>Game Review, puzzles from your selected games, all opening courses and training modes, and saved training progress.</p></details>
+          <details><summary>How does the free trial work?</summary><p>Eligible accounts get 3 days of Premium training, including full opening Practice and Drill, Mistake Packs, and Daily Training. No card is required. The trial ends automatically. A paid subscription starts only if you choose one.</p></details>
+          <details><summary>What is included with Premium?</summary><p>Full access to opening courses and training modes, Mistake Packs from multiple games, and Daily Training with saved review history and mistake positions.</p></details>
           <details><summary>How am I billed?</summary><p>The yearly plan is $39 billed once per year. The monthly plan is $5.99 billed each month. Paid subscriptions renew automatically until canceled. Card and PayPal payments are processed through PayPal.</p></details>
-          <details><summary>Do I need an account?</summary><p>Yes. An account is required for the Premium trial and membership, game review, and saving your progress.</p></details>
+          <details><summary>Do I need an account?</summary><p>Anyone can review unlimited games and practice puzzles from each game without an account. Create an account to start a Premium trial, subscribe, or sync your training progress.</p></details>
         </section>
       </div>
     </div>

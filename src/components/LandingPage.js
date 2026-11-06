@@ -16,7 +16,7 @@ function Arrow() {
   return <svg className="landing-arrow" aria-hidden="true" viewBox="0 0 20 20" fill="none"><path d="M4 16 16 4M4 4h12v12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>;
 }
 
-const signup = '/openings?opening=london';
+const openingLibrary = '/openings/library';
 
 function ReviewPreview() {
   const frame = useRef(null);
@@ -147,7 +147,6 @@ function ReviewPreview() {
 
 export default function LandingPage() {
   const { user } = useAuth();
-  const start = signup;
   useEffect(() => { trackEvent('landing_page_view', {}, user, { persist: false }); }, [user]);
   const cta = (location) => trackEvent('landing_start_click', { location }, user, { persist: false });
 
@@ -156,16 +155,22 @@ export default function LandingPage() {
     <a className="landing-skip" href="#landing-content">Skip to content</a>
     <header className="landing-header"><div className="landing-wrap landing-nav">
       <Link to="/" aria-label="ChessDrills landing page" className="landing-brand"><img src={logo} alt="ChessDrills" /></Link>
-      <nav aria-label="Landing page navigation"><a className="landing-nav-detail" href="#how-it-works">How it works</a><Link className="landing-nav-detail" to="/openings/library">Openings</Link><Link to={user ? '/home' : '/login'}>{user ? 'My training' : 'Log in'}</Link><Link className="landing-button landing-button-small" to={start} onClick={() => cta('navigation')}>{'Try opening training'}</Link></nav>
+      <nav aria-label="Landing page navigation">
+        <Link to="/home">Home</Link>
+        <Link to={openingLibrary}>Openings</Link>
+        <Link to="/my-games">Game Review</Link>
+        {!user && <Link to="/login">Log in</Link>}
+      </nav>
+      <Link className="landing-button landing-button-small landing-nav-cta" to={openingLibrary} onClick={() => cta('navigation')}>Try opening training</Link>
     </div></header>
 
     <main id="landing-content">
       <section className="landing-wrap landing-hero">
-        <div className="landing-hero-copy"><p className="landing-eyebrow">CHESS OPENING TRAINER</p><h1>Learn your openings.<br /><span>Know what to play.</span></h1><p className="landing-lead">Choose an opening for White or Black, learn why each move is played, and practice the moves on the board.</p><div className="landing-actions"><Link className="landing-button" to={start} onClick={() => cta('hero')}>{'Try opening training'} <Arrow /></Link><a className="landing-text-link" href="#opening-demo">Try an opening <Arrow /></a></div><p className="landing-fine">Free opening Learn. Unlimited game reviews.<br />No card required.</p></div>
+        <div className="landing-hero-copy"><p className="landing-eyebrow">CHESS OPENING TRAINER</p><h1>Learn your openings.<br /><span>Know what to play.</span></h1><p className="landing-lead">Choose an opening for White or Black, learn why each move is played, and practice the moves on the board.</p><div className="landing-actions"><Link className="landing-button" to={openingLibrary} onClick={() => cta('hero')}>{'Try opening training'} <Arrow /></Link><a className="landing-text-link" href="#opening-demo">Try the London demo <Arrow /></a></div><p className="landing-fine">Free opening Learn. Unlimited game reviews.<br />No card required.</p></div>
         <div className="landing-hero-visual" id="opening-demo"><div className="landing-visual-caption"><span className="landing-caption-line" /> Try a London opening. No account needed.</div><div className="landing-demo-wrap"><div className="landing-demo-heading"><span className="landing-eyebrow">TRY IT RIGHT HERE</span></div><HomeOpeningDemo /></div></div>
       </section>
 
-      <section className="landing-intro"><div className="landing-wrap landing-intro-inner"><LandingOpeningShowcase /><div className="landing-intro-card"><h2>Want to learn openings, but not sure where to start?</h2><p>Choose an opening and start practicing. ChessDrills explains the moves as you play, with hints when you need them.</p><ul className="landing-checks"><li>Openings for White and Black</li><li>Simple explanations for each move</li><li>Learn and practice on the board</li></ul><Link className="landing-button landing-button-small" to={start} onClick={() => cta('introduction')}>Try opening training</Link></div></div></section>
+      <section className="landing-intro"><div className="landing-wrap landing-intro-inner"><LandingOpeningShowcase /><div className="landing-intro-card"><h2>Want to learn openings, but not sure where to start?</h2><p>Choose an opening and start practicing. ChessDrills explains the moves as you play, with hints when you need them.</p><ul className="landing-checks"><li>Openings for White and Black</li><li>Simple explanations for each move</li><li>Learn and practice on the board</li></ul><Link className="landing-button landing-button-small" to={openingLibrary} onClick={() => cta('introduction')}>Try opening training</Link></div></div></section>
 
       <section className="landing-process" id="how-it-works"><div className="landing-wrap"><div className="landing-section-heading"><p className="landing-eyebrow">GETTING STARTED</p><h2>Here’s how ChessDrills works.</h2><p>Choose an opening. Learn the moves. Practice them.</p></div><div className="landing-steps">
         <article><span className="landing-step-number">01</span><h3>Choose an opening</h3><p>Browse the opening library and pick an opening for White or Black that you want to learn.</p><span className="landing-step-tag">White and Black</span></article>

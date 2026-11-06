@@ -54,10 +54,22 @@ test('existing membership shows continue training instead of checkout', () => {
 });
 
 
-test('trial copy has no retired review quota', () => {
+test.each([
+  ['guest', { user: null }],
+  ['eligible member', { user: { uid: 'eligible' }, trialEligible: true }],
+  ['active trial', { user: { uid: 'trial' }, trialActive: true }],
+  ['expired trial', { user: { uid: 'expired' }, trialEligible: false }],
+  ['paid member', { user: { uid: 'paid' }, hasPaidMembership: true }],
+])('%s sees free review access and separate Premium benefits', (_, auth) => {
+  useAuth.mockReturnValue(auth);
+  const screen = render(<About />);
+  expect(screen.getByText(/review unlimited games and practice puzzles from each game without an account/i)).toBeTruthy();
+  expect(screen.getByRole('heading', { name: 'Build Mistake Packs' })).toBeTruthy();
+  expect(screen.queryByText(/one (?:game review preview|game with puzzles)|additional game reviews/i)).toBeNull();
+});
+
+test('eligible accounts can try Premium for 3 days without a card', () => {
   const screen = render(<About />);
   expect(screen.getByRole('heading', { name: 'Try Premium free for 3 days' })).toBeTruthy();
-  expect(screen.queryByText('No card required.')).toBeNull();
-  expect(screen.queryByText(/one Game Review preview/i)).toBeNull();
-  expect(screen.queryByText(/Additional.*reviews.*require/i)).toBeNull();
+  expect(screen.getByText(/try full opening training, mistake packs, and daily training\. no card required/i)).toBeTruthy();
 });
