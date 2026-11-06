@@ -145,6 +145,7 @@ class Board extends Component {
 
   // Generate new board position
   newPosition = () => {
+    this.clearSelection();
     let orientation = null;
     if (this.props.orientation === 'random'){
       orientation = orientations[Math.floor(Math.random() * 2)];
@@ -341,11 +342,9 @@ class Board extends Component {
 
   onSquareClick = (square) => {
     const piece = game.get(square);
-    // only let user interact with the correct side to move (the expected move color)
-    if (!this.allowDrag({ piece: piece ? (piece.color + piece.type.toUpperCase()) : "" })) return;
 
     if (!this.state.selectedSquare) {
-      if (!piece) return;
+      if (!piece || piece.color !== this.state.nextMoveData.color) return;
       const targets = this.getLegalTargets(square);
       this.setState({ selectedSquare: square, legalTargets: targets });
       return;
@@ -364,10 +363,13 @@ class Board extends Component {
     }
 
     const from = this.state.selectedSquare;
-    const to = square;
-    this.setState({ selectedSquare: null, legalTargets: [] }, () => {
-      this.onDrop({ sourceSquare: from, targetSquare: to, piece: (this.state.nextMoveData.color + this.state.nextMoveData.piece.toUpperCase()) });
-    });
+    const selectedPiece = game.get(from);
+    if (!selectedPiece || selectedPiece.color !== this.state.nextMoveData.color) {
+      this.clearSelection();
+      return;
+    }
+
+    this.onDrop({ sourceSquare: from, targetSquare: square, piece: selectedPiece.color + selectedPiece.type.toUpperCase() });
   };
 
   onSquareRightClick = () => {
