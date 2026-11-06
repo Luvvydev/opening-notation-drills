@@ -36,7 +36,7 @@ export default function EvaluationBar({ evaluation, orientation = 'white', unava
   );
 }
 
-export function LiveEvaluationBar({ fen, orientation, drawn = false }) {
+export function LiveEvaluationBar({ fen, orientation, drawn = false, paused = false }) {
   const sessionRef = useRef(null);
   const [result, setResult] = useState(null);
 
@@ -52,9 +52,11 @@ export function LiveEvaluationBar({ fen, orientation, drawn = false }) {
   }, []);
 
   useEffect(() => {
+    if (paused) return undefined;
     const session = sessionRef.current;
     const { signal } = session.controller;
     let current = true;
+    let searching = false;
     const timer = window.setTimeout(() => {
       // Let the current search drain before sending a new position to the same worker.
       session.pending = session.pending.then(async () => {
@@ -80,9 +82,12 @@ export function LiveEvaluationBar({ fen, orientation, drawn = false }) {
             }
             if (!current) return;
 
+            searching = true;
             const messages = await sendCommandsToWorker(
               session.worker, [`position fen ${position}`, 'go depth 12 movetime 250'], 'bestmove', null, 4000
             );
+            searching = false;
+            if (!current) return;
             evaluation = parseEvaluationResults(messages, position);
           }
           if (current) setResult({ fen, drawn, evaluation, unavailable: !evaluation.lines.length });
@@ -97,8 +102,11 @@ export function LiveEvaluationBar({ fen, orientation, drawn = false }) {
     return () => {
       current = false;
       window.clearTimeout(timer);
+      if (searching && session.worker && !session.worker.failed) {
+        try { session.worker.worker.postMessage('stop'); } catch (_) {}
+      }
     };
-  }, [fen, drawn]);
+  }, [fen, drawn, paused]);
 
   const displayed = result && result.fen === fen && result.drawn === drawn ? result : null;
   return <EvaluationBar evaluation={displayed?.evaluation} previousEvaluation={displayed ? null : result?.evaluation}

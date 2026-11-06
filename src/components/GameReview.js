@@ -75,6 +75,7 @@ const DEFAULT_DEPTH = 12;
 const DEFAULT_MULTI_PV = 3;
 const DEFAULT_SOURCE = 'chesscom';
 const DEFAULT_PLAY_TIME = 500;
+const BOARD_TRANSITION_MS = 125;
 const PLAY_EVALUATION_KEY = 'chessdrills_play_evaluation_bar';
 const DEFAULT_PACK_BATCH = 10;
 const PACK_SEED_PUZZLES = 2;
@@ -1833,6 +1834,7 @@ function GameReview({ active = true }) {
   const cacheRef = useRef(new Map());
   const remoteAbortRef = useRef(null);
   const remoteAutoLoadKeyRef = useRef('');
+  const playEnginePromiseRef = useRef(null);
   const playGameRef = useRef(null);
   if (!playGameRef.current) playGameRef.current = new Chess();
   const boardFrameRef = useRef(null);
@@ -2031,12 +2033,20 @@ function GameReview({ active = true }) {
     setPlayDraggedSquare(null);
   }, []);
 
+  const closePlayEngine = useCallback(() => {
+    const pending = playEnginePromiseRef.current;
+    playEnginePromiseRef.current = null;
+    if (pending) pending.then(disposeReviewWorkerHandle, () => {});
+  }, []);
+
   const closeEngineBoard = useCallback(() => {
+    playGameRef.current = new Chess();
+    closePlayEngine();
     setPlayStarted(false);
     clearPlaySelection();
     clearPlayDragState();
     setPlayThinking(false);
-  }, [clearPlayDragState, clearPlaySelection]);
+  }, [clearPlayDragState, clearPlaySelection, closePlayEngine]);
 
   const getLegalTargetsForFen = useCallback((fen, fromSquare) => {
     if (!fen || !fromSquare) return [];
@@ -3049,17 +3059,33 @@ function GameReview({ active = true }) {
     }
   };
 
-  const getBestMoveForCurrentPosition = useCallback(async (fen, movetime) => {
-    const engine = await ensureEngineReady();
-    await stopSearch();
+  const ensurePlayEngine = useCallback(() => {
+    if (playEnginePromiseRef.current) return playEnginePromiseRef.current;
+    // Play only needs one line. Keep it independent of review searches and settings.
+    const pending = startEngineWorker(1).catch((error) => {
+      if (playEnginePromiseRef.current === pending) playEnginePromiseRef.current = null;
+      throw error;
+    });
+    playEnginePromiseRef.current = pending;
+    return pending;
+  }, [startEngineWorker]);
 
-    const results = await sendCommandsToWorker(
-      engine,
-      [`position fen ${fen}`, `go movetime ${movetime}`],
-      'bestmove',
-      null,
-      Math.max(8000, movetime + 6000)
-    );
+  const getBestMoveForCurrentPosition = useCallback(async (fen, movetime) => {
+    const pending = ensurePlayEngine();
+    const engine = await pending;
+    let results;
+    try {
+      results = await sendCommandsToWorker(
+        engine,
+        [`position fen ${fen}`, `go movetime ${movetime}`],
+        'bestmove',
+        null,
+        Math.max(8000, movetime + 6000)
+      );
+    } catch (error) {
+      if (playEnginePromiseRef.current === pending) closePlayEngine();
+      throw error;
+    }
 
     const bestLine = String(results.find((line) => String(line).startsWith('bestmove')) || '');
     const move = getResultProperty(bestLine, 'bestmove');
@@ -3067,7 +3093,7 @@ function GameReview({ active = true }) {
       throw new Error('No best move returned.');
     }
     return move;
-  }, [ensureEngineReady, stopSearch]);
+  }, [closePlayEngine, ensurePlayEngine]);
 
   const syncPlayState = useCallback((statusText, moveOverride) => {
     setPlayFen(playGameRef.current.fen());
@@ -3104,7 +3130,10 @@ function GameReview({ active = true }) {
       const scriptedMove = openingKey
         ? getAggressiveRepertoireReply(scenario, openingKey, game.history(), game.fen()) || getRepertoireReply(openingKey, game.history(), game.fen())
         : getScenarioReply(scenario, game.history(), sideOverride || playOrientation);
+      // Give the player move a render and animation before an immediate scripted reply.
+      if (scriptedMove) await waitMs(BOARD_TRANSITION_MS);
       const bestMove = scriptedMove || await getBestMoveForCurrentPosition(game.fen(), playTimeMs);
+      if (!isMountedRef.current || playGameRef.current !== game) return;
       const applied = scriptedMove ? game.move(scriptedMove) : game.move(uciToMoveObject(bestMove));
       if (!applied) {
         throw new Error('Engine move was illegal.');
@@ -3112,10 +3141,12 @@ function GameReview({ active = true }) {
       playSfx(isCaptureLike(applied) ? 'capture' : 'moveOpponent');
       syncPlayState('Your move.', applied);
     } catch (_) {
-      setEngineError('Engine move failed.');
-      setPlayStatus('Engine move failed.');
+      if (isMountedRef.current && playGameRef.current === game) {
+        setEngineError('Engine move failed.');
+        setPlayStatus('Engine move failed.');
+      }
     } finally {
-      setPlayThinking(false);
+      if (isMountedRef.current && playGameRef.current === game) setPlayThinking(false);
     }
   }, [activePlayOpeningKey, activePlayScenario, getBestMoveForCurrentPosition, playOrientation, playSfx, playTimeMs, syncPlayState]);
 
@@ -3146,7 +3177,8 @@ function GameReview({ active = true }) {
         return;
       }
     }
-    if (nextGame.turn() !== (side === 'white' ? 'w' : 'b')) {
+    const computerMovesFirst = side === 'black' && !nextGame.history().length;
+    if (!computerMovesFirst && nextGame.turn() !== (side === 'white' ? 'w' : 'b')) {
       setEngineError('Training position has the wrong side to move.');
       return;
     }
@@ -3164,7 +3196,7 @@ function GameReview({ active = true }) {
     setSidebarMode('play');
     syncPlayState(nextGame.turn() === 'b' && side === 'black' ? 'Your move.' : setupMoves.length ? 'Training position ready. Your move.' : (side === 'black' ? 'Engine to move first…' : 'Your move.'));
 
-    if (side === 'black' && !nextGame.history().length) {
+    if (computerMovesFirst) {
       await makeEngineMove(selectedScenario, side, selectedOpening ? selectedOpening.key : '');
     }
   }, [clearPlayDragState, clearPlaySelection, handleStop, makeEngineMove, playOpeningKey, playScenario, syncPlayState]);
@@ -3553,6 +3585,12 @@ function GameReview({ active = true }) {
     pool.handles = [];
   }, []);
 
+  useEffect(() => closePlayEngine, [closePlayEngine]);
+
+  useEffect(() => {
+    if (active && isPlayMode) ensurePlayEngine().catch(() => {});
+  }, [active, ensurePlayEngine, isPlayMode]);
+
   // Warm up the review workers while the person is still picking a game,
   // so clicking a game doesn't wait on engine startup.
   useEffect(() => {
@@ -3721,12 +3759,12 @@ function GameReview({ active = true }) {
             <div className="gr-stage-board-only">
               <div className="gr-board-frame" ref={boardFrameRef}>
                 {!isPlayMode && !isPuzzleMode && hasLoadedGame && <EvaluationBar evaluation={displayedEvaluation} />}
-                {showPlayEvaluation && <LiveEvaluationBar fen={playFen} orientation={playOrientation} drawn={playResult === 'Game drawn.'} />}
+                {showPlayEvaluation && <LiveEvaluationBar fen={playFen} orientation={playOrientation} paused={playThinking} drawn={playResult === 'Game drawn.'} />}
                 <div className="gr-board-stack" style={{ width: `${boardWidth}px` }}>
                   <Chessboard
                     key={`review-board-${isPlayMode ? playOrientation : effectiveBoardOrientation}${isPuzzleMode ? `-puzzle-${currentPuzzle?.id || puzzleIndex}` : ''}`}
                     width={boardWidth}
-                    transitionDuration={125}
+                    transitionDuration={BOARD_TRANSITION_MS}
                     position={reviewBoardFen}
                     orientation={isPlayMode && playStarted ? playOrientation : effectiveBoardOrientation}
                     arePiecesDraggable={isPlayMode ? playStarted && !playThinking && !playResult : isPuzzleMode ? Boolean(currentPuzzle) && !explanationActive && puzzleStatus !== 'checking' && puzzleStatus !== 'solved' : hasLoadedGame && engineState !== 'analyzing-game'}
