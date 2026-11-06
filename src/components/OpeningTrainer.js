@@ -8,6 +8,7 @@ import TopNav from "./TopNav";
 import SEO from "./SEO";
 import { BOARD_THEMES, DEFAULT_THEME, PIECE_THEMES } from "../theme/boardThemes";
 import "./OpeningTrainer.css";
+import { LiveEvaluationBar } from "./EvaluationBar";
 import { getStreakState, markLineCompletedTodayDetailed } from "../utils/streak";
 import { getActivityDays, markActivityToday, touchActivityToday } from "../utils/activityDays";
 import { X_SVG_DATA_URI, pickRandomLineId, countMovesForSide, countDoneMovesForSide, groupLines, detectCustomInputFormat, parseCustomLineInput, lineToSanText, lineToPgn, encodeSharedCustomLine, decodeSharedCustomLine, getLineStartFen } from "./openingTrainer/otUtils";
@@ -1227,6 +1228,12 @@ saveCustomModal = () => {
   };
 
 
+  getTrainingBoardWidth = () => {
+    const width = this.state.isMobile && this.state.mobileBoardSize ? this.state.mobileBoardSize : this.state.boardSize;
+    // Leave room for the evaluation rail and its gap.
+    return Math.max(1, width - (this.state.isMobile ? 20 : 28));
+  };
+
   getBoardSquareCenter = (square, orientation, boardSize) => {
     if (!square || square.length < 2 || !boardSize) return null;
     const file = square.charCodeAt(0) - 97;
@@ -1247,7 +1254,7 @@ saveCustomModal = () => {
     if (this.state.viewing || (!this.state.showHint && !this.state.solveArmed) || !this.state.hintFromSquare || !this.state.hintToSquare || this.state.completed) return null;
     if (this.state.isMobile && !this.state.mobileBoardSize) return null;
 
-    const boardSize = this.state.isMobile && this.state.mobileBoardSize ? this.state.mobileBoardSize : this.state.boardSize;
+    const boardSize = this.getTrainingBoardWidth();
     const orientation = playerColor === "b" ? "black" : "white";
     const from = this.getBoardSquareCenter(this.state.hintFromSquare, orientation, boardSize);
     const to = this.getBoardSquareCenter(this.state.hintToSquare, orientation, boardSize);
@@ -4436,7 +4443,7 @@ render() {
     const boardFen = this.state.viewing ? this.state.viewFen : this.state.fen;
     // History jumps can replace several pieces without an ordinary move transition.
     const boardKey = this.state.viewing ? `history:${boardFen}` : "live";
-    const boardWidth = this.state.isMobile && this.state.mobileBoardSize ? this.state.mobileBoardSize : this.state.boardSize;
+    const boardWidth = this.getTrainingBoardWidth();
     const canViewBack = viewIndex > 0;
     const canViewForward = viewIndex < this.state.stepIndex;
 
@@ -5159,7 +5166,7 @@ render() {
 
               <div className="ot-mobile-board-wrap">
                 <div className="ot-board">
-                  <div className="ot-board-inner">
+                  <div className="ot-board-inner ot-board-with-evaluation">
                   <BoardErrorBoundary onReset={this.resetBoardRender}>
                   <Chessboard
                     id="opening-trainer-board"
@@ -5180,6 +5187,7 @@ render() {
                   </BoardErrorBoundary>
                   {this.renderHintArrowOverlay(playerColor)}
                   {wrongMoveMarker}
+                  <LiveEvaluationBar fen={boardFen || "start"} orientation={orientation} />
                   </div>
                 </div>
               </div>
@@ -5419,7 +5427,7 @@ render() {
 <option value="badOpeningPunishment">Bad Opening Punishment Drills</option>
 </select>
             </div>
-            <div className="ot-board-inner">
+            <div className="ot-board-inner ot-board-with-evaluation">
 <BoardErrorBoundary onReset={this.resetBoardRender}>
 <Chessboard
   id="opening-trainer-board"
@@ -5440,6 +5448,7 @@ render() {
 </BoardErrorBoundary>
 {this.renderHintArrowOverlay(playerColor)}
 {wrongMoveMarker}
+              <LiveEvaluationBar fen={boardFen || "start"} orientation={orientation} />
             </div>
           </div>
 

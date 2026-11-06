@@ -3423,6 +3423,24 @@
   width: fit-content;
 }
 
+.ot-board-with-evaluation {
+  --ot-eval-width: 20px;
+  --ot-eval-gap: 8px;
+  margin-left: calc(var(--ot-eval-width) + var(--ot-eval-gap));
+}
+
+.ot-board-with-evaluation .position-eval {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: calc(100% + var(--ot-eval-gap));
+  width: var(--ot-eval-width);
+}
+
+@media (max-width: 720px) {
+  .ot-board-with-evaluation { --ot-eval-width: 12px; }
+}
+
 /* chessboardjsx draws a second, squareless piece over the board during captures. */
 .ot-container [data-boardid] [data-squareid] [data-testid$="-undefined"] {
   visibility: hidden;

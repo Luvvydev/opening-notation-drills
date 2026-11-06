@@ -3998,6 +3998,16 @@
 .gr-session-count { color: #bbc1ca; font-size: 12px; font-variant-numeric: tabular-nums; }
 .gr-page-refresh .gr-options-toggle { min-height: 40px; height: 40px; padding: 0 12px; }
 .gr-workspace-options { flex-shrink: 0; padding: 12px; margin-bottom: 12px; border: 1px solid #30363e; border-radius: 6px; background: #171c21; max-height: 280px; overflow-y: auto; }
+.gr-play-eval-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  margin-bottom: 10px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
 .gr-workspace-options .gr-sidebar-actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 12px; }
 .gr-workspace-options .gr-panel-gear { width: 100%; height: auto; min-height: 52px; flex-direction: column; gap: 6px; font-size: 12px; border-radius: 6px; }
 .gr-page-refresh .gr-button,
@@ -4370,35 +4380,6 @@
 
 /* Evaluation rail follows the board's actual height and keeps the board centered. */
 .gr-page-refresh .gr-board-frame { gap: 8px; }
-.gr-page-refresh .gr-live-eval {
-  position: relative;
-  flex: 0 0 20px;
-  align-self: stretch;
-  border-radius: 3px;
-  overflow: hidden;
-  background: #202327;
-  border: 1px solid #414750;
-  box-sizing: border-box;
-}
-.gr-page-refresh .gr-live-eval-white {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  background: #f1f1ed;
-  transition: height 230ms ease;
-}
-.gr-page-refresh .gr-live-eval-value {
-  position: absolute;
-  top: 6px;
-  left: 50%;
-  writing-mode: vertical-rl;
-  transform: translateX(-50%);
-  font-size: 10px;
-  font-weight: 800;
-  color: #f9f9f9;
-  text-shadow: 0 1px 2px #111;
-}
 .gr-page-refresh .gr-coach-message { display: flex; align-items: flex-start; gap: 10px; min-width: 0; }
 .gr-page-refresh .gr-coach-avatar {
   display: block;
@@ -4441,8 +4422,6 @@
 }
 .gr-page-refresh .gr-review-engine-lines strong { color: #9dd27b; margin-right: 5px; }
 @media (max-width: 720px) {
-  .gr-page-refresh .gr-live-eval { flex-basis: 12px; }
-  .gr-page-refresh .gr-live-eval-value { display: none; }
   .gr-page-refresh .gr-coach-avatar { width: 34px; height: 34px; flex-basis: 34px; }
 }
 

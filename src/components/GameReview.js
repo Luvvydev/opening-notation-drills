@@ -31,6 +31,9 @@ import { OPENING_CATALOG } from '../openings/openingCatalog';
 import { BOARD_THEMES, DEFAULT_THEME, PIECE_THEMES } from '../theme/boardThemes';
 import { TRAINING_SCENARIOS, getScenarioReply, getScenarioStartMoves, getRepertoireReply, getAggressiveRepertoireReply, supportsOpeningAttack } from '../data/aggressionTraining';
 import './GameReview.css';
+import EvaluationBar, { LiveEvaluationBar } from './EvaluationBar';
+import { clamp, getPositionLabel, getPositionWinPercentage, getResultProperty, parseEvaluationResults, uciToMoveObject } from '../review/positionEvaluation';
+import { createReviewWorkerHandle, disposeReviewWorkerHandle, LEGACY_ENGINE_PATH, sendCommandsToWorker, WASM_ENGINE_PATH } from '../review/stockfishWorker';
 import { trackEvent, getExperimentVariant } from '../utils/trackEvent';
 import { buildSavedReview, trainingRequest } from '../training/workspace';
 import { isCriticalMove as classifyCriticalMove, getSacrificeCandidate as detectSacrificeCandidate } from '../review/tacticalClassification';
@@ -68,12 +71,11 @@ function ReviewConfetti({ active }) {
   return <div className="gr-confetti-layer">{pieces}</div>;
 }
 
-const LEGACY_ENGINE_PATH = '/engines/stockfish-worker.js';
-const WASM_ENGINE_PATH = '/engines/stockfish-17/stockfish-17-lite-single.js';
 const DEFAULT_DEPTH = 12;
 const DEFAULT_MULTI_PV = 3;
 const DEFAULT_SOURCE = 'chesscom';
 const DEFAULT_PLAY_TIME = 500;
+const PLAY_EVALUATION_KEY = 'chessdrills_play_evaluation_bar';
 const DEFAULT_PACK_BATCH = 10;
 const PACK_SEED_PUZZLES = 2;
 const MAX_PACK_PUZZLES = 24;
@@ -205,10 +207,6 @@ function getReviewMoveSoundKey(move, gameData) {
   return move.color === reviewColor ? 'moveSelf' : 'moveOpponent';
 }
 
-function clamp(value, min, max) {
-  return Math.min(max, Math.max(min, value));
-}
-
 function normalizeSan(value) {
   return String(value || '')
     .trim()
@@ -219,110 +217,6 @@ function normalizeSan(value) {
 function moveToUci(move) {
   if (!move || !move.from || !move.to) return '';
   return `${move.from}${move.to}${move.promotion || ''}`;
-}
-
-function uciToMoveObject(uci) {
-  return {
-    from: uci.slice(0, 2),
-    to: uci.slice(2, 4),
-    promotion: uci.slice(4, 5) || undefined,
-  };
-}
-
-function formatUciPv(fen, uciMoves) {
-  const game = new Chess(fen);
-  const sanMoves = [];
-
-  for (let i = 0; i < uciMoves.length; i += 1) {
-    const uciMove = uciMoves[i];
-    try {
-      const move = game.move(uciToMoveObject(uciMove));
-      if (!move) break;
-      sanMoves.push(move.san);
-    } catch (_) {
-      break;
-    }
-  }
-
-  return sanMoves;
-}
-
-function getResultProperty(result, property) {
-  const parts = String(result || '').split(' ');
-  const index = parts.indexOf(property);
-  if (index === -1 || index + 1 >= parts.length) return undefined;
-  return parts[index + 1];
-}
-
-function getResultPv(result) {
-  const parts = String(result || '').split(' ');
-  const pvIndex = parts.indexOf('pv');
-  if (pvIndex === -1 || pvIndex + 1 >= parts.length) return undefined;
-  return parts.slice(pvIndex + 1);
-}
-
-function sortLines(a, b) {
-  if (typeof a.mate === 'number' && typeof b.mate === 'number') {
-    if (a.mate > 0 && b.mate < 0) return -1;
-    if (a.mate < 0 && b.mate > 0) return 1;
-    return a.mate - b.mate;
-  }
-
-  if (typeof a.mate === 'number') return -a.mate;
-  if (typeof b.mate === 'number') return b.mate;
-  return (b.cp || 0) - (a.cp || 0);
-}
-
-function parseEvaluationResults(results, fen) {
-  const parsed = { lines: [] };
-  const temp = {};
-
-  results.forEach((result) => {
-    const text = String(result || '');
-
-    if (text.startsWith('bestmove')) {
-      const bestMove = getResultProperty(text, 'bestmove');
-      if (bestMove) parsed.bestMove = bestMove;
-    }
-
-    if (!text.startsWith('info')) return;
-
-    const depth = parseInt(getResultProperty(text, 'depth') || '', 10);
-    const multiPv = parseInt(getResultProperty(text, 'multipv') || '1', 10);
-    const pv = getResultPv(text);
-    if (!pv || Number.isNaN(depth) || Number.isNaN(multiPv)) return;
-
-    const current = temp[multiPv];
-    if (current && depth < current.depth) return;
-
-    const cpRaw = getResultProperty(text, 'cp');
-    const mateRaw = getResultProperty(text, 'mate');
-
-    temp[multiPv] = {
-      depth,
-      multiPv,
-      pv,
-      cp: cpRaw !== undefined ? parseInt(cpRaw, 10) : undefined,
-      mate: mateRaw !== undefined ? parseInt(mateRaw, 10) : undefined,
-    };
-  });
-
-  // Earlier search depths are discarded. Only replay the final lines on a chess board.
-  parsed.lines = Object.values(temp).sort(sortLines).map((line) => ({
-    ...line,
-    pv: formatUciPv(fen, line.pv),
-  }));
-
-  const whiteToPlay = String(fen || '').split(' ')[1] === 'w';
-  if (!whiteToPlay) {
-    parsed.lines = parsed.lines.map((line) => ({
-      ...line,
-      cp: typeof line.cp === 'number' ? -line.cp : line.cp,
-      mate: typeof line.mate === 'number' ? -line.mate : line.mate,
-    }));
-  }
-
-  return parsed;
 }
 
 function getIsStalemate(fen) {
@@ -350,30 +244,6 @@ function getPositionCp(position) {
   if (typeof line.cp === 'number') return clamp(line.cp, -1000, 1000);
   if (typeof line.mate === 'number') return line.mate > 0 ? 1000 : -1000;
   return 0;
-}
-
-function getPositionLabel(position) {
-  const line = position && position.lines && position.lines[0];
-  if (!line) return '...';
-  if (typeof line.mate === 'number') return `M${Math.abs(line.mate)}`;
-  const cp = typeof line.cp === 'number' ? line.cp : 0;
-  const value = Math.abs(cp) / 100;
-  const prefix = cp > 0 ? '+' : cp < 0 ? '-' : '';
-  return `${prefix}${value >= 10 ? value.toFixed(0) : value.toFixed(1)}`;
-}
-
-function getWinPercentageFromCp(cp) {
-  const ceiled = clamp(cp, -1000, 1000);
-  const multiplier = -0.00368208;
-  const winChances = 2 / (1 + Math.exp(multiplier * ceiled)) - 1;
-  return 50 + 50 * winChances;
-}
-
-function getPositionWinPercentage(position) {
-  const line = position && position.lines && position.lines[0];
-  if (!line) return 50;
-  if (typeof line.mate === 'number') return line.mate > 0 ? 100 : 0;
-  return getWinPercentageFromCp(typeof line.cp === 'number' ? line.cp : 0);
 }
 
 function getAccuracyWeights(winPercentages) {
@@ -780,47 +650,6 @@ function parsePgn(rawText, orientationOverride) {
 
 
 
-function sendCommandsToWorker(workerHandle, commands, finalPrefix, onMessage, timeoutMs) {
-  return new Promise((resolve, reject) => {
-    if (workerHandle.failed) {
-      reject(new Error('Stockfish worker is unavailable'));
-      return;
-    }
-
-    const messages = [];
-    let finished = false;
-    let timeoutId = null;
-    const finish = (error) => {
-      if (finished) return;
-      finished = true;
-      if (timeoutId) window.clearTimeout(timeoutId);
-      if (workerHandle.listener === receive) {
-        workerHandle.listener = null;
-        workerHandle.rejectCommand = null;
-      }
-      if (error) reject(error);
-      else resolve(messages);
-    };
-    const receive = (data) => {
-      const text = String(data || '');
-      messages.push(text);
-      if (onMessage) onMessage(messages, text);
-      if (text.startsWith(finalPrefix)) finish();
-    };
-    workerHandle.listener = receive;
-    workerHandle.rejectCommand = finish;
-    if (timeoutMs) {
-      timeoutId = window.setTimeout(() => finish(new Error(`Worker timeout waiting for ${finalPrefix}`)), timeoutMs);
-    }
-
-    try {
-      commands.forEach((command) => workerHandle.worker.postMessage(command));
-    } catch (error) {
-      finish(error);
-    }
-  });
-}
-
 // ---------------------------------------------------------------------------
 // Parallel review workers
 // Full-game review evaluates every position independently, so we spread the
@@ -838,39 +667,9 @@ function getReviewWorkerCount() {
   return clamp(Math.min(byCores, byMemory), 1, MAX_REVIEW_WORKERS);
 }
 
-async function createReviewWorkerHandle(enginePath, multiPv) {
-  const worker = new window.Worker(enginePath);
-  const handle = { worker, enginePath, listener: null, rejectCommand: null, multiPv, busy: false };
-  worker.onmessage = (event) => {
-    if (handle.listener) handle.listener(String(event.data || ''));
-  };
-  worker.onerror = () => {
-    handle.failed = true;
-    if (handle.rejectCommand) handle.rejectCommand(new Error('Stockfish worker failed'));
-  };
-
-  try {
-    await sendCommandsToWorker(handle, ['uci'], 'uciok', null, 10000);
-    await sendCommandsToWorker(handle, [`setoption name MultiPV value ${multiPv}`, 'isready'], 'readyok', null, 10000);
-    return handle;
-  } catch (error) {
-    disposeReviewWorkerHandle(handle);
-    throw error;
-  }
-}
-
 function stopReviewWorkerHandle(handle) {
   if (!handle || !handle.busy) return;
   try { handle.worker.postMessage('stop'); } catch (_) {}
-}
-
-function disposeReviewWorkerHandle(handle) {
-  if (!handle || handle.disposed) return;
-  handle.disposed = true;
-  handle.failed = true;
-  if (handle.rejectCommand) handle.rejectCommand(new Error('Stockfish worker closed'));
-  try { handle.worker.postMessage('quit'); } catch (_) {}
-  try { handle.worker.terminate(); } catch (_) {}
 }
 
 async function evaluateOnReviewHandle(handle, fen, { depth, multiPv, searchMoves, isCurrent }) {
@@ -1987,6 +1786,9 @@ function GameReview({ active = true }) {
   const [playMoveHistory, setPlayMoveHistory] = useState([]);
   const [playLastMove, setPlayLastMove] = useState(null);
   const [playTimeMs, setPlayTimeMs] = useState(DEFAULT_PLAY_TIME);
+  const [playShowEvaluation, setPlayShowEvaluation] = useState(() => {
+    try { return window.localStorage.getItem(PLAY_EVALUATION_KEY) === 'true'; } catch (_) { return false; }
+  });
   const [playResult, setPlayResult] = useState('');
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [optionsOpen, setOptionsOpen] = useState(false);
@@ -2098,6 +1900,7 @@ function GameReview({ active = true }) {
   }, [active, sidebarMode, packBuilderOpen, location.search]);
 
   const isPlayMode = sidebarMode === 'play';
+  const showPlayEvaluation = active && isPlayMode && playStarted && playShowEvaluation;
   const isPuzzleMode = sidebarMode === 'puzzles';
   const isReviewVariation = Boolean(reviewVariation) && !isPlayMode && !isPuzzleMode;
   const isCompactPractice = isPuzzleMode && activePuzzleQueue.length > 0;
@@ -2145,7 +1948,6 @@ function GameReview({ active = true }) {
   const shellProgressStyle = { '--gr-top-progress': `${topProgressPercent}%` };
   const sidebarPanelStyle = { '--gr-sidebar-target-height': `${boardWidth}px` };
   const displayedEvaluation = isReviewVariation ? (variationEval || (variationFeedback && variationFeedback.evaluationAfter)) : (gameAnalysis && gameAnalysis.positions && gameAnalysis.positions[currentPly]) || positionEval;
-  const evaluationPercent = displayedEvaluation && displayedEvaluation.lines && displayedEvaluation.lines.length ? getPositionWinPercentage(displayedEvaluation) : 50;
   // Hook calls below are unconditional; preserve their order across every render.
   const puzzlePlayedMarkerId = useMemo(() => `grPuzzleArrowHeadPlayed-${Math.random().toString(36).slice(2, 9)}`, []);
   const puzzleBestMarkerId = useMemo(() => `grPuzzleArrowHeadBest-${Math.random().toString(36).slice(2, 9)}`, []);
@@ -3781,12 +3583,13 @@ function GameReview({ active = true }) {
         // Let the board use the viewport, reserving only the header and progress rail.
         const desktopCap = Math.max(320, (window.innerHeight || 850) - 145);
 
+        const playEvalSpace = showPlayEvaluation ? (viewportWidth <= 720 ? 20 : 28) : 0;
         let nextWidth;
         if (viewportWidth && viewportWidth <= 1100) {
-          const mobileWidth = frameWidth || mobileCap;
+          const mobileWidth = (frameWidth || mobileCap) - playEvalSpace;
           nextWidth = Math.max(160, Math.min(mobileCap, mobileWidth, isCompactPractice || sidebarMode === 'moves' ? practiceCap : 620));
         } else {
-          const desktopWidth = frameWidth ? frameWidth - (hasLoadedGame && sidebarMode !== 'play' && sidebarMode !== 'puzzles' ? 30 : 0) : desktopCap;
+          const desktopWidth = frameWidth ? frameWidth - playEvalSpace - (hasLoadedGame && sidebarMode !== 'play' && sidebarMode !== 'puzzles' ? 30 : 0) : desktopCap;
           nextWidth = Math.max(260, Math.min(desktopCap, desktopWidth));
         }
 
@@ -3811,7 +3614,7 @@ function GameReview({ active = true }) {
         window.cancelAnimationFrame(frame);
       }
     };
-  }, [active, hasLoadedGame, isCompactPractice, sidebarMode]);
+  }, [active, hasLoadedGame, isCompactPractice, showPlayEvaluation, sidebarMode]);
 
   useEffect(() => {
     if (!active) return undefined;
@@ -3917,12 +3720,8 @@ function GameReview({ active = true }) {
           <section className="gr-stage-card gr-stage-card-board">
             <div className="gr-stage-board-only">
               <div className="gr-board-frame" ref={boardFrameRef}>
-                {!isPlayMode && !isPuzzleMode && hasLoadedGame && (
-                  <div className="gr-live-eval" role="progressbar" aria-label="White position evaluation" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(evaluationPercent)} title={`White winning chances: ${Math.round(evaluationPercent)}%`}>
-                    <div className="gr-live-eval-white" style={{ height: `${evaluationPercent}%` }} />
-                    <span className="gr-live-eval-value">{displayedEvaluation && displayedEvaluation.lines && displayedEvaluation.lines.length ? getPositionLabel(displayedEvaluation) : '…'}</span>
-                  </div>
-                )}
+                {!isPlayMode && !isPuzzleMode && hasLoadedGame && <EvaluationBar evaluation={displayedEvaluation} />}
+                {showPlayEvaluation && <LiveEvaluationBar fen={playFen} orientation={playOrientation} drawn={playResult === 'Game drawn.'} />}
                 <div className="gr-board-stack" style={{ width: `${boardWidth}px` }}>
                   <Chessboard
                     key={`review-board-${isPlayMode ? playOrientation : effectiveBoardOrientation}${isPuzzleMode ? `-puzzle-${currentPuzzle?.id || puzzleIndex}` : ''}`}
@@ -4099,6 +3898,16 @@ function GameReview({ active = true }) {
                   </button>
                 </div>
 
+                {isPlayMode && (
+                  <label className="gr-play-eval-toggle">
+                    <input type="checkbox" checked={playShowEvaluation} onChange={(event) => {
+                      const checked = event.target.checked;
+                      setPlayShowEvaluation(checked);
+                      try { window.localStorage.setItem(PLAY_EVALUATION_KEY, String(checked)); } catch (_) {}
+                    }} />
+                    Show evaluation bar
+                  </label>
+                )}
                 {settingsOpen ? (
                   <div className="gr-settings-drawer gr-settings-drawer-shell">
                     {sidebarMode === 'play' ? (

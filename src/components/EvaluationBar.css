@@ -1,0 +1,41 @@
+.position-eval {
+  position: relative;
+  flex: 0 0 20px;
+  align-self: stretch;
+  border-radius: 3px;
+  overflow: hidden;
+  background: #202327;
+  border: 1px solid #414750;
+  box-sizing: border-box;
+}
+.position-eval-white {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: #f1f1ed;
+  transition: height 230ms ease;
+}
+.position-eval-value {
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  writing-mode: vertical-rl;
+  transform: translateX(-50%);
+  font-size: 10px;
+  font-weight: 800;
+  color: #f9f9f9;
+  text-shadow: 0 1px 2px #111;
+}
+
+.position-eval.is-flipped .position-eval-white { top: 0; bottom: auto; }
+.position-eval.is-flipped .position-eval-value { bottom: 6px; top: auto; }
+
+@media (max-width: 720px) {
+  .position-eval { flex-basis: 12px; }
+  .position-eval-value { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .position-eval-white { transition: none; }
+}
