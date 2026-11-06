@@ -18,9 +18,9 @@ jest.mock("./components/TrainingPage", () => () => <h1>Daily training page</h1>)
 jest.mock("./components/GameReview", () => () => <h1>Free review workspace</h1>);
 beforeEach(() => { window.matchMedia = () => ({ matches: false, addListener: jest.fn(), removeListener: jest.fn() }); });
 afterEach(cleanup);
-test.each([["/my-games", "Free review workspace"], ["/review", "Free review workspace"], ["/training", "Daily training page"]])("anonymous route %s stays available", (path, heading) => {
+test.each([["/my-games", "Free review workspace"], ["/review", "Free review workspace"], ["/training", "Daily training page"]])("anonymous route %s stays available", async (path, heading) => {
   window.history.replaceState({}, "", path);
   const screen = render(<App />);
-  expect(screen.getByRole("heading", { name: heading })).toBeTruthy();
+  expect(await screen.findByRole("heading", { name: heading })).toBeTruthy();
   expect(window.location.pathname).toBe(path);
 });

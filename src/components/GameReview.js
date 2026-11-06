@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { unstable_batchedUpdates } from 'react-dom';
 import Chessboard from 'chessboardjsx';
 import { Link, useLocation } from 'react-router-dom';
 import { httpsCallable } from 'firebase/functions';
@@ -67,7 +68,8 @@ function ReviewConfetti({ active }) {
   return <div className="gr-confetti-layer">{pieces}</div>;
 }
 
-const ENGINE_PATH = '/engines/stockfish-worker.js';
+const LEGACY_ENGINE_PATH = '/engines/stockfish-worker.js';
+const WASM_ENGINE_PATH = '/engines/stockfish-17/stockfish-17-lite-single.js';
 const DEFAULT_DEPTH = 12;
 const DEFAULT_MULTI_PV = 3;
 const DEFAULT_SOURCE = 'chesscom';
@@ -252,11 +254,11 @@ function getResultProperty(result, property) {
   return parts[index + 1];
 }
 
-function getResultPv(result, fen) {
+function getResultPv(result) {
   const parts = String(result || '').split(' ');
   const pvIndex = parts.indexOf('pv');
   if (pvIndex === -1 || pvIndex + 1 >= parts.length) return undefined;
-  return formatUciPv(fen, parts.slice(pvIndex + 1));
+  return parts.slice(pvIndex + 1);
 }
 
 function sortLines(a, b) {
@@ -287,7 +289,7 @@ function parseEvaluationResults(results, fen) {
 
     const depth = parseInt(getResultProperty(text, 'depth') || '', 10);
     const multiPv = parseInt(getResultProperty(text, 'multipv') || '1', 10);
-    const pv = getResultPv(text, fen);
+    const pv = getResultPv(text);
     if (!pv || Number.isNaN(depth) || Number.isNaN(multiPv)) return;
 
     const current = temp[multiPv];
@@ -305,7 +307,11 @@ function parseEvaluationResults(results, fen) {
     };
   });
 
-  parsed.lines = Object.values(temp).sort(sortLines);
+  // Earlier search depths are discarded. Only replay the final lines on a chess board.
+  parsed.lines = Object.values(temp).sort(sortLines).map((line) => ({
+    ...line,
+    pv: formatUciPv(fen, line.pv),
+  }));
 
   const whiteToPlay = String(fen || '').split(' ')[1] === 'w';
   if (!whiteToPlay) {
@@ -563,7 +569,7 @@ function classifyMissedOpportunities(moves, evaluations) {
 // Each path supplies position evaluations; identical evaluations yield identical
 // labels, including the same deeper verification for sacrifice candidates.
 async function classifyEvaluatedGame(moves, evaluatedPositions, options) {
-  const { depth, multiPv, evaluateFen, requestId, isCurrent, onVerificationProgress } = options;
+  const { depth, multiPv, evaluateFen, requestId, isCurrent, onVerificationProgress, verificationEvaluators } = options;
   const verifiedSacrifices = new Map();
   const candidates = moves.map((move, index) => ({
     move, index,
@@ -572,19 +578,20 @@ async function classifyEvaluatedGame(moves, evaluatedPositions, options) {
     .sort((a, b) => b.sacrifice.score - a.sacrifice.score)
     .slice(0, 12);
 
-  for (let candidateIndex = 0; candidateIndex < candidates.length; candidateIndex += 1) {
-    if (!isCurrent()) return null;
-    const candidate = candidates[candidateIndex];
+  let nextCandidate = 0;
+  let verifiedCount = 0;
+  const retryCandidates = [];
+  const verifyCandidate = async (candidate, evaluate) => {
     try {
       const rootDepth = depth + 4;
       const rootPv = Math.max(2, multiPv);
-      const beforeDeep = await evaluateFen(candidate.move.beforeFen, {
+      const beforeDeep = await evaluate(candidate.move.beforeFen, {
         depth: rootDepth, multiPv: rootPv, requestId,
       });
       if (!isCurrent()) return null;
       let playedLine = beforeDeep.lines.find((line) => line.pv && line.pv[0] === candidate.move.san);
       if (!playedLine) {
-        const forced = await evaluateFen(candidate.move.beforeFen, {
+        const forced = await evaluate(candidate.move.beforeFen, {
           depth: rootDepth, multiPv: 1, searchMoves: [candidate.move.uci], requestId,
         });
         if (!isCurrent()) return null;
@@ -600,10 +607,36 @@ async function classifyEvaluatedGame(moves, evaluatedPositions, options) {
           verifiedSacrifices.set(candidate.index, candidate.sacrifice);
         }
       }
-    } catch (_) { /* Unverified candidates keep their normal classification. */ }
+    } catch (_) {
+      return false;
+    }
+    return true;
+  };
+  const markVerified = () => {
+    if (!isCurrent()) return;
+    verifiedCount += 1;
+    if (onVerificationProgress) onVerificationProgress(verifiedCount, candidates.length);
+  };
+
+  const evaluators = verificationEvaluators || [evaluateFen];
+  await Promise.all(evaluators.slice(0, candidates.length).map(async (evaluate) => {
+    while (isCurrent() && nextCandidate < candidates.length) {
+      const candidate = candidates[nextCandidate++];
+      if (await verifyCandidate(candidate, evaluate) === false && verificationEvaluators) {
+        retryCandidates.push(candidate);
+        return;
+      }
+      markVerified();
+    }
+  }));
+  // Retry any failed or unclaimed work on the regular engine if pool workers failed.
+  retryCandidates.push(...candidates.slice(nextCandidate));
+  for (const candidate of retryCandidates) {
     if (!isCurrent()) return null;
-    if (onVerificationProgress) onVerificationProgress(candidateIndex + 1, candidates.length);
+    await verifyCandidate(candidate, evaluateFen);
+    markVerified();
   }
+  if (!isCurrent()) return null;
 
   const classified = moves.map((move, index) => ({
     ...move,
@@ -621,6 +654,7 @@ function getMatchSummary(sanMoves) {
   if (!sanMoves || !sanMoves.length) return null;
 
   let best = null;
+  const normalizedMoves = sanMoves.map(normalizeSan);
 
   OPENING_CATALOG.forEach((opening) => {
     (opening.lines || []).forEach((line) => {
@@ -630,7 +664,7 @@ function getMatchSummary(sanMoves) {
       while (
         matched < sanMoves.length &&
         matched < lineMoves.length &&
-        normalizeSan(sanMoves[matched]) === normalizeSan(lineMoves[matched])
+        normalizedMoves[matched] === normalizeSan(lineMoves[matched])
       ) {
         matched += 1;
       }
@@ -748,32 +782,41 @@ function parsePgn(rawText, orientationOverride) {
 
 function sendCommandsToWorker(workerHandle, commands, finalPrefix, onMessage, timeoutMs) {
   return new Promise((resolve, reject) => {
+    if (workerHandle.failed) {
+      reject(new Error('Stockfish worker is unavailable'));
+      return;
+    }
+
     const messages = [];
     let finished = false;
-    const timeoutId = timeoutMs ? window.setTimeout(() => {
+    let timeoutId = null;
+    const finish = (error) => {
       if (finished) return;
       finished = true;
-      reject(new Error(`Worker timeout waiting for ${finalPrefix}`));
-    }, timeoutMs) : null;
-
-    workerHandle.listener = (data) => {
+      if (timeoutId) window.clearTimeout(timeoutId);
+      if (workerHandle.listener === receive) {
+        workerHandle.listener = null;
+        workerHandle.rejectCommand = null;
+      }
+      if (error) reject(error);
+      else resolve(messages);
+    };
+    const receive = (data) => {
       const text = String(data || '');
       messages.push(text);
       if (onMessage) onMessage(messages, text);
-      if (!finished && text.startsWith(finalPrefix)) {
-        finished = true;
-        if (timeoutId) window.clearTimeout(timeoutId);
-        resolve(messages);
-      }
+      if (text.startsWith(finalPrefix)) finish();
     };
+    workerHandle.listener = receive;
+    workerHandle.rejectCommand = finish;
+    if (timeoutMs) {
+      timeoutId = window.setTimeout(() => finish(new Error(`Worker timeout waiting for ${finalPrefix}`)), timeoutMs);
+    }
 
     try {
-      commands.forEach((command) => {
-        workerHandle.worker.postMessage(command);
-      });
+      commands.forEach((command) => workerHandle.worker.postMessage(command));
     } catch (error) {
-      if (timeoutId) window.clearTimeout(timeoutId);
-      reject(error);
+      finish(error);
     }
   });
 }
@@ -795,32 +838,25 @@ function getReviewWorkerCount() {
   return clamp(Math.min(byCores, byMemory), 1, MAX_REVIEW_WORKERS);
 }
 
-function createReviewWorkerHandle(multiPv) {
-  return new Promise((resolve, reject) => {
-    let worker = null;
-    try {
-      worker = new window.Worker(ENGINE_PATH);
-    } catch (error) {
-      reject(error);
-      return;
-    }
+async function createReviewWorkerHandle(enginePath, multiPv) {
+  const worker = new window.Worker(enginePath);
+  const handle = { worker, enginePath, listener: null, rejectCommand: null, multiPv, busy: false };
+  worker.onmessage = (event) => {
+    if (handle.listener) handle.listener(String(event.data || ''));
+  };
+  worker.onerror = () => {
+    handle.failed = true;
+    if (handle.rejectCommand) handle.rejectCommand(new Error('Stockfish worker failed'));
+  };
 
-    const handle = { worker, listener: null, multiPv, busy: false };
-    worker.onmessage = (event) => {
-      if (handle.listener) handle.listener(String(event.data || ''));
-    };
-    worker.onerror = () => {
-      reject(new Error('review worker failed'));
-    };
-
-    sendCommandsToWorker(handle, ['uci'], 'uciok', null, 10000)
-      .then(() => sendCommandsToWorker(handle, [`setoption name MultiPV value ${multiPv}`, 'isready'], 'readyok', null, 10000))
-      .then(() => resolve(handle))
-      .catch((error) => {
-        try { worker.terminate(); } catch (_) {}
-        reject(error);
-      });
-  });
+  try {
+    await sendCommandsToWorker(handle, ['uci'], 'uciok', null, 10000);
+    await sendCommandsToWorker(handle, [`setoption name MultiPV value ${multiPv}`, 'isready'], 'readyok', null, 10000);
+    return handle;
+  } catch (error) {
+    disposeReviewWorkerHandle(handle);
+    throw error;
+  }
 }
 
 function stopReviewWorkerHandle(handle) {
@@ -829,27 +865,36 @@ function stopReviewWorkerHandle(handle) {
 }
 
 function disposeReviewWorkerHandle(handle) {
-  if (!handle || !handle.worker) return;
+  if (!handle || handle.disposed) return;
+  handle.disposed = true;
+  handle.failed = true;
+  if (handle.rejectCommand) handle.rejectCommand(new Error('Stockfish worker closed'));
   try { handle.worker.postMessage('quit'); } catch (_) {}
   try { handle.worker.terminate(); } catch (_) {}
 }
 
-async function evaluateOnReviewHandle(handle, fen, depth, multiPv) {
-  if (handle.multiPv !== multiPv) {
-    await sendCommandsToWorker(handle, [`setoption name MultiPV value ${multiPv}`, 'isready'], 'readyok', null, 10000);
-    handle.multiPv = multiPv;
-  }
-
-  handle.busy = true;
+async function evaluateOnReviewHandle(handle, fen, { depth, multiPv, searchMoves, isCurrent }) {
+  if (handle.failed) throw new Error('review worker unavailable');
   try {
+    if (handle.multiPv !== multiPv) {
+      await sendCommandsToWorker(handle, [`setoption name MultiPV value ${multiPv}`, 'isready'], 'readyok', null, 10000);
+      handle.multiPv = multiPv;
+    }
+    if (!isCurrent()) return null;
+    handle.busy = true;
+    const search = searchMoves && searchMoves.length ? ` searchmoves ${searchMoves.join(' ')}` : '';
     const results = await sendCommandsToWorker(
       handle,
-      [`position fen ${fen}`, `go depth ${depth}`],
+      [`position fen ${fen}`, `go depth ${depth}${search}`],
       'bestmove',
       null,
       45000
     );
-    return parseEvaluationResults(results, fen);
+    return isCurrent() ? parseEvaluationResults(results, fen) : null;
+  } catch (error) {
+    handle.failed = true;
+    disposeReviewWorkerHandle(handle);
+    throw error;
   } finally {
     handle.busy = false;
   }
@@ -857,6 +902,10 @@ async function evaluateOnReviewHandle(handle, fen, depth, multiPv) {
 
 function waitMs(ms) {
   return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
+function getEvaluationCacheKey(fen, depth, multiPv, searchMoves) {
+  return `${fen}|d${depth}|pv${multiPv}${searchMoves ? `|search:${searchMoves.join(',')}` : ''}`;
 }
 
 function getPaddedNumber(value) {
@@ -1975,13 +2024,15 @@ function GameReview({ active = true }) {
   const fileInputRef = useRef(null);
   const engineRef = useRef(null);
   const initPromiseRef = useRef(null);
+  const engineBackendRef = useRef({ path: null, probe: null });
   const positionRequestRef = useRef(0);
   const variationRequestRef = useRef(0);
   const runRequestRef = useRef(0);
   const cacheRef = useRef(new Map());
   const remoteAbortRef = useRef(null);
   const remoteAutoLoadKeyRef = useRef('');
-  const playGameRef = useRef(new Chess());
+  const playGameRef = useRef(null);
+  if (!playGameRef.current) playGameRef.current = new Chess();
   const boardFrameRef = useRef(null);
   const workspaceRef = useRef(null);
   const autoReviewRunningRef = useRef('');
@@ -2004,7 +2055,7 @@ function GameReview({ active = true }) {
   useEffect(() => {
     if (!hasFullReview || reviewTrackedRef.current) return;
     reviewTrackedRef.current = true;
-    trackEvent('game_review_complete', { source: 'game_review', engine: 'stockfish_11', depth, multi_pv: multiPv }, null, { persist: false });
+    trackEvent('game_review_complete', { source: 'game_review', engine: engineBackendRef.current.path === WASM_ENGINE_PATH ? 'stockfish_17_lite' : 'stockfish_11', depth, multi_pv: multiPv }, null, { persist: false });
   }, [hasFullReview, depth, multiPv]);
   useEffect(() => {
     if (Object.keys(puzzleResults).length === 0 || puzzleTrackedRef.current) return;
@@ -2213,67 +2264,83 @@ function GameReview({ active = true }) {
     }, 1100);
   }, [reviewSettings]);
 
-  const ensureEngineReady = useCallback(async () => {
-    if (engineRef.current) return engineRef.current;
-    if (initPromiseRef.current) return initPromiseRef.current;
+  const startEngineWorker = useCallback(async (nextMultiPv) => {
+    const backend = engineBackendRef.current;
+    if (!isMountedRef.current) throw new Error('review closed');
+    if (backend.path) return createReviewWorkerHandle(backend.path, nextMultiPv);
 
-    initPromiseRef.current = new Promise((resolve, reject) => {
-      try {
-        setEngineState('starting');
-        setEngineError('');
-        setStatusMessage('Starting Stockfish…');
+    if (backend.probe) {
+      const first = await backend.probe;
+      if (!isMountedRef.current) throw new Error('review closed');
+      return createReviewWorkerHandle(first.enginePath, nextMultiPv);
+    }
 
-        const worker = new window.Worker(ENGINE_PATH);
-        const handle = { worker, listener: null };
-
-        worker.onmessage = (event) => {
-          if (handle.listener) handle.listener(String(event.data || ''));
-        };
-
-        worker.onerror = () => {
-          setEngineState('error');
-          setEngineError('The analysis worker failed to start.');
-          setStatusMessage('Stockfish failed to start.');
-          initPromiseRef.current = null;
-          reject(new Error('worker start failed'));
-        };
-
-        sendCommandsToWorker(handle, ['uci'], 'uciok', null, 10000)
-          .then(() => sendCommandsToWorker(handle, [`setoption name MultiPV value ${multiPv}`, 'isready'], 'readyok', null, 10000))
-          .then(() => {
-            engineRef.current = handle;
-            setEngineState('ready');
-            setStatusMessage('Stockfish is ready.');
-            resolve(handle);
-          })
-          .catch((error) => {
-            setEngineState('error');
-            setEngineError('Engine startup failed.');
-            setStatusMessage('Stockfish failed to start.');
-            initPromiseRef.current = null;
-            reject(error);
-          });
-      } catch (error) {
-        setEngineState('error');
-        setEngineError('Your browser blocked engine startup.');
-        setStatusMessage('Stockfish failed to start.');
-        initPromiseRef.current = null;
-        reject(error);
+    // Use one engine version for every search and cached score in this workspace.
+    backend.probe = (async () => {
+      if (typeof window.WebAssembly !== 'undefined') {
+        try {
+          return await createReviewWorkerHandle(WASM_ENGINE_PATH, nextMultiPv);
+        } catch (_) {
+          if (!isMountedRef.current) throw new Error('review closed');
+        }
       }
-    });
+      return createReviewWorkerHandle(LEGACY_ENGINE_PATH, nextMultiPv);
+    })();
+    try {
+      const first = await backend.probe;
+      backend.path = first.enginePath;
+      return first;
+    } finally {
+      backend.probe = null;
+    }
+  }, []);
 
+  const ensureEngineReady = useCallback(async () => {
+    if (engineRef.current && !engineRef.current.failed) return engineRef.current;
+    if (initPromiseRef.current) return initPromiseRef.current;
+    if (engineRef.current) {
+      disposeReviewWorkerHandle(engineRef.current);
+      engineRef.current = null;
+    }
+
+    setEngineState('starting');
+    setEngineError('');
+    setStatusMessage('Starting Stockfish…');
+    initPromiseRef.current = startEngineWorker(multiPv).then((handle) => {
+      if (!isMountedRef.current) {
+        disposeReviewWorkerHandle(handle);
+        throw new Error('review closed');
+      }
+      engineRef.current = handle;
+      setEngineState('ready');
+      setStatusMessage('Stockfish is ready.');
+      return handle;
+    }).catch((error) => {
+      if (isMountedRef.current) {
+        setEngineState('error');
+        setEngineError('Engine startup failed.');
+        setStatusMessage('Stockfish failed to start.');
+      }
+      throw error;
+    }).finally(() => {
+      initPromiseRef.current = null;
+    });
     return initPromiseRef.current;
-  }, [multiPv]);
+  }, [multiPv, startEngineWorker]);
 
   const ensureWorkerPool = useCallback(() => {
     const pool = poolRef.current;
     if (pool.disposed) return Promise.reject(new Error('pool disposed'));
-    if (pool.initPromise) return pool.initPromise;
+    if (pool.handles.length && pool.handles.every((handle) => handle.failed)) {
+      pool.handles = [];
+      pool.initPromise = null;
+    }
+    if (pool.initPromise) return pool.initPromise.then((handles) => handles.filter((handle) => !handle.failed));
 
     const size = getReviewWorkerCount();
     const startedMultiPv = multiPv;
     pool.initPromise = Promise.all(
-      Array.from({ length: size }, () => createReviewWorkerHandle(startedMultiPv).catch(() => null))
+      Array.from({ length: size }, () => startEngineWorker(startedMultiPv).catch(() => null))
     ).then((handles) => {
       const ready = handles.filter(Boolean);
       if (pool.disposed) {
@@ -2289,7 +2356,7 @@ function GameReview({ active = true }) {
     });
 
     return pool.initPromise;
-  }, [multiPv]);
+  }, [multiPv, startEngineWorker]);
 
   const stopPoolSearches = useCallback(() => {
     poolRef.current.handles.forEach(stopReviewWorkerHandle);
@@ -2305,7 +2372,7 @@ function GameReview({ active = true }) {
 
   const evaluateFen = useCallback(async (fen, options) => {
     const { depth: nextDepth, multiPv: nextMultiPv, partialCallback, requestId, searchMoves } = options;
-    const cacheKey = `${fen}|d${nextDepth}|pv${nextMultiPv}${searchMoves ? `|search:${searchMoves.join(",")}` : ""}`;
+    const cacheKey = getEvaluationCacheKey(fen, nextDepth, nextMultiPv, searchMoves);
     const cached = cacheRef.current.get(cacheKey);
     if (cached) {
       if (partialCallback) partialCallback(cached);
@@ -2331,18 +2398,21 @@ function GameReview({ active = true }) {
     await stopSearch();
     await sendCommandsToWorker(engine, [`setoption name MultiPV value ${nextMultiPv}`, 'isready'], 'readyok', null, 10000);
 
+    let lastPartialAt = -Infinity;
     const results = await sendCommandsToWorker(
       engine,
       [`position fen ${fen}`, `go depth ${nextDepth}${searchMoves && searchMoves.length ? ` searchmoves ${searchMoves.join(" ")}` : ""}`],
       'bestmove',
-      (messages) => {
+      partialCallback ? (messages, text) => {
         if (requestId !== undefined && requestId !== positionRequestRef.current && requestId !== runRequestRef.current) {
           return;
         }
-        if (!partialCallback) return;
+        const now = performance.now();
+        if (!text.startsWith('info') || !text.includes(' pv ') || now - lastPartialAt < 100) return;
+        lastPartialAt = now;
         const parsed = parseEvaluationResults(messages, fen);
         if (parsed.lines.length) partialCallback(parsed);
-      },
+      } : null,
       45000
     );
 
@@ -2569,18 +2639,29 @@ function GameReview({ active = true }) {
     try {
       const positions = gameData.positions;
       const evaluatedPositions = new Array(positions.length);
+      const pool = poolRef.current;
+      const isCurrent = () => requestId === runRequestRef.current;
+      let handles = null;
       let completed = 0;
+      let lastProgressAt = -Infinity;
+      const updateProgress = (percent, force = false) => {
+        const now = performance.now();
+        if (!force && now - lastProgressAt < 100) return;
+        lastProgressAt = now;
+        setGameProgress(percent);
+      };
       const markDone = () => {
-        if (requestId !== runRequestRef.current) return;
+        if (!isCurrent()) return;
         completed += 1;
-        setGameProgress(Math.max(1, Math.round((completed / positions.length) * 85)));
+        updateProgress(Math.max(1, Math.round((completed / positions.length) * 85)));
       };
 
       // Cached / trivial (mate, stalemate) positions cost nothing, fill them first.
       const pending = [];
       for (let i = 0; i < positions.length; i += 1) {
         const fen = positions[i].fen;
-        const cached = cacheRef.current.get(`${fen}|d${depth}|pv${multiPv}`);
+        const cacheKey = getEvaluationCacheKey(fen, depth, multiPv);
+        const cached = cacheRef.current.get(cacheKey);
         if (cached) {
           evaluatedPositions[i] = cached;
           markDone();
@@ -2589,14 +2670,14 @@ function GameReview({ active = true }) {
         const whoIsCheckmated = getWhoIsCheckmated(fen);
         if (whoIsCheckmated) {
           const mateEval = { lines: [{ pv: [], depth: 0, multiPv: 1, mate: whoIsCheckmated === 'w' ? -1 : 1 }] };
-          cacheRef.current.set(`${fen}|d${depth}|pv${multiPv}`, mateEval);
+          cacheRef.current.set(cacheKey, mateEval);
           evaluatedPositions[i] = mateEval;
           markDone();
           continue;
         }
         if (getIsStalemate(fen)) {
           const drawEval = { lines: [{ pv: [], depth: 0, multiPv: 1, cp: 0 }] };
-          cacheRef.current.set(`${fen}|d${depth}|pv${multiPv}`, drawEval);
+          cacheRef.current.set(cacheKey, drawEval);
           evaluatedPositions[i] = drawEval;
           markDone();
           continue;
@@ -2605,8 +2686,6 @@ function GameReview({ active = true }) {
       }
 
       if (pending.length) {
-        const pool = poolRef.current;
-
         // If a previous review is still winding down, tell its workers to stop and let it finish.
         if (pool.runPromise) {
           stopPoolSearches();
@@ -2614,9 +2693,9 @@ function GameReview({ active = true }) {
           if (requestId !== runRequestRef.current) return;
         }
 
-        let handles = null;
         try {
-          handles = await ensureWorkerPool();
+          // A previous run may have timed out while winding down. Don't reuse its workers yet.
+          if (!pool.runPromise) handles = await ensureWorkerPool();
         } catch (_) {
           handles = null;
         }
@@ -2624,11 +2703,9 @@ function GameReview({ active = true }) {
 
         if (handles && handles.length) {
           let nextPending = 0;
-          let workerFailed = false;
 
           const runWorker = async (handle) => {
-            while (!workerFailed) {
-              if (requestId !== runRequestRef.current) return;
+            while (isCurrent()) {
               const pendingIndex = nextPending;
               nextPending += 1;
               if (pendingIndex >= pending.length) return;
@@ -2636,14 +2713,14 @@ function GameReview({ active = true }) {
               const positionIndex = pending[pendingIndex];
               const fen = positions[positionIndex].fen;
               try {
-                const result = await evaluateOnReviewHandle(handle, fen, depth, multiPv);
+                const result = await evaluateOnReviewHandle(handle, fen, { depth, multiPv, isCurrent });
                 if (requestId !== runRequestRef.current) return;
-                cacheRef.current.set(`${fen}|d${depth}|pv${multiPv}`, result);
+                cacheRef.current.set(getEvaluationCacheKey(fen, depth, multiPv), result);
                 evaluatedPositions[positionIndex] = result;
                 markDone();
               } catch (error) {
-                // Leave this position for the sequential fallback below.
-                workerFailed = true;
+                // Let another pool worker retry it before falling back to the single worker.
+                pending.push(positionIndex);
                 return;
               }
             }
@@ -2676,29 +2753,53 @@ function GameReview({ active = true }) {
 
       if (requestId !== runRequestRef.current) return;
 
-      const enrichedMoves = await classifyEvaluatedGame(gameData.moves, evaluatedPositions, {
+      unstable_batchedUpdates(() => {
+        setStatusMessage('Checking tactics and finishing the review…');
+        updateProgress(85, true);
+      });
+      const availableHandles = !pool.runPromise && handles ? handles.filter((handle) => !handle.failed) : [];
+      const verificationEvaluators = availableHandles.length ? availableHandles.map((handle) => async (fen, options) => {
+        const key = getEvaluationCacheKey(fen, options.depth, options.multiPv, options.searchMoves);
+        const cached = cacheRef.current.get(key);
+        if (cached) return cached;
+        const result = await evaluateOnReviewHandle(handle, fen, { ...options, isCurrent });
+        if (result && isCurrent()) cacheRef.current.set(key, result);
+        return result;
+      }) : undefined;
+      const classification = classifyEvaluatedGame(gameData.moves, evaluatedPositions, {
         depth, multiPv, evaluateFen, requestId,
-        isCurrent: () => requestId === runRequestRef.current,
+        isCurrent, verificationEvaluators,
         onVerificationProgress: (completed, total) => {
-          setGameProgress(Math.min(98, 85 + Math.round(13 * completed / total)));
+          updateProgress(Math.min(98, 85 + Math.round(13 * completed / total)));
         },
       });
+      if (verificationEvaluators) pool.runPromise = classification;
+      let enrichedMoves;
+      try {
+        enrichedMoves = await classification;
+      } finally {
+        if (pool.runPromise === classification) pool.runPromise = null;
+      }
       if (!enrichedMoves || requestId !== runRequestRef.current) return;
       const updatedGameData = {
         ...gameData,
         moves: enrichedMoves,
       };
 
-      setGameData(updatedGameData);
-      setPositionEval(evaluatedPositions[currentPly] || null);
-      setGameAnalysis({
+      const analysis = {
         positions: evaluatedPositions,
         accuracy: computeAccuracy(evaluatedPositions),
         acpl: computeAcpl(evaluatedPositions, enrichedMoves),
+      };
+      unstable_batchedUpdates(() => {
+        setGameData(updatedGameData);
+        setPositionEval(evaluatedPositions[currentPly] || null);
+        setGameAnalysis(analysis);
+        setGameProgress(100);
+        setAutoReviewQueued(false);
+        setEngineState('ready');
+        setStatusMessage('Full review finished.');
       });
-      setGameProgress(100);
-      setEngineState('ready');
-      setStatusMessage('Full review finished.');
     } catch (_) {
       if (requestId !== runRequestRef.current) return;
       setEngineState('error');
@@ -2937,16 +3038,17 @@ function GameReview({ active = true }) {
         return;
       }
       if (!await authorizeReview(parsed) || !isMountedRef.current) return;
-      resetReviewStateFromParsed(parsed, game.pgn, nextOrientation);
-      setStatusMessage(`${source === 'lichess' ? 'Lichess' : 'Chess.com'} game loaded.`);
-      queueAutoReview();
+      unstable_batchedUpdates(() => {
+        resetReviewStateFromParsed(parsed, game.pgn, nextOrientation);
+        queueAutoReview();
+      });
     } catch (_) {
       if (isMountedRef.current) setRemoteError('Could not open that game. Please try again.');
     } finally {
       remoteSelectionRef.current = false;
       if (isMountedRef.current) setOpeningRemoteGameId('');
     }
-  }, [authorizeReview, queueAutoReview, remoteUsername, resetReviewStateFromParsed, source]);
+  }, [authorizeReview, queueAutoReview, remoteUsername, resetReviewStateFromParsed]);
 
   const handleBuildPersonalPack = async () => {
     const username = remoteUsername.trim();
@@ -3637,14 +3739,12 @@ function GameReview({ active = true }) {
   }, [currentPly, gameData, isPuzzleMode, playSfx]);
 
   useEffect(() => () => {
+    runRequestRef.current += 1;
+    positionRequestRef.current += 1;
     if (remoteAbortRef.current) {
       try { remoteAbortRef.current.abort(); } catch (_) {}
     }
-    const engine = engineRef.current;
-    if (engine && engine.worker) {
-      try { engine.worker.postMessage('quit'); } catch (_) {}
-      try { engine.worker.terminate(); } catch (_) {}
-    }
+    disposeReviewWorkerHandle(engineRef.current);
     const pool = poolRef.current;
     pool.disposed = true;
     pool.handles.forEach(disposeReviewWorkerHandle);
@@ -3654,11 +3754,12 @@ function GameReview({ active = true }) {
   // Warm up the review workers while the person is still picking a game,
   // so clicking a game doesn't wait on engine startup.
   useEffect(() => {
+    if (!active || isPlayMode) return undefined;
     const timerId = window.setTimeout(() => {
       ensureWorkerPool().catch(() => {});
     }, 250);
     return () => window.clearTimeout(timerId);
-  }, [ensureWorkerPool]);
+  }, [active, ensureWorkerPool, isPlayMode]);
 
   useEffect(() => {
     const node = boardFrameRef.current;

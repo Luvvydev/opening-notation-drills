@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Chessboard from 'chessboardjsx';
 import * as ChessModule from 'chess.js';
-import { OPENING_CATALOG } from '../openings/openingCatalog';
+import { londonLines } from '../openings/londonLines';
 import { BOARD_THEMES, DEFAULT_THEME } from '../theme/boardThemes';
 import { trackEvent } from '../utils/trackEvent';
 
@@ -10,7 +10,7 @@ import { trackEvent } from '../utils/trackEvent';
 const Chess = ChessModule.Chess || ChessModule.default || ChessModule;
 
 // Use the same first London line as /demo, rather than a separate sample position.
-export const HOME_DEMO_LINE = OPENING_CATALOG.find((opening) => opening.key === 'london').lines[0];
+export const HOME_DEMO_LINE = londonLines[0];
 
 export function createHomeDemoGame() {
   const game = new Chess();

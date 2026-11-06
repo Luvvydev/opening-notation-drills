@@ -24,10 +24,10 @@ beforeEach(() => {
   window.matchMedia = () => ({ matches: false, addListener: jest.fn(), removeListener: jest.fn() });
 });
 
-test.each(['/my-games', '/my-games/', '/review/'])('review state at %s survives section and account changes correctly', (url) => {
+test.each(['/my-games', '/my-games/', '/review/'])('review state at %s survives section and account changes correctly', async (url) => {
   const View = () => <MemoryRouter initialEntries={[url]}><Link to="/">Home</Link><Link to="/my-games?mode=puzzles">Puzzles</Link><Route exact path="/" render={() => <p>Homepage</p>} /><ReviewWorkspace /></MemoryRouter>;
   const screen = render(<View />);
-  fireEvent.click(screen.getByText('Review session 0'));
+  fireEvent.click(await screen.findByText('Review session 0'));
   fireEvent.click(screen.getByText('Home'));
   expect(screen.getByText('Review session 1').closest('[hidden]')).not.toBeNull();
   fireEvent.click(screen.getByText('Puzzles'));
@@ -37,10 +37,10 @@ test.each(['/my-games', '/my-games/', '/review/'])('review state at %s survives 
   expect(screen.getByText('Review session 0')).toBeTruthy();
 });
 
-test.each(['/my-games?mode=puzzles', '/my-games/?mode=puzzles'])('guest review shortcut %s opens without a signup gate', (url) => {
+test.each(['/my-games?mode=puzzles', '/my-games/?mode=puzzles'])('guest review shortcut %s opens without a signup gate', async (url) => {
   useAuth.mockReturnValue({ user: null, authLoading: false });
   const screen = render(<MemoryRouter initialEntries={[url]}><ReviewWorkspace /><Route path="/signup" render={({ location }) => <p>{location.search}</p>} /></MemoryRouter>);
-  expect(screen.getByText('Review session 0')).toBeTruthy();
+  expect(await screen.findByText('Review session 0')).toBeTruthy();
   expect(screen.queryByText(/from=.*mode%3Dpuzzles/)).toBeNull();
 });
 

@@ -243,6 +243,12 @@
   max-width: 100%;
 }
 
+/* These built-in pieces have invalid inline fills that can survive SVG reuse. */
+.gr-board-stack [data-squareid] [data-testid^="bR-"] > svg > g > svg > g,
+.gr-board-stack [data-squareid] [data-testid^="bQ-"] > svg > g > svg > g {
+  fill: #000 !important;
+}
+
 .gr-board-overlay {
   position: absolute;
   inset: 0;

@@ -125,13 +125,13 @@
 }
 
 .landing-hero h1, .landing-hero h1 span { color: var(--landing-pink); }
-.landing-intro { background: #1c293e url('/images/landing/chess-pieces-background.png') center / cover no-repeat; padding-block: 65px; }
+.landing-intro { background: #1c293e url('/images/landing/chess-pieces-background.webp') center / cover no-repeat; padding-block: 65px; }
 .landing-intro-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; }
 .landing-intro-card { background: #2d384b; padding: 30px; border-radius: 25px; }
 .landing-intro-card h2 { font-size: 28px; letter-spacing: -.02em; line-height: 1.35; }
 .landing-intro-card p { margin-top: 20px; color: #e0e5ee; font-size: 18px; line-height: 1.6; }
 .landing-intro-card .landing-checks { margin-block: 20px 27px; color: #f3f4f7; font-size: 15px; }
-.landing-finish { background: linear-gradient(#0e13186b, #0e1318b3), url('/images/landing/chess-pieces-background.png') center / cover; }
+.landing-finish { background: linear-gradient(#0e13186b, #0e1318b3), url('/images/landing/chess-pieces-background.webp') center / cover; }
 .landing-finish h2 { font-size: 40px; margin: 0 0 16px; }
 .landing-membership { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; text-align: left; background: #293346f5; border-radius: 24px; padding: 38px; max-width: 900px; margin: 40px auto 0; }
 .landing-membership h3 { font-size: 28px; letter-spacing: -.02em; }

@@ -3429,6 +3429,12 @@
   pointer-events: none;
 }
 
+/* These built-in pieces have invalid inline fills that can survive SVG reuse. */
+.ot-container [data-boardid] [data-squareid] [data-testid^="bR-"] > svg > g > svg > g,
+.ot-container [data-boardid] [data-squareid] [data-testid^="bQ-"] > svg > g > svg > g {
+  fill: #000 !important;
+}
+
 .ot-wrong-move-marker {
   position: absolute;
   transform: translate(-50%, -50%);

@@ -19,6 +19,27 @@ const LEARN_STORAGE_KEY = "notation_trainer_learn_progress_v1";
 const OPENINGS = OPENING_CATALOG;
 const _previewFenCache = new Map();
 const PREVIEW_PLIES = 6;
+
+const OpeningThumbnail = React.memo(function OpeningThumbnail({ opening, boardTheme }) {
+  const frame = React.useRef(null);
+  const [visible, setVisible] = React.useState(() => typeof window.IntersectionObserver !== "function");
+
+  React.useEffect(() => {
+    if (visible) return undefined;
+    const observer = new window.IntersectionObserver((entries) => {
+      if (!entries.some((entry) => entry.isIntersecting)) return;
+      observer.disconnect();
+      setVisible(true);
+    }, { rootMargin: "320px" });
+    observer.observe(frame.current);
+    return () => observer.disconnect();
+  }, [visible]);
+
+  return <div className="home-opening-thumb" ref={frame} aria-hidden="true">
+    {visible && <Chessboard width={160} position={opening.position && opening.position !== "start" ? opening.position : _getPreviewFenForOpening(opening)} orientation={opening.orientation || "white"} showNotation={false} draggable={false} {...(BOARD_THEMES[boardTheme] || BOARD_THEMES[DEFAULT_THEME])} />}
+  </div>;
+});
+
 function _tokenizePgnLike(text) {
   if (!text) return [];
   const s = String(text).trim();
@@ -309,7 +330,7 @@ class Home extends Component {
     const prestige = _getOpeningPrestigeCount(this.state.progress, opening.key);
     const side = opening.orientation === "black" ? "Black" : "White";
     return <Link className="home-opening-card" key={opening.key} to={`/openings?opening=${encodeURIComponent(opening.key)}`}>
-      <div className="home-opening-thumb" aria-hidden="true"><Chessboard width={160} position={opening.position && opening.position !== "start" ? opening.position : _getPreviewFenForOpening(opening)} orientation={opening.orientation || "white"} showNotation={false} draggable={false} {...(BOARD_THEMES[this.state.boardTheme] || BOARD_THEMES[DEFAULT_THEME])} /></div>
+      <OpeningThumbnail opening={opening} boardTheme={this.state.boardTheme} />
       <div className="home-opening-copy"><h3>{opening.title}</h3><p>{opening.description}</p><span className="home-opening-side">{side}</span>
         <div className="home-opening-progress"><span>{stats.completed}/{stats.total} learned</span><div><i style={{ width: `${Math.min(100, stats.completed / stats.total * 100)}%` }} /></div></div>
         {prestige > 0 && <span className="home-opening-prestige">Prestige {_toRomanNumeral(prestige)}</span>}

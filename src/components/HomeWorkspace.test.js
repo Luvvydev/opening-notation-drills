@@ -80,6 +80,30 @@ test('guest homepage shows the full opening library without a separate puzzle sh
   expect(screen.getByText(/Enter your username, select a game/)).toBeTruthy();
 });
 
+test('opening cards reserve space and mount their preview boards near the viewport', () => {
+  const originalObserver = window.IntersectionObserver;
+  const callbacks = new Map();
+  window.IntersectionObserver = function (callback) {
+    this.observe = (element) => callbacks.set(element, callback);
+    this.disconnect = jest.fn();
+  };
+  try {
+    const screen = render(<MemoryRouter initialEntries={['/openings/library']}><Route path="/openings/library" component={Home} /></MemoryRouter>);
+    const thumbnails = screen.container.querySelectorAll('.home-opening-thumb');
+    expect(thumbnails).toHaveLength(25);
+    expect(screen.queryAllByTestId('demo-board')).toHaveLength(0);
+    const showThumbnail = callbacks.get(thumbnails[0]);
+    act(() => showThumbnail([{ isIntersecting: false }]));
+    expect(screen.queryAllByTestId('demo-board')).toHaveLength(0);
+    act(() => showThumbnail([{ isIntersecting: true }]));
+    expect(thumbnails[0].querySelector('[data-testid="demo-board"]')).toBeTruthy();
+    expect(screen.getAllByTestId('demo-board')).toHaveLength(1);
+    screen.unmount();
+  } finally {
+    window.IntersectionObserver = originalObserver;
+  }
+});
+
 test('lesson guidance hides the answer until Hint and waits before Black replies', () => {
   jest.useFakeTimers();
   const screen = render(<MemoryRouter><HomeOpeningDemo /></MemoryRouter>);

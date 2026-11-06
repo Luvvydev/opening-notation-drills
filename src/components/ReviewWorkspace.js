@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { lazy, Suspense, useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '../auth/AuthProvider';
-import GameReview from './GameReview';
+
+const GameReview = lazy(() => import('./GameReview'));
 
 // Keep this workspace mounted after its first visit. Its engine, imported game,
 // analysis and puzzle pack stay in memory while the user visits another section.
@@ -18,7 +19,14 @@ export default function ReviewWorkspace() {
     if (active) setOwner(uid);
   }, [uid, active]);
 
-  if (authLoading) return active ? <p className="workspace-review-loading" role="status">Loading your workspace…</p> : null;
+  const loading = active ? <p className="workspace-review-loading" role="status">Loading your workspace…</p> : null;
+  if (authLoading) return loading;
   if (!active && owner !== uid) return null;
-  return <div hidden={!active}><GameReview key={uid} active={active} /></div>;
+  return (
+    <div hidden={!active}>
+      <Suspense fallback={loading}>
+        <GameReview key={uid} active={active} />
+      </Suspense>
+    </div>
+  );
 }

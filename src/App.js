@@ -1,29 +1,30 @@
-import React, { useEffect } from 'react';
+import React, { lazy, Suspense, useEffect } from 'react';
 import { BrowserRouter, Route } from 'react-router-dom';
 import './App.css';
-import Home from './components/Home';
 import PublicHome from './auth/PublicHome';
-import About from './components/About';
-import Practice from './components/Practice';
-import OpeningTrainer from './components/OpeningTrainer';
 import StreakModal from './components/StreakModal';
 
 import { AuthProvider, useAuth } from './auth/AuthProvider';
 import ProtectedRoute from './auth/ProtectedRoute';
-import Login from './components/Login';
-import Signup from './components/Signup';
-import Profile from './components/Profile';
-import Leaderboards from './components/Leaderboards';
-import DiscordCallback from './components/DiscordCallback';
-import InstallAppPage from './components/InstallAppPage';
 import ReviewWorkspace from './components/ReviewWorkspace';
 import WorkspaceShell from './components/WorkspaceShell';
-import PaymentReturn from './components/PaymentReturn';
-import TrainingPage from './components/TrainingPage';
 
-import PublicProfile from './components/PublicProfile';
 import { installCloudSync } from './utils/cloudSync';
 import { trackDay2Return, trackFirstVisit, trackMembershipMilestones } from './utils/trackEvent';
+
+const Home = lazy(() => import('./components/Home'));
+const About = lazy(() => import('./components/About'));
+const Practice = lazy(() => import('./components/Practice'));
+const OpeningTrainer = lazy(() => import('./components/OpeningTrainer'));
+const Login = lazy(() => import('./components/Login'));
+const Signup = lazy(() => import('./components/Signup'));
+const Profile = lazy(() => import('./components/Profile'));
+const Leaderboards = lazy(() => import('./components/Leaderboards'));
+const DiscordCallback = lazy(() => import('./components/DiscordCallback'));
+const InstallAppPage = lazy(() => import('./components/InstallAppPage'));
+const PaymentReturn = lazy(() => import('./components/PaymentReturn'));
+const TrainingPage = lazy(() => import('./components/TrainingPage'));
+const PublicProfile = lazy(() => import('./components/PublicProfile'));
 
 function CloudSyncInstaller() {
   const { user } = useAuth();
@@ -64,42 +65,44 @@ class App extends React.Component {
             <StreakModal />
 
             <WorkspaceShell>
-            <Route exact path='/' component={PublicHome} />
-            <Route exact path='/home' component={Home} />
-            <Route exact path='/openings/library' component={Home} />
-            <Route path='/practice' component={Practice} />
-            <Route exact path='/training' component={TrainingPage} />
-            <Route
-              exact
-              path='/demo'
-              render={(props) => (
-                <OpeningTrainer
-                  {...props}
-                  location={{
-                    ...props.location,
-                    search: props.location.search || '?opening=london&demo=1'
-                  }}
-                />
-              )}
-            />
-            <Route exact path='/openings' component={OpeningTrainer} />
-            <Route path='/about' component={About} />
-            <Route path='/leaderboards' component={Leaderboards} />
-            <Route path='/install' component={InstallAppPage} />
-            <Route exact path='/payment/success' component={PaymentReturn} />
-            <Route exact path='/payment/cancel' component={PaymentReturn} />
+            <Suspense fallback={<p className="workspace-review-loading" role="status">Loading page…</p>}>
+              <Route exact path='/' component={PublicHome} />
+              <Route exact path='/home' component={Home} />
+              <Route exact path='/openings/library' component={Home} />
+              <Route path='/practice' component={Practice} />
+              <Route exact path='/training' component={TrainingPage} />
+              <Route
+                exact
+                path='/demo'
+                render={(props) => (
+                  <OpeningTrainer
+                    {...props}
+                    location={{
+                      ...props.location,
+                      search: props.location.search || '?opening=london&demo=1'
+                    }}
+                  />
+                )}
+              />
+              <Route exact path='/openings' component={OpeningTrainer} />
+              <Route path='/about' component={About} />
+              <Route path='/leaderboards' component={Leaderboards} />
+              <Route path='/install' component={InstallAppPage} />
+              <Route exact path='/payment/success' component={PaymentReturn} />
+              <Route exact path='/payment/cancel' component={PaymentReturn} />
 
-            <Route path='/discord' component={DiscordCallback} />
+              <Route path='/discord' component={DiscordCallback} />
 
-            <Route path='/login' component={Login} />
-            <Route path='/signup' component={Signup} />
+              <Route path='/login' component={Login} />
+              <Route path='/signup' component={Signup} />
 
-            {/* Public profiles (keep both routes) */}
-            <Route path='/profile/u/:username' component={PublicProfile} />
-            <Route path='/u/:username' component={PublicProfile} />
+              {/* Public profiles (keep both routes) */}
+              <Route path='/profile/u/:username' component={PublicProfile} />
+              <Route path='/u/:username' component={PublicProfile} />
 
-            {/* Private profile must be exact so it doesn't swallow /profile/u/:username */}
-            <ProtectedRoute exact path='/profile' component={Profile} />
+              {/* Private profile must be exact so it doesn't swallow /profile/u/:username */}
+              <ProtectedRoute exact path='/profile' component={Profile} />
+            </Suspense>
             <ReviewWorkspace />
             </WorkspaceShell>
           </AuthProvider>
