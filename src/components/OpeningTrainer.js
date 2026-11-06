@@ -2235,6 +2235,12 @@ onCompletedLine = () => {
   onDrop = ({ sourceSquare, targetSquare }) => {
     if (this.state.completed || this.state.viewing) return;
 
+    // A small pointer movement can turn a piece click into a drop on the same square.
+    if (sourceSquare && sourceSquare === targetSquare) {
+      this.onSquareClick(sourceSquare);
+      return;
+    }
+
     const line = this.getLine();
     if (!line) return;
 
@@ -3068,6 +3074,10 @@ tryPuzzleMove = (move) => {
 onPuzzleDrop = ({ sourceSquare, targetSquare, piece }) => {
   if (this.state.puzzleWrongAttempt) return null;
   if (!sourceSquare || !targetSquare || !piece) return null;
+  if (sourceSquare === targetSquare) {
+    this.onPuzzleSquareClick(sourceSquare);
+    return null;
+  }
   let promotion;
   if ((piece === "wP" && targetSquare.endsWith("8")) || (piece === "bP" && targetSquare.endsWith("1"))) {
     promotion = "q";
