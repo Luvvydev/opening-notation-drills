@@ -54,9 +54,36 @@ function AnalyticsInstaller() {
   return null;
 }
 
+class StartupErrorBoundary extends React.Component {
+  state = { failed: false };
+
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+
+  componentDidCatch(error) {
+    if (typeof window.chessdrillsRecoverStartup === 'function') {
+      window.chessdrillsRecoverStartup(error);
+    }
+  }
+
+  render() {
+    if (this.state.failed) {
+      return (
+        <div role="alert" data-startup-retry="" style={{ padding: 24, fontFamily: 'Arial, sans-serif', lineHeight: 1.5 }}>
+          <p>ChessDrills could not finish loading. Please try again.</p>
+          <button type="button" onClick={() => window.location.reload()}>Try again</button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 class App extends React.Component {
   render () {
     return (
+      <StartupErrorBoundary>
       <div className="board-container">
         <BrowserRouter>
           <AuthProvider>
@@ -108,6 +135,7 @@ class App extends React.Component {
           </AuthProvider>
         </BrowserRouter>
       </div>
+      </StartupErrorBoundary>
     );
   }
 }
