@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { unstable_batchedUpdates } from 'react-dom';
 import Chessboard from 'chessboardjsx';
 import { Link, useLocation } from 'react-router-dom';
@@ -40,6 +40,68 @@ import { isCriticalMove as classifyCriticalMove, getSacrificeCandidate as detect
 
 // chess.js 0.11 exports a constructor in the browser and { Chess } in Node.
 const Chess = ChessModule.Chess || ChessModule.default || ChessModule;
+
+// Animate review navigation on the piece element itself. chessboardjsx's own
+// position transition is disabled for review so rapid navigation cannot queue
+// competing board transitions. The animation runs on the compositor.
+function ReviewPieceMotion({ children, gameData, currentPly, fen, orientation, enabled }) {
+  const boardRef = useRef(null);
+  const previousRef = useRef(null);
+  const animationsRef = useRef([]);
+
+  useLayoutEffect(() => {
+    animationsRef.current.forEach((animation) => animation.cancel());
+    animationsRef.current = [];
+
+    const previous = previousRef.current;
+    previousRef.current = { gameData, currentPly, fen, orientation, enabled };
+    if (!enabled || !previous || !previous.enabled || previous.gameData !== gameData ||
+        previous.orientation !== orientation || previous.fen === fen ||
+        Math.abs(currentPly - previous.currentPly) !== 1 ||
+        !gameData || !gameData.moves || !boardRef.current ||
+        (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) return undefined;
+
+    const forward = currentPly > previous.currentPly;
+    const move = gameData.moves[forward ? currentPly - 1 : previous.currentPly - 1];
+    if (!move || !move.from || !move.to) return undefined;
+
+    const animatePiece = (from, to) => {
+      const source = boardRef.current.querySelector(`[data-squareid="${from}"]`);
+      const target = boardRef.current.querySelector(`[data-squareid="${to}"]`);
+      const piece = target && target.querySelector('[data-testid^="w"], [data-testid^="b"]');
+      if (!source || !target || !piece || typeof piece.animate !== 'function') return;
+
+      const sourceRect = source.getBoundingClientRect();
+      const targetRect = target.getBoundingClientRect();
+      const dx = sourceRect.left - targetRect.left;
+      const dy = sourceRect.top - targetRect.top;
+      if (!dx && !dy) return;
+
+      const animation = piece.animate([
+        { transform: `translate3d(${dx}px, ${dy}px, 0)` },
+        { transform: 'translate3d(0, 0, 0)' },
+      ], { duration: 170, easing: 'cubic-bezier(0.22, 0.75, 0.25, 1)' });
+      animationsRef.current.push(animation);
+    };
+
+    animatePiece(forward ? move.from : move.to, forward ? move.to : move.from);
+    // Castling moves both king and rook. Preserve both animations.
+    if (typeof move.flags === 'string' && /[kq]/.test(move.flags)) {
+      const rank = move.from.slice(1);
+      const kingSide = move.to.charCodeAt(0) > move.from.charCodeAt(0);
+      const rookFrom = `${kingSide ? 'h' : 'a'}${rank}`;
+      const rookTo = `${kingSide ? 'f' : 'd'}${rank}`;
+      animatePiece(forward ? rookFrom : rookTo, forward ? rookTo : rookFrom);
+    }
+    return undefined;
+  }, [gameData, currentPly, fen, orientation, enabled]);
+
+  useEffect(() => () => {
+    animationsRef.current.forEach((animation) => animation.cancel());
+  }, []);
+
+  return <div ref={boardRef} className={enabled ? "gr-review-piece-motion gr-review-piece-motion-active" : "gr-review-piece-motion"}>{children}</div>;
+}
 
 function ReviewConfetti({ active }) {
   if (!active) return null;
@@ -3761,10 +3823,11 @@ function GameReview({ active = true }) {
                 {!isPlayMode && !isPuzzleMode && hasLoadedGame && <EvaluationBar evaluation={displayedEvaluation} />}
                 {showPlayEvaluation && <LiveEvaluationBar fen={playFen} orientation={playOrientation} paused={playThinking} drawn={playResult === 'Game drawn.'} />}
                 <div className="gr-board-stack" style={{ width: `${boardWidth}px` }}>
+                  <ReviewPieceMotion gameData={gameData} currentPly={currentPly} fen={reviewBoardFen} orientation={effectiveBoardOrientation} enabled={!isPlayMode && !isPuzzleMode && !isReviewVariation}>
                   <Chessboard
                     key={`review-board-${isPlayMode ? playOrientation : effectiveBoardOrientation}${isPuzzleMode ? `-puzzle-${currentPuzzle?.id || puzzleIndex}` : ''}`}
                     width={boardWidth}
-                    transitionDuration={BOARD_TRANSITION_MS}
+                    transitionDuration={isPlayMode || isPuzzleMode || isReviewVariation ? BOARD_TRANSITION_MS : 0}
                     position={reviewBoardFen}
                     orientation={isPlayMode && playStarted ? playOrientation : effectiveBoardOrientation}
                     arePiecesDraggable={isPlayMode ? playStarted && !playThinking && !playResult : isPuzzleMode ? Boolean(currentPuzzle) && !explanationActive && puzzleStatus !== 'checking' && puzzleStatus !== 'solved' : hasLoadedGame && engineState !== 'analyzing-game'}
@@ -3778,6 +3841,7 @@ function GameReview({ active = true }) {
                     pieceTheme={pieceThemeUrl}
                     {...boardThemeStyles}
                   />
+                  </ReviewPieceMotion>
                   {isPlayMode ? null : isReviewVariation ? (
                     <BoardOverlay
                       move={variationFeedback && variationFeedback.cursor === reviewVariation.cursor ? variationFeedback.move : null}

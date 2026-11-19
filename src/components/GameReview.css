@@ -4535,3 +4535,12 @@
 @media (min-width: 1101px) {
   .gr-page-refresh > .topnav { display: none; }
 }
+
+/* A dedicated compositor animation handles Game Review piece navigation. */
+.gr-review-piece-motion {
+  width: 100%;
+  position: relative;
+}
+.gr-review-piece-motion-active [data-squareid] {
+  overflow: visible;
+}
