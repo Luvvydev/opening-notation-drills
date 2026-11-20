@@ -1,12 +1,35 @@
 import { httpsCallable } from "firebase/functions";
-import { functions } from "../firebase";
+import { collection, getDocsFromServer, limit, orderBy, query, where } from "firebase/firestore";
+import { db, functions } from "../firebase";
+
+export const TRAINING_POSITIONS_ADDED = "chessdrills:training-positions-added";
 
 export async function trainingRequest(data) {
   const result = await httpsCallable(functions, "trainingWorkspace")(data);
   return result.data;
 }
 
-export function buildSavedReview(game, puzzles, depth, multiPv) {
+export async function loadDueTraining(uid, now = Date.now()) {
+  const items = collection(db, "users", uid, "trainingItems");
+  const due = where("dueAtMs", "<=", now);
+  const [oldestSnapshot, newestSnapshot] = await Promise.all([
+    getDocsFromServer(query(items, due, orderBy("dueAtMs"), limit(5))),
+    getDocsFromServer(query(items, due, orderBy("dueAtMs", "desc"), limit(5)))
+  ]);
+  const oldest = oldestSnapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id }));
+  const newest = newestSnapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id }))
+    .filter((item) => !Number(item.attempts)).slice(0, 2);
+  const mixed = [oldest[0], newest[0], oldest[1], newest[1], ...oldest.slice(2)].filter(Boolean);
+  return Array.from(new Map(mixed.map((item) => [item.id, item])).values()).slice(0, 5);
+}
+
+export async function loadTrainingHistory(uid) {
+  const reviews = collection(db, "users", uid, "reviewSummaries");
+  const snapshot = await getDocsFromServer(query(reviews, orderBy("analyzedAtMs", "desc"), limit(200)));
+  return snapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id }));
+}
+
+export function buildSavedReview(game, puzzles, depth, multiPv, itemLimit = 12) {
   const headers = game.headers || {};
   return {
     gameKey: game.moves.map((move) => move.uci).join(" "),
@@ -15,7 +38,7 @@ export function buildSavedReview(game, puzzles, depth, multiPv) {
     label: (headers.White || "White") + " vs " + (headers.Black || "Black"),
     opening: game.match ? game.match.title || game.match.name || "" : "",
     puzzleCount: puzzles.length,
-    items: puzzles.slice(0, 12).map((puzzle) => ({
+    items: puzzles.slice(0, itemLimit).map((puzzle) => ({
       fen: puzzle.beforeFen, bestMove: puzzle.bestMove,
       severity: puzzle.classification, opening: puzzle.openingTitle || "",
       theme: puzzle.isCapture ? "Missed capture" : puzzle.isForcingBest ? "Forcing move" : "Missed stronger move"

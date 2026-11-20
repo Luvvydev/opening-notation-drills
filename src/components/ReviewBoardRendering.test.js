@@ -2,9 +2,15 @@ import React from 'react';
 import { fireEvent, render, waitForElement, wait } from '@testing-library/react';
 import { Link, MemoryRouter } from 'react-router-dom';
 import ReviewWorkspace from './ReviewWorkspace';
+import * as ChessModule from 'chess.js';
+import { useAuth } from '../auth/AuthProvider';
+import { trainingRequest, TRAINING_POSITIONS_ADDED } from '../training/workspace';
 import { trackEvent } from '../utils/trackEvent';
 
-jest.mock('../auth/AuthProvider', () => ({ useAuth: () => ({ user: null, authLoading: false }) }));
+jest.mock('../auth/AuthProvider', () => ({ useAuth: jest.fn() }));
+jest.mock('../training/workspace', () => ({
+  ...jest.requireActual('../training/workspace'), trainingRequest: jest.fn()
+}));
 jest.mock('../firebase', () => ({ auth: {}, db: {}, functions: {} }));
 jest.mock('./TopNav', () => () => null);
 jest.mock('../utils/trackEvent', () => ({ trackEvent: jest.fn(), getExperimentVariant: () => 'A' }));
@@ -20,6 +26,8 @@ class TestStockfish {
 }
 
 beforeEach(() => {
+  useAuth.mockReturnValue({ user: null, authLoading: false });
+  trainingRequest.mockReset();
   window.Worker = TestStockfish;
   window.matchMedia = () => ({ matches: false, addListener: jest.fn(), removeListener: jest.fn() });
   jest.spyOn(window.HTMLMediaElement.prototype, 'pause').mockImplementation(() => {});
@@ -123,3 +131,71 @@ test.each([
     window.WebAssembly = originalWasm;
   }
 });
+
+test.each(['paid', 'failure', 'free'])('completed %s review respects automatic and manual saving', async (scenario) => {
+  const membershipActive = scenario !== 'free';
+  useAuth.mockReturnValue({ user: { uid: 'player' }, membershipActive, authLoading: false });
+  const Chess = ChessModule.Chess || ChessModule.default || ChessModule;
+  const game = new Chess();
+  const pgn = '1. a3 a6 2. h3 h6 3. b3 b6 4. g3 g6 5. Bg2 Bg7 6. Nc3 Nc6 7. Rb1 Rb8 8. Bb2 Bb7 *';
+  const nextMoves = new Map();
+  pgn.split(' ').filter((token) => !token.endsWith('.') && token !== '*').forEach((san) => {
+    const fen = game.fen();
+    const move = game.move(san);
+    nextMoves.set(fen, move.from + move.to);
+  });
+  const searches = [];
+  window.Worker = class extends TestStockfish {
+    postMessage(command) {
+      if (command.startsWith('position fen ')) this.fen = command.slice('position fen '.length);
+      if (!command.startsWith('go ')) {
+        super.postMessage(command);
+        return;
+      }
+      searches.push(command);
+      const board = new Chess(this.fen);
+      const candidate = board.moves({ verbose: true }).find((move) => move.from + move.to !== nextMoves.get(this.fen));
+      const uci = candidate.from + candidate.to + (candidate.promotion || '');
+      setTimeout(() => {
+        this.onmessage({ data: `info depth 12 multipv 1 score cp 300 pv ${uci}` });
+        this.onmessage({ data: `bestmove ${uci}` });
+      }, 1);
+    }
+  };
+  if (scenario === 'failure') trainingRequest.mockRejectedValueOnce(new Error('offline'));
+  trainingRequest.mockResolvedValue({ added: 3 });
+  const notified = jest.fn();
+  window.addEventListener(TRAINING_POSITIONS_ADDED, notified);
+  const view = render(<MemoryRouter initialEntries={['/my-games']}><Link to="/">Leave review</Link><Link to="/my-games">Return to review</Link><ReviewWorkspace /></MemoryRouter>);
+  try {
+    fireEvent.click(await view.findByLabelText('Paste or upload PGN'));
+    fireEvent.change(view.getByPlaceholderText('Paste a PGN here'), { target: { value: pgn } });
+    fireEvent.click(view.getByText('Load PGN'));
+    await view.findByText(/^Open review$/i);
+    if (scenario === 'free') {
+      expect(trainingRequest).not.toHaveBeenCalled();
+      expect(view.getByLabelText('Premium required to save to Daily Training')).toBeTruthy();
+      return;
+    }
+
+    await view.findByText(scenario === 'failure' ? /Could not save this review/ : '3 positions added to Daily Training.');
+    expect(trainingRequest).toHaveBeenCalledTimes(1);
+    expect(notified).toHaveBeenCalledTimes(scenario === 'failure' ? 0 : 1);
+    const automatic = trainingRequest.mock.calls[0][0];
+    expect(automatic).toMatchObject({ action: 'save_review', review: { depth: 12, multiPv: 3, puzzleCount: 4 } });
+    expect(automatic.review.items).toHaveLength(3);
+    const searchCount = searches.length;
+
+    fireEvent.click(view.getByText('Leave review'));
+    fireEvent.click(view.getByText('Return to review'));
+    expect(trainingRequest).toHaveBeenCalledTimes(1);
+    fireEvent.click(view.getByLabelText('Save game and mistakes to Daily Training'));
+    await view.findByText('Saved to your training history.');
+    expect(trainingRequest).toHaveBeenCalledTimes(2);
+    expect(trainingRequest.mock.calls[1][0].review.items).toHaveLength(4);
+    expect(searches).toHaveLength(searchCount);
+  } finally {
+    view.unmount();
+    window.removeEventListener(TRAINING_POSITIONS_ADDED, notified);
+  }
+}, 15000);

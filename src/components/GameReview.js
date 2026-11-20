@@ -35,7 +35,7 @@ import EvaluationBar, { LiveEvaluationBar } from './EvaluationBar';
 import { clamp, getPositionLabel, getPositionWinPercentage, getResultProperty, parseEvaluationResults, uciToMoveObject } from '../review/positionEvaluation';
 import { createReviewWorkerHandle, disposeReviewWorkerHandle, LEGACY_ENGINE_PATH, sendCommandsToWorker, WASM_ENGINE_PATH } from '../review/stockfishWorker';
 import { trackEvent, getExperimentVariant } from '../utils/trackEvent';
-import { buildSavedReview, trainingRequest } from '../training/workspace';
+import { buildSavedReview, TRAINING_POSITIONS_ADDED, trainingRequest } from '../training/workspace';
 import { isCriticalMove as classifyCriticalMove, getSacrificeCandidate as detectSacrificeCandidate } from '../review/tacticalClassification';
 
 // chess.js 0.11 exports a constructor in the browser and { Chess } in Node.
@@ -1778,8 +1778,9 @@ function GameReview({ active = true }) {
   const location = useLocation();
   const { user, membershipActive, userDocLoading } = useAuth();
   const [accessMessage, setAccessMessage] = useState('');
-  const [saveStatus, setSaveStatus] = useState("");
-  const [saveBusy, setSaveBusy] = useState(false);
+  const [trainingSave, setTrainingSave] = useState(null);
+  const saveRequestsRef = useRef(new WeakSet());
+  const autoSaveAttemptedRef = useRef(null);
   const [offerDismissed, setOfferDismissed] = useState(false);
   const offerVariant = getExperimentVariant("review_pack_offer_v1");
   const authorizeReview = useCallback(async (parsed, action = 'review') => {
@@ -1916,6 +1917,8 @@ function GameReview({ active = true }) {
   });
   const hasLoadedGame = Boolean(gameData && gameData.moves && gameData.moves.length);
   const hasFullReview = Boolean(gameAnalysis && gameAnalysis.positions && gameAnalysis.positions.length);
+  const saveStatus = trainingSave && trainingSave.game === gameData ? trainingSave.message : '';
+  const saveBusy = Boolean(trainingSave && trainingSave.game === gameData && trainingSave.busy);
   // The existing component uses an explicit lint scope for its subsequent hooks.
   /* eslint-disable react-hooks/rules-of-hooks */
   useEffect(() => {
@@ -2662,6 +2665,8 @@ function GameReview({ active = true }) {
 
       const analysis = {
         positions: evaluatedPositions,
+        depth,
+        multiPv,
         accuracy: computeAccuracy(evaluatedPositions),
         acpl: computeAcpl(evaluatedPositions, enrichedMoves),
       };
@@ -2703,7 +2708,7 @@ function GameReview({ active = true }) {
     setEngineState('idle');
     setEngineError('');
     setGameAnalysis(null);
-    setSaveStatus('');
+    setTrainingSave(null);
     setOfferDismissed(false);
     setPositionEval(null);
     setGameProgress(0);
@@ -2728,19 +2733,46 @@ function GameReview({ active = true }) {
     setStatusMessage('Game loaded.');
   }, [exitReviewVariation, stopPoolSearches]);
 
-  const saveToTraining = async () => {
-    if (!user || !membershipActive || !hasFullReview || saveBusy) return;
-    setSaveBusy(true);
+  const saveToTraining = useCallback(async (game, puzzles, analysis, uid, automatic = false) => {
+    const requests = saveRequestsRef.current;
+    if (requests.has(game)) return;
+    requests.add(game);
+    setTrainingSave({ game, busy: true, message: '' });
+    let message;
     try {
-      const result = await trainingRequest({ action: 'save_review', review: buildSavedReview(gameData, puzzleQueue, depth, multiPv) });
-      setSaveStatus(result.itemLimitReached ? 'Summary saved. Your 500 position limit is full; some positions were not added.' : 'Saved to your training history.');
-      trackEvent('review_saved', { source: 'game_review' }, null, { persist: false });
+      const review = buildSavedReview(game, puzzles, analysis.depth, analysis.multiPv, automatic ? 3 : 12);
+      const result = await trainingRequest({ action: 'save_review', review });
+      if (result.added > 0) {
+        window.dispatchEvent(new CustomEvent(TRAINING_POSITIONS_ADDED, { detail: uid }));
+      }
+      if (result.itemLimitReached) {
+        message = 'Summary saved. Your 500 position limit is full; some positions were not added.';
+      } else if (automatic) {
+        message = result.added > 0
+          ? `${result.added} ${result.added === 1 ? 'position' : 'positions'} added to Daily Training.`
+          : 'Saved to Daily Training.';
+      } else {
+        message = 'Saved to your training history.';
+      }
+      trackEvent('review_saved', { source: 'game_review', automatic }, null, { persist: false });
     } catch (error) {
-      setSaveStatus(error.code === 'functions/resource-exhausted'
+      message = error.code === 'functions/resource-exhausted'
         ? 'Your 200 review summary limit is full. Existing training stays available.'
-        : 'Could not save this review. Check your connection and Premium or trial access, then retry.');
-    } finally { if (isMountedRef.current) setSaveBusy(false); }
-  };
+        : 'Could not save this review. Check your connection and Premium or trial access, then retry.';
+    } finally {
+      requests.delete(game);
+      if (isMountedRef.current) {
+        setTrainingSave((current) => current && current.game === game ? { game, busy: false, message } : current);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!user || !membershipActive || userDocLoading || !hasFullReview || !puzzleQueue.length ||
+        autoSaveAttemptedRef.current === gameAnalysis) return;
+    autoSaveAttemptedRef.current = gameAnalysis;
+    saveToTraining(gameData, puzzleQueue, gameAnalysis, user.uid, true);
+  }, [user, membershipActive, userDocLoading, hasFullReview, puzzleQueue, gameAnalysis, gameData, saveToTraining]);
 
   const preserveGuestReview = () => {
     try {
@@ -3917,7 +3949,7 @@ function GameReview({ active = true }) {
               <div className="gr-workspace-heading-actions">
                 {isCompactPractice ? <span className="gr-session-count">{puzzleIndex + 1} / {activePuzzleQueue.length}</span> : null}
                 {hasFullReview && (user && membershipActive
-                  ? <button type="button" className="gr-save-icon gr-tooltip-anchor" disabled={saveBusy || userDocLoading} onClick={saveToTraining} title="Save this game and its mistakes to Daily Training" aria-label={saveBusy ? 'Saving to Daily Training' : 'Save game and mistakes to Daily Training'} data-tooltip="Save to Daily Training"><FontAwesomeIcon icon={saveBusy ? faSpinner : faSave} spin={saveBusy} /></button>
+                  ? <button type="button" className="gr-save-icon gr-tooltip-anchor" disabled={saveBusy || userDocLoading} onClick={() => saveToTraining(gameData, puzzleQueue, gameAnalysis, user.uid)} title="Save this game and its mistakes to Daily Training" aria-label={saveBusy ? 'Saving to Daily Training' : 'Save game and mistakes to Daily Training'} data-tooltip="Save to Daily Training"><FontAwesomeIcon icon={saveBusy ? faSpinner : faSave} spin={saveBusy} /></button>
                   : !user
                     ? <Link className="gr-save-icon gr-tooltip-anchor" to="/signup?from=%2Fmy-games&source=save_review" onClick={preserveGuestReview} title="Sign up to save games and mistakes to Daily Training" aria-label="Sign up to save to Daily Training" data-tooltip="Save to Daily Training"><FontAwesomeIcon icon={faSave} /></Link>
                     : <Link className="gr-save-icon gr-tooltip-anchor" to={{ pathname: "/about", state: { from: "/my-games" } }} title="Premium required to save games and mistakes to Daily Training" aria-label="Premium required to save to Daily Training" data-tooltip="Save to Daily Training"><FontAwesomeIcon icon={faSave} /></Link>)}
