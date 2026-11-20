@@ -13,6 +13,11 @@ import "./TrainingPage.css";
 
 const Chess = ChessModule.Chess || ChessModule.default || ChessModule;
 const PatternTraining = lazy(() => import("./PatternTraining"));
+// The position after the setup move in Lichess puzzle 030iQ.
+const SAMPLE_FORK_FEN = "4r3/ppp4k/8/8/4p1NP/8/P1P3PK/8 w - - 0 46";
+const SAMPLE_FORK_MOVE = { from: "g4", to: "f6" };
+const PATTERN_INTRO = "One game might give you one shot at spotting a fork. Ten minutes of easy puzzles can give you a dozen.";
+const TRAINING_MEMBERSHIP_LINK = { pathname: "/about", state: { from: "/training" } };
 
 function MoveArrow({ move, orientation, id, correct }) {
   const center = (square) => {
@@ -359,33 +364,138 @@ function TrainingPlaceholder() {
   </div>;
 }
 
-function TrainingHub() {
+function TrainingSample({ signedIn }) {
+  const frame = useRef(null);
+  const prompt = useRef(null);
+  const [width, setWidth] = useState(0);
+  const [active, setActive] = useState(false);
+  const [selected, setSelected] = useState(null);
+  const [result, setResult] = useState(null);
+  const [feedback, setFeedback] = useState("");
+  const [fen, setFen] = useState(SAMPLE_FORK_FEN);
+  const game = useMemo(() => new Chess(fen), [fen]);
+  const canPlay = active && !result;
+
+  useLayoutEffect(() => {
+    const measure = () => setWidth(Math.floor(frame.current.clientWidth / 8) * 8 || 240);
+    measure();
+    const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(measure);
+    if (observer) observer.observe(frame.current);
+    window.addEventListener("resize", measure);
+    return () => {
+      if (observer) observer.disconnect();
+      window.removeEventListener("resize", measure);
+    };
+  }, []);
+  useEffect(() => {
+    if (active) prompt.current.focus({ preventScroll: true });
+  }, [active]);
+
+  function solve(outcome) {
+    const position = new Chess(SAMPLE_FORK_FEN);
+    position.move(SAMPLE_FORK_MOVE);
+    setFen(position.fen());
+    setSelected(null);
+    setFeedback("");
+    setResult(outcome);
+  }
+
+  function play(from, to) {
+    if (!canPlay || !to || from === to) return;
+    if (from === SAMPLE_FORK_MOVE.from && to === SAMPLE_FORK_MOVE.to) {
+      solve("correct");
+      return;
+    }
+    setSelected(null);
+    setFeedback("Try again. Look for a knight check.");
+  }
+
+  const squares = {};
+  if (selected) {
+    squares[selected] = { backgroundColor: "rgba(244,197,66,.55)" };
+    game.moves({ square: selected, verbose: true }).forEach(({ to }) => {
+      squares[to] = { boxShadow: "inset 0 0 0 3px rgba(244,197,66,.65)" };
+    });
+  }
+  if (result) {
+    squares[SAMPLE_FORK_MOVE.from] = { backgroundColor: "rgba(244,197,66,.35)" };
+    squares[SAMPLE_FORK_MOVE.to] = { backgroundColor: "rgba(244,197,66,.55)" };
+  }
+
+  return <section className="training-track training-track-patterns">
+    <div className="training-track-copy">
+      <h2>Pattern recognition</h2>
+      <p>{PATTERN_INTRO}</p>
+      {active && <div className="training-sample-instructions" role="status" ref={prompt} tabIndex={-1}>
+        {result ? <p><strong>{result === "correct" ? "Correct." : "Nf6+."}</strong> The knight checks the king and attacks the rook on e8.</p> :
+          <p><strong>White to move.</strong> {feedback || "Fork the king and rook."}</p>}
+      </div>}
+      <div className="training-preview-actions">
+        {(signedIn || result) && <Link className="training-action" to={TRAINING_MEMBERSHIP_LINK}>
+          {signedIn ? "Unlock Daily Training" : "See Premium plans"} <WorkspaceIcon name="arrow" />
+        </Link>}
+        {!active && <button className={"training-action" + (signedIn ? " training-action-secondary" : "")} type="button" aria-controls="training-sample-board" onClick={() => setActive(true)}>
+          Try a puzzle <WorkspaceIcon name="arrow" />
+        </button>}
+        {canPlay && <button className="training-action training-action-secondary" type="button" onClick={() => solve("revealed")}>Show answer</button>}
+      </div>
+    </div>
+    <div className="training-track-preview training-sample-preview" role="group" aria-label="Sample chess position" id="training-sample-board">
+      <div className="training-sample-frame" ref={frame}>
+        {width > 0 && <Chessboard width={width} position={fen} orientation="white" {...BOARD_THEMES[DEFAULT_THEME]}
+          transitionDuration={130} squareStyles={squares} draggable={canPlay}
+          allowDrag={({ piece }) => canPlay && piece.startsWith("w")}
+          onDrop={({ sourceSquare, targetSquare }) => play(sourceSquare, targetSquare)}
+          onSquareClick={(square) => {
+            if (!canPlay) return;
+            const piece = game.get(square);
+            if (square === selected) setSelected(null);
+            else if (piece && piece.color === "w") setSelected(square);
+            else if (selected) play(selected, square);
+          }}
+          onSquareRightClick={() => setSelected(null)} />}
+      </div>
+    </div>
+  </section>;
+}
+
+function TrainingHub({ preview = false, signedIn = false }) {
   const media = (process.env.PUBLIC_URL || "") + "/media/";
   return <>
     <header className="training-hub-heading">
       <h1>Daily training</h1>
     </header>
     <div className="training-track-grid">
-      <section className="training-track training-track-patterns">
+      {preview ? <TrainingSample signedIn={signedIn} /> : <section className="training-track training-track-patterns">
         <div className="training-track-copy">
           <span className="training-panel-icon"><WorkspaceIcon name="puzzles" /></span>
           <h2>Pattern recognition</h2>
-          <p>The secret to getting better at chess faster? Do the puzzles you think you’re too good for. See the same fork ten different ways and you’ll start spotting it in your own games before it costs you.</p>
+          <p>{PATTERN_INTRO}</p>
+          <details className="training-track-explainer">
+            <summary>Why easy puzzles work</summary>
+            <div>
+              <p><strong>The secret to getting better faster? Go below your usual puzzle rating.</strong></p>
+              <p>This is the actual secret. That's why I gated it behind Premium.</p>
+              <p>A hard puzzle takes five minutes to solve and you'll never see that position against a real opponent. The easy ones show you the same idea on different boards. Those forks, checks, and mates are the patterns you'll actually face in your games. Higher-rated puzzles don't train your pattern recognition for real chess. The easy ones do.</p>
+              <p>Do that every day and you'll start seeing the fork before your opponent plays it. Then you start noticing pins and hanging pieces you used to play right past. <strong>That's what getting better at chess actually looks like.</strong></p>
+            </div>
+          </details>
           <Link className="training-action" to="/training?mode=patterns">Start pattern recognition <WorkspaceIcon name="arrow" /></Link>
         </div>
         <div className="training-track-preview" aria-hidden="true">
           <img src={media + "training-pattern-preview.webp"} alt="" width="384" height="384" />
         </div>
-      </section>
+      </section>}
       <section className="training-track training-track-mistakes">
         <div className="training-track-copy">
-          <span className="training-panel-icon"><WorkspaceIcon name="review" /></span>
+          {!preview && <span className="training-panel-icon"><WorkspaceIcon name="review" /></span>}
           <h2>Practice my mistakes</h2>
-          <p>Get another shot at the moves you missed in your own games.</p>
-          <Link className="training-action training-action-secondary" to="/training?mode=mistakes">Practice my mistakes <WorkspaceIcon name="arrow" /></Link>
+          <p>{preview ? "Replay the moves you missed. Premium saves key positions from Game Review and brings them back when they're due." : "Get another shot at the moves you missed in your own games."}</p>
+          {preview ? <Link className="training-action training-action-secondary" to="/my-games">Review a game free <WorkspaceIcon name="arrow" /></Link> :
+            <Link className="training-action training-action-secondary" to="/training?mode=mistakes">Practice my mistakes <WorkspaceIcon name="arrow" /></Link>}
         </div>
-        <div className="training-track-preview" aria-hidden="true">
-          <img src={media + "training-mistakes-preview.webp"} alt="" width="384" height="384" />
+        <div className="training-track-preview" aria-hidden={preview ? undefined : true}>
+          <img src={media + "training-mistakes-preview.webp"} alt={preview ? "Example Game Review position with the missed move marked." : ""} width="384" height="384" />
         </div>
       </section>
     </div>
@@ -412,38 +522,8 @@ export default function TrainingPage() {
       {mode !== "patterns" && <TrainingHistory key={"history-" + user.uid} uid={user.uid} />}
     </div>;
   }
-  return <div className="training-page">
-      <header className="training-heading"><h1>Daily training</h1></header>
-      <section className="training-landing" aria-label="Daily training introduction">
-        <div className="training-landing-copy">
-          <div className="training-overline"><span className="training-live-dot" /> YOUR PERSONAL CHESS WORKOUT</div>
-          <h2>Make your mistakes <em>worth something.</em></h2>
-          <p>Review your games, find the moves you missed, and build a practice routine around your own positions.</p>
-          <div className="training-landing-actions">
-            <Link className="training-action training-action-main" to="/my-games"><WorkspaceIcon name="review" /> Review a game free</Link>
-            <Link className="training-action training-action-outline" to={!user ? "/signup?from=%2Ftraining&source=training" : "/about"}>{!user ? "Create free account" : "Unlock Daily Training"}<WorkspaceIcon name="arrow" /></Link>
-          </div>
-          <div className="training-landing-note">{!user ? "No account required to review a game or practice its mistakes." : "Game review is free. Saved daily practice is included with Premium."}</div>
-        </div>
-        <div className="training-preview" aria-label="Example daily training dashboard">
-          <div className="training-preview-top"><span className="training-preview-title"><WorkspaceIcon name="puzzles" /> YOUR TRAINING PLAN</span><span className="training-preview-example">PREVIEW</span></div>
-          <div className="training-preview-progress"><span>Today's practice</span><strong>3 positions</strong></div>
-          <div className="training-preview-track" aria-hidden="true"><span /><span /><span /></div>
-          <div className="training-preview-lesson"><div className="training-preview-symbol">?</div><div><strong>Find the stronger move</strong><small>Turn your last blunder into a puzzle</small></div><span className="training-preview-tag">01</span></div>
-          <div className="training-preview-lesson"><div className="training-preview-symbol training-preview-symbol-green"><WorkspaceIcon name="openings" /></div><div><strong>Practice an opening</strong><small>Repeat the lines that need work</small></div><span className="training-preview-tag">02</span></div>
-          <div className="training-preview-lesson"><div className="training-preview-symbol training-preview-symbol-purple"><WorkspaceIcon name="review" /></div><div><strong>Review your progress</strong><small>See what keeps showing up in your games</small></div><span className="training-preview-tag">03</span></div>
-          <div className="training-preview-footer">Example of a personalized session</div>
-        </div>
-      </section>
-      <section className="training-feature-grid" aria-label="How Daily Training works">
-        <div className="training-feature"><span>01 <WorkspaceIcon name="review" /></span><h3>Review</h3><p>Import a game and find the positions that matter.</p></div>
-        <div className="training-feature"><span>02 <WorkspaceIcon name="puzzles" /></span><h3>Practice</h3><p>Play the better move instead of just reading about it.</p></div>
-        <div className="training-feature"><span>03 <WorkspaceIcon name="openings" /></span><h3>Repeat</h3><p>Build consistency with saved positions and recurring themes.</p></div>
-      </section>
-      <section className="training-membership-strip">
-        <div><strong>{user ? "Keep your training in one place" : "Start for free. Save your progress when you're ready."}</strong><p>{user ? "Saved sessions, opening progress and history are available with Premium." : "Free game review and mistake practice are available without signing in."}</p></div>
-        <Link className="training-action training-action-secondary" to={{ pathname: "/about", state: { from: "/training" } }}>See Premium features <WorkspaceIcon name="arrow" /></Link>
-      </section>
+  return <div className="training-page training-page-hub training-page-preview">
+    <TrainingHub preview signedIn={Boolean(user)} />
     {user && <TrainingHistory key={"history-" + user.uid} uid={user.uid} />}
   </div>;
 }

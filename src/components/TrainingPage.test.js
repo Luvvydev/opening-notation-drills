@@ -40,7 +40,22 @@ beforeEach(() => {
 test("guests see the paid offer while review stays available without signup", () => {
   useAuth.mockReturnValue({ user: null, membershipActive: false });
   const screen = render(<MemoryRouter initialEntries={["/training?mode=mistakes"]}><TrainingPage /></MemoryRouter>);
-  expect(screen.getByRole("heading", { name: /Make your mistakes/ })).toBeTruthy();
+  expect(screen.getByRole("heading", { name: "Pattern recognition" })).toBeTruthy();
+  expect(screen.getByRole("heading", { name: "Practice my mistakes" })).toBeTruthy();
+  expect(screen.getByRole("link", { name: "Review a game free" }).getAttribute("href")).toBe("/my-games");
+  expect(mockBoard.draggable).toBe(false);
+  fireEvent.click(screen.getByRole("button", { name: "Try a puzzle" }));
+  expect(mockBoard.draggable).toBe(true);
+  expect(screen.queryByRole("link", { name: "See Premium plans" })).toBeNull();
+  const original = mockBoard.position;
+  act(() => mockBoard.onDrop({ sourceSquare: "g4", targetSquare: "e3" }));
+  expect(screen.getByText(/Try again/)).toBeTruthy();
+  expect(mockBoard.position).toBe(original);
+  act(() => mockBoard.onDrop({ sourceSquare: "g4", targetSquare: "f6" }));
+  expect(screen.getByText("Correct.")).toBeTruthy();
+  expect(mockBoard.position).not.toBe(original);
+  expect(mockBoard.draggable).toBe(false);
+  expect(screen.getByRole("link", { name: "See Premium plans" }).getAttribute("href")).toBe("/about");
   expect(loadDueTraining).not.toHaveBeenCalled();
   expect(loadTrainingHistory).not.toHaveBeenCalled();
   expect(trainingRequest).not.toHaveBeenCalled();
@@ -62,6 +77,11 @@ test("revealing a move records a failed attempt", async () => {
 test("expired accounts retain history without enabling saved puzzle writes", async () => {
   useAuth.mockReturnValue({ user: { uid: "expired" }, userDoc: {}, membershipActive: false });
   const screen = render(<MemoryRouter initialEntries={["/training?mode=mistakes"]}><TrainingPage /></MemoryRouter>);
+  expect(screen.getByRole("link", { name: "Unlock Daily Training" }).getAttribute("href")).toBe("/about");
+  fireEvent.click(screen.getByRole("button", { name: "Try a puzzle" }));
+  fireEvent.click(screen.getByRole("button", { name: "Show answer" }));
+  expect(screen.getByText("Nf6+.")).toBeTruthy();
+  expect(mockBoard.draggable).toBe(false);
   const history = screen.getByText("Review history").parentElement;
   expect(loadTrainingHistory).not.toHaveBeenCalled();
   history.open = true;
@@ -69,8 +89,8 @@ test("expired accounts retain history without enabling saved puzzle writes", asy
   await waitForElement(() => screen.getByText("No saved reviews yet."));
   expect(loadTrainingHistory).toHaveBeenCalledWith("expired");
   expect(loadDueTraining).not.toHaveBeenCalled();
-  expect(screen.queryByText("Saved board")).toBeNull();
-  expect(screen.getByText(/Saved sessions, opening progress and history/)).toBeTruthy();
+  expect(screen.queryByRole("button", { name: "Next puzzle" })).toBeNull();
+  expect(trainingRequest).not.toHaveBeenCalled();
 });
 
 test("new members see one useful starter panel instead of empty statistics and history", async () => {

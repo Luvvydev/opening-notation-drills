@@ -38,6 +38,12 @@ a:hover {
   padding: 18px;
 }
 
+/* chessboardjsx's built-in black rooks and queens declare an invalid SVG fill. */
+[data-testid^="bR-"] > svg > g > svg > g,
+[data-testid^="bQ-"] > svg > g > svg > g {
+  fill: #000 !important;
+}
+
 /* For chessboardjsx notation font */
 div[data-testid=bottom-left-a],
 div[data-testid=bottom-left-h],
