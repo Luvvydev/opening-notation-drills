@@ -1,5 +1,5 @@
-import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import React, { lazy, Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 import Chessboard from "chessboardjsx";
 import * as ChessModule from "chess.js";
 import { useAuth } from "../auth/AuthProvider";
@@ -12,6 +12,7 @@ import { loadSettings } from "./openingTrainer/otStorage";
 import "./TrainingPage.css";
 
 const Chess = ChessModule.Chess || ChessModule.default || ChessModule;
+const PatternTraining = lazy(() => import("./PatternTraining"));
 
 function MoveArrow({ move, orientation, id, correct }) {
   const center = (square) => {
@@ -358,12 +359,60 @@ function TrainingPlaceholder() {
   </div>;
 }
 
+function TrainingHub() {
+  const media = (process.env.PUBLIC_URL || "") + "/media/";
+  return <>
+    <header className="training-hub-heading">
+      <h1>Daily training</h1>
+    </header>
+    <div className="training-track-grid">
+      <section className="training-track training-track-patterns">
+        <div className="training-track-copy">
+          <span className="training-panel-icon"><WorkspaceIcon name="puzzles" /></span>
+          <h2>Pattern recognition</h2>
+          <p>The secret to getting better at chess faster? Do the puzzles you think you’re too good for. See the same fork ten different ways and you’ll start spotting it in your own games before it costs you.</p>
+          <Link className="training-action" to="/training?mode=patterns">Start pattern recognition <WorkspaceIcon name="arrow" /></Link>
+        </div>
+        <div className="training-track-preview" aria-hidden="true">
+          <img src={media + "training-pattern-preview.webp"} alt="" width="384" height="384" />
+        </div>
+      </section>
+      <section className="training-track training-track-mistakes">
+        <div className="training-track-copy">
+          <span className="training-panel-icon"><WorkspaceIcon name="review" /></span>
+          <h2>Practice my mistakes</h2>
+          <p>Get another shot at the moves you missed in your own games.</p>
+          <Link className="training-action training-action-secondary" to="/training?mode=mistakes">Practice my mistakes <WorkspaceIcon name="arrow" /></Link>
+        </div>
+        <div className="training-track-preview" aria-hidden="true">
+          <img src={media + "training-mistakes-preview.webp"} alt="" width="384" height="384" />
+        </div>
+      </section>
+    </div>
+  </>;
+}
+
 export default function TrainingPage() {
   const { user, membershipActive, authLoading, userDocLoading } = useAuth();
+  const location = useLocation();
+  const mode = new URLSearchParams(location.search).get("mode");
   const waiting = authLoading || (user && userDocLoading);
-  const showPractice = Boolean(user && membershipActive);
-  return <div className={`training-page${waiting || showPractice ? " training-page-practice" : ""}`}>
-    {waiting ? <TrainingPlaceholder /> : showPractice ? <DailyPractice key={user.uid} uid={user.uid} /> : <>
+  if (waiting) return <div className="training-page training-page-practice"><TrainingPlaceholder /></div>;
+  if (user && membershipActive) {
+    const training = mode === "patterns" || mode === "mistakes";
+    return <div className={`training-page ${training ? "training-page-practice" : "training-page-hub"}`}>
+      {training && <nav className="training-mode-nav" aria-label="Daily training modes">
+        <Link to="/training"><span aria-hidden="true">←</span> Daily training</Link>
+        <Link to="/training?mode=patterns" aria-current={mode === "patterns" ? "page" : undefined}>Pattern recognition</Link>
+        <Link to="/training?mode=mistakes" aria-current={mode === "mistakes" ? "page" : undefined}>My mistakes</Link>
+      </nav>}
+      {mode === "patterns" ? <Suspense fallback={<p role="status">Loading pattern puzzles…</p>}>
+        <PatternTraining key={user.uid} uid={user.uid} />
+      </Suspense> : mode === "mistakes" ? <DailyPractice key={user.uid} uid={user.uid} /> : <TrainingHub />}
+      {mode !== "patterns" && <TrainingHistory key={"history-" + user.uid} uid={user.uid} />}
+    </div>;
+  }
+  return <div className="training-page">
       <header className="training-heading"><h1>Daily training</h1></header>
       <section className="training-landing" aria-label="Daily training introduction">
         <div className="training-landing-copy">
@@ -395,8 +444,6 @@ export default function TrainingPage() {
         <div><strong>{user ? "Keep your training in one place" : "Start for free. Save your progress when you're ready."}</strong><p>{user ? "Saved sessions, opening progress and history are available with Premium." : "Free game review and mistake practice are available without signing in."}</p></div>
         <Link className="training-action training-action-secondary" to={{ pathname: "/about", state: { from: "/training" } }}>See Premium features <WorkspaceIcon name="arrow" /></Link>
       </section>
-    </>}
-
-    {!waiting && user && <TrainingHistory key={"history-" + user.uid} uid={user.uid} />}
+    {user && <TrainingHistory key={"history-" + user.uid} uid={user.uid} />}
   </div>;
 }

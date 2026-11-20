@@ -32,7 +32,8 @@ export default function WorkspaceShell({ children }) {
   const toggle = useRef(null);
   const landing = pathname === '/';
   const reviewing = ['/my-games', '/review'].includes(pathname);
-  const training = pathname === '/training' && user && membershipActive;
+  const trainingMode = pathname === '/training' ? new URLSearchParams(location.search).get('mode') : null;
+  const training = Boolean(user && membershipActive && ['patterns', 'mistakes'].includes(trainingMode));
   const boardWorkspace = reviewing || training || pathname === '/openings' || pathname === '/demo';
   const activeMode = reviewMode;
 
@@ -53,7 +54,7 @@ export default function WorkspaceShell({ children }) {
       window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
     });
     return () => window.cancelAnimationFrame(frame);
-  }, [boardWorkspace, pathname]);
+  }, [boardWorkspace, pathname, trainingMode]);
 
   useEffect(() => {
     // Existing trainers listen for resize; recalculate after the rail changes width.

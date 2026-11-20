@@ -226,3 +226,130 @@
   .training-page { padding-inline: 12px; }
   .training-page.training-page-practice { padding-top: 14px; }
 }
+
+.training-page.training-page-hub {
+  max-width: 1720px;
+  padding: clamp(24px, 4.5vh, 52px) clamp(16px, 3vw, 44px) 44px;
+}
+.training-hub-heading { margin-bottom: clamp(16px, 2.5vw, 28px); }
+.training-page .training-hub-heading h1 { font-size: clamp(32px, 4vw, 54px); }
+.training-track-grid { display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr); gap: clamp(12px, 2vw, 24px); }
+.training-track {
+  --track-accent: #dcc06a;
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, .66fr);
+  align-items: center;
+  gap: clamp(12px, 1.4vw, 24px);
+  min-width: 0;
+  min-height: clamp(300px, 28vw, 405px);
+  padding: clamp(21px, 2.5vw, 37px);
+  overflow: hidden;
+  border: 1px solid #54452c;
+  border-radius: 15px;
+  background: radial-gradient(ellipse at 95% 0, #382d1e, transparent 68%), #15191f;
+}
+.training-track-mistakes {
+  --track-accent: #a2c9cc;
+  border-color: #32444b;
+  background: radial-gradient(ellipse at 95% 0, #20363e, transparent 68%), #15191f;
+}
+.training-track-copy { display: flex; flex-direction: column; align-self: stretch; align-items: flex-start; gap: 11px; min-width: 0; }
+.training-track .training-panel-icon { color: var(--track-accent); margin-bottom: 3px; }
+.training-page .training-track h2 { font-size: clamp(24px, 2.05vw, 35px); line-height: 1.12; font-weight: 740; letter-spacing: -.04em; }
+.training-track p { max-width: 40ch; color: #c0c8d1; font-size: clamp(14px, 1.08vw, 17px); }
+.training-track .training-action { min-height: 46px; margin-top: auto; font-size: 14px; white-space: normal; text-align: center; }
+.training-track-preview {
+  position: relative;
+  justify-self: end;
+  width: 100%;
+  max-width: 310px;
+  aspect-ratio: 1;
+  padding: 5px;
+  border: 1px solid #46515d;
+  border-radius: 9px;
+  background: #141a21;
+  box-shadow: 0 14px 28px rgba(0,0,0,.35);
+}
+.training-track-preview img { display: block; width: 100%; height: auto; border-radius: 5px; }
+.training-page-hub .training-history { margin-top: 24px; }
+.training-mode-nav { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 14px; margin-bottom: 12px; }
+.training-mode-nav a { display: inline-flex; align-items: center; gap: 5px; padding: 6px 9px; color: #aab3bf; border-radius: 6px; font-size: 13px; }
+.training-mode-nav a:first-child { padding-left: 0; }
+.training-mode-nav a[aria-current="page"] { color: #f4c542; background: #252319; }
+.pattern-setup {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(16px, 3vw, 44px);
+  padding: clamp(18px, 3.5vw, 44px);
+  border: 1px solid #303842;
+  border-radius: 14px;
+  background: #14191f;
+}
+.pattern-setup-main, .pattern-guide { min-width: 0; }
+.training-page .pattern-setup h1 { font-size: clamp(30px, 4vw, 52px); }
+.training-page .pattern-quick-start { margin-top: 8px; color: #c1cad4; font-size: 16px; }
+.pattern-form { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 24px; }
+.pattern-form label { min-width: 0; display: grid; gap: 7px; font-size: 13px; color: #c1cad4; }
+.pattern-form select { width: 100%; min-height: 46px; padding: 7px 8px; color: #edf0f4; background: #0c1015; border: 1px solid #414a57; border-radius: 6px; font: inherit; }
+.training-page .pattern-form button { grid-column: 1 / -1; min-height: 49px; font-size: 15px; }
+.pattern-setup-foot { display: flex; flex-wrap: wrap; align-items: baseline; gap: 7px 14px; margin-top: 16px; color: #aab3bf; font-size: 12px; }
+.pattern-setup-foot summary { cursor: pointer; }
+.pattern-setup-foot details[open] { flex: 1 0 100%; }
+.pattern-setup-foot p { margin-top: 6px; max-width: 46ch; }
+.pattern-guide-video { display: block; width: 100%; aspect-ratio: 16 / 9; border-radius: 9px; background: #0b0e11; }
+.training-page .pattern-guide-cover {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 0;
+  overflow: hidden;
+  border-color: #383e48;
+  border-radius: 9px;
+  background: #0b0e11;
+  text-align: left;
+}
+.pattern-guide-cover img { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; }
+.pattern-guide-label {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 12px;
+  min-height: 44px;
+  color: #edf0f4;
+  background: #191f26;
+  font-size: 14px;
+}
+.pattern-guide-label > span { color: #f4c542; }
+.pattern-guide-label small { margin-left: auto; color: #aab3bf; font-size: 12px; }
+.pattern-guide-cover:hover .pattern-guide-label { background: #252d36; }
+.pattern-session-meta { display: flex; justify-content: space-between; align-items: center; gap: 12px; color: #aab3bf; font-size: 13px; font-variant-numeric: tabular-nums; }
+.pattern-summary { margin: 0 auto 14px; }
+.training-board-stage.training-pattern-board { grid-template-columns: minmax(0, 1fr); }
+.training-pattern-board .training-board-frame { grid-column: 1; }
+.pattern-session-meta { margin-top: 15px; }
+.pattern-utility { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0; }
+
+@media (max-width: 1100px) {
+  .pattern-setup { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .pattern-guide-cover img { display: none; }
+}
+@media (max-width: 1170px) {
+  .training-track-grid { grid-template-columns: minmax(0, 1fr); }
+  .training-track { min-height: 0; grid-template-columns: minmax(0, 1fr) minmax(0, .42fr); }
+  .training-track-preview { max-width: 236px; }
+}
+@media (max-width: 520px) {
+  .training-track { grid-template-columns: minmax(0, 1fr); }
+  .training-track-copy { z-index: 1; }
+  .training-track-preview { position: absolute; right: -42px; top: -38px; width: 180px; opacity: .11; transform: rotate(-12deg); }
+  .training-track p { max-width: 32ch; }
+}
+@media (max-width: 440px) {
+  .training-mode-nav { gap: 4px; }
+  .training-mode-nav a { font-size: 11px; padding-inline: 6px; }
+  .pattern-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pattern-form label:last-of-type { grid-column: 1 / -1; }
+}

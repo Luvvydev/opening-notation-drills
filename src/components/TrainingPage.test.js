@@ -39,14 +39,14 @@ beforeEach(() => {
 });
 test("guests see the paid offer while review stays available without signup", () => {
   useAuth.mockReturnValue({ user: null, membershipActive: false });
-  const screen = render(<MemoryRouter><TrainingPage /></MemoryRouter>);
+  const screen = render(<MemoryRouter initialEntries={["/training?mode=mistakes"]}><TrainingPage /></MemoryRouter>);
   expect(screen.getByRole("heading", { name: /Make your mistakes/ })).toBeTruthy();
   expect(loadDueTraining).not.toHaveBeenCalled();
   expect(loadTrainingHistory).not.toHaveBeenCalled();
   expect(trainingRequest).not.toHaveBeenCalled();
 });
 test("a correct saved move records an attempt and updates progress", async () => {
-  const screen = render(<MemoryRouter><TrainingPage /></MemoryRouter>);
+  const screen = render(<MemoryRouter initialEntries={["/training?mode=mistakes"]}><TrainingPage /></MemoryRouter>);
   await waitForElement(() => screen.getByRole("heading", { name: "White to move" }));
   await act(async () => { mockBoard.onDrop({ sourceSquare: "e2", targetSquare: "e4" }); });
   expect(screen.getByText("Correct")).toBeTruthy();
@@ -54,14 +54,14 @@ test("a correct saved move records an attempt and updates progress", async () =>
   expect(screen.getByRole("progressbar", { name: "Session progress" }).getAttribute("aria-valuenow")).toBe("1");
 });
 test("revealing a move records a failed attempt", async () => {
-  const screen = render(<MemoryRouter><TrainingPage /></MemoryRouter>);
+  const screen = render(<MemoryRouter initialEntries={["/training?mode=mistakes"]}><TrainingPage /></MemoryRouter>);
   await waitForElement(() => screen.getByRole("heading", { name: "White to move" }));
   await act(async () => { fireEvent.click(screen.getByText("Show answer")); });
   expect(trainingRequest.mock.calls.find(([data]) => data.action === "attempt")[0].correct).toBe(false);
 });
 test("expired accounts retain history without enabling saved puzzle writes", async () => {
   useAuth.mockReturnValue({ user: { uid: "expired" }, userDoc: {}, membershipActive: false });
-  const screen = render(<MemoryRouter><TrainingPage /></MemoryRouter>);
+  const screen = render(<MemoryRouter initialEntries={["/training?mode=mistakes"]}><TrainingPage /></MemoryRouter>);
   const history = screen.getByText("Review history").parentElement;
   expect(loadTrainingHistory).not.toHaveBeenCalled();
   history.open = true;
@@ -75,7 +75,7 @@ test("expired accounts retain history without enabling saved puzzle writes", asy
 
 test("new members see one useful starter panel instead of empty statistics and history", async () => {
   loadDueTraining.mockResolvedValue([]);
-  const screen = render(<MemoryRouter><TrainingPage /></MemoryRouter>);
+  const screen = render(<MemoryRouter initialEntries={["/training?mode=mistakes"]}><TrainingPage /></MemoryRouter>);
   await waitForElement(() => screen.getByRole("heading", { name: "No puzzles due" }));
   expect(screen.queryByLabelText("Training progress")).toBeNull();
   expect(screen.queryByRole("heading", { name: "Recurring themes" })).toBeNull();
@@ -86,7 +86,7 @@ test("new members see one useful starter panel instead of empty statistics and h
 
 
 test("revealed solutions keep an arrow and remove every reveal action", async () => {
-  const screen = render(<MemoryRouter><TrainingPage /></MemoryRouter>);
+  const screen = render(<MemoryRouter initialEntries={["/training?mode=mistakes"]}><TrainingPage /></MemoryRouter>);
   await waitForElement(() => screen.getByText("Show answer"));
   await act(async () => { fireEvent.click(screen.getByText("Show answer")); });
   expect(screen.getByRole("img", { name: "Solution move e2e4" })).toBeTruthy();
@@ -97,7 +97,7 @@ test("revealed solutions keep an arrow and remove every reveal action", async ()
 });
 
 test("a wrong move can reveal the solution without recording another attempt", async () => {
-  const screen = render(<MemoryRouter><TrainingPage /></MemoryRouter>);
+  const screen = render(<MemoryRouter initialEntries={["/training?mode=mistakes"]}><TrainingPage /></MemoryRouter>);
   await waitForElement(() => screen.getByText("Show answer"));
   await act(async () => { mockBoard.onDrop({ sourceSquare: "d2", targetSquare: "d4" }); });
   expect(screen.getByRole("img", { name: "Your move d2d4" })).toBeTruthy();
@@ -110,7 +110,7 @@ test("a wrong move can reveal the solution without recording another attempt", a
 
 test("board, pieces, sounds and confetti respect existing preferences", async () => {
   window.localStorage.setItem("notation_trainer_opening_settings_v1", JSON.stringify({ boardTheme: "darkblue", pieceTheme: "alpha", playSounds: false, showConfetti: false }));
-  const screen = render(<MemoryRouter><TrainingPage /></MemoryRouter>);
+  const screen = render(<MemoryRouter initialEntries={["/training?mode=mistakes"]}><TrainingPage /></MemoryRouter>);
   await waitForElement(() => screen.getByText("Show answer"));
   expect(mockBoard.darkSquareStyle.backgroundColor).toBe("#3a6ea5");
   expect(mockBoard.pieceTheme).toContain("alpha");
@@ -121,7 +121,7 @@ test("board, pieces, sounds and confetti respect existing preferences", async ()
 });
 
 test("a clean saved session celebrates once and plays move feedback", async () => {
-  const screen = render(<MemoryRouter><TrainingPage /></MemoryRouter>);
+  const screen = render(<MemoryRouter initialEntries={["/training?mode=mistakes"]}><TrainingPage /></MemoryRouter>);
   await waitForElement(() => screen.getByText("Show answer"));
   await act(async () => { mockBoard.onDrop({ sourceSquare: "e2", targetSquare: "e4" }); });
   expect(HTMLMediaElement.prototype.play).toHaveBeenCalledTimes(1);
@@ -133,7 +133,7 @@ test("a clean saved session celebrates once and plays move feedback", async () =
 
 test("duplicate saves finish the card without inflating success or celebrating", async () => {
   trainingRequest.mockResolvedValue({ duplicate: true });
-  const screen = render(<MemoryRouter><TrainingPage /></MemoryRouter>);
+  const screen = render(<MemoryRouter initialEntries={["/training?mode=mistakes"]}><TrainingPage /></MemoryRouter>);
   await waitForElement(() => screen.getByText("Show answer"));
   await act(async () => { mockBoard.onDrop({ sourceSquare: "e2", targetSquare: "e4" }); });
   expect(screen.getByText("Already recorded")).toBeTruthy();
@@ -145,7 +145,7 @@ test("duplicate saves finish the card without inflating success or celebrating",
 test("a failed save retries the same attempt and completes progress only after success", async () => {
   let attempts = 0;
   trainingRequest.mockImplementation(() => ++attempts === 1 ? Promise.reject(new Error("offline")) : Promise.resolve({ ok: true }));
-  const screen = render(<MemoryRouter><TrainingPage /></MemoryRouter>);
+  const screen = render(<MemoryRouter initialEntries={["/training?mode=mistakes"]}><TrainingPage /></MemoryRouter>);
   await waitForElement(() => screen.getByText("Show answer"));
   await act(async () => { fireEvent.click(screen.getByText("Show answer")); });
   expect(screen.getByRole("progressbar", { name: "Session progress" }).getAttribute("aria-valuenow")).toBe("0");
@@ -159,7 +159,7 @@ test("a failed save retries the same attempt and completes progress only after s
 test("black solution arrows use the flipped board coordinates", async () => {
   const blackItem = { ...item, fen: "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1", bestMove: "e7e5" };
   loadDueTraining.mockResolvedValue([blackItem]);
-  const screen = render(<MemoryRouter><TrainingPage /></MemoryRouter>);
+  const screen = render(<MemoryRouter initialEntries={["/training?mode=mistakes"]}><TrainingPage /></MemoryRouter>);
   await waitForElement(() => screen.getByText("Show answer"));
   await act(async () => { fireEvent.click(screen.getByText("Show answer")); });
   expect(mockBoard.orientation).toBe("black");
@@ -168,7 +168,7 @@ test("black solution arrows use the flipped board coordinates", async () => {
 });
 
 test("rapid repeated input submits only one attempt", async () => {
-  const screen = render(<MemoryRouter><TrainingPage /></MemoryRouter>);
+  const screen = render(<MemoryRouter initialEntries={["/training?mode=mistakes"]}><TrainingPage /></MemoryRouter>);
   await waitForElement(() => screen.getByText("Show answer"));
   const drop = mockBoard.onDrop;
   await act(async () => {
@@ -182,7 +182,7 @@ test("reduced motion suppresses confetti after a clean session", async () => {
   const previous = window.matchMedia;
   window.matchMedia = jest.fn(() => ({ matches: true }));
   try {
-    const screen = render(<MemoryRouter><TrainingPage /></MemoryRouter>);
+    const screen = render(<MemoryRouter initialEntries={["/training?mode=mistakes"]}><TrainingPage /></MemoryRouter>);
     await waitForElement(() => screen.getByText("Show answer"));
     await act(async () => { mockBoard.onDrop({ sourceSquare: "e2", targetSquare: "e4" }); });
     expect(screen.container.querySelector(".training-celebration")).toBeNull();
@@ -194,7 +194,7 @@ test("reduced motion suppresses confetti after a clean session", async () => {
 
 
 test("piece selection highlights legal destinations and clears them on deselection or completion", async () => {
-  const screen = render(<MemoryRouter><TrainingPage /></MemoryRouter>);
+  const screen = render(<MemoryRouter initialEntries={["/training?mode=mistakes"]}><TrainingPage /></MemoryRouter>);
   await waitForElement(() => screen.getByText("Show answer"));
   act(() => { mockBoard.onSquareClick("e2"); });
   expect(Object.keys(mockBoard.squareStyles).sort()).toEqual(["e2", "e3", "e4"]);
@@ -214,7 +214,7 @@ test("piece selection highlights legal destinations and clears them on deselecti
 test("legal highlights exclude pinned moves and include captures", async () => {
   const pinned = { ...item, fen: "k3r3/8/8/8/8/8/4R3/4K3 w - - 0 1", bestMove: "e2e8" };
   loadDueTraining.mockResolvedValue([pinned]);
-  const screen = render(<MemoryRouter><TrainingPage /></MemoryRouter>);
+  const screen = render(<MemoryRouter initialEntries={["/training?mode=mistakes"]}><TrainingPage /></MemoryRouter>);
   await waitForElement(() => screen.getByText("Show answer"));
   act(() => { mockBoard.onSquareClick("e2"); });
   expect(mockBoard.squareStyles.d2).toBeUndefined();
@@ -225,7 +225,7 @@ test("legal highlights exclude pinned moves and include captures", async () => {
 test("the first board loads during account sync and the next puzzle replaces it", async () => {
   useAuth.mockReturnValue({ user: { uid: "member" }, membershipActive: true, syncing: true });
   loadDueTraining.mockResolvedValue([item, { ...item, id: "b".repeat(64), bestMove: "d2d4" }]);
-  const screen = render(<MemoryRouter><TrainingPage /></MemoryRouter>);
+  const screen = render(<MemoryRouter initialEntries={["/training?mode=mistakes"]}><TrainingPage /></MemoryRouter>);
   await waitForElement(() => screen.getByText("Puzzle 1 of 2"));
   expect(screen.getAllByText("Saved board")).toHaveLength(1);
   expect(loadTrainingHistory).not.toHaveBeenCalled();
@@ -243,7 +243,7 @@ test("the first board loads during account sync and the next puzzle replaces it"
 test.each(["wrong move", "reveal", "wrong move followed by the solution"])("a %s can be replayed without changing the saved result", async (action) => {
   let finishSave;
   trainingRequest.mockImplementation(() => new Promise((resolve) => { finishSave = resolve; }));
-  const screen = render(<MemoryRouter><TrainingPage /></MemoryRouter>);
+  const screen = render(<MemoryRouter initialEntries={["/training?mode=mistakes"]}><TrainingPage /></MemoryRouter>);
   await waitForElement(() => screen.getByText("Show answer"));
   if (action === "reveal") fireEvent.click(screen.getByText("Show answer"));
   else {
@@ -274,7 +274,7 @@ test.each(["wrong move", "reveal", "wrong move followed by the solution"])("a %s
 
 test("an empty session refreshes when this account adds positions and keeps any active board", async () => {
   loadDueTraining.mockResolvedValueOnce([]);
-  const screen = render(<MemoryRouter><TrainingPage /></MemoryRouter>);
+  const screen = render(<MemoryRouter initialEntries={["/training?mode=mistakes"]}><TrainingPage /></MemoryRouter>);
   await waitForElement(() => screen.getByText("No puzzles due"));
   const notify = (uid) => act(() => {
     window.dispatchEvent(new CustomEvent(TRAINING_POSITIONS_ADDED, { detail: uid }));
@@ -290,7 +290,7 @@ test("an empty session refreshes when this account adds positions and keeps any 
 });
 
 test("hint highlights only the starting square and does not submit an attempt", async () => {
-  const screen = render(<MemoryRouter><TrainingPage /></MemoryRouter>);
+  const screen = render(<MemoryRouter initialEntries={["/training?mode=mistakes"]}><TrainingPage /></MemoryRouter>);
   const hint = await waitForElement(() => screen.getByRole("button", { name: "Hint" }));
   fireEvent.click(hint);
   expect(hint.getAttribute("aria-pressed")).toBe("true");
@@ -322,7 +322,7 @@ test("the left evaluation bar updates on a move and uses the board orientation",
   const blackItem = { ...item, fen: "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1", bestMove: "e7e5" };
   loadDueTraining.mockResolvedValue([blackItem]);
   sendCommandsToWorker.mockResolvedValueOnce(["info depth 12 score cp 120 pv e7e5", "bestmove e7e5"]);
-  const screen = render(<MemoryRouter><TrainingPage /></MemoryRouter>);
+  const screen = render(<MemoryRouter initialEntries={["/training?mode=mistakes"]}><TrainingPage /></MemoryRouter>);
   const bar = await waitForElement(() => screen.getByRole("progressbar", { name: "White position evaluation" }));
   expect(bar.classList.contains("is-flipped")).toBe(true);
   expect(bar.nextElementSibling.className).toBe("training-board-frame");
@@ -335,4 +335,12 @@ test("the left evaluation bar updates on a move and uses the board orientation",
   expect(createReviewWorkerHandle).toHaveBeenCalledTimes(1);
   screen.unmount();
   expect(disposeReviewWorkerHandle).toHaveBeenCalledWith(expect.objectContaining({ worker: expect.any(Object) }));
+});
+
+
+test("Premium Daily Training opens with both tracks before loading saved positions", () => {
+  const screen = render(<MemoryRouter initialEntries={["/training"]}><TrainingPage /></MemoryRouter>);
+  expect(screen.getByRole("link", { name: /Start pattern recognition/ }).getAttribute("href")).toBe("/training?mode=patterns");
+  expect(screen.getByRole("link", { name: /Practice my mistakes/ }).getAttribute("href")).toBe("/training?mode=mistakes");
+  expect(loadDueTraining).not.toHaveBeenCalled();
 });

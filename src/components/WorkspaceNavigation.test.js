@@ -75,9 +75,14 @@ test('desktop rail collapses and mobile drawer closes with Escape', () => {
   window.innerWidth = originalWidth;
 });
 
-test.each([true, false])('Daily Training uses the board workspace when practice access is %s', (membershipActive) => {
+test.each([
+  ['/training', true, false],
+  ['/training?mode=patterns', true, true],
+  ['/training?mode=mistakes', true, true],
+  ['/training?mode=patterns', false, false]
+])('Daily Training controls the board workspace at %s with access %s', (url, membershipActive, boardWorkspace) => {
   useAuth.mockReturnValue({ user: { uid: 'test-user' }, membershipActive, authLoading: false });
-  const screen = render(<MemoryRouter initialEntries={['/training']}><WorkspaceShell><p>Daily practice</p></WorkspaceShell></MemoryRouter>);
-  expect(screen.getByText('Daily practice').closest('.workspace-shell').classList.contains('is-board-workspace')).toBe(membershipActive);
+  const screen = render(<MemoryRouter initialEntries={[url]}><WorkspaceShell><p>Daily practice</p></WorkspaceShell></MemoryRouter>);
+  expect(screen.getByText('Daily practice').closest('.workspace-shell').classList.contains('is-board-workspace')).toBe(boardWorkspace);
   expect(screen.getByRole('link', { name: 'Daily Training' }).getAttribute('aria-current')).toBe('page');
 });
