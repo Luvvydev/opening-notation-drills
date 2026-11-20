@@ -1,6 +1,7 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import Chessboard from "chessboardjsx";
 import * as ChessModule from "chess.js";
+import { Link } from "react-router-dom";
 import { BOARD_THEMES, DEFAULT_THEME, PIECE_THEMES } from "../theme/boardThemes";
 import { loadSettings } from "./openingTrainer/otStorage";
 import { preparePuzzle, moveMatchesUci, uciToMove } from "./openingTrainer/puzzleUtils";
@@ -12,6 +13,7 @@ const Chess = ChessModule.Chess || ChessModule.default || ChessModule;
 const LEVELS = Object.keys(PATTERNS).map(Number);
 const SOURCE_URL = "https://database.lichess.org/#puzzles";
 const GUIDE = (process.env.PUBLIC_URL || "") + "/media/pattern-recognition-guide";
+const GUIDE_VERSION = "?v=3";
 const SOUND_FILES = { move: "move-self", reply: "move-opponent", capture: "capture", illegal: "illegal" };
 
 function PatternPosition({ raw, index, timeLeft, flipped, setFlipped, showEval, toggleEval, record, next, finish }) {
@@ -230,8 +232,9 @@ function PatternPosition({ raw, index, timeLeft, flipped, setFlipped, showEval, 
   </article>;
 }
 
-export default function PatternTraining({ uid }) {
-  const [progress, setProgress] = useState(() => patternProgress(uid, LEVELS[0]));
+export default function PatternTraining({ uid, membershipLink }) {
+  const canPractice = Boolean(uid);
+  const [progress, setProgress] = useState(() => canPractice ? patternProgress(uid, LEVELS[0]) : { level: LEVELS[0], days: 0 });
   const [level, setLevel] = useState(LEVELS.includes(progress.level) ? progress.level : LEVELS[0]);
   const [minutes, setMinutes] = useState(20);
   const [theme, setTheme] = useState("mixed");
@@ -242,6 +245,7 @@ export default function PatternTraining({ uid }) {
   const [guideOpen, setGuideOpen] = useState(false);
   const evalKey = "chessdrills.pattern.eval." + uid;
   const [showEval, setShowEval] = useState(() => {
+    if (!canPractice) return false;
     try { return window.localStorage.getItem(evalKey) === "true"; } catch (_) { return false; }
   });
   const actions = useRef({});
@@ -261,6 +265,7 @@ export default function PatternTraining({ uid }) {
   useEffect(() => { if (guideOpen && guidePlayer.current) guidePlayer.current.focus(); }, [guideOpen]);
 
   function start() {
+    if (!canPractice) return;
     const latest = patternProgress(uid, LEVELS[0]);
     const queue = createPatternQueue(PATTERNS[level], theme, latest.recent);
     if (!queue.length) return;
@@ -321,23 +326,24 @@ export default function PatternTraining({ uid }) {
         <p className="pattern-quick-start">Find the target. Check the reply.</p>
         <form className="pattern-form" onSubmit={(event) => { event.preventDefault(); start(); }}>
           <label>Difficulty
-            <select value={level} onChange={(event) => {
+            <select value={level} disabled={!canPractice} onChange={(event) => {
               setLevel(Number(event.target.value));
               setTheme("mixed");
             }}>{LEVELS.map((value) => <option key={value} value={value}>{value} to {value + 99}</option>)}</select>
           </label>
           <label>Session length
-            <select value={minutes} onChange={(event) => setMinutes(Number(event.target.value))}>
+            <select value={minutes} disabled={!canPractice} onChange={(event) => setMinutes(Number(event.target.value))}>
               <option value={5}>5 minutes</option><option value={10}>10 minutes</option><option value={20}>20 minutes</option>
             </select>
           </label>
           <label>Tactic
-            <select value={theme} onChange={(event) => setTheme(event.target.value)}>
+            <select value={theme} disabled={!canPractice} onChange={(event) => setTheme(event.target.value)}>
               {Object.entries(PATTERN_THEMES).filter(([key]) => key === "mixed" || PATTERNS[level].some((puzzle) => puzzle[4].includes(key)))
                 .map(([key, name]) => <option key={key} value={key}>{name}</option>)}
             </select>
           </label>
-          <button type="submit">Start practice</button>
+          {canPractice ? <button type="submit">Start practice</button> :
+            <Link className="training-action" to={membershipLink}>Unlock practice with Premium</Link>}
         </form>
         <div className="pattern-setup-foot">
           {progress.days > 0 && <span>{practicedToday ? "Practiced today" : `${progress.days} ${progress.days === 1 ? "day" : "days"} practiced`}</span>}
@@ -349,13 +355,13 @@ export default function PatternTraining({ uid }) {
         </div>
       </div>
       <div className="pattern-guide">
-        {guideOpen ? <video ref={guidePlayer} className="pattern-guide-video" tabIndex={0} controls autoPlay playsInline preload="metadata" poster={GUIDE + ".jpg"} aria-label="How to train pattern recognition">
-          <source src={GUIDE + ".mp4"} type="video/mp4" />
-          <track src={GUIDE + ".vtt"} kind="captions" label="English" srcLang="en" default />
-          <a href={GUIDE + ".mp4"}>Download the guide</a>
+        {guideOpen ? <video ref={guidePlayer} className="pattern-guide-video" tabIndex={0} controls autoPlay playsInline preload="metadata" poster={GUIDE + ".jpg" + GUIDE_VERSION} aria-label="How to train pattern recognition">
+          <source src={GUIDE + ".mp4" + GUIDE_VERSION} type="video/mp4" />
+          <track src={GUIDE + ".vtt" + GUIDE_VERSION} kind="captions" label="English" srcLang="en" default />
+          <a href={GUIDE + ".mp4" + GUIDE_VERSION}>Download the guide</a>
         </video> : <button className="pattern-guide-cover" type="button" onClick={() => setGuideOpen(true)}>
-          <img src={GUIDE + ".jpg"} alt="" />
-          <span className="pattern-guide-label"><span aria-hidden="true">▶︎</span> Why train this? <small>30 sec</small></span>
+          <img src={GUIDE + ".jpg" + GUIDE_VERSION} alt="" />
+          <span className="pattern-guide-label"><span aria-hidden="true">▶︎</span> Why train this? <small>2 min 3 sec</small></span>
         </button>}
       </div>
     </section>

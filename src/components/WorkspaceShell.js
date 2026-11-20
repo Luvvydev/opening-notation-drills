@@ -33,7 +33,7 @@ export default function WorkspaceShell({ children }) {
   const landing = pathname === '/';
   const reviewing = ['/my-games', '/review'].includes(pathname);
   const trainingMode = pathname === '/training' ? new URLSearchParams(location.search).get('mode') : null;
-  const training = Boolean(user && membershipActive && ['patterns', 'mistakes'].includes(trainingMode));
+  const training = trainingMode === 'patterns' || (trainingMode === 'mistakes' && Boolean(user && membershipActive));
   const boardWorkspace = reviewing || training || pathname === '/openings' || pathname === '/demo';
   const activeMode = reviewMode;
 

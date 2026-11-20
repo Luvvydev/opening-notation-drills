@@ -437,6 +437,7 @@ function TrainingSample({ signedIn }) {
         {!active && <button className={"training-action" + (signedIn ? " training-action-secondary" : "")} type="button" aria-controls="training-sample-board" onClick={() => setActive(true)}>
           Try a puzzle <WorkspaceIcon name="arrow" />
         </button>}
+        <Link className="training-action training-action-secondary" to="/training?mode=patterns">Watch the guide</Link>
         {canPlay && <button className="training-action training-action-secondary" type="button" onClick={() => solve("revealed")}>Show answer</button>}
       </div>
     </div>
@@ -507,17 +508,20 @@ export default function TrainingPage() {
   const location = useLocation();
   const mode = new URLSearchParams(location.search).get("mode");
   const waiting = authLoading || (user && userDocLoading);
+  const canPractice = Boolean(user && membershipActive);
   if (waiting) return <div className="training-page training-page-practice"><TrainingPlaceholder /></div>;
-  if (user && membershipActive) {
+  if (canPractice || mode === "patterns") {
     const training = mode === "patterns" || mode === "mistakes";
     return <div className={`training-page ${training ? "training-page-practice" : "training-page-hub"}`}>
       {training && <nav className="training-mode-nav" aria-label="Daily training modes">
         <Link to="/training"><span aria-hidden="true">←</span> Daily training</Link>
         <Link to="/training?mode=patterns" aria-current={mode === "patterns" ? "page" : undefined}>Pattern recognition</Link>
-        <Link to="/training?mode=mistakes" aria-current={mode === "mistakes" ? "page" : undefined}>My mistakes</Link>
+        {canPractice ? <Link to="/training?mode=mistakes" aria-current={mode === "mistakes" ? "page" : undefined}>My mistakes</Link> :
+          <Link to="/my-games">Game Review</Link>}
       </nav>}
       {mode === "patterns" ? <Suspense fallback={<p role="status">Loading pattern puzzles…</p>}>
-        <PatternTraining key={user.uid} uid={user.uid} />
+        <PatternTraining key={canPractice ? user.uid : "preview"} uid={canPractice ? user.uid : undefined}
+          membershipLink={{ ...TRAINING_MEMBERSHIP_LINK, state: { from: "/training?mode=patterns" } }} />
       </Suspense> : mode === "mistakes" ? <DailyPractice key={user.uid} uid={user.uid} /> : <TrainingHub />}
       {mode !== "patterns" && <TrainingHistory key={"history-" + user.uid} uid={user.uid} />}
     </div>;

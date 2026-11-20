@@ -267,7 +267,8 @@
 .pattern-form { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 24px; }
 .pattern-form label { min-width: 0; display: grid; gap: 7px; font-size: 13px; color: #c1cad4; }
 .pattern-form select { width: 100%; min-height: 46px; padding: 7px 8px; color: #edf0f4; background: #0c1015; border: 1px solid #414a57; border-radius: 6px; font: inherit; }
-.training-page .pattern-form button { grid-column: 1 / -1; min-height: 49px; font-size: 15px; }
+.training-page .pattern-form button, .training-page .pattern-form .training-action { grid-column: 1 / -1; min-height: 49px; font-size: 15px; }
+.pattern-form select:disabled { opacity: .65; }
 .pattern-setup-foot { display: flex; flex-wrap: wrap; align-items: baseline; gap: 7px 14px; margin-top: 16px; color: #aab3bf; font-size: 12px; }
 .pattern-setup-foot summary { cursor: pointer; }
 .pattern-setup-foot details[open] { flex: 1 0 100%; }

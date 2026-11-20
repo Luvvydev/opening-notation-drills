@@ -42,6 +42,7 @@ test("guests see the paid offer while review stays available without signup", ()
   const screen = render(<MemoryRouter initialEntries={["/training?mode=mistakes"]}><TrainingPage /></MemoryRouter>);
   expect(screen.getByRole("heading", { name: "Pattern recognition" })).toBeTruthy();
   expect(screen.getByRole("heading", { name: "Practice my mistakes" })).toBeTruthy();
+  expect(screen.getByRole("link", { name: "Watch the guide" }).getAttribute("href")).toBe("/training?mode=patterns");
   expect(screen.getByRole("link", { name: "Review a game free" }).getAttribute("href")).toBe("/my-games");
   expect(mockBoard.draggable).toBe(false);
   fireEvent.click(screen.getByRole("button", { name: "Try a puzzle" }));
@@ -58,6 +59,18 @@ test("guests see the paid offer while review stays available without signup", ()
   expect(screen.getByRole("link", { name: "See Premium plans" }).getAttribute("href")).toBe("/about");
   expect(loadDueTraining).not.toHaveBeenCalled();
   expect(loadTrainingHistory).not.toHaveBeenCalled();
+  expect(trainingRequest).not.toHaveBeenCalled();
+});
+test.each([null, { uid: "free" }])("visitors without Premium can watch the guide but cannot start practice (%j)", async (user) => {
+  useAuth.mockReturnValue({ user, membershipActive: false });
+  const screen = render(<MemoryRouter initialEntries={["/training?mode=patterns"]}><TrainingPage /></MemoryRouter>);
+  const watch = await waitForElement(() => screen.getByRole("button", { name: /Why train this/ }));
+  expect(screen.queryByRole("button", { name: "Start practice" })).toBeNull();
+  expect(screen.getByLabelText("Difficulty").disabled).toBe(true);
+  expect(screen.getByRole("link", { name: "Unlock practice with Premium" }).getAttribute("href")).toBe("/about");
+  expect(screen.queryByLabelText("How to train pattern recognition")).toBeNull();
+  fireEvent.click(watch);
+  expect(screen.getByLabelText("How to train pattern recognition").querySelector("source").src).toContain("pattern-recognition-guide.mp4");
   expect(trainingRequest).not.toHaveBeenCalled();
 });
 test("a correct saved move records an attempt and updates progress", async () => {
