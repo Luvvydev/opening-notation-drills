@@ -13,7 +13,7 @@ const Chess = ChessModule.Chess || ChessModule.default || ChessModule;
 const LEVELS = Object.keys(PATTERNS).map(Number);
 const SOURCE_URL = "https://database.lichess.org/#puzzles";
 const GUIDE = (process.env.PUBLIC_URL || "") + "/media/pattern-recognition-guide";
-const GUIDE_VERSION = "?v=3";
+const GUIDE_VERSION = "?v=5";
 const SOUND_FILES = { move: "move-self", reply: "move-opponent", capture: "capture", illegal: "illegal" };
 
 function PatternPosition({ raw, index, timeLeft, flipped, setFlipped, showEval, toggleEval, record, next, finish }) {
@@ -361,7 +361,7 @@ export default function PatternTraining({ uid, membershipLink }) {
           <a href={GUIDE + ".mp4" + GUIDE_VERSION}>Download the guide</a>
         </video> : <button className="pattern-guide-cover" type="button" onClick={() => setGuideOpen(true)}>
           <img src={GUIDE + ".jpg" + GUIDE_VERSION} alt="" />
-          <span className="pattern-guide-label"><span aria-hidden="true">▶︎</span> Why train this? <small>2 min 3 sec</small></span>
+          <span className="pattern-guide-label"><span aria-hidden="true">▶︎</span> Why train this? <small>2 min 29 sec</small></span>
         </button>}
       </div>
     </section>
