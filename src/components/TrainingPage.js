@@ -143,6 +143,7 @@ function SavedPosition({ item, onSaved, settings, playSound, index, total, compl
     if (prompt.current) prompt.current.focus();
   }
   if (!game) return <section className="training-start">
+    <h1>Daily training</h1>
     <p role="alert">This position could not be loaded.</p>
     <button onClick={onNext}>{index + 1 === total ? "Finish session" : "Next puzzle"}</button>
   </section>;
@@ -167,13 +168,6 @@ function SavedPosition({ item, onSaved, settings, playSound, index, total, compl
   }
   const label = index + 1 === total ? "Finish session" : "Next puzzle";
   return <article className="training-position">
-    <div className="training-prompt">
-      <div className="training-puzzle-count">Puzzle {index + 1} of {total}</div>
-      <div className="training-session-progress" role="progressbar" aria-label="Session progress" aria-valuemin={0} aria-valuemax={total} aria-valuenow={completed}>
-        <span style={{ width: (completed / total * 100) + "%" }} />
-      </div>
-      <h2 ref={prompt} tabIndex={-1}>{game.turn() === "w" ? "White" : "Black"} to move</h2>
-    </div>
     <div className="training-board-stage">
       <LiveEvaluationBar fen={fen} orientation={orientation} />
       <div ref={frame} className="training-board-frame">{width > 0 && <div className="training-board" style={{ width }}><Chessboard width={width} position={fen} orientation={orientation}
@@ -190,23 +184,33 @@ function SavedPosition({ item, onSaved, settings, playSound, index, total, compl
         {lastMove && correct && <MoveArrow move={lastMove} orientation={orientation} correct id={"training-answer-" + item.id} />}
       </div>}</div>
     </div>
-    <div className="training-controls">
-      {(message || hintSquare || solutionSan || busy || recorded === "duplicate") && <p role="status" className={correct ? "training-correct" : undefined}>
-        {solutionSan && <strong>Best move {solutionSan}</strong>}
-        {message && !answerShown && <span>{message}</span>}
-        {hintSquare && <span>Try the piece on {hintSquare}.</span>}
-        {recorded === "duplicate" && <small>Already recorded</small>}
-        {busy && <small>Saving…</small>}
-      </p>}
-      {saveFailed && <p role="alert">Attempt could not be saved.</p>}
-      <div className="training-move-actions">
-        {(!resolved || (wrongMove && !answerShown)) && <button aria-pressed={hintShown}
-          onClick={() => resolved ? retryPosition(true) : setHintShown((shown) => !shown)}>Hint</button>}
-        {!resolved && <button className="training-action-secondary" onClick={reveal}>Show answer</button>}
-        {attempt && !recorded && !busy && <button onClick={() => save(attempt)}>Retry saving attempt</button>}
-        {resolved && wrongMove && !answerShown && <button className="training-action-secondary" onClick={showSolution}>Show solution</button>}
-        {resolved && (wrongMove || answerShown) && <button className="training-action-secondary" onClick={() => retryPosition()}>Try again</button>}
-        {recorded && <button onClick={onNext}>{label}<WorkspaceIcon name="arrow" /></button>}
+    <div className="training-panel">
+      <div className="training-prompt">
+        <h1>Daily training</h1>
+        <h2 ref={prompt} tabIndex={-1}>{game.turn() === "w" ? "White" : "Black"} to move</h2>
+        <div className="training-puzzle-count">Puzzle {index + 1} of {total}</div>
+        <div className="training-session-progress" role="progressbar" aria-label="Session progress" aria-valuemin={0} aria-valuemax={total} aria-valuenow={completed}>
+          <span style={{ width: (completed / total * 100) + "%" }} />
+        </div>
+      </div>
+      <div className="training-controls">
+        {(message || hintSquare || solutionSan || busy || recorded === "duplicate") && <p role="status" className={correct ? "training-correct" : undefined}>
+          {solutionSan && <strong>Best move {solutionSan}</strong>}
+          {message && !answerShown && <span>{message}</span>}
+          {hintSquare && <span>Try the piece on {hintSquare}.</span>}
+          {recorded === "duplicate" && <small>Already recorded</small>}
+          {busy && <small>Saving…</small>}
+        </p>}
+        {saveFailed && <p role="alert">Attempt could not be saved.</p>}
+        <div className="training-move-actions">
+          {(!resolved || (wrongMove && !answerShown)) && <button aria-pressed={hintShown}
+            onClick={() => resolved ? retryPosition(true) : setHintShown((shown) => !shown)}>Hint</button>}
+          {!resolved && <button className="training-action-secondary" onClick={reveal}>Show answer</button>}
+          {attempt && !recorded && !busy && <button onClick={() => save(attempt)}>Retry saving attempt</button>}
+          {resolved && wrongMove && !answerShown && <button className="training-action-secondary" onClick={showSolution}>Show solution</button>}
+          {resolved && (wrongMove || answerShown) && <button className="training-action-secondary" onClick={() => retryPosition()}>Try again</button>}
+          {recorded && <button className="training-next" onClick={onNext}>{label}<WorkspaceIcon name="arrow" /></button>}
+        </div>
       </div>
     </div>
   </article>;
@@ -319,8 +323,9 @@ function DailyPractice({ uid }) {
     if (index > 0 && nextFocus.current) nextFocus.current.focus();
   }, [index]);
 
-  if (error) return <div className="training-start" role="alert">
-    <p>Could not load puzzles.</p>
+  if (error) return <div className="training-start">
+    <h1>Daily training</h1>
+    <p role="alert">Could not load puzzles.</p>
     <button onClick={() => setReload((value) => value + 1)}>Retry</button>
   </div>;
   if (!queue) return <TrainingPlaceholder />;
@@ -332,6 +337,7 @@ function DailyPractice({ uid }) {
         onNext={() => setIndex(index + 1)}
         onSaved={(id, correct, counted) => setResults((value) => ({ ...value, [id]: { correct, counted } }))} />
     </div> : <section className="training-start">
+      <h1>Daily training</h1>
       <h2 ref={nextFocus} tabIndex={-1}>{sessionComplete ? "Session complete" : "No puzzles due"}</h2>
       <p>{sessionComplete ? Object.values(results).filter((result) => result.correct).length + " of " + queue.length + " correct on the first try"
         : "Review a game to add mistakes automatically."}</p>
@@ -341,18 +347,24 @@ function DailyPractice({ uid }) {
 }
 
 function TrainingPlaceholder() {
-  return <div className="training-position training-loading" role="status">
+  return <div className="training-position training-loading">
     <div className="training-board-stage" aria-hidden="true"><span className="training-board-frame" /></div>
-    <span className="training-prompt">Loading puzzles…</span>
+    <div className="training-panel">
+      <div className="training-prompt">
+        <h1>Daily training</h1>
+        <p role="status">Loading puzzles…</p>
+      </div>
+    </div>
   </div>;
 }
 
 export default function TrainingPage() {
   const { user, membershipActive, authLoading, userDocLoading } = useAuth();
   const waiting = authLoading || (user && userDocLoading);
-  return <div className="training-page">
-    <header className="training-heading"><h1>Daily training</h1></header>
-    {waiting ? <TrainingPlaceholder /> : membershipActive && user ? <DailyPractice key={user.uid} uid={user.uid} /> : <>
+  const showPractice = Boolean(user && membershipActive);
+  return <div className={`training-page${waiting || showPractice ? " training-page-practice" : ""}`}>
+    {waiting ? <TrainingPlaceholder /> : showPractice ? <DailyPractice key={user.uid} uid={user.uid} /> : <>
+      <header className="training-heading"><h1>Daily training</h1></header>
       <section className="training-landing" aria-label="Daily training introduction">
         <div className="training-landing-copy">
           <div className="training-overline"><span className="training-live-dot" /> YOUR PERSONAL CHESS WORKOUT</div>

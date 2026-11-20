@@ -21,7 +21,7 @@ const navigation = [
 export default function WorkspaceShell({ children }) {
   const location = useLocation();
   const pathname = location.pathname.replace(/\/+$/, '') || '/';
-  const { user } = useAuth();
+  const { user, membershipActive } = useAuth();
   const [expanded, setExpanded] = useState(() => {
     try { return localStorage.getItem('chessdrills.sidebar.expanded') !== 'false'; } catch (_) { return true; }
   });
@@ -32,7 +32,8 @@ export default function WorkspaceShell({ children }) {
   const toggle = useRef(null);
   const landing = pathname === '/';
   const reviewing = ['/my-games', '/review'].includes(pathname);
-  const boardWorkspace = reviewing || pathname === '/openings' || pathname === '/demo';
+  const training = pathname === '/training' && user && membershipActive;
+  const boardWorkspace = reviewing || training || pathname === '/openings' || pathname === '/demo';
   const activeMode = reviewMode;
 
   useEffect(() => {
