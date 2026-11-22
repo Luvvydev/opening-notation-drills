@@ -12,7 +12,7 @@
 .home-hero-description { margin-top: 22px !important; max-width: 470px; color: #b7bdc7; font-size: clamp(14px, 1.15vw, 17px); line-height: 1.65; }
 .home-hero-actions { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; margin-top: 27px; }
 .home-primary-button { border: 1px solid #f4c542; border-radius: 6px; background: #f4c542; color: #18150e; padding: 13px 20px; min-height: 46px; display: inline-flex; align-items: center; justify-content: center; gap: 20px; font-size: 14px !important; font-weight: 700 !important; cursor: pointer; }
-.home-primary-button:hover { background: #ffda6c; border-color: #ffda6c; }
+.home-primary-button:hover { background: #ffda6c; border-color: #ffda6c; color: #18150e; }
 .home-text-link { display: inline-flex; gap: 9px; align-items: center; font-weight: 600; font-size: 13px; color: #e4c565; border: 0; padding: 0; background: transparent; cursor: pointer; }
 .home-text-link svg { width: 17px; }
 .home-text-link:hover { color: #ffe49b; }

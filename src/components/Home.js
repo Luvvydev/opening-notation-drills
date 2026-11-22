@@ -472,13 +472,13 @@ class Home extends Component {
     const resume = latest && latest.opening;
 
     return <div className="home-page home-workspace">
-      <SEO title={library ? "Opening Library | ChessDrills" : "ChessDrills | Review Games and Train Your Mistakes"} description="Review Chess.com and Lichess games, practice mistakes as puzzles, and train your chess openings." canonical={library ? "https://chessdrills.net/openings/library" : "https://chessdrills.net/"} image="https://chessdrills.net/logo512.png" />
+      <SEO title={library ? "Opening Library | ChessDrills" : "ChessDrills | Game Review and Opening Practice"} description="Review Chess.com and Lichess games, practice mistakes as puzzles, and train your chess openings." canonical={library ? "https://chessdrills.net/openings/library" : "https://chessdrills.net/home"} image="https://chessdrills.net/logo512.png" />
       {!library && <>
         <section className="home-workspace-hero" aria-labelledby="home-heading">
-          <div className="home-hero-copy"><p className="home-eyebrow">YOUR GAMES. YOUR TRAINING.</p><h1 id="home-heading">Review your games.<br />Train your mistakes.</h1>
-            <p className="home-hero-description">Review games from Chess.com or Lichess. Practice the moves you missed and build your repertoire.</p>
-            <div className="home-hero-actions"><button className="home-primary-button" type="button" onClick={() => this.goToReview()}>Review a game <WorkspaceIcon name="arrow" /></button><Link className="home-text-link" to="/openings/library">Browse openings <WorkspaceIcon name="arrow" /></Link></div>
-            <p className="home-account-note">{this.props.user ? "Your game review and personal mistake training." : "Review a game free. Practice the moves you missed."}</p>
+          <div className="home-hero-copy"><p className="home-eyebrow">YOUR GAMES. YOUR TRAINING.</p><h1 id="home-heading">Review your games.<br />Practice your openings.</h1>
+            <p className="home-hero-description">Import a game from Chess.com or Lichess, or practice an opening on the board.</p>
+            <div className="home-hero-actions"><button className="home-primary-button" type="button" onClick={() => this.goToReview()}>Review a game <WorkspaceIcon name="arrow" /></button><Link className="home-primary-button" to="/openings/library">Browse openings <WorkspaceIcon name="arrow" /></Link></div>
+            <p className="home-account-note">Unlimited game reviews and free opening lessons. No account needed.</p>
           </div>
           <HomeOpeningDemo boardTheme={this.state.boardTheme} />
         </section>
