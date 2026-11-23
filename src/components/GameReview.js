@@ -1023,20 +1023,6 @@ function getPuzzleHintText(puzzle) {
   return 'The game move was too slow. Look for the move that changes the position immediately.';
 }
 
-function getPuzzleLeadText(puzzle) {
-  if (!puzzle) return 'Load a game to start training.';
-
-  if (puzzle.classification === 'blunder') {
-    return `You played ${puzzle.playedSan}. This was the big swing in the game. ${getPuzzleGoalLabel(puzzle.classification)}.`;
-  }
-
-  if (puzzle.classification === 'mistake') {
-    return `You played ${puzzle.playedSan}. There was a cleaner move here. ${getPuzzleGoalLabel(puzzle.classification)}.`;
-  }
-
-  return `You played ${puzzle.playedSan}. There was a stronger continuation available. ${getPuzzleGoalLabel(puzzle.classification)}.`;
-}
-
 function getSpeedClassFromSeconds(totalSeconds) {
   const numeric = Number(totalSeconds || 0);
   if (!Number.isFinite(numeric) || numeric <= 0) return 'game';
@@ -1870,7 +1856,7 @@ function GameReview({ active = true }) {
   const [puzzleIndex, setPuzzleIndex] = useState(0);
   const [puzzleFen, setPuzzleFen] = useState('start');
   const [puzzleStatus, setPuzzleStatus] = useState('idle');
-  const [puzzleFeedback, setPuzzleFeedback] = useState('Load a game to start training.');
+  const [puzzleFeedback, setPuzzleFeedback] = useState('');
   const [puzzleResults, setPuzzleResults] = useState({});
   const [reviewedMistakes, setReviewedMistakes] = useState(loadReviewedMistakes);
   const [puzzleExplanation, setPuzzleExplanation] = useState(null);
@@ -1938,11 +1924,6 @@ function GameReview({ active = true }) {
   const currentPuzzleResult = currentPuzzle ? puzzleResults[currentPuzzle.id] : '';
   const solvedPuzzleCount = activePuzzleQueue.filter((puzzle) => puzzleResults[puzzle.id] === 'solved').length;
   const canOpenSingleGameViews = hasLoadedGame && trainingSource !== 'pack';
-  useEffect(() => {
-    if (solvedPuzzleCount > 0 && !membershipActive && !offerDismissed) {
-      trackEvent('premium_offer_viewed', { source: 'puzzle_complete', variant: offerVariant }, null, { persist: false });
-    }
-  }, [solvedPuzzleCount, membershipActive, offerDismissed, offerVariant]);
   // Sidebar shortcuts select a view inside the current workspace, not a new
   // GameReview instance. Opening Puzzles without data leads to its pack builder.
   useEffect(() => {
@@ -1971,6 +1952,14 @@ function GameReview({ active = true }) {
   const isPuzzleMode = sidebarMode === 'puzzles';
   const isReviewVariation = Boolean(reviewVariation) && !isPlayMode && !isPuzzleMode;
   const isCompactPractice = isPuzzleMode && activePuzzleQueue.length > 0;
+  const showPremiumOffer = solvedPuzzleCount > 0 && !membershipActive && !offerDismissed;
+  const premiumOfferVisible = showPremiumOffer && isCompactPractice && optionsOpen;
+  useEffect(() => {
+    if (premiumOfferVisible) {
+      trackEvent('premium_offer_viewed', { source: 'puzzle_complete', variant: offerVariant }, null, { persist: false });
+    }
+  }, [premiumOfferVisible, offerVariant]);
+
 
   useEffect(() => {
     setOptionsOpen(false);
@@ -1994,16 +1983,11 @@ function GameReview({ active = true }) {
     : (gameData && gameData.orientation ? gameData.orientation : orientation);
   const isFullReviewProgressActive = engineState === 'analyzing-game'
     || (hasLoadedGame && !hasFullReview && gameProgress > 0 && (autoReviewQueued || engineState === 'starting'));
-  const topProgressPercent = isFullReviewProgressActive
-    ? Math.max(4, gameProgress || 1)
-    : activePuzzleQueue.length
-      ? Math.round((solvedPuzzleCount / activePuzzleQueue.length) * 100)
-      : 0;
+  const topProgressPercent = Math.max(4, gameProgress || 1);
   const isPersonalPackPopulating = trainingSource === 'pack' && packBuilding && activePuzzleQueue.length > 0;
   const packBuildProgressText = packProgress.total
     ? `${packProgress.current}/${packProgress.total}`
     : 'working';
-  const packTrainingLabel = trainingSource === 'pack' ? 'Training from recent games' : 'Training from this game';
   const canCreateRecentPack = Boolean(remoteUsername.trim() && remoteGames.length) && !packBuilding && !remoteLoading;
   const mistakePuzzleCount = hasFullReview && trainingSource !== 'pack'
     ? puzzleQueue.filter((puzzle) => !reviewedMistakes.includes(puzzleReviewKey(puzzle))).length : 0;
@@ -2726,7 +2710,7 @@ function GameReview({ active = true }) {
     setPuzzleIndex(0);
     setPuzzleFen('start');
     setPuzzleStatus('idle');
-    setPuzzleFeedback('Game loaded. Building training spots...');
+    setPuzzleFeedback('');
     setPuzzleResults({});
     setPuzzleHintOpen(false);
     setPuzzleShowSolution(false);
@@ -2747,12 +2731,8 @@ function GameReview({ active = true }) {
       }
       if (result.itemLimitReached) {
         message = 'Summary saved. Your 500 position limit is full; some positions were not added.';
-      } else if (automatic) {
-        message = result.added > 0
-          ? `${result.added} ${result.added === 1 ? 'position' : 'positions'} added to Daily Training.`
-          : 'Saved to Daily Training.';
       } else {
-        message = 'Saved to your training history.';
+        message = automatic ? '' : 'Saved to your training history.';
       }
       trackEvent('review_saved', { source: 'game_review', automatic }, null, { persist: false });
     } catch (error) {
@@ -3222,8 +3202,8 @@ function GameReview({ active = true }) {
       const scenario = typeof scenarioOverride === 'string' ? scenarioOverride : activePlayScenario;
       const openingKey = typeof openingOverride === 'string' ? openingOverride : activePlayOpeningKey;
       const scriptedMove = openingKey
-        ? getAggressiveRepertoireReply(scenario, openingKey, game.history(), game.fen()) || getRepertoireReply(openingKey, game.history(), game.fen())
-        : getScenarioReply(scenario, game.history(), sideOverride || playOrientation);
+        ? getAggressiveRepertoireReply(scenario, openingKey, game.history(), game.fen()) || getRepertoireReply(openingKey, game.history(), game.fen(), scenario)
+        : getScenarioReply(scenario, game.history(), sideOverride || playOrientation, game.fen());
       // Give the player move a render and animation before an immediate scripted reply.
       if (scriptedMove) await waitMs(BOARD_TRANSITION_MS);
       const bestMove = scriptedMove || await getBestMoveForCurrentPosition(game.fen(), playTimeMs);
@@ -3259,7 +3239,7 @@ function GameReview({ active = true }) {
     // before displaying the game, rather than waiting for a worker response.
     if (selectedOpening && side === 'black') {
       const firstReply = getAggressiveRepertoireReply(selectedScenario, selectedOpening.key, [], nextGame.fen())
-        || getRepertoireReply(selectedOpening.key, [], nextGame.fen());
+        || getRepertoireReply(selectedOpening.key, [], nextGame.fen(), selectedScenario);
       if (firstReply && !nextGame.move(firstReply)) {
         setEngineError('Could not start the selected opening.');
         return;
@@ -3371,7 +3351,7 @@ function GameReview({ active = true }) {
     setPuzzleStatus('revealed');
     setPuzzleOutcome(currentPuzzle.id, 'failed');
     markPuzzleReviewed(currentPuzzle);
-    setPuzzleFeedback(`Best was ${currentPuzzle.bestSan}. In the game you played ${currentPuzzle.playedSan}.`);
+    setPuzzleFeedback(`Best move: ${currentPuzzle.bestSan}.`);
   }, [clearPuzzleSelection, currentPuzzle, markPuzzleReviewed, setPuzzleOutcome]);
 
   const handlePuzzleDrop = useCallback(async ({ sourceSquare, targetSquare, piece }) => {
@@ -3397,6 +3377,7 @@ function GameReview({ active = true }) {
     setPuzzleHintOpen(false);
     setPuzzleShowSolution(false);
     setPuzzleStatus('checking');
+    setPuzzleFeedback('Checking move…');
     setPuzzleFen(game.fen());
 
     const attemptedUci = moveToUci(move);
@@ -3427,7 +3408,7 @@ function GameReview({ active = true }) {
         triggerPuzzleSolvedCelebration();
         setPuzzleFeedback(
           attemptedUci === currentPuzzle.bestMove
-            ? `Best move found: ${attemptedSan}. In the game you played ${currentPuzzle.playedSan}.`
+            ? `Best move found: ${attemptedSan}.`
             : `${attemptedSan} is much better than ${currentPuzzle.playedSan}. Engine best was ${currentPuzzle.bestSan}.`
         );
         return;
@@ -3436,7 +3417,7 @@ function GameReview({ active = true }) {
       setPuzzleOutcome(currentPuzzle.id, 'failed');
       setPuzzleStatus('failed');
       setPuzzleFen(currentPuzzle.beforeFen);
-      setPuzzleFeedback(`${attemptedSan} still misses it. In the game you played ${currentPuzzle.playedSan}. Use Hint or Solution and look again.`);
+      setPuzzleFeedback(`${attemptedSan} falls short. Try again.`);
     } catch (_) {
       setPuzzleOutcome(currentPuzzle.id, 'failed');
       setPuzzleStatus('failed');
@@ -3526,16 +3507,14 @@ function GameReview({ active = true }) {
       setPuzzleStatus('idle');
       setPuzzleHintOpen(false);
       setPuzzleShowSolution(false);
-      if (trainingSource === 'pack' || hasFullReview) {
-        setPuzzleFeedback(trainingSource === 'pack' ? 'No clear training spots were found in this pack.' : 'No clear training spots were found in this game.');
-      }
+      setPuzzleFeedback('');
       return;
     }
 
     if (puzzleIndex >= activePuzzleQueue.length) {
       setPuzzleIndex(0);
     }
-  }, [activePuzzleQueue, currentPosition, hasFullReview, hasLoadedGame, puzzleIndex, trainingSource]);
+  }, [activePuzzleQueue, currentPosition, hasLoadedGame, puzzleIndex]);
 
   useEffect(() => {
     if (!currentPuzzle) return;
@@ -3545,7 +3524,7 @@ function GameReview({ active = true }) {
     setPuzzleStatus('idle');
     setPuzzleHintOpen(false);
     setPuzzleShowSolution(false);
-    setPuzzleFeedback(getPuzzleLeadText(currentPuzzle));
+    setPuzzleFeedback('');
     explanationRequestRef.current += 1;
     setPuzzleExplanation(null);
     setExplanationLoading(false);
@@ -3711,7 +3690,7 @@ function GameReview({ active = true }) {
         const viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
         const workspaceTop = workspaceRef.current ? Math.max(0, workspaceRef.current.getBoundingClientRect().top) : 80;
         // Reserve space for instructions, progress and touch controls before sizing the board.
-        const practiceCap = Math.max(160, Math.floor(viewportHeight - workspaceTop - 230));
+        const practiceCap = Math.max(160, Math.floor(viewportHeight - workspaceTop - (isCompactPractice ? 148 : 230)));
         // Let the board use the viewport, reserving only the header and progress rail.
         const desktopCap = Math.max(320, (window.innerHeight || 850) - 145);
 
@@ -3837,15 +3816,37 @@ function GameReview({ active = true }) {
         : 'start';
   const statusTone = engineState === 'error' ? 'error' : engineState === 'ready' ? 'ready' : engineState === 'idle' ? 'idle' : 'working';
 
+  const saveActionContent = (
+    <>
+      <FontAwesomeIcon icon={saveBusy ? faSpinner : faSave} spin={saveBusy} />
+      <span>{saveBusy ? 'Saving…' : 'Save to Daily Training'}</span>
+    </>
+  );
+  const saveAction = hasFullReview && (user && membershipActive
+    ? <button type="button" className="gr-option-row" disabled={saveBusy || userDocLoading} onClick={() => saveToTraining(gameData, puzzleQueue, gameAnalysis, user.uid)} title="Save this game and its mistakes to Daily Training" aria-label={saveBusy ? 'Saving to Daily Training' : 'Save game and mistakes to Daily Training'}>{saveActionContent}</button>
+    : !user
+      ? <Link className="gr-option-row" to="/signup?from=%2Fmy-games&source=save_review" onClick={preserveGuestReview} title="Sign up to save games and mistakes to Daily Training" aria-label="Sign up to save to Daily Training">{saveActionContent}</Link>
+      : <Link className="gr-option-row" to={{ pathname: "/about", state: { from: "/my-games" } }} title="Premium required to save games and mistakes to Daily Training" aria-label="Premium required to save to Daily Training">{saveActionContent}</Link>);
+  const premiumOffer = showPremiumOffer && (
+    <div className="gr-inline-offer">
+      <p>Build a practice pack from more of your games.</p>
+      <Link to={{ pathname: "/about", state: { from: "/my-games?mode=puzzles" } }}
+        onClick={() => trackEvent('premium_offer_clicked', { source: 'puzzle_complete', variant: offerVariant }, null, { persist: false })}>{offerVariant === 'B' ? 'Train mistakes from more games' : 'See Premium'}</Link>
+      <button type="button" className="gr-offer-dismiss" aria-label="Dismiss Premium suggestion" onClick={() => { setOfferDismissed(true); trackEvent('premium_offer_dismissed', { source: 'puzzle_complete', variant: offerVariant }, null, { persist: false }); }}>Not now</button>
+    </div>
+  );
+
   return (
     <div className={`gr-page gr-page-refresh${isCompactPractice ? ' gr-practice-active' : ''}${sidebarMode === 'moves' ? ' gr-moves-active' : ''}${isMobileSummary ? ' gr-mobile-summary' : ''}`}>
       <TopNav title="Game Review" hideHero />
       <div className="gr-shell gr-shell-review" style={shellProgressStyle} ref={workspaceRef}>
-        <div className="gr-top-progress-shell" aria-hidden="true">
-          <div className="gr-top-progress-track">
-            <div className="gr-top-progress-fill" />
+        {!isPlayMode && isFullReviewProgressActive && (
+          <div className="gr-top-progress-shell" aria-hidden="true">
+            <div className="gr-top-progress-track">
+              <div className="gr-top-progress-fill" />
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="gr-stage-shell">
 
@@ -3943,29 +3944,16 @@ function GameReview({ active = true }) {
           <section className="gr-panel gr-sidebar-shell" style={sidebarPanelStyle}>
             <div className="gr-sidebar-topbar">
               <div className="gr-sidebar-title-wrap">
-                <div className="gr-panel-kicker">Game Review</div>
                 <h2>{sidebarHeading}</h2>
               </div>
               <div className="gr-workspace-heading-actions">
-                {isCompactPractice ? <span className="gr-session-count">{puzzleIndex + 1} / {activePuzzleQueue.length}</span> : null}
-                {hasFullReview && (user && membershipActive
-                  ? <button type="button" className="gr-save-icon gr-tooltip-anchor" disabled={saveBusy || userDocLoading} onClick={() => saveToTraining(gameData, puzzleQueue, gameAnalysis, user.uid)} title="Save this game and its mistakes to Daily Training" aria-label={saveBusy ? 'Saving to Daily Training' : 'Save game and mistakes to Daily Training'} data-tooltip="Save to Daily Training"><FontAwesomeIcon icon={saveBusy ? faSpinner : faSave} spin={saveBusy} /></button>
-                  : !user
-                    ? <Link className="gr-save-icon gr-tooltip-anchor" to="/signup?from=%2Fmy-games&source=save_review" onClick={preserveGuestReview} title="Sign up to save games and mistakes to Daily Training" aria-label="Sign up to save to Daily Training" data-tooltip="Save to Daily Training"><FontAwesomeIcon icon={faSave} /></Link>
-                    : <Link className="gr-save-icon gr-tooltip-anchor" to={{ pathname: "/about", state: { from: "/my-games" } }} title="Premium required to save games and mistakes to Daily Training" aria-label="Premium required to save to Daily Training" data-tooltip="Save to Daily Training"><FontAwesomeIcon icon={faSave} /></Link>)}
+                {isCompactPractice ? <span className="gr-session-count" aria-label={`Puzzle ${puzzleIndex + 1} of ${activePuzzleQueue.length}`}>{puzzleIndex + 1} / {activePuzzleQueue.length}</span> : null}
                 <button type="button" className="gr-button gr-options-toggle" onClick={() => setOptionsOpen((value) => !value)} aria-expanded={optionsOpen} aria-controls="gr-workspace-options">Options</button>
               </div>
             </div>
             {sidebarMode !== 'play' && (
               <div className="gr-session-tools">
                 {accessMessage && <div className="gr-inline-notice" role="status"><p>{accessMessage}</p><Link to={{ pathname: "/about", state: { from: "/my-games?mode=puzzles" } }}>View Premium</Link></div>}
-                {saveStatus && <p className="gr-save-status" role="status">{saveStatus}</p>}
-                {solvedPuzzleCount > 0 && !membershipActive && !offerDismissed && <div className="gr-inline-offer">
-                  <p>Build a practice pack from more of your games.</p>
-                  <Link to={{ pathname: "/about", state: { from: "/my-games?mode=puzzles" } }}
-                    onClick={() => trackEvent('premium_offer_clicked', { source: 'puzzle_complete', variant: offerVariant }, null, { persist: false })}>{offerVariant === 'B' ? 'Train mistakes from more games' : 'See Premium'}</Link>
-                  <button type="button" className="gr-offer-dismiss" aria-label="Dismiss Premium suggestion" onClick={() => { setOfferDismissed(true); trackEvent('premium_offer_dismissed', { source: 'puzzle_complete' }, null, { persist: false }); }}>Not now</button>
-                </div>}
               </div>
             )}
             {optionsOpen ? (
@@ -4066,21 +4054,71 @@ function GameReview({ active = true }) {
                     )}
                   </div>
                 ) : null}
-                {isCompactPractice ? (
-                  <section className="gr-view-section gr-puzzle-build-pack">
-                    <div className="gr-puzzle-build-topline">
-                      <span>{packTrainingLabel}</span>
-                      <button
-                        type="button"
-                        className="gr-puzzle-build-toggle"
-                        onClick={() => setPackBuilderOpen((value) => !value)}
-                        aria-expanded={packBuilderOpen ? 'true' : 'false'}
-                      >
-                        Build Pack
-                      </button>
-                    </div>
+                <div className="gr-option-list">
+                  {!isPlayMode && saveAction}
+                  {!isPlayMode && saveStatus && <p className="gr-save-status" role="status">{saveStatus}</p>}
+                  {shouldShowOverviewView && positionEval?.lines?.length ? (
+                    <details className="gr-option-disclosure">
+                      <summary className="gr-option-row">Engine lines</summary>
+                      <div className="gr-mini-lines">
+                        {positionEval.lines.map((line) => (
+                          <div key={`${line.multiPv}-${line.depth}-${line.pv.join('-')}`} className="gr-mini-line">
+                            <span className="gr-mini-line-eval">{typeof line.mate === 'number' ? `M${Math.abs(line.mate)}` : getPositionLabel({ lines: [line] })}</span>
+                            <span className="gr-mini-line-text">{line.pv.length ? line.pv.join(' ') : 'No continuation.'}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </details>
+                  ) : null}
+                  {isCompactPractice && (
+                    <details className="gr-option-disclosure">
+                      <summary className="gr-option-row">Position and progress</summary>
+                      <div className="gr-option-content">
+                        {currentPuzzle && (
+                          <section className="gr-practice-option-section" aria-label="Position details">
+                            <strong>Position details</strong>
+                            <div className="gr-puzzle-chip-row">
+                              <span className="gr-puzzle-chip">Played {currentPuzzle.playedSan}</span>
+                              <span className="gr-puzzle-chip">Move {currentPuzzle.turnNumber}</span>
+                              <span className={`gr-puzzle-chip gr-puzzle-chip-${currentPuzzle.classification}`}>{CLASSIFICATION_META[currentPuzzle.classification]?.label || currentPuzzle.classification}</span>
+                              <span className="gr-puzzle-chip">Swing {currentPuzzle.lossLabel}</span>
+                              {currentPuzzle.themeLabel ? <span className="gr-puzzle-chip">{currentPuzzle.themeLabel}</span> : null}
+                            </div>
+                          </section>
+                        )}
+                        <section className="gr-practice-option-section" aria-label="Puzzle progress">
+                          <strong>{solvedPuzzleCount} of {activePuzzleQueue.length} solved</strong>
+                          <div className="gr-puzzle-progress-cells">
+                            {activePuzzleQueue.map((puzzle, index) => {
+                              const result = puzzleResults[puzzle.id];
+                              const isActive = currentPuzzle && puzzle.id === currentPuzzle.id;
+                              const className = result === 'solved'
+                                ? 'is-solved'
+                                : result === 'failed'
+                                  ? 'is-failed'
+                                  : 'is-pending';
 
-                    {packBuilderOpen ? (
+                              return (
+                                <button
+                                  key={puzzle.id}
+                                  type="button"
+                                  className={`gr-puzzle-progress-cell ${className}${isActive ? ' is-active' : ''}`}
+                                  aria-label={`Puzzle ${index + 1}: ${result || 'not completed'}`}
+                                  aria-current={isActive ? 'step' : undefined}
+                                  onClick={() => setPuzzleIndex(index)}
+                                >
+                                  {index + 1}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </section>
+                      </div>
+                    </details>
+                  )}
+                  {(isCompactPractice || (shouldShowOverviewView && hasFullReview && canCreateRecentPack)) && (
+                    <details className="gr-option-disclosure">
+                      <summary className="gr-option-row">Build Mistake Pack</summary>
                       <div className="gr-puzzle-build-controls">
                         <label className="gr-puzzle-build-field">
                           <span>Recent games</span>
@@ -4101,9 +4139,10 @@ function GameReview({ active = true }) {
                           <span>{packBuilding ? 'Building...' : 'Create Pack'}</span>
                         </button>
                       </div>
-                    ) : null}
-                      </section>
-                ) : null}
+                    </details>
+                  )}
+                  {isCompactPractice && premiumOffer}
+                </div>
               </div>
             ) : null}
 
@@ -4111,25 +4150,25 @@ function GameReview({ active = true }) {
               {isPlayMode ? (
                 <div className="gr-sidebar-view gr-sidebar-view-play">
                   <section className="gr-view-section gr-training-panel">
-                    <div className="gr-play-opening-picker">
+                    <label className="gr-play-opening-picker">
+                      <span>Opening</span>
                       <select aria-label="Choose your opening" value={playOpeningKey} onChange={(event) => { setPlayOpeningKey(event.target.value); if (event.target.value && !supportsOpeningAttack(playScenario, event.target.value)) setPlayScenario('normal'); }}>
                         <option value="">Any Opening</option>
                         {OPENING_CATALOG.filter((item) => Array.isArray(item.lines) && item.lines.some((line) => Array.isArray(line.moves) && line.moves.length >= 2)).map((item) => (
                           <option key={item.key} value={item.key}>{item.title} ({item.playerColor === 'b' || item.orientation === 'black' ? 'Black' : 'White'})</option>
                         ))}
                       </select>
-                    </div>
-                    <div className="gr-training-scenarios">
-                      {TRAINING_SCENARIOS.map((scenario) => (
-                        <button key={scenario.id} type="button"
-                          className={`gr-training-scenario${playScenario === scenario.id ? ' is-active' : ''}`}
-                          onClick={() => setPlayScenario(scenario.id)}
-                          disabled={Boolean(playOpeningKey) && !supportsOpeningAttack(scenario.id, playOpeningKey)}>
-                          <strong>{scenario.title}</strong>
-                          <span>{scenario.description}</span>
-                        </button>
-                      ))}
-                    </div>
+                    </label>
+                    <label className="gr-play-opening-picker">
+                      <span>Scenario</span>
+                      <select aria-label="Training scenario" value={playScenario} onChange={(event) => setPlayScenario(event.target.value)}>
+                        {TRAINING_SCENARIOS.map((scenario) => (
+                          <option key={scenario.id} value={scenario.id} disabled={Boolean(playOpeningKey) && !supportsOpeningAttack(scenario.id, playOpeningKey)}>
+                            {scenario.title}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
                     <div className="gr-inline-actions gr-play-start-actions">
                       {playOpeningKey ? (
                         <button type="button" className="gr-button gr-button-primary" onClick={() => startPlayGame(OPENING_CATALOG.find((item) => item.key === playOpeningKey)?.playerColor === 'b' || OPENING_CATALOG.find((item) => item.key === playOpeningKey)?.orientation === 'black' ? 'black' : 'white')} disabled={playThinking}>Play my opening</button>
@@ -4312,8 +4351,6 @@ function GameReview({ active = true }) {
                     </section>
                   ) : (
                     <>
-
-
                       {isPersonalPackPopulating ? (
                         <section className="gr-view-section gr-pack-live-card">
                           <div className="gr-pack-live-topline">
@@ -4325,25 +4362,15 @@ function GameReview({ active = true }) {
                       ) : null}
 
                       <section className="gr-view-section gr-puzzle-card gr-puzzle-card-primary">
-                        <div className="gr-puzzle-kicker">{currentPuzzle ? `${currentPuzzle.sideLabel} to move` : 'Training spot'}</div>
-                        <div className="gr-puzzle-title">{currentPuzzle ? currentPuzzle.goalLabel : 'Find the move'}</div>
-                        <div className="gr-puzzle-copy" role="status" aria-live="polite">{puzzleFeedback}</div>
+                        <div className="gr-puzzle-prompt">
+                          <div className="gr-puzzle-title">{currentPuzzle ? currentPuzzle.goalLabel : 'Find the move'}</div>
+                          {currentPuzzle && <span className="gr-puzzle-kicker">{currentPuzzle.sideLabel} to move</span>}
+                        </div>
+                        <div className="gr-puzzle-copy" role="status">{puzzleStatus !== 'idle' ? puzzleFeedback : ''}</div>
                         {puzzleHintOpen && currentPuzzle ? (
                           <div className="gr-puzzle-hint">{getPuzzleHintText(currentPuzzle)}</div>
                         ) : null}
                       </section>
-
-                      <details className="gr-puzzle-details">
-                        <summary>Position details</summary>
-                        {currentPuzzle ? (
-                          <div className="gr-puzzle-chip-row">
-                            <span className={`gr-puzzle-chip gr-puzzle-chip-${currentPuzzle.classification}`}>{CLASSIFICATION_META[currentPuzzle.classification] ? CLASSIFICATION_META[currentPuzzle.classification].label : currentPuzzle.classification}</span>
-                            <span className="gr-puzzle-chip">Move {currentPuzzle.turnNumber}</span>
-                            <span className="gr-puzzle-chip">Swing {currentPuzzle.lossLabel}</span>
-                            {currentPuzzle.themeLabel ? <span className="gr-puzzle-chip">{currentPuzzle.themeLabel}</span> : null}
-                          </div>
-                        ) : null}
-                      </details>
 
                       <div className="gr-puzzle-action-row">
                         <button type="button" className="gr-button gr-button-secondary gr-puzzle-action-btn" onClick={() => setPuzzleHintOpen((value) => !value)} disabled={!currentPuzzle}>
@@ -4380,49 +4407,6 @@ function GameReview({ active = true }) {
                           ) : null}
                         </section>
                       ) : null}
-
-                      <section className="gr-puzzle-stat-card gr-puzzle-progress-card">
-                        <div className="gr-puzzle-progress-title-row">
-                          <div className="gr-puzzle-stat-label">Progress</div>
-                          <div className="gr-puzzle-progress-meta">
-                            <div className={`gr-puzzle-status-pill is-${puzzleStatus}${currentPuzzleResult ? ` has-${currentPuzzleResult}` : ''}`}>
-                              {puzzleStatus === 'checking'
-                                ? 'Checking...'
-                                : puzzleStatus === 'solved'
-                                  ? 'Solved'
-                                  : puzzleStatus === 'revealed'
-                                    ? 'Shown'
-                                    : currentPuzzleResult === 'failed'
-                                      ? 'Missed'
-                                      : 'Live'}
-                            </div>
-                            <div className="gr-puzzle-progress-mini-count">{solvedPuzzleCount}/{activePuzzleQueue.length}</div>
-                          </div>
-                        </div>
-                        
-                        <div className="gr-puzzle-progress-cells">
-                          {activePuzzleQueue.map((puzzle, index) => {
-                            const result = puzzleResults[puzzle.id];
-                            const isActive = currentPuzzle && puzzle.id === currentPuzzle.id;
-                            const className = result === 'solved'
-                              ? 'is-solved'
-                              : result === 'failed'
-                                ? 'is-failed'
-                                : 'is-pending';
-
-                            return (
-                              <button
-                                key={puzzle.id}
-                                type="button"
-                                className={`gr-puzzle-progress-cell ${className}${isActive ? ' is-active' : ''}`}
-                                aria-label={`Puzzle ${index + 1}: ${result || 'not completed'}`}
-                                aria-current={isActive ? 'step' : undefined}
-                                onClick={() => setPuzzleIndex(index)}
-                              />
-                            );
-                          })}
-                        </div>
-                      </section>
 
                       <div className="gr-puzzle-footer">
                         <button
@@ -4539,23 +4523,7 @@ function GameReview({ active = true }) {
                       })}
                     </div>
 
-                    {positionEval && positionEval.lines && positionEval.lines.length ? (
-                      <div className="gr-mini-lines">
-                        {positionEval.lines.map((line) => (
-                          <div key={`${line.multiPv}-${line.depth}-${line.pv.join('-')}`} className="gr-mini-line">
-                            <span className="gr-mini-line-eval">{typeof line.mate === 'number' ? `M${Math.abs(line.mate)}` : getPositionLabel({ lines: [line] })}</span>
-                            <span className="gr-mini-line-text">{line.pv.length ? line.pv.join(' ') : 'No continuation.'}</span>
-                          </div>
-                        ))}
-                      </div>
-                    ) : null}
                   </section>
-
-                  {hasFullReview && canCreateRecentPack ? (
-                    <button type="button" className="gr-practice-recent-link" onClick={handleBuildPersonalPack} aria-label="Create puzzles from mistakes in recent games">
-                      {mistakePuzzleCount > 0 ? 'Or build puzzles from my last' : 'Build puzzles from my last'} {Math.min(packBatchSize, remoteGames.length)} games
-                    </button>
-                  ) : null}
                 </div>
               ) : (
                 <div className="gr-sidebar-view gr-sidebar-view-moves">
@@ -4578,7 +4546,7 @@ function GameReview({ active = true }) {
                           </div>
                         </div>
                       </div>
-                    ) : (
+                    ) : currentMove ? (
                       <div className="gr-coach-message">
                         <img className="gr-coach-avatar" src={`/coaches/${reviewSettings.coachTheme === 'princess' ? 'princess-coach' : 'learn-coach'}.svg`} alt="ChessDrills coach" />
                         <div className={`gr-insight-bubble gr-insight-bubble-${currentInsight.tone || 'neutral'}`}>
@@ -4586,7 +4554,7 @@ function GameReview({ active = true }) {
                           <div className="gr-insight-body">{currentInsight.body}</div>
                         </div>
                       </div>
-                    )}
+                    ) : null}
 
                     {!hasFullReview || isFullReviewProgressActive || engineError ? (
                       <div className={`gr-status-strip is-${statusTone}`}>

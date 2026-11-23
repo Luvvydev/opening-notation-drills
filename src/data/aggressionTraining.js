@@ -1,8 +1,10 @@
 // Curated opening continuations. These are examples, not Lichess-sourced games.
 // A scripted reply is used only while the played SAN history matches a line.
 // On any deviation the existing Stockfish worker takes over.
-import * as Chess from 'chess.js';
+import * as ChessModule from 'chess.js';
 import { OPENING_CATALOG } from '../openings/openingCatalog';
+
+const Chess = ChessModule.Chess || ChessModule.default || ChessModule;
 
 export const TRAINING_SCENARIOS = [
   { id: 'normal', title: 'Normal Game', description: 'Play from the starting position.' },
@@ -59,26 +61,41 @@ export function getScenarioStartMoves(scenarioId, playerSide) {
   return scenarios ? (scenarios[playerSide] || []).slice() : [];
 }
 
-export function getScenarioReply(scenarioId, history, playerSide) {
+export function getScenarioReply(scenarioId, history, playerSide, fen) {
   const lines = (LINES[scenarioId] || {})[playerSide] || [];
   const played = Array.isArray(history) ? history : [];
   const match = lines.find((line) => played.length < line.length && played.every((move, index) => line[index] === move));
-  return match ? match[played.length] : null;
+  const reply = match ? match[played.length] : null;
+  return fen ? legalSan(fen, reply, scenarioId) : reply;
 }
 
 // Repertoire training starts at move one. Use the opponent moves from the
 // selected opening only while the entire played sequence matches a saved line.
 // No predetermined move is played if the user has changed the position.
-function legalSan(fen, san) {
+function legalSan(fen, san, scenarioId) {
   if (!san) return null;
   try {
     const game = new Chess(fen);
     const move = game.move(san, { sloppy: true });
-    return move ? move.san : null;
+    if (!move) return null;
+    if (scenarioId !== 'queen' && scenarioId !== 'scholar') return move.san;
+
+    // A legal script can still drop the queen. Permit an even queen trade,
+    // including a queen capture that the player can immediately recapture.
+    const queenCaptures = game.moves({ verbose: true }).filter((reply) => reply.captured === 'q');
+    for (const capture of queenCaptures) {
+      if (move.captured === 'q' && move.to === capture.to) continue;
+      if (capture.piece !== 'q') return null;
+      game.move(capture);
+      const canTrade = game.moves({ verbose: true }).some((reply) => reply.to === capture.to && reply.captured === 'q');
+      game.undo();
+      if (!canTrade) return null;
+    }
+    return move.san;
   } catch (_) { return null; }
 }
 
-export function getRepertoireReply(openingKey, history, fen) {
+export function getRepertoireReply(openingKey, history, fen, scenarioId) {
   const opening = OPENING_CATALOG.find((item) => item.key === openingKey);
   if (!opening || !Array.isArray(opening.lines)) return null;
   const played = Array.isArray(history) ? history : [];
@@ -87,7 +104,7 @@ export function getRepertoireReply(openingKey, history, fen) {
     played.every((move, index) => move === line.moves[index])
   );
   for (const line of candidates) {
-    const next = legalSan(fen, line.moves[played.length]);
+    const next = legalSan(fen, line.moves[played.length], scenarioId);
     if (next) return next;
   }
   return null;
@@ -98,14 +115,19 @@ export function getRepertoireReply(openingKey, history, fen) {
 // If an attack does not fit the opening, fall back to its regular repertoire.
 const OPENING_ATTACK_REPLIES = {
   queen: {
-    london: [{ after: ['d4', 'd5', 'Bf4'], move: 'Qd6' }],
-    italian: [{ after: ['e4', 'e5', 'Nf3', 'Nc6', 'Bc4'], move: 'Qh4' }],
+    london: [
+      { after: ['d4', 'd5', 'Bf4'], move: 'c5' },
+      { after: ['d4', 'd5', 'Nf3'], move: 'c5' },
+      ...['e3', 'Nf3', 'c3', 'c4'].map((move) => ({ after: ['d4', 'd5', 'Bf4', 'c5', move], move: 'Qb6' })),
+      { after: ['d4', 'd5', 'Nf3', 'c5', 'Bf4'], move: 'Qb6' },
+    ],
+    italian: [{ after: ['e4', 'e5', 'Nf3', 'Nc6', 'Bc4'], move: 'Qf6' }],
     viennaGame: [{ after: ['e4', 'e5', 'Nc3'], move: 'Qh4' }],
     sicilian: [{ after: ['e4', 'c5'], move: 'Qh5' }],
     caroKann: [{ after: ['e4', 'c6'], move: 'Qh5' }],
   },
   scholar: {
-    italian: [{ after: ['e4', 'e5', 'Nf3', 'Nc6', 'Bc4'], move: 'Qh4' }],
+    italian: [{ after: ['e4', 'e5', 'Nf3', 'Nc6', 'Bc4'], move: 'Qf6' }],
     sicilian: [{ after: ['e4', 'c5'], move: 'Bc4' }, { after: ['e4', 'c5', 'Bc4', 'Nc6'], move: 'Qh5' }],
   },
   pawns: {
@@ -124,7 +146,7 @@ export function getAggressiveRepertoireReply(scenarioId, openingKey, history, fe
   const played = Array.isArray(history) ? history : [];
   for (const rule of rules) {
     if (rule.after.length !== played.length || !rule.after.every((move, index) => move === played[index])) continue;
-    const reply = legalSan(fen, rule.move);
+    const reply = legalSan(fen, rule.move, scenarioId);
     if (reply) return reply;
   }
   return null;

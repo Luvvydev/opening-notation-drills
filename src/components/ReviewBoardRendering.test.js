@@ -6,6 +6,7 @@ import * as ChessModule from 'chess.js';
 import { useAuth } from '../auth/AuthProvider';
 import { trainingRequest, TRAINING_POSITIONS_ADDED } from '../training/workspace';
 import { trackEvent } from '../utils/trackEvent';
+import { getAggressiveRepertoireReply } from '../data/aggressionTraining';
 
 jest.mock('../auth/AuthProvider', () => ({ useAuth: jest.fn() }));
 jest.mock('../training/workspace', () => ({
@@ -132,7 +133,7 @@ test.each([
   }
 });
 
-test.each(['paid', 'failure', 'free'])('completed %s review respects automatic and manual saving', async (scenario) => {
+test.each(['paid', 'already saved', 'failure', 'free'])('completed %s review respects automatic and manual saving', async (scenario) => {
   const membershipActive = scenario !== 'free';
   useAuth.mockReturnValue({ user: { uid: 'player' }, membershipActive, authLoading: false });
   const Chess = ChessModule.Chess || ChessModule.default || ChessModule;
@@ -163,7 +164,7 @@ test.each(['paid', 'failure', 'free'])('completed %s review respects automatic a
     }
   };
   if (scenario === 'failure') trainingRequest.mockRejectedValueOnce(new Error('offline'));
-  trainingRequest.mockResolvedValue({ added: 3 });
+  trainingRequest.mockResolvedValue({ added: scenario === 'already saved' ? 0 : 3 });
   const notified = jest.fn();
   window.addEventListener(TRAINING_POSITIONS_ADDED, notified);
   const view = render(<MemoryRouter initialEntries={['/my-games']}><Link to="/">Leave review</Link><Link to="/my-games">Return to review</Link><ReviewWorkspace /></MemoryRouter>);
@@ -172,23 +173,39 @@ test.each(['paid', 'failure', 'free'])('completed %s review respects automatic a
     fireEvent.change(view.getByPlaceholderText('Paste a PGN here'), { target: { value: pgn } });
     fireEvent.click(view.getByText('Load PGN'));
     await view.findByText(/^Open review$/i);
+    expect(view.queryByText(/Saved to Daily Training|positions added to Daily Training|Could not save this review/i)).toBeNull();
+    expect(view.queryByText('Engine lines')).toBeNull();
+    fireEvent.click(view.getByRole('button', { name: 'Options' }));
+    expect(view.getByText('Engine lines').closest('details').open).toBe(false);
     if (scenario === 'free') {
       expect(trainingRequest).not.toHaveBeenCalled();
       expect(view.getByLabelText('Premium required to save to Daily Training')).toBeTruthy();
       return;
     }
 
-    await view.findByText(scenario === 'failure' ? /Could not save this review/ : '3 positions added to Daily Training.');
-    expect(trainingRequest).toHaveBeenCalledTimes(1);
-    expect(notified).toHaveBeenCalledTimes(scenario === 'failure' ? 0 : 1);
+    await wait(() => expect(trainingRequest).toHaveBeenCalledTimes(1));
+    if (scenario === 'failure') await view.findByText(/Could not save this review/);
+    expect(view.queryByText(/Saved to Daily Training|positions added to Daily Training/i)).toBeNull();
+    expect(notified).toHaveBeenCalledTimes(scenario === 'paid' ? 1 : 0);
     const automatic = trainingRequest.mock.calls[0][0];
     expect(automatic).toMatchObject({ action: 'save_review', review: { depth: 12, multiPv: 3, puzzleCount: 4 } });
     expect(automatic.review.items).toHaveLength(3);
     const searchCount = searches.length;
 
+    fireEvent.click(view.getByRole('button', { name: 'Options' }));
+    fireEvent.click(view.getByText('Open review'));
+    expect(view.queryByText('Load a game to review it')).toBeNull();
+    expect(view.queryByText(/Saved to Daily Training|positions added to Daily Training|Could not save this review/i)).toBeNull();
+    fireEvent.click(view.getByRole('button', { name: 'Practice missed moves from this game' }));
+    fireEvent.click(view.getByRole('button', { name: 'Options' }));
+    expect(view.getByText('Position and progress').closest('details').open).toBe(false);
+    expect(view.getByText('Build Mistake Pack').closest('details').open).toBe(false);
+    expect(view.queryByText(/Saved to Daily Training|positions added to Daily Training/i)).toBeNull();
     fireEvent.click(view.getByText('Leave review'));
     fireEvent.click(view.getByText('Return to review'));
     expect(trainingRequest).toHaveBeenCalledTimes(1);
+    const options = view.getByRole('button', { name: 'Options' });
+    if (options.getAttribute('aria-expanded') === 'false') fireEvent.click(options);
     fireEvent.click(view.getByLabelText('Save game and mistakes to Daily Training'));
     await view.findByText('Saved to your training history.');
     expect(trainingRequest).toHaveBeenCalledTimes(2);
@@ -199,3 +216,52 @@ test.each(['paid', 'failure', 'free'])('completed %s review respects automatic a
     window.removeEventListener(TRAINING_POSITIONS_ADDED, notified);
   }
 }, 15000);
+
+
+test('London queen training reaches Qb6 through the normal computer play controls', async () => {
+  const view = render(<MemoryRouter initialEntries={['/my-games?mode=play']}><ReviewWorkspace /></MemoryRouter>);
+  const clickSquare = (square) => fireEvent.click(view.container.querySelector(`[data-squareid="${square}"]`));
+  try {
+    fireEvent.change(await view.findByLabelText('Choose your opening'), { target: { value: 'london' } });
+    fireEvent.change(view.getByLabelText('Training scenario'), { target: { value: 'queen' } });
+    fireEvent.click(view.getByText('Play my opening'));
+    await view.findByText('London vs Early Queen Attacks');
+    clickSquare('d2');
+    clickSquare('d4');
+    await view.findByText('1. d4 d5');
+    clickSquare('c1');
+    clickSquare('f4');
+    await view.findByText('1. d4 d5 2. Bf4 c5');
+    clickSquare('e2');
+    clickSquare('e3');
+    await view.findByText('1. d4 d5 2. Bf4 c5 3. e3 Qb6');
+  } finally {
+    view.unmount();
+  }
+}, 10000);
+
+test.each([
+  ['london', ['d4', 'd5', 'Bf4', 'c5', 'Nf3'], 'Qb6'],
+  ['london', ['d4', 'd5', 'Nf3', 'c5', 'Bf4'], 'Qb6'],
+  ['italian', ['e4', 'e5', 'Nf3', 'Nc6', 'Bc4'], 'Qf6'],
+  ['viennaGame', ['e4', 'e5', 'Nc3'], 'Qh4'],
+  ['sicilian', ['e4', 'c5'], 'Qh5'],
+  ['caroKann', ['e4', 'c6'], 'Qh5'],
+])('early queen reply for %s preserves its queen', (opening, history, expected) => {
+  const Chess = ChessModule.Chess || ChessModule.default || ChessModule;
+  const game = new Chess();
+  history.forEach((san) => expect(game.move(san)).toBeTruthy());
+  const reply = getAggressiveRepertoireReply('queen', opening, history, game.fen());
+  expect(reply).toBe(expected);
+  expect(game.move(reply)).toBeTruthy();
+  expect(game.moves({ verbose: true }).some((move) => move.captured === 'q')).toBe(false);
+});
+
+test('the scripted queen reply is skipped when the actual board allows a bishop capture', () => {
+  const Chess = ChessModule.Chess || ChessModule.default || ChessModule;
+  const game = new Chess();
+  const history = ['d4', 'd5', 'Bf4', 'c5', 'e3'];
+  history.forEach((san) => game.move(san));
+  game.put({ type: 'b', color: 'w' }, 'a5');
+  expect(getAggressiveRepertoireReply('queen', 'london', history, game.fen())).toBeNull();
+});

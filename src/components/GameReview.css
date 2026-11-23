@@ -467,15 +467,6 @@
   margin-bottom: 14px;
 }
 
-.gr-panel-kicker {
-  color: rgba(244, 197, 66, 0.82);
-  font-size: 0.68rem;
-  font-weight: 900;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  margin-bottom: 5px;
-}
-
 .gr-panel h2 {
   margin: 0;
   font-size: 1.05rem;
@@ -3735,43 +3726,6 @@
 }
 
 
-/* 2026-07 Mistake Training inline Build Pack flow */
-.gr-puzzle-build-pack {
-  border-radius: 15px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.035);
-  padding: 10px 12px;
-}
-
-.gr-puzzle-build-topline {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  color: rgba(238, 242, 247, 0.70);
-  font-size: 0.76rem;
-  font-weight: 900;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.gr-puzzle-build-toggle {
-  border: 1px solid rgba(137, 97, 255, 0.35);
-  background: rgba(137, 97, 255, 0.14);
-  color: #efeaff;
-  border-radius: 999px;
-  min-height: 28px;
-  padding: 0 10px;
-  cursor: pointer;
-  font-size: 0.75rem;
-  font-weight: 900;
-}
-
-.gr-puzzle-build-toggle:hover {
-  background: rgba(137, 97, 255, 0.22);
-  border-color: rgba(137, 97, 255, 0.52);
-}
-
 .gr-puzzle-build-controls {
   margin-top: 10px;
   display: grid;
@@ -3936,10 +3890,6 @@
 .gr-mode-tab { padding: 10px 3px; border: 1px solid rgba(255,255,255,.1); border-radius: 10px; color: #b8bfca; background: #121723; font: inherit; font-size: 12px; font-weight: 750; cursor: pointer; }
 .gr-mode-tab:hover, .gr-mode-tab.is-active { color: #fff; border-color: #7560cf; background: #372b65; }
 .gr-training-panel { display: flex; flex-direction: column; gap: 12px; }
-.gr-training-scenarios { display: flex; flex-direction: column; gap: 8px; }
-.gr-training-scenario { display: flex; flex-direction: column; text-align: left; gap: 4px; border: 1px solid rgba(255,255,255,.12); border-radius: 12px; background: #141924; color: #edf0f9; padding: 12px; cursor: pointer; font: inherit; }
-.gr-training-scenario span { font-size: 12px; line-height: 1.4; color: #aeb5c4; }
-.gr-training-scenario.is-active { background: #252044; border-color: #8567ec; }
 .gr-play-start-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .gr-play-session { padding: 12px; border: 1px solid rgba(255,255,255,.12); border-radius: 12px; background: #131927; color: #e8ebf3; }
 .gr-play-session p { margin: 8px 0; color: #b9c0cc; }
@@ -3956,11 +3906,10 @@
 }
 
 /* Opening selection within the existing computer-play sidebar. */
-.gr-play-opening-picker { display: flex; flex-direction: column; gap: 6px; margin: 4px 0 12px; font-size: 12px; font-weight: 700; }
+.gr-play-opening-picker { display: flex; flex-direction: column; gap: 5px; font-size: 12px; font-weight: 700; }
 .gr-play-opening-picker select { width: 100%; min-width: 0; padding: 10px; border: 1px solid rgba(160,160,185,.22); border-radius: 10px; color: inherit; background: #090d19; }
 .gr-play-opening-note { margin: 0 0 12px; font-size: 12px; line-height: 1.5; opacity: .78; }
 
-.gr-training-scenario:disabled { opacity: .38; cursor: not-allowed; }
 .gr-play-start-actions > .gr-button:only-child { grid-column: 1 / -1; }
 
 /* Keep the import form above and Mistake Pack below a separately scrolling game list. */
@@ -3993,11 +3942,10 @@
 .gr-page-refresh .gr-panel { background: #111519; border-color: #30363e; border-radius: 8px; box-shadow: none; }
 .gr-page-refresh .gr-sidebar-shell { box-sizing: border-box; padding: 16px; }
 .gr-page-refresh .gr-sidebar-topbar { align-items: center; gap: 8px; padding-bottom: 12px; margin-bottom: 12px; }
-.gr-page-refresh .gr-panel-kicker { color: #c8b87e; letter-spacing: .12em; }
 .gr-workspace-heading-actions { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
 .gr-session-count { color: #bbc1ca; font-size: 12px; font-variant-numeric: tabular-nums; }
 .gr-page-refresh .gr-options-toggle { min-height: 40px; height: 40px; padding: 0 12px; }
-.gr-workspace-options { flex-shrink: 0; padding: 12px; margin-bottom: 12px; border: 1px solid #30363e; border-radius: 6px; background: #171c21; max-height: 280px; overflow-y: auto; }
+.gr-workspace-options { flex-shrink: 0; padding: 12px; margin-bottom: 12px; border: 1px solid #30363e; border-radius: 6px; background: #171c21; max-height: min(50dvh, 360px); overflow-y: auto; }
 .gr-play-eval-toggle {
   display: flex;
   align-items: center;
@@ -4020,7 +3968,6 @@
 .gr-page-refresh .gr-button-primary:hover:not(:disabled) { background: #ffda60; }
 .gr-page-refresh .gr-source-tab.is-active,
 .gr-page-refresh .gr-move-cell.is-active,
-.gr-page-refresh .gr-training-scenario.is-active,
 .gr-page-refresh .gr-puzzle-explain-switch button.is-active { background: rgba(244, 202, 66, .1); border-color: #a68d42; }
 .gr-page-refresh .gr-top-progress-shell { width: 100%; margin: 0; }
 .gr-page-refresh .gr-top-progress-track { height: 4px; border: 0; background: #282d34; }
@@ -4040,7 +3987,6 @@
 .gr-page-refresh .gr-puzzle-action-btn,
 .gr-page-refresh .gr-puzzle-next-btn { height: 44px; min-height: 44px; }
 .gr-page-refresh .gr-puzzle-footer { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.gr-page-refresh .gr-puzzle-build-toggle { background: #252a30; border-color: #675d39; color: #f4ca42; }
 .gr-page-refresh .gr-practice-recent-link { color: #e3ca7d; }
 .gr-page-refresh button:focus-visible,
 .gr-page-refresh select:focus-visible { outline: 2px solid #f4ca42; outline-offset: 3px; }
@@ -4067,17 +4013,29 @@
   .gr-moves-active .gr-top-progress-shell { display: none; }
   .gr-practice-active .gr-sidebar-topbar,
   .gr-moves-active .gr-sidebar-topbar { grid-column: 1 / -1; order: 0; margin: 0; padding: 0; border: 0; min-height: 40px; }
-  .gr-practice-active .gr-panel-kicker,
-  .gr-moves-active .gr-panel-kicker { display: none; }
   .gr-practice-active .gr-workspace-options,
   .gr-moves-active .gr-workspace-options { grid-column: 1 / -1; order: 1; margin: 0; }
-  .gr-practice-active .gr-puzzle-card-primary,
+  .gr-page-refresh .gr-workspace-options { max-height: none; overflow: visible; }
   .gr-moves-active .gr-move-summary { grid-column: 1 / -1; order: 2; box-sizing: border-box; max-height: 112px; overflow-y: auto; padding: 8px 10px; background: #151a1f; border: 1px solid #30363e; border-radius: 6px; gap: 4px; }
+  .workspace-main .gr-page.gr-practice-active { padding-top: 0; }
+  .gr-page-refresh.gr-practice-active .gr-shell-review {
+    box-sizing: border-box;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .gr-practice-active .gr-session-tools,
+  .gr-moves-active .gr-session-tools { grid-column: 1 / -1; order: 1; }
+  .gr-practice-active .gr-session-tools .gr-inline-notice,
+  .gr-moves-active .gr-session-tools .gr-inline-notice { margin: 0; }
+  .gr-page-refresh.gr-practice-active .gr-puzzle-card-primary {
+    grid-column: 1 / -1;
+    order: 2;
+    gap: 4px;
+    padding: 4px 0;
+  }
   .gr-practice-active .gr-puzzle-title { font-size: 15px; }
   .gr-practice-active .gr-puzzle-copy,
   .gr-practice-active .gr-puzzle-hint { font-size: 13px; margin: 0; }
   .gr-practice-active .gr-puzzle-kicker { font-size: 10px; }
-  .gr-practice-active .gr-puzzle-chip-row { gap: 4px; margin: 0; }
   .gr-practice-active .gr-stage-shell,
   .gr-moves-active .gr-stage-shell { grid-column: 1 / -1; order: 3; }
   .gr-practice-active .gr-puzzle-footer > button:first-child { order: 4; }
@@ -4086,10 +4044,6 @@
   .gr-practice-active .gr-puzzle-footer > button:last-child { order: 7; }
   .gr-practice-active .gr-puzzle-action-btn,
   .gr-practice-active .gr-puzzle-next-btn { width: 100%; min-width: 0; padding: 0 4px; font-size: 12px; gap: 4px; }
-  .gr-practice-active .gr-puzzle-progress-card { grid-column: 1 / -1; order: 8; margin: 0; gap: 4px; }
-  .gr-practice-active .gr-puzzle-progress-title-row { margin: 0; }
-  .gr-practice-active .gr-puzzle-progress-cells { margin-top: 0; flex-wrap: nowrap; gap: 4px; }
-  .gr-practice-active .gr-puzzle-progress-cell { min-width: 0; min-height: 14px; flex: 1 1 0; width: auto; padding: 0; }
   .gr-practice-active .gr-puzzle-explain,
   .gr-practice-active .gr-pack-live-card { grid-column: 1 / -1; order: 10; margin: 0; }
   .gr-moves-active .gr-control-dock { grid-column: 1 / -1; order: 4; margin: 0; }
@@ -4099,67 +4053,76 @@
 }
 .gr-page-refresh .gr-puzzle-footer .gr-puzzle-next-btn { min-width: 0; padding: 0 8px; font-size: 12px; white-space: nowrap; }
 .gr-page-refresh .gr-puzzle-footer { gap: 6px; }
-.gr-puzzle-details { color: #aeb6c0; font-size: 12px; }
-.gr-puzzle-details summary { padding: 6px 0; cursor: pointer; }
-.gr-puzzle-details .gr-puzzle-chip-row { margin-top: 6px; }
-@media (max-width: 1100px) {
-  .gr-practice-active .gr-puzzle-details { grid-column: 1 / -1; order: 11; }
-  .gr-practice-active .gr-puzzle-card-primary { min-height: 94px; }
+.gr-practice-active .gr-puzzle-prompt {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 10px;
 }
-@media (max-width: 1100px) {
-  .gr-practice-active .gr-puzzle-kicker { order: 0; }
-  .gr-practice-active .gr-puzzle-title { order: 1; }
-  .gr-practice-active .gr-puzzle-hint { order: 2; }
-  .gr-practice-active .gr-puzzle-copy { order: 3; }
-}
+.gr-practice-active .gr-puzzle-prompt .gr-puzzle-title,
+.gr-practice-active .gr-puzzle-card-primary .gr-puzzle-copy,
+.gr-practice-active .gr-puzzle-card-primary .gr-puzzle-hint { margin: 0; }
+.gr-practice-active .gr-puzzle-copy:empty { position: absolute; }
 
-/* Align practice status, completed count and progress across the full panel. */
-.gr-page-refresh .gr-puzzle-progress-meta {
+.gr-option-list {
+  display: grid;
+  border-top: 1px solid #30363e;
+}
+.gr-option-list:empty { display: none; }
+.gr-option-row {
   display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-shrink: 0;
-}
-.gr-page-refresh .gr-puzzle-progress-meta .gr-puzzle-status-pill {
-  min-height: 0;
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  background: none;
-  font-size: 12px;
-  line-height: 1.4;
-}
-.gr-page-refresh .gr-puzzle-progress-card {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.gr-page-refresh .gr-puzzle-progress-cells {
-  display: flex;
-  flex-wrap: nowrap;
-  gap: 6px;
-  margin-top: 0;
-  padding: 2px;
-}
-.gr-page-refresh .gr-puzzle-progress-cell {
-  flex: 1 1 0;
-  width: auto;
-  min-width: 0;
-  padding: 0;
-  height: 12px;
-}
-.gr-page-refresh .gr-puzzle-footer .gr-puzzle-next-btn {
+  min-height: 42px;
   width: 100%;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 6px;
+  box-sizing: border-box;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: #dce2e9;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
 }
-@media (max-width: 1100px) {
-  .gr-practice-active .gr-puzzle-progress-card { margin-top: 4px; }
-  .gr-practice-active .gr-puzzle-details { margin-top: 4px; }
+.gr-option-row:hover { background: rgba(255, 255, 255, 0.06); }
+.gr-page-refresh .gr-option-row:focus-visible { outline: 2px solid #f4ca42; outline-offset: 1px; }
+.gr-option-row:disabled { opacity: .55; cursor: wait; }
+.gr-option-disclosure summary { list-style: none; }
+.gr-option-disclosure summary::-webkit-details-marker { display: none; }
+.gr-option-disclosure summary::after {
+  content: '';
+  width: 6px;
+  height: 6px;
+  margin-left: auto;
+  margin-right: 4px;
+  border-right: 1px solid currentColor;
+  border-bottom: 1px solid currentColor;
+  transform: rotate(45deg);
 }
-@media (max-width: 1100px) {
-  .gr-practice-active .gr-puzzle-progress-meta .gr-puzzle-status-pill.is-idle:not(.has-failed) {
-    display: none;
-  }
+.gr-option-disclosure[open] summary::after { transform: rotate(225deg); }
+.gr-option-content { display: grid; gap: 12px; padding: 4px 6px 10px; }
+.gr-option-disclosure .gr-mini-lines,
+.gr-option-disclosure .gr-puzzle-build-controls { margin: 0 6px 10px; }
+.gr-practice-option-section { display: grid; gap: 6px; font-size: 12px; }
+.gr-practice-option-section .gr-puzzle-chip-row { margin: 0; }
+.gr-practice-option-section .gr-puzzle-progress-cells { margin: 0; }
+.gr-practice-option-section .gr-puzzle-progress-cell {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 5px;
+  color: #d6dce4;
+  font: inherit;
 }
+.gr-practice-option-section .gr-puzzle-progress-cell.is-solved,
+.gr-practice-option-section .gr-puzzle-progress-cell.is-failed { color: #111519; }
+.gr-option-list .gr-inline-offer { margin: 8px 0 0; }
+.gr-page-refresh .gr-option-list .gr-save-status { margin: 0; padding: 0 6px 8px; }
 
 /* Mobile import and accuracy overview do not need a board. */
 @media (max-width: 1100px) {
@@ -4329,17 +4292,6 @@
   .gr-page-refresh .gr-moves-active .gr-move-list { order: 7; }
 }
 
-/* Review save action belongs with Options, not in a separate toolbar. */
-.gr-page-refresh .gr-save-icon {
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 29px; height: 29px; min-width: 29px;
-  padding: 0; border: 1px solid transparent; border-radius: 6px;
-  background: transparent; color: #9da7b5; text-decoration: none;
-  cursor: pointer; font-size: 13px;
-}
-.gr-page-refresh .gr-save-icon:hover { color: #f8cb4a; background: rgba(255,255,255,.07); }
-.gr-page-refresh .gr-save-icon:disabled { opacity: .45; cursor: wait; }
-.gr-page-refresh .gr-save-status { margin: 0 0 6px; padding: 4px 8px; }
 .gr-variation-rating { font-weight: 700; color: #aebac9; }
 .gr-variation-rating-best, .gr-variation-rating-excellent { color: #8cd14f; }
 .gr-variation-rating-brilliant { color: #60cad5; }
@@ -4466,6 +4418,23 @@
 @media (min-width: 1101px) {
   .gr-page-refresh .gr-shell-review {
     grid-template-columns: minmax(0, min(calc(100vh - 145px), calc(100vw - 490px))) 380px;
+  }
+  .gr-page-refresh.gr-practice-active .gr-sidebar-shell {
+    height: auto;
+    min-height: 0;
+    overflow-y: auto;
+  }
+  .gr-practice-active .gr-workspace-options {
+    max-height: none;
+    overflow: visible;
+  }
+  .gr-page-refresh.gr-practice-active .gr-sidebar-body {
+    flex: 0 0 auto;
+    overflow: visible;
+  }
+  .gr-page-refresh.gr-practice-active .gr-sidebar-view-puzzles {
+    gap: 12px;
+    padding-right: 0;
   }
 }
 /* Larger notation and classification markers, without widening the move columns. */
