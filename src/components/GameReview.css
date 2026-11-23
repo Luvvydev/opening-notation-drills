@@ -4042,6 +4042,7 @@
   .gr-practice-active .gr-puzzle-action-row > button:first-child { order: 5; }
   .gr-practice-active .gr-puzzle-action-row > button:last-child { order: 6; }
   .gr-practice-active .gr-puzzle-footer > button:last-child { order: 7; }
+  .gr-practice-active .gr-puzzle-progress-cells { grid-column: 1 / -1; order: 8; }
   .gr-practice-active .gr-puzzle-action-btn,
   .gr-practice-active .gr-puzzle-next-btn { width: 100%; min-width: 0; padding: 0 4px; font-size: 12px; gap: 4px; }
   .gr-practice-active .gr-puzzle-explain,
@@ -4110,17 +4111,16 @@
 .gr-option-disclosure .gr-puzzle-build-controls { margin: 0 6px 10px; }
 .gr-practice-option-section { display: grid; gap: 6px; font-size: 12px; }
 .gr-practice-option-section .gr-puzzle-chip-row { margin: 0; }
-.gr-practice-option-section .gr-puzzle-progress-cells { margin: 0; }
-.gr-practice-option-section .gr-puzzle-progress-cell {
-  width: 28px;
-  height: 28px;
-  padding: 0;
-  border-radius: 5px;
-  color: #d6dce4;
-  font: inherit;
+.gr-practice-active .gr-puzzle-progress-cells {
+  margin: 0;
+  padding: 2px;
 }
-.gr-practice-option-section .gr-puzzle-progress-cell.is-solved,
-.gr-practice-option-section .gr-puzzle-progress-cell.is-failed { color: #111519; }
+.gr-practice-active .gr-puzzle-progress-cell {
+  flex: 1 0 14px;
+  max-width: 84px;
+  height: 12px;
+  padding: 0;
+}
 .gr-option-list .gr-inline-offer { margin: 8px 0 0; }
 .gr-page-refresh .gr-option-list .gr-save-status { margin: 0; padding: 0 6px 8px; }
 

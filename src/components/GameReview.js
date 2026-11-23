@@ -4072,11 +4072,10 @@ function GameReview({ active = true }) {
                   ) : null}
                   {isCompactPractice && (
                     <details className="gr-option-disclosure">
-                      <summary className="gr-option-row">Position and progress</summary>
+                      <summary className="gr-option-row">Position details</summary>
                       <div className="gr-option-content">
                         {currentPuzzle && (
                           <section className="gr-practice-option-section" aria-label="Position details">
-                            <strong>Position details</strong>
                             <div className="gr-puzzle-chip-row">
                               <span className="gr-puzzle-chip">Played {currentPuzzle.playedSan}</span>
                               <span className="gr-puzzle-chip">Move {currentPuzzle.turnNumber}</span>
@@ -4086,33 +4085,6 @@ function GameReview({ active = true }) {
                             </div>
                           </section>
                         )}
-                        <section className="gr-practice-option-section" aria-label="Puzzle progress">
-                          <strong>{solvedPuzzleCount} of {activePuzzleQueue.length} solved</strong>
-                          <div className="gr-puzzle-progress-cells">
-                            {activePuzzleQueue.map((puzzle, index) => {
-                              const result = puzzleResults[puzzle.id];
-                              const isActive = currentPuzzle && puzzle.id === currentPuzzle.id;
-                              const className = result === 'solved'
-                                ? 'is-solved'
-                                : result === 'failed'
-                                  ? 'is-failed'
-                                  : 'is-pending';
-
-                              return (
-                                <button
-                                  key={puzzle.id}
-                                  type="button"
-                                  className={`gr-puzzle-progress-cell ${className}${isActive ? ' is-active' : ''}`}
-                                  aria-label={`Puzzle ${index + 1}: ${result || 'not completed'}`}
-                                  aria-current={isActive ? 'step' : undefined}
-                                  onClick={() => setPuzzleIndex(index)}
-                                >
-                                  {index + 1}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </section>
                       </div>
                     </details>
                   )}
@@ -4428,6 +4400,23 @@ function GameReview({ active = true }) {
                           <span>Next</span>
                           <FontAwesomeIcon icon={faStepForward} />
                         </button>
+                      </div>
+
+                      <div className="gr-puzzle-progress-cells" role="group" aria-label="Puzzle progress">
+                        {activePuzzleQueue.map((puzzle, index) => {
+                          const result = puzzleResults[puzzle.id];
+                          const isActive = index === puzzleIndex;
+                          return (
+                            <button
+                              key={puzzle.id}
+                              type="button"
+                              className={`gr-puzzle-progress-cell is-${result || 'pending'}${isActive ? ' is-active' : ''}`}
+                              aria-label={`Puzzle ${index + 1}: ${result || 'not completed'}`}
+                              aria-current={isActive ? 'step' : undefined}
+                              onClick={() => setPuzzleIndex(index)}
+                            />
+                          );
+                        })}
                       </div>
                     </>
                   )}
