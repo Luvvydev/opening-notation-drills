@@ -86,6 +86,7 @@ export function parseEvaluationResults(results, fen) {
     temp[multiPv] = {
       depth,
       multiPv,
+      firstMove: pv[0],
       pv,
       cp: cpRaw !== undefined ? parseInt(cpRaw, 10) : undefined,
       mate: mateRaw !== undefined ? parseInt(mateRaw, 10) : undefined,

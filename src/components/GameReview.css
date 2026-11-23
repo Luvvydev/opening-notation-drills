@@ -4530,3 +4530,40 @@
 .gr-review-piece-motion-active [data-squareid] {
   overflow: visible;
 }
+
+.gr-fair-indicator {
+  width: min(100%, 108px);
+  padding: 0 4px 4px;
+}
+.gr-fair-indicator-text {
+  display: flex;
+  justify-content: space-between;
+  gap: 4px;
+  align-items: baseline;
+  color: #b7bfca;
+  font-size: 11px;
+  white-space: nowrap;
+}
+.gr-fair-indicator-text strong[data-status="Clean"] { color: #77d6a8; }
+.gr-fair-indicator-text strong[data-status="Watch"] { color: #edbc68; }
+.gr-fair-indicator-text strong[data-status="Sus"] { color: #ff94ac; }
+.gr-fair-indicator-line {
+  position: relative;
+  height: 4px;
+  margin-top: 5px;
+  border-radius: 4px;
+  background: #303640;
+}
+.gr-fair-indicator-line.is-scored {
+  background: linear-gradient(90deg, #df6e92, #edbc68 50%, #75caa3);
+}
+.gr-fair-indicator-line span {
+  position: absolute;
+  top: 50%;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: #f3f5f6;
+  box-shadow: 0 0 0 1px #14181d;
+}

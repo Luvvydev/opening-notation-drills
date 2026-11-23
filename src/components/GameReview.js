@@ -31,6 +31,7 @@ import { OPENING_CATALOG } from '../openings/openingCatalog';
 import { BOARD_THEMES, DEFAULT_THEME, PIECE_THEMES } from '../theme/boardThemes';
 import { TRAINING_SCENARIOS, getScenarioReply, getScenarioStartMoves, getRepertoireReply, getAggressiveRepertoireReply, supportsOpeningAttack } from '../data/aggressionTraining';
 import './GameReview.css';
+import { readFairPlayClocks, runFairPlayIndicator } from '../review/fairPlayIndicator';
 import EvaluationBar, { LiveEvaluationBar } from './EvaluationBar';
 import { clamp, getPositionLabel, getPositionWinPercentage, getResultProperty, parseEvaluationResults, uciToMoveObject } from '../review/positionEvaluation';
 import { createReviewWorkerHandle, disposeReviewWorkerHandle, LEGACY_ENGINE_PATH, sendCommandsToWorker, WASM_ENGINE_PATH } from '../review/stockfishWorker';
@@ -697,6 +698,13 @@ function parsePgn(rawText, orientationOverride) {
     for (let i = 0; i < moves.length && i < match.matchedPlies; i += 1) {
       moves[i].inBook = true;
     }
+  }
+
+  if (/\[%(?:clk|emt)\s/i.test(text)) {
+    const comments = new Map(game.get_comments().map(({ fen, comment }) => [fen, comment]));
+    readFairPlayClocks(moves, comments, headers.TimeControl).forEach((seconds, index) => {
+      moves[index].fairPlaySeconds = seconds;
+    });
   }
 
   return {
@@ -1670,9 +1678,11 @@ function useReviewBoardState({
   const currentClassification = currentMove && currentMove.classification ? CLASSIFICATION_META[currentMove.classification] : null;
   const playerSummary = useMemo(() => {
     const headers = gameData && gameData.headers ? gameData.headers : null;
+    const white = getHeaderPlayer(headers, 'white');
+    const black = getHeaderPlayer(headers, 'black');
     return {
-      white: getHeaderPlayer(headers, 'white'),
-      black: getHeaderPlayer(headers, 'black'),
+      white: { ...white, rating: Number(white.rating) > 0 ? white.rating : gameData?.importedRatings?.white || '' },
+      black: { ...black, rating: Number(black.rating) > 0 ? black.rating : gameData?.importedRatings?.black || '' },
     };
   }, [gameData]);
   const classificationCounts = useMemo(() => getMoveClassificationCounts(gameData && gameData.moves), [gameData]);
@@ -1760,6 +1770,25 @@ function useReviewBoardState({
   return { currentPosition, currentMove, currentClassification, playerSummary, classificationCounts, currentInsight, boardSquareStyles, boardThemeStyles, pieceThemeUrl, playSquareStyles, puzzleSquareStyles };
 }
 
+function FairPlayIndicator({ result, player }) {
+  const hasScore = Number.isFinite(result?.score);
+  const detail = result?.label === 'Few moves' ? 'Too few usable moves for a result.'
+    : result?.basis === 'stockfish' ? 'Stockfish estimate from engine matches, difficult choices, and costly moves. The score is a screening signal.'
+      : 'Stockfish and Maia estimate how unusual the engine matches were at a reference rating of at least 600. The score is a screening signal.';
+  const clockDetail = result?.usedClocks ? 'Clock patterns also contributed.' : '';
+  return (
+    <div className="gr-fair-indicator" aria-label={`Fair Play for ${player}`} title={clockDetail ? `${detail} ${clockDetail}` : detail}>
+      <div className="gr-fair-indicator-text">
+        <span>{hasScore ? `${result.score}/100` : 'Fair Play'}</span>{' '}
+        <strong data-status={hasScore ? result.label : undefined}>{result?.label || 'Checking…'}</strong>
+      </div>
+      <div className={`gr-fair-indicator-line${hasScore ? ' is-scored' : ''}`} aria-hidden="true">
+        {hasScore && <span style={{ left: `${result.score}%` }} />}
+      </div>
+    </div>
+  );
+}
+
 function GameReview({ active = true }) {
   const location = useLocation();
   const { user, membershipActive, userDocLoading } = useAuth();
@@ -1810,6 +1839,7 @@ function GameReview({ active = true }) {
   const [multiPv, setMultiPv] = useState(DEFAULT_MULTI_PV);
   const [positionEval, setPositionEval] = useState(null);
   const [gameAnalysis, setGameAnalysis] = useState(null);
+  const [fairPlay, setFairPlay] = useState(null);
   const [gameProgress, setGameProgress] = useState(0);
   const [statusMessage, setStatusMessage] = useState('Load a game to start review.');
   const [copied, setCopied] = useState(false);
@@ -2005,6 +2035,13 @@ function GameReview({ active = true }) {
   const sidebarHeading = sidebarMode === 'play' ? 'Play vs Computer' : !hasLoadedGame && !activePuzzleQueue.length && sidebarMode !== 'puzzles' ? 'Import Game' : sidebarMode === 'overview' ? 'Overview' : sidebarMode === 'moves' ? 'Move Review' : sidebarMode === 'puzzles' ? (trainingSource === 'pack' ? 'Mistake Pack' : 'Practice Mistakes') : 'Import Game';
   const shouldShowLoadView = sidebarMode === 'load';
   const shouldShowOverviewView = canOpenSingleGameViews && sidebarMode === 'overview';
+  const shouldMeasureFairPlay = active && hasFullReview && canOpenSingleGameViews &&
+    (sidebarMode === 'overview' || sidebarMode === 'moves');
+  useEffect(() => {
+    if (!shouldMeasureFairPlay) return undefined;
+    return runFairPlayIndicator(gameData, playerSummary, (result) => setFairPlay({ game: gameData, result }));
+  }, [gameData, playerSummary, shouldMeasureFairPlay]);
+  const fairPlayResult = fairPlay && fairPlay.game === gameData ? fairPlay.result : null;
   const isMobileSummary = shouldShowLoadView || shouldShowOverviewView;
 
   useEffect(() => {
@@ -2924,6 +2961,7 @@ function GameReview({ active = true }) {
         return;
       }
       if (!await authorizeReview(parsed) || !isMountedRef.current) return;
+      parsed.importedRatings = { white: game.white?.rating, black: game.black?.rating };
       unstable_batchedUpdates(() => {
         resetReviewStateFromParsed(parsed, game.pgn, nextOrientation);
         queueAutoReview();
@@ -4464,12 +4502,14 @@ function GameReview({ active = true }) {
                         <PlayerAvatar name={stagePlayerSummary.white.name} avatarUrl={playerVisuals.white} className="gr-score-avatar" />
                         <div className="gr-score-name">{stagePlayerSummary.white.name}</div>
                         <div className="gr-score-accuracy">{hasFullReview ? gameAnalysis.accuracy.white.toFixed(1) : '--'}</div>
+                        {hasFullReview && <FairPlayIndicator player={stagePlayerSummary.white.name} result={fairPlayResult?.white} />}
                       </div>
                       <div className="gr-score-center-pill">{gameData ? gameData.result : '*'}</div>
                       <div className="gr-score-player">
                         <PlayerAvatar name={stagePlayerSummary.black.name} avatarUrl={playerVisuals.black} className="gr-score-avatar" />
                         <div className="gr-score-name">{stagePlayerSummary.black.name}</div>
                         <div className="gr-score-accuracy">{hasFullReview ? gameAnalysis.accuracy.black.toFixed(1) : '--'}</div>
+                        {hasFullReview && <FairPlayIndicator player={stagePlayerSummary.black.name} result={fairPlayResult?.black} />}
                       </div>
                     </div>
 
