@@ -4338,10 +4338,6 @@ function GameReview({ active = true }) {
                           <div className="gr-puzzle-title">{currentPuzzle ? currentPuzzle.goalLabel : 'Find the move'}</div>
                           {currentPuzzle && <span className="gr-puzzle-kicker">{currentPuzzle.sideLabel} to move</span>}
                         </div>
-                        <div className="gr-puzzle-copy" role="status">{puzzleStatus !== 'idle' ? puzzleFeedback : ''}</div>
-                        {puzzleHintOpen && currentPuzzle ? (
-                          <div className="gr-puzzle-hint">{getPuzzleHintText(currentPuzzle)}</div>
-                        ) : null}
                       </section>
 
                       <div className="gr-puzzle-action-row">
@@ -4354,32 +4350,6 @@ function GameReview({ active = true }) {
                           <span>Solution</span>
                         </button>
                       </div>
-                      {currentPuzzle && (puzzleStatus === 'solved' || puzzleStatus === 'revealed' || currentPuzzleResult) ? (
-                        <section className="gr-puzzle-explain">
-                          <button type="button" className="gr-button gr-button-secondary gr-puzzle-explain-toggle" onClick={handleExplainPuzzle} disabled={explanationLoading}>
-                            {explanationLoading ? 'Analyzing with Stockfish...' : explanationActive ? 'Hide explanation' : 'Why is this better?'}
-                          </button>
-                          {explanationActive ? (
-                            puzzleExplanation.error ? <div className="gr-puzzle-explain-copy">{puzzleExplanation.error}</div> : (
-                              <>
-                                <div className="gr-puzzle-explain-switch">
-                                  <button type="button" className={explanationBranch === 'played' ? 'is-active' : ''} onClick={() => { setExplanationBranch('played'); setExplanationStep(0); }}>Your move: {currentPuzzle.playedSan}</button>
-                                  <button type="button" className={explanationBranch === 'best' ? 'is-active' : ''} onClick={() => { setExplanationBranch('best'); setExplanationStep(0); }}>Best: {currentPuzzle.bestSan}</button>
-                                </div>
-                                <div className="gr-puzzle-explain-copy">{explanationBranch === 'played' ? puzzleExplanation.playedText : puzzleExplanation.bestText}</div>
-                                <div className="gr-puzzle-explain-copy">{explanationStep === 0 ? 'Start here, then step forward to see what happens.' : `Move ${explanationStep}: ${explanationPosition && explanationPosition.san}. The arrow shows the move just played.`}</div>
-                                <div className="gr-puzzle-explain-nav">
-                                  <button type="button" className="gr-button gr-button-secondary" disabled={explanationStep === 0} onClick={() => setExplanationStep((value) => Math.max(0, value - 1))}>Previous</button>
-                                  <span>{explanationStep + 1}/{explanationSteps.length}</span>
-                                  <button type="button" className="gr-button gr-button-secondary" disabled={explanationStep >= explanationSteps.length - 1} onClick={() => setExplanationStep((value) => Math.min(explanationSteps.length - 1, value + 1))}>Next</button>
-                                </div>
-                                <div className="gr-puzzle-explain-note">Stockfish continuation, not a guaranteed human response. Different defenses can change the line.</div>
-                              </>
-                            )
-                          ) : null}
-                        </section>
-                      ) : null}
-
                       <div className="gr-puzzle-footer">
                         <button
                           type="button"
@@ -4418,6 +4388,40 @@ function GameReview({ active = true }) {
                           );
                         })}
                       </div>
+
+                      <div className="gr-puzzle-feedback" role="status">
+                        {puzzleStatus !== 'idle' && puzzleFeedback && (
+                          <div className="gr-puzzle-copy">{puzzleFeedback}</div>
+                        )}
+                        {puzzleHintOpen && currentPuzzle && (
+                          <div className="gr-puzzle-hint">{getPuzzleHintText(currentPuzzle)}</div>
+                        )}
+                      </div>
+                      {currentPuzzle && (puzzleStatus === 'solved' || puzzleStatus === 'revealed' || currentPuzzleResult) ? (
+                        <section className="gr-puzzle-explain">
+                          <button type="button" className="gr-button gr-button-secondary gr-puzzle-explain-toggle" onClick={handleExplainPuzzle} disabled={explanationLoading}>
+                            {explanationLoading ? 'Analyzing with Stockfish...' : explanationActive ? 'Hide explanation' : 'Why is this better?'}
+                          </button>
+                          {explanationActive ? (
+                            puzzleExplanation.error ? <div className="gr-puzzle-explain-copy">{puzzleExplanation.error}</div> : (
+                              <>
+                                <div className="gr-puzzle-explain-switch">
+                                  <button type="button" className={explanationBranch === 'played' ? 'is-active' : ''} onClick={() => { setExplanationBranch('played'); setExplanationStep(0); }}>Your move: {currentPuzzle.playedSan}</button>
+                                  <button type="button" className={explanationBranch === 'best' ? 'is-active' : ''} onClick={() => { setExplanationBranch('best'); setExplanationStep(0); }}>Best: {currentPuzzle.bestSan}</button>
+                                </div>
+                                <div className="gr-puzzle-explain-copy">{explanationBranch === 'played' ? puzzleExplanation.playedText : puzzleExplanation.bestText}</div>
+                                <div className="gr-puzzle-explain-copy">{explanationStep === 0 ? 'Start here, then step forward to see what happens.' : `Move ${explanationStep}: ${explanationPosition && explanationPosition.san}. The arrow shows the move just played.`}</div>
+                                <div className="gr-puzzle-explain-nav">
+                                  <button type="button" className="gr-button gr-button-secondary" disabled={explanationStep === 0} onClick={() => setExplanationStep((value) => Math.max(0, value - 1))}>Previous</button>
+                                  <span>{explanationStep + 1}/{explanationSteps.length}</span>
+                                  <button type="button" className="gr-button gr-button-secondary" disabled={explanationStep >= explanationSteps.length - 1} onClick={() => setExplanationStep((value) => Math.min(explanationSteps.length - 1, value + 1))}>Next</button>
+                                </div>
+                                <div className="gr-puzzle-explain-note">Stockfish continuation, not a guaranteed human response. Different defenses can change the line.</div>
+                              </>
+                            )
+                          ) : null}
+                        </section>
+                      ) : null}
                     </>
                   )}
                 </div>
@@ -4516,6 +4520,36 @@ function GameReview({ active = true }) {
                 </div>
               ) : (
                 <div className="gr-sidebar-view gr-sidebar-view-moves">
+                  <div className="gr-moves-head">
+                    <span>Review</span>
+                    {isReviewVariation ? (
+                      <button type="button" className="gr-variation-return" onClick={exitReviewVariation}>
+                        ↩ Game
+                      </button>
+                    ) : <span>{currentPly === 0 ? 'Start' : `${currentPly}/${moveCount}`}</span>}
+                  </div>
+
+                  <div className="gr-control-dock">
+                    <button type="button" className="gr-dock-btn gr-tooltip-anchor" onClick={() => { if (isReviewVariation) exitReviewVariation(); setCurrentPly(0); }} aria-label="Jump to the first move" data-tooltip="Jump to first move">
+                      <FontAwesomeIcon icon={faFastBackward} />
+                    </button>
+                    <button type="button" className="gr-dock-btn gr-tooltip-anchor" onClick={() => { const origin = isReviewVariation ? reviewVariation.originPly : currentPly; if (isReviewVariation) exitReviewVariation(); setCurrentPly(Math.max(0, origin - 1)); }} aria-label="Review the previous move" data-tooltip="Previous move">
+                      <FontAwesomeIcon icon={faStepBackward} />
+                    </button>
+                    {!isReviewVariation && <button type="button" className="gr-dock-btn gr-dock-btn-primary gr-tooltip-anchor" onClick={() => { if (showPositionLines) setShowPositionLines(false); else { setShowPositionLines(true); analyzeCurrentPosition(); } }} aria-label={showPositionLines ? "Hide engine lines" : "Show engine lines for this position"} aria-pressed={showPositionLines} data-tooltip={showPositionLines ? "Hide engine lines" : "Show engine lines"}>
+                      {engineState === 'analyzing-position' ? <FontAwesomeIcon icon={faSpinner} spin /> : <FontAwesomeIcon icon={faSearch} />}
+                    </button>}
+                    {!isReviewVariation && <button type="button" className="gr-dock-btn gr-dock-btn-primary gr-tooltip-anchor" onClick={() => { setShowPositionLines(false); analyzeWholeGame(); }} disabled={engineState === 'analyzing-game'} aria-label="Reanalyze full game" data-tooltip="Reanalyze game">
+                      {engineState === 'analyzing-game' ? <FontAwesomeIcon icon={faSpinner} spin /> : <FontAwesomeIcon icon={faChartLine} />}
+                    </button>}
+                    <button type="button" className="gr-dock-btn gr-tooltip-anchor" onClick={() => { const origin = isReviewVariation ? reviewVariation.originPly : currentPly; if (isReviewVariation) exitReviewVariation(); setCurrentPly(Math.min(moveCount, origin + 1)); }} aria-label="Review the next move" data-tooltip="Next move">
+                      <FontAwesomeIcon icon={faStepForward} />
+                    </button>
+                    <button type="button" className="gr-dock-btn gr-tooltip-anchor" onClick={() => { if (isReviewVariation) exitReviewVariation(); setCurrentPly(moveCount); }} aria-label="Jump to the final move" data-tooltip="Final move">
+                      <FontAwesomeIcon icon={faFastForward} />
+                    </button>
+                  </div>
+
                   <div className="gr-move-summary">
                     {isReviewVariation ? (
                       <div className="gr-coach-message" role="status" aria-live="polite">
@@ -4565,36 +4599,6 @@ function GameReview({ active = true }) {
                         </button>
                       </div>
                     ) : null}
-                  </div>
-
-                  <div className="gr-moves-head">
-                    <span>Review</span>
-                    {isReviewVariation ? (
-                      <button type="button" className="gr-variation-return" onClick={exitReviewVariation}>
-                        ↩ Game
-                      </button>
-                    ) : <span>{currentPly === 0 ? 'Start' : `${currentPly}/${moveCount}`}</span>}
-                  </div>
-
-                  <div className="gr-control-dock">
-                    <button type="button" className="gr-dock-btn gr-tooltip-anchor" onClick={() => { if (isReviewVariation) exitReviewVariation(); setCurrentPly(0); }} aria-label="Jump to the first move" data-tooltip="Jump to first move">
-                      <FontAwesomeIcon icon={faFastBackward} />
-                    </button>
-                    <button type="button" className="gr-dock-btn gr-tooltip-anchor" onClick={() => { const origin = isReviewVariation ? reviewVariation.originPly : currentPly; if (isReviewVariation) exitReviewVariation(); setCurrentPly(Math.max(0, origin - 1)); }} aria-label="Review the previous move" data-tooltip="Previous move">
-                      <FontAwesomeIcon icon={faStepBackward} />
-                    </button>
-                    {!isReviewVariation && <button type="button" className="gr-dock-btn gr-dock-btn-primary gr-tooltip-anchor" onClick={() => { if (showPositionLines) setShowPositionLines(false); else { setShowPositionLines(true); analyzeCurrentPosition(); } }} aria-label={showPositionLines ? "Hide engine lines" : "Show engine lines for this position"} aria-pressed={showPositionLines} data-tooltip={showPositionLines ? "Hide engine lines" : "Show engine lines"}>
-                      {engineState === 'analyzing-position' ? <FontAwesomeIcon icon={faSpinner} spin /> : <FontAwesomeIcon icon={faSearch} />}
-                    </button>}
-                    {!isReviewVariation && <button type="button" className="gr-dock-btn gr-dock-btn-primary gr-tooltip-anchor" onClick={() => { setShowPositionLines(false); analyzeWholeGame(); }} disabled={engineState === 'analyzing-game'} aria-label="Reanalyze full game" data-tooltip="Reanalyze game">
-                      {engineState === 'analyzing-game' ? <FontAwesomeIcon icon={faSpinner} spin /> : <FontAwesomeIcon icon={faChartLine} />}
-                    </button>}
-                    <button type="button" className="gr-dock-btn gr-tooltip-anchor" onClick={() => { const origin = isReviewVariation ? reviewVariation.originPly : currentPly; if (isReviewVariation) exitReviewVariation(); setCurrentPly(Math.min(moveCount, origin + 1)); }} aria-label="Review the next move" data-tooltip="Next move">
-                      <FontAwesomeIcon icon={faStepForward} />
-                    </button>
-                    <button type="button" className="gr-dock-btn gr-tooltip-anchor" onClick={() => { if (isReviewVariation) exitReviewVariation(); setCurrentPly(moveCount); }} aria-label="Jump to the final move" data-tooltip="Final move">
-                      <FontAwesomeIcon icon={faFastForward} />
-                    </button>
                   </div>
 
                   <div className="gr-move-list">
