@@ -27,6 +27,12 @@ import { dayKeyFromDate, isoWeekKeyFromDate, monthKeyFromDate } from "../utils/p
 import { trackEvent } from "../utils/trackEvent";
 
 const Chess = ChessModule.Chess || ChessModule.default || ChessModule;
+const OPENING_REPLY_DELAY_MS = 70;
+const OPENING_MOVE_MOTION = {
+  duration: 185,
+  easing: "cubic-bezier(0.33, 0.04, 0.57, 1)",
+  fill: "forwards"
+};
 
 class BoardErrorBoundary extends Component {
   constructor(props) {
@@ -336,6 +342,9 @@ class OpeningTrainer extends Component {
     const customForFirst = customAll.filter((l) => l && l.openingKey === firstSetKey);
     const firstLines = firstLinesBuiltIn.concat(customForFirst);
 
+    this._openingBoardRef = React.createRef();
+    this._openingMoveAnimations = null;
+    this._openingReplyTimer = null;
     this._autoNextTimer = null;
     this._confettiTimer = null;
     this._streakToastTimer = null;
@@ -631,6 +640,12 @@ this._countedSeenForRun = false;
 
   
   componentDidUpdate(prevProps, prevState) {
+    if (prevState.openingKey !== this.state.openingKey ||
+        prevState.lineId !== this.state.lineId ||
+        prevState.gameMode !== this.state.gameMode) {
+      this.cancelOpeningMoveMotion();
+    }
+
     if (this.state.feedbackPreview && (
       prevState.lastMoveFeedback !== this.state.lastMoveFeedback ||
       prevState.fen !== this.state.fen ||
@@ -700,6 +715,7 @@ this._countedSeenForRun = false;
   }
 
 componentWillUnmount() {
+    this.cancelOpeningMoveMotion();
     this.clearFeedbackPreviewTimers();
 
     if (typeof window !== "undefined" && this._handleResize) {
@@ -1108,7 +1124,7 @@ saveCustomModal = () => {
   };
 
   onHint = () => {
-    if (this.state.completed) return;
+    if (this.state.completed || this._openingMoveAnimations) return;
     if (this.state.gameMode === "drill") return;
 
     const line = this.getLine();
@@ -1135,7 +1151,7 @@ saveCustomModal = () => {
   };
 
   playMoveForMe = () => {
-    if (this.state.completed) return;
+    if (this.state.completed || this._openingMoveAnimations) return;
 
     const line = this.getLine();
     if (!line) return;
@@ -1156,33 +1172,32 @@ saveCustomModal = () => {
 
     const flags = typeof mv.flags === "string" ? mv.flags : "";
     const isCapture = flags.includes("c") || flags.includes("e");
-    this.playSfx(isCapture ? "capture" : "moveSelf");
-
     const nextStep = this.state.stepIndex + 1;
 
-    this.setState(
-      {
-        fen: this.game.fen(),
-        stepIndex: nextStep,
-        viewing: false,
-        viewIndex: nextStep,
-        viewFen: this.game.fen(),
-        lastMistake: null,
-        lastMoveFeedback: null,
-        wrongAttempt: null,
-        wrongAttemptCount: 0,
-        showHint: false,
-        solveArmed: false,
-        hintFromSquare: null,
-        hintToSquare: null,
-        // Solve breaks clean completion
-        helpUsed: true,
-        lastMove: { from: mv.from, to: mv.to }
-      },
-      () => {
-        this.playAutoMovesIfNeeded();
-      }
-    );
+    this.animateOpeningMove(mv, () => {
+      this.playSfx(isCapture ? "capture" : "moveSelf");
+      this.setState(
+        {
+          fen: this.game.fen(),
+          stepIndex: nextStep,
+          viewing: false,
+          viewIndex: nextStep,
+          viewFen: this.game.fen(),
+          lastMistake: null,
+          lastMoveFeedback: null,
+          wrongAttempt: null,
+          wrongAttemptCount: 0,
+          showHint: false,
+          solveArmed: false,
+          hintFromSquare: null,
+          hintToSquare: null,
+          // Solve breaks clean completion
+          helpUsed: true,
+          lastMove: { from: mv.from, to: mv.to }
+        },
+        this.queueOpeningReply
+      );
+    });
   };
 
   toggleSettingsOpen = (e) => {
@@ -1452,6 +1467,7 @@ saveCustomModal = () => {
   };
 
   goToViewIndex = (nextIndex) => {
+    if (this._openingMoveAnimations || this._openingReplyTimer !== null) return;
     const line = this.getLine();
     if (!line) return;
 
@@ -1491,7 +1507,7 @@ saveCustomModal = () => {
   };
 
   undoMistake = () => {
-    if (!this.state.lastMistake && !this.state.wrongAttempt) return;
+    if (this._openingMoveAnimations || (!this.state.lastMistake && !this.state.wrongAttempt)) return;
     this.setState({
       fen: this.game.fen(),
       wrongAttempt: null,
@@ -1507,6 +1523,7 @@ saveCustomModal = () => {
   };
 
   resetLine = (keepUnlocked) => {
+    this.cancelOpeningMoveMotion();
     const line = this.getLine();
     const startFen = getLineStartFen(line);
 
@@ -2023,42 +2040,112 @@ if (!nextId) nextId = nextLines[0] ? nextLines[0].id : "";
 
 
 
-  playAutoMovesIfNeeded = () => {
-    const line = this.getLine();
-    if (!line) return;
+  cancelOpeningMoveMotion = () => {
+    clearTimeout(this._openingReplyTimer);
+    this._openingReplyTimer = null;
+    const animations = this._openingMoveAnimations;
+    this._openingMoveAnimations = null;
+    if (animations) this.releaseOpeningPieceAnimations(animations);
+  };
 
-    let stepIndex = this.state.stepIndex;
-    const playerColor = this.getPlayerColor();
+  releaseOpeningPieceAnimations = (animations) => {
+    animations.forEach(({ animation, piece }) => {
+      animation.cancel();
+      piece.classList.remove("ot-opening-piece-moving");
+    });
+  };
 
-    let didAutoMove = false;
-    let lastAutoMove = null;
-
-    while (stepIndex < line.moves.length && this.game.turn() !== playerColor) {
-      const expected = line.moves[stepIndex];
-      const mv = this.game.move(expected);
-      if (!mv) {
-        this.setState({ fen: this.game.fen() });
-        return;
-      }
-      lastAutoMove = mv;
-      stepIndex += 1;
-      didAutoMove = true;
+  animateOpeningMove = (move, onLand) => {
+    const board = this._openingBoardRef.current;
+    if (!board || this.state.viewing ||
+        (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches)) {
+      onLand();
+      return;
     }
 
-    const completed = stepIndex >= line.moves.length;
+    // Keep the original position visible until the moving piece reaches its square.
+    const animations = [];
+    const animatePiece = (from, to) => {
+      const source = board.querySelector(`[data-squareid="${from}"]`);
+      const target = board.querySelector(`[data-squareid="${to}"]`);
+      const piece = source && source.querySelector(`[data-testid$="-${from}"]`);
+      if (!piece || !target || typeof piece.animate !== "function") return;
 
-    this.setState(
-      {
-        fen: this.game.fen(),
-        stepIndex: stepIndex,
-        completed: completed,
-        lastMove: lastAutoMove ? { from: lastAutoMove.from, to: lastAutoMove.to } : this.state.lastMove
-      },
-      () => {
-        if (didAutoMove) this.playSfx("moveOpponent");
-        if (completed) this.onCompletedLine();
+      const sourceRect = source.getBoundingClientRect();
+      const targetRect = target.getBoundingClientRect();
+      if (!sourceRect.width || !sourceRect.height) return;
+      const dx = Math.round((targetRect.left - sourceRect.left) / sourceRect.width) * 100;
+      const dy = Math.round((targetRect.top - sourceRect.top) / sourceRect.height) * 100;
+      if (!dx && !dy) return;
+
+      piece.classList.add("ot-opening-piece-moving");
+      const animation = piece.animate([
+        { transform: "translate3d(0, 0, 0)" },
+        { transform: `translate3d(${dx}%, ${dy}%, 0)` }
+      ], OPENING_MOVE_MOTION);
+      animations.push({ animation, piece });
+    };
+
+    animatePiece(move.from, move.to);
+    if (/[kq]/.test(move.flags)) {
+      const rank = move.from[1];
+      const kingSide = move.flags.includes("k");
+      animatePiece(`${kingSide ? "h" : "a"}${rank}`, `${kingSide ? "f" : "d"}${rank}`);
+    }
+    if (!animations.length) {
+      onLand();
+      return;
+    }
+
+    this._openingMoveAnimations = animations;
+    const land = () => {
+      if (this._openingMoveAnimations !== animations) return;
+      this._openingMoveAnimations = null;
+      try {
+        onLand();
+      } finally {
+        this.releaseOpeningPieceAnimations(animations);
       }
-    );
+    };
+    Promise.all(animations.map(({ animation }) => animation.finished)).then(land, land);
+  };
+
+  queueOpeningReply = () => {
+    const line = this.getLine();
+    if (!line || this.state.stepIndex >= line.moves.length || this.game.turn() === this.getPlayerColor()) {
+      this.playAutoMovesIfNeeded();
+      return;
+    }
+    if (this._openingReplyTimer !== null) return;
+
+    this._openingReplyTimer = setTimeout(() => {
+      this._openingReplyTimer = null;
+      this.playAutoMovesIfNeeded();
+    }, OPENING_REPLY_DELAY_MS);
+  };
+
+  playAutoMovesIfNeeded = () => {
+    const line = this.getLine();
+    if (!line || this.state.completed || this._openingMoveAnimations || this._openingReplyTimer !== null) return;
+
+    const { stepIndex } = this.state;
+    if (stepIndex >= line.moves.length) {
+      this.setState({ completed: true }, this.onCompletedLine);
+      return;
+    }
+    if (this.game.turn() === this.getPlayerColor()) return;
+
+    const move = this.game.move(line.moves[stepIndex]);
+    if (!move) return;
+
+    this.animateOpeningMove(move, () => {
+      this.playSfx(move.captured ? "capture" : "moveOpponent");
+      this.setState({
+        fen: this.game.fen(),
+        stepIndex: stepIndex + 1,
+        lastMove: { from: move.from, to: move.to }
+      }, this.playAutoMovesIfNeeded);
+    });
   };
 
 onCompletedLine = () => {
@@ -2239,8 +2326,8 @@ onCompletedLine = () => {
   }
 };
 
-  onDrop = ({ sourceSquare, targetSquare }) => {
-    if (this.state.completed || this.state.viewing) return;
+  onDrop = ({ sourceSquare, targetSquare, piece }) => {
+    if (this.state.completed || this.state.viewing || this._openingMoveAnimations) return;
 
     // A small pointer movement can turn a piece click into a drop on the same square.
     if (sourceSquare && sourceSquare === targetSquare) {
@@ -2270,12 +2357,21 @@ onCompletedLine = () => {
       return;
     }
 
-    // Any legal move counts as activity (throttled to avoid spam)
-    try { touchActivityToday(); } catch (_) {}
+    // Let the first frame paint before updating activity storage and listeners.
+    window.requestAnimationFrame(() => {
+      setTimeout(() => {
+        try { touchActivityToday(); } catch (_) {}
+      }, 0);
+    });
 
     const playedSAN = move.san;
     const flags = typeof move.flags === "string" ? move.flags : "";
     const isCapture = flags.includes("c") || flags.includes("e");
+    // The drag layer has already moved a dropped piece to the target square.
+    const landMove = (onLand) => {
+      if (piece) onLand();
+      else this.animateOpeningMove(move, onLand);
+    };
 
     if (playedSAN !== expected) {
       const allowTranspositions = !!(this.state.settings && this.state.settings.allowTranspositions);
@@ -2302,7 +2398,7 @@ onCompletedLine = () => {
             }
           : null;
 
-        this.setState(
+        landMove(() => this.setState(
           {
             fen: this.game.fen(),
             lineId: transpositionMatch.lineId,
@@ -2333,9 +2429,9 @@ onCompletedLine = () => {
               this.clearTranspositionNotice();
             }
             this.playSfx(isCapture ? "capture" : "moveSelf");
-            this.playAutoMovesIfNeeded();
+            this.queueOpeningReply();
           }
-        );
+        ));
 
         return;
       }
@@ -2417,8 +2513,6 @@ onCompletedLine = () => {
       return;
     }
 
-    this.playSfx(isCapture ? "capture" : "moveSelf");
-
     const nextStep = this.state.stepIndex + 1;
 
     const correctFeedback = this.resolveMoveFeedback({
@@ -2429,8 +2523,9 @@ onCompletedLine = () => {
       isCorrect: true
     });
 
-    this.setState(
-      {
+    landMove(() => {
+      this.playSfx(isCapture ? "capture" : "moveSelf");
+      this.setState({
         fen: this.game.fen(),
         stepIndex: nextStep,
         lastMistake: null,
@@ -2447,15 +2542,12 @@ onCompletedLine = () => {
         lastMove: { from: sourceSquare, to: targetSquare },
         userHasPlayedThisLine: true,
         modePanelVisible: false
-      },
-      () => {
-        this.playAutoMovesIfNeeded();
-      }
-    );
+      }, this.queueOpeningReply);
+    });
   };
 
   allowDrag = ({ piece }) => {
-    if (this.state.completed) return false;
+    if (this.state.completed || this._openingMoveAnimations) return false;
     if (this.state.viewing) return false;
 
     const playerColor = this.getPlayerColor();
@@ -2482,7 +2574,7 @@ onCompletedLine = () => {
   };
 
   onSquareClick = (square) => {
-    if (this.state.completed) return;
+    if (this.state.completed || this._openingMoveAnimations) return;
     if (this.state.viewing) return;
 
     const line = this.getLine();
@@ -4442,7 +4534,7 @@ render() {
     const coachExpected = line.moves[viewIndex] || null;
     const boardFen = this.state.viewing ? this.state.viewFen : this.state.fen;
     // History jumps can replace several pieces without an ordinary move transition.
-    const boardKey = this.state.viewing ? `history:${boardFen}` : "live";
+    const boardKey = this.state.viewing ? `history:${boardFen}` : `live:${this.state.boardRenderToken}`;
     const boardWidth = this.getTrainingBoardWidth();
     const canViewBack = viewIndex > 0;
     const canViewForward = viewIndex < this.state.stepIndex;
@@ -4451,6 +4543,9 @@ render() {
 
     const playerColor = this.getPlayerColor();
     const orientation = playerColor === "b" ? "black" : "white";
+    // The position between the player move and scripted reply is only shown briefly.
+    const boardTurn = (boardFen || "").split(" ", 2)[1] || "w";
+    const waitingForReply = Boolean(nextExpected) && !this.state.viewing && boardTurn !== playerColor;
     const wrongMoveMarker = this.state.viewing || (this.state.isMobile && !this.state.mobileBoardSize)
       ? null
       : this.renderWrongMoveMarker(this.state.wrongAttempt?.to, orientation, boardWidth);
@@ -5166,14 +5261,14 @@ render() {
 
               <div className="ot-mobile-board-wrap">
                 <div className="ot-board">
-                  <div className="ot-board-inner ot-board-with-evaluation">
+                  <div className="ot-board-inner ot-board-with-evaluation ot-opening-board-motion" ref={this._openingBoardRef}>
                   <BoardErrorBoundary onReset={this.resetBoardRender}>
                   <Chessboard
                     id="opening-trainer-board"
                     key={boardKey}
                     width={boardWidth}
                     position={boardFen || "start"}
-                    transitionDuration={125}
+                    transitionDuration={0}
                     onDrop={this.onDrop}
                     allowDrag={this.allowDrag}
                     orientation={orientation}
@@ -5187,7 +5282,7 @@ render() {
                   </BoardErrorBoundary>
                   {this.renderHintArrowOverlay(playerColor)}
                   {wrongMoveMarker}
-                  <LiveEvaluationBar fen={boardFen || "start"} orientation={orientation} />
+                  <LiveEvaluationBar fen={boardFen || "start"} orientation={orientation} paused={waitingForReply} />
                   </div>
                 </div>
               </div>
@@ -5427,14 +5522,14 @@ render() {
 <option value="badOpeningPunishment">Bad Opening Punishment Drills</option>
 </select>
             </div>
-            <div className="ot-board-inner ot-board-with-evaluation">
+            <div className="ot-board-inner ot-board-with-evaluation ot-opening-board-motion" ref={this._openingBoardRef}>
 <BoardErrorBoundary onReset={this.resetBoardRender}>
 <Chessboard
   id="opening-trainer-board"
   key={boardKey}
   width={boardWidth}
   position={boardFen || "start"}
-  transitionDuration={125}
+  transitionDuration={0}
   onDrop={this.onDrop}
   allowDrag={this.allowDrag}
   orientation={orientation}
@@ -5448,7 +5543,7 @@ render() {
 </BoardErrorBoundary>
 {this.renderHintArrowOverlay(playerColor)}
 {wrongMoveMarker}
-              <LiveEvaluationBar fen={boardFen || "start"} orientation={orientation} />
+              <LiveEvaluationBar fen={boardFen || "start"} orientation={orientation} paused={waitingForReply} />
             </div>
           </div>
 

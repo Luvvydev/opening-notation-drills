@@ -3441,6 +3441,18 @@
   .ot-board-with-evaluation { --ot-eval-width: 12px; }
 }
 
+/* chessboardjsx can still offset a piece for one frame at a duration of zero. */
+.ot-opening-board-motion [data-squareid] [data-testid^="w"]:not(.ot-opening-piece-moving),
+.ot-opening-board-motion [data-squareid] [data-testid^="b"]:not(.ot-opening-piece-moving) {
+  transform: none !important;
+}
+
+/* Keep stacking order fixed so only the transform needs to animate. */
+.ot-opening-board-motion .ot-opening-piece-moving {
+  z-index: 7 !important;
+  will-change: transform;
+}
+
 /* chessboardjsx draws a second, squareless piece over the board during captures. */
 .ot-container [data-boardid] [data-squareid] [data-testid$="-undefined"] {
   visibility: hidden;

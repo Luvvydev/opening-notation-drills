@@ -1,12 +1,13 @@
 import React, { Component } from 'react';
 import Chessboard from "chessboardjsx";
-import * as Chess from 'chess.js';
+import * as ChessModule from 'chess.js';
 import PGNData from '../PGN/outfile.json';
 import { faCircle as blackCircle } from "@fortawesome/free-solid-svg-icons";
 import { faCircle as whiteCircle } from "@fortawesome/free-regular-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { BOARD_THEMES, DEFAULT_THEME } from '../theme/boardThemes';
 import './Board.css';
+import { startPieceMotion } from './pieceMotion';
 
 const ALPHA_PIECES = "https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/img/chesspieces/alpha/{piece}.png";
 
@@ -22,6 +23,7 @@ function stripPieceProps(theme) {
   return out;
 }
 
+const Chess = ChessModule.Chess || ChessModule.default || ChessModule;
 const game = new Chess();
 const orientations = ['white', 'black'];
 const NOTATION_SETTINGS_KEY = 'notation_trainer_opening_settings_v1';
@@ -52,6 +54,9 @@ class Board extends Component {
   constructor(props) {
     super(props);
     this.timeouts = new Set();
+    this.boardRef = React.createRef();
+    this.pieceMotion = null;
+    this.positionTimers = [];
     this.state = { 
       fen: 'start', 
       randomGameIndex: 0, 
@@ -112,6 +117,7 @@ class Board extends Component {
   }
 
   componentWillUnmount() {
+    this.cancelPieceMotion();
     clearInterval(this.interval);
     this.timeouts.forEach(clearTimeout);
     this.timeouts.clear();
@@ -124,6 +130,31 @@ class Board extends Component {
     }, delay);
     this.timeouts.add(timer);
     return timer;
+  };
+
+  cancelPieceMotion = () => {
+    const motion = this.pieceMotion;
+    this.pieceMotion = null;
+    if (motion) motion.cancel();
+  };
+
+  animateMove = (move, onLand) => {
+    const motion = startPieceMotion(this.boardRef.current, move, { beforeCommit: true });
+    if (!motion) {
+      onLand();
+      return;
+    }
+
+    this.pieceMotion = motion;
+    motion.finished.then(() => {
+      if (this.pieceMotion !== motion) return;
+      this.pieceMotion = null;
+      try {
+        onLand();
+      } finally {
+        motion.cancel();
+      }
+    });
   };
 
   playCorrectMoveSound = (capture) => {
@@ -145,6 +176,12 @@ class Board extends Component {
 
   // Generate new board position
   newPosition = () => {
+    this.cancelPieceMotion();
+    this.positionTimers.forEach((timer) => {
+      clearTimeout(timer);
+      this.timeouts.delete(timer);
+    });
+    this.positionTimers = [];
     this.clearSelection();
     let orientation = null;
     if (this.props.orientation === 'random'){
@@ -245,8 +282,10 @@ class Board extends Component {
       lastMove: null
     });
 
-    this.scheduleTimeout(() => this.makeInitMove(), 100);
-    this.scheduleTimeout(() => this.updateSquareStyling(), 800);
+    this.positionTimers = [
+      this.scheduleTimeout(this.makeInitMove, 100),
+      this.scheduleTimeout(this.updateSquareStyling, 800)
+    ];
   }
 
   // For initMove animation
@@ -269,8 +308,10 @@ class Board extends Component {
     }
 
     game.undo();
-    this.setState({ fen: game.fen(), initMoveData: initMoveData, nextMoveData: nextMoveData });
-    this.playCorrectMoveSound(!!initMoveData.captured);
+    this.animateMove(initMoveData, () => {
+      this.setState({ fen: game.fen(), initMoveData, nextMoveData });
+      this.playCorrectMoveSound(!!initMoveData.captured);
+    });
   }
 
   // For initMove colors
@@ -284,29 +325,36 @@ class Board extends Component {
   }
 
   // Validate user move input
-  onDrop = ({ sourceSquare, targetSquare, piece }) => {
+  onDrop = ({ sourceSquare, targetSquare, piece }, fromClick = false) => {
+    if (this.pieceMotion || this.state.correct || !this.state.nextMoveData.from) return;
     if (this.state.nextMoveData.from === sourceSquare 
        && this.state.nextMoveData.to === targetSquare
        && (this.state.nextMoveData.color + this.state.nextMoveData.piece.toUpperCase()) === piece) {
         if(!this.props.timed) {
           this.props.callbackDisableSettings(true);
         }
-        game.move(this.state.nextMove);
-        this.playCorrectMoveSound(!!this.state.nextMoveData.captured);
-        this.showCorrectConfetti();
-        this.setState({ 
-          answer: 'correct', 
-          fen: game.fen(), 
-          correctMoves: this.state.correctMoves+1,
-          correct: true,
-          selectedSquare: null,
-          legalTargets: [],
-          lastMove: {
-            from: sourceSquare,
-            to: targetSquare,
-            color: this.state.nextMoveData.color
-          }
-        });
+        const move = game.move(this.state.nextMove);
+        if (!move) return;
+
+        const onLand = () => {
+          this.playCorrectMoveSound(!!move.captured);
+          this.showCorrectConfetti();
+          this.setState({
+            answer: 'correct',
+            fen: game.fen(),
+            correctMoves: this.state.correctMoves + 1,
+            correct: true,
+            selectedSquare: null,
+            legalTargets: [],
+            lastMove: {
+              from: sourceSquare,
+              to: targetSquare,
+              color: move.color
+            }
+          });
+        };
+        if (fromClick) this.animateMove(move, onLand);
+        else onLand();
        } else if (sourceSquare === targetSquare) {
         // Skip if piece is dropped onto original square
        } else {
@@ -316,6 +364,7 @@ class Board extends Component {
 
   // Only allow correct colored pieces to be dragged
   allowDrag = ({ piece }) => {
+    if (this.pieceMotion || this.state.correct) return false;
     if (piece.charAt(0) === this.state.nextMoveData.color) {
       return true;
     } else {
@@ -341,6 +390,7 @@ class Board extends Component {
   };
 
   onSquareClick = (square) => {
+    if (this.pieceMotion || this.state.correct) return;
     const piece = game.get(square);
 
     if (!this.state.selectedSquare) {
@@ -369,7 +419,7 @@ class Board extends Component {
       return;
     }
 
-    this.onDrop({ sourceSquare: from, targetSquare: square, piece: selectedPiece.color + selectedPiece.type.toUpperCase() });
+    this.onDrop({ sourceSquare: from, targetSquare: square, piece: selectedPiece.color + selectedPiece.type.toUpperCase() }, true);
   };
 
   onSquareRightClick = () => {
@@ -468,19 +518,22 @@ class Board extends Component {
         <Timer 
           time={this.state.time - this.state.timerCount} 
           display={this.props.timed ? 'block' : 'none'} />
-        <Chessboard
-          position={this.state.fen} 
-          squareStyles={renderSquareStyles}
-          onDrop={this.onDrop}
-          allowDrag={this.allowDrag} 
-          showNotation={this.props.showNotation} 
-          orientation={this.props.orientation === 'random' ? this.state.orientation : this.props.orientation}
-          calcWidth={effectiveCalcWidth}
-          onSquareClick={this.onSquareClick}
-          onSquareRightClick={this.onSquareRightClick}
-          pieceTheme={this.props.pieceTheme === "alpha" ? ALPHA_PIECES : DEFAULT_PIECES}
-          {...stripPieceProps(BOARD_THEMES[this.props.boardTheme || DEFAULT_THEME])}
+        <div ref={this.boardRef} className="piece-motion-board">
+          <Chessboard
+            position={this.state.fen}
+            transitionDuration={0}
+            squareStyles={renderSquareStyles}
+            onDrop={this.onDrop}
+            allowDrag={this.allowDrag}
+            showNotation={this.props.showNotation}
+            orientation={this.props.orientation === 'random' ? this.state.orientation : this.props.orientation}
+            calcWidth={effectiveCalcWidth}
+            onSquareClick={this.onSquareClick}
+            onSquareRightClick={this.onSquareRightClick}
+            pieceTheme={this.props.pieceTheme === "alpha" ? ALPHA_PIECES : DEFAULT_PIECES}
+            {...stripPieceProps(BOARD_THEMES[this.props.boardTheme || DEFAULT_THEME])}
           />
+        </div>
         <div 
         id='movePrompt' >
           {this.state.nextMoveColor === 'White' ? <FontAwesomeIcon icon={whiteCircle} /> : <FontAwesomeIcon icon={blackCircle} />}   

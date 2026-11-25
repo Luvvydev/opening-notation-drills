@@ -31,6 +31,7 @@ import { OPENING_CATALOG } from '../openings/openingCatalog';
 import { BOARD_THEMES, DEFAULT_THEME, PIECE_THEMES } from '../theme/boardThemes';
 import { TRAINING_SCENARIOS, getScenarioReply, getScenarioStartMoves, getRepertoireReply, getAggressiveRepertoireReply, supportsOpeningAttack } from '../data/aggressionTraining';
 import './GameReview.css';
+import { startPieceMotion } from './pieceMotion';
 import { readFairPlayClocks, runFairPlayIndicator } from '../review/fairPlayIndicator';
 import EvaluationBar, { LiveEvaluationBar } from './EvaluationBar';
 import { clamp, getPositionLabel, getPositionWinPercentage, getResultProperty, parseEvaluationResults, uciToMoveObject } from '../review/positionEvaluation';
@@ -45,63 +46,34 @@ const Chess = ChessModule.Chess || ChessModule.default || ChessModule;
 // Animate review navigation on the piece element itself. chessboardjsx's own
 // position transition is disabled for review so rapid navigation cannot queue
 // competing board transitions. The animation runs on the compositor.
-function ReviewPieceMotion({ children, gameData, currentPly, fen, orientation, enabled }) {
+function ReviewPieceMotion({ children, gameData, currentPly, fen, orientation, enabled, playBoardRef }) {
   const boardRef = useRef(null);
   const previousRef = useRef(null);
-  const animationsRef = useRef([]);
 
   useLayoutEffect(() => {
-    animationsRef.current.forEach((animation) => animation.cancel());
-    animationsRef.current = [];
-
     const previous = previousRef.current;
     previousRef.current = { gameData, currentPly, fen, orientation, enabled };
-    if (!enabled || !previous || !previous.enabled || previous.gameData !== gameData ||
+    if (!enabled || !previous?.enabled || previous.gameData !== gameData ||
         previous.orientation !== orientation || previous.fen === fen ||
-        Math.abs(currentPly - previous.currentPly) !== 1 ||
-        !gameData || !gameData.moves || !boardRef.current ||
-        (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) return undefined;
+        Math.abs(currentPly - previous.currentPly) !== 1 || !gameData?.moves) return undefined;
 
     const forward = currentPly > previous.currentPly;
     const move = gameData.moves[forward ? currentPly - 1 : previous.currentPly - 1];
-    if (!move || !move.from || !move.to) return undefined;
-
-    const animatePiece = (from, to) => {
-      const source = boardRef.current.querySelector(`[data-squareid="${from}"]`);
-      const target = boardRef.current.querySelector(`[data-squareid="${to}"]`);
-      const piece = target && target.querySelector('[data-testid^="w"], [data-testid^="b"]');
-      if (!source || !target || !piece || typeof piece.animate !== 'function') return;
-
-      const sourceRect = source.getBoundingClientRect();
-      const targetRect = target.getBoundingClientRect();
-      const dx = sourceRect.left - targetRect.left;
-      const dy = sourceRect.top - targetRect.top;
-      if (!dx && !dy) return;
-
-      const animation = piece.animate([
-        { transform: `translate3d(${dx}px, ${dy}px, 0)` },
-        { transform: 'translate3d(0, 0, 0)' },
-      ], { duration: 170, easing: 'cubic-bezier(0.22, 0.75, 0.25, 1)' });
-      animationsRef.current.push(animation);
+    let disposed = false;
+    let motion = null;
+    // During a capture the board installs the final piece in a nested update.
+    Promise.resolve().then(() => {
+      if (disposed) return;
+      motion = startPieceMotion(boardRef.current, move, { reverse: !forward });
+      if (motion) motion.finished.then(motion.cancel);
+    });
+    return () => {
+      disposed = true;
+      if (motion) motion.cancel();
     };
-
-    animatePiece(forward ? move.from : move.to, forward ? move.to : move.from);
-    // Castling moves both king and rook. Preserve both animations.
-    if (typeof move.flags === 'string' && /[kq]/.test(move.flags)) {
-      const rank = move.from.slice(1);
-      const kingSide = move.to.charCodeAt(0) > move.from.charCodeAt(0);
-      const rookFrom = `${kingSide ? 'h' : 'a'}${rank}`;
-      const rookTo = `${kingSide ? 'f' : 'd'}${rank}`;
-      animatePiece(forward ? rookFrom : rookTo, forward ? rookTo : rookFrom);
-    }
-    return undefined;
   }, [gameData, currentPly, fen, orientation, enabled]);
 
-  useEffect(() => () => {
-    animationsRef.current.forEach((animation) => animation.cancel());
-  }, []);
-
-  return <div ref={boardRef} className={enabled ? "gr-review-piece-motion gr-review-piece-motion-active" : "gr-review-piece-motion"}>{children}</div>;
+  return <div ref={playBoardRef || boardRef} className={`gr-review-piece-motion${enabled || playBoardRef ? ' piece-motion-board' : ''}${enabled ? ' gr-review-piece-motion-active' : ''}`}>{children}</div>;
 }
 
 function ReviewConfetti({ active }) {
@@ -139,6 +111,7 @@ const DEFAULT_MULTI_PV = 3;
 const DEFAULT_SOURCE = 'chesscom';
 const DEFAULT_PLAY_TIME = 500;
 const BOARD_TRANSITION_MS = 125;
+const SCRIPTED_PLAY_REPLY_DELAY_MS = 70;
 const PLAY_EVALUATION_KEY = 'chessdrills_play_evaluation_bar';
 const DEFAULT_PACK_BATCH = 10;
 const PACK_SEED_PUZZLES = 2;
@@ -1914,6 +1887,8 @@ function GameReview({ active = true }) {
   const remoteAbortRef = useRef(null);
   const remoteAutoLoadKeyRef = useRef('');
   const playEnginePromiseRef = useRef(null);
+  const playBoardRef = useRef(null);
+  const playPieceMotionRef = useRef(null);
   const playGameRef = useRef(null);
   if (!playGameRef.current) playGameRef.current = new Chess();
   const boardFrameRef = useRef(null);
@@ -1979,6 +1954,9 @@ function GameReview({ active = true }) {
 
   const isPlayMode = sidebarMode === 'play';
   const showPlayEvaluation = active && isPlayMode && playStarted && playShowEvaluation;
+  useLayoutEffect(() => () => {
+    if (isPlayMode && active && playPieceMotionRef.current) playPieceMotionRef.current.cancel();
+  }, [active, isPlayMode]);
   const isPuzzleMode = sidebarMode === 'puzzles';
   const isReviewVariation = Boolean(reviewVariation) && !isPlayMode && !isPuzzleMode;
   const isCompactPractice = isPuzzleMode && activePuzzleQueue.length > 0;
@@ -2127,6 +2105,8 @@ function GameReview({ active = true }) {
 
   const closeEngineBoard = useCallback(() => {
     playGameRef.current = new Chess();
+    if (playPieceMotionRef.current) playPieceMotionRef.current.cancel();
+    playPieceMotionRef.current = null;
     closePlayEngine();
     setPlayStarted(false);
     clearPlaySelection();
@@ -3229,7 +3209,24 @@ function GameReview({ active = true }) {
     setPlayStatus(statusText);
   }, []);
 
-  const makeEngineMove = useCallback(async (scenarioOverride, sideOverride, openingOverride) => {
+  const landPlayMove = useCallback(async (game, move, status, sound, animate) => {
+    const motion = animate ? startPieceMotion(playBoardRef.current, move, { beforeCommit: true }) : null;
+    if (motion) playPieceMotionRef.current = motion;
+    try {
+      if (motion) await motion.finished;
+      if (!isMountedRef.current || playGameRef.current !== game) return false;
+      playSfx(isCaptureLike(move) ? 'capture' : sound);
+      unstable_batchedUpdates(() => syncPlayState(status, move));
+      return true;
+    } finally {
+      if (motion) {
+        motion.cancel();
+        if (playPieceMotionRef.current === motion) playPieceMotionRef.current = null;
+      }
+    }
+  }, [playSfx, syncPlayState]);
+
+  const makeEngineMove = useCallback(async (scenarioOverride, sideOverride, openingOverride, afterPlayerMove = false) => {
     const game = playGameRef.current;
     if (game.game_over()) return;
 
@@ -3242,16 +3239,14 @@ function GameReview({ active = true }) {
       const scriptedMove = openingKey
         ? getAggressiveRepertoireReply(scenario, openingKey, game.history(), game.fen()) || getRepertoireReply(openingKey, game.history(), game.fen(), scenario)
         : getScenarioReply(scenario, game.history(), sideOverride || playOrientation, game.fen());
-      // Give the player move a render and animation before an immediate scripted reply.
-      if (scriptedMove) await waitMs(BOARD_TRANSITION_MS);
+      if (scriptedMove && afterPlayerMove) await waitMs(SCRIPTED_PLAY_REPLY_DELAY_MS);
       const bestMove = scriptedMove || await getBestMoveForCurrentPosition(game.fen(), playTimeMs);
       if (!isMountedRef.current || playGameRef.current !== game) return;
       const applied = scriptedMove ? game.move(scriptedMove) : game.move(uciToMoveObject(bestMove));
       if (!applied) {
         throw new Error('Engine move was illegal.');
       }
-      playSfx(isCaptureLike(applied) ? 'capture' : 'moveOpponent');
-      syncPlayState('Your move.', applied);
+      await landPlayMove(game, applied, 'Your move.', 'moveOpponent', true);
     } catch (_) {
       if (isMountedRef.current && playGameRef.current === game) {
         setEngineError('Engine move failed.');
@@ -3260,7 +3255,7 @@ function GameReview({ active = true }) {
     } finally {
       if (isMountedRef.current && playGameRef.current === game) setPlayThinking(false);
     }
-  }, [activePlayOpeningKey, activePlayScenario, getBestMoveForCurrentPosition, playOrientation, playSfx, playTimeMs, syncPlayState]);
+  }, [activePlayOpeningKey, activePlayScenario, getBestMoveForCurrentPosition, landPlayMove, playOrientation, playTimeMs]);
 
   const startPlayGame = useCallback(async (side, openingOverride, scenarioOverride) => {
     await handleStop();
@@ -3295,6 +3290,8 @@ function GameReview({ active = true }) {
       return;
     }
     playGameRef.current = nextGame;
+    if (playPieceMotionRef.current) playPieceMotionRef.current.cancel();
+    playPieceMotionRef.current = null;
     setPlayOrientation(side);
     setPlayLastMove(null);
     clearPlaySelection();
@@ -3313,8 +3310,8 @@ function GameReview({ active = true }) {
     }
   }, [clearPlayDragState, clearPlaySelection, handleStop, makeEngineMove, playOpeningKey, playScenario, syncPlayState]);
 
-  const handlePlayDrop = useCallback(async ({ sourceSquare, targetSquare }) => {
-    if (playThinking || playResult) return;
+  const handlePlayDrop = useCallback(async ({ sourceSquare, targetSquare }, fromClick = false) => {
+    if (playThinking || playResult || playPieceMotionRef.current) return;
     clearPlaySelection();
     clearPlayDragState();
     const game = playGameRef.current;
@@ -3332,10 +3329,14 @@ function GameReview({ active = true }) {
       return;
     }
 
-    playSfx(isCaptureLike(move) ? 'capture' : 'moveSelf');
-    syncPlayState('Engine thinking…', move);
-    await makeEngineMove();
-  }, [clearPlayDragState, clearPlaySelection, makeEngineMove, playOrientation, playResult, playSfx, playThinking, syncPlayState]);
+    setPlayThinking(true);
+    if (!await landPlayMove(game, move, 'Engine thinking…', 'moveSelf', fromClick)) return;
+    if (game.game_over()) {
+      setPlayThinking(false);
+      return;
+    }
+    await makeEngineMove(undefined, undefined, undefined, true);
+  }, [clearPlayDragState, clearPlaySelection, landPlayMove, makeEngineMove, playOrientation, playResult, playSfx, playThinking]);
 
   const handlePlaySquareClick = useCallback((square) => {
     if (playThinking || playResult) return;
@@ -3364,9 +3365,7 @@ function GameReview({ active = true }) {
       return;
     }
 
-    const selectedPiece = game.get(playSelectedSquare);
-    const pieceCode = selectedPiece ? `${selectedPiece.color}${selectedPiece.type.toUpperCase()}` : undefined;
-    handlePlayDrop({ sourceSquare: playSelectedSquare, targetSquare: square, piece: pieceCode });
+    handlePlayDrop({ sourceSquare: playSelectedSquare, targetSquare: square }, true);
   }, [clearPlaySelection, getLegalTargetsForFen, handlePlayDrop, playOrientation, playResult, playSelectedSquare, playThinking]);
 
   const goToPreviousPuzzle = useCallback(() => {
@@ -3894,13 +3893,14 @@ function GameReview({ active = true }) {
                 {!isPlayMode && !isPuzzleMode && hasLoadedGame && <EvaluationBar evaluation={displayedEvaluation} />}
                 {showPlayEvaluation && <LiveEvaluationBar fen={playFen} orientation={playOrientation} paused={playThinking} drawn={playResult === 'Game drawn.'} />}
                 <div className="gr-board-stack" style={{ width: `${boardWidth}px` }}>
-                  <ReviewPieceMotion gameData={gameData} currentPly={currentPly} fen={reviewBoardFen} orientation={effectiveBoardOrientation} enabled={!isPlayMode && !isPuzzleMode && !isReviewVariation}>
+                  <ReviewPieceMotion gameData={gameData} currentPly={currentPly} fen={reviewBoardFen} orientation={effectiveBoardOrientation} enabled={!isPlayMode && !isPuzzleMode && !isReviewVariation} playBoardRef={isPlayMode && active ? playBoardRef : null}>
                   <Chessboard
                     key={`review-board-${isPlayMode ? playOrientation : effectiveBoardOrientation}${isPuzzleMode ? `-puzzle-${currentPuzzle?.id || puzzleIndex}` : ''}`}
                     width={boardWidth}
-                    transitionDuration={isPlayMode || isPuzzleMode || isReviewVariation ? BOARD_TRANSITION_MS : 0}
+                    transitionDuration={isPuzzleMode || isReviewVariation ? BOARD_TRANSITION_MS : 0}
                     position={reviewBoardFen}
                     orientation={isPlayMode && playStarted ? playOrientation : effectiveBoardOrientation}
+                    {...(isPlayMode ? { draggable: playStarted && !playThinking && !playResult } : {})}
                     arePiecesDraggable={isPlayMode ? playStarted && !playThinking && !playResult : isPuzzleMode ? Boolean(currentPuzzle) && !explanationActive && puzzleStatus !== 'checking' && puzzleStatus !== 'solved' : hasLoadedGame && engineState !== 'analyzing-game'}
                     onDrop={isPlayMode ? (playStarted ? handlePlayDrop : undefined) : isPuzzleMode ? handlePuzzleDrop : handleReviewMove}
                     onSquareClick={isPlayMode ? (playStarted ? handlePlaySquareClick : undefined) : isPuzzleMode && !explanationActive ? handlePuzzleSquareClick : handleReviewSquareClick}

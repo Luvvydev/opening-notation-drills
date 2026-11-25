@@ -1,0 +1,22 @@
+.piece-motion-board {
+  isolation: isolate;
+}
+
+.piece-motion-board [data-squareid] {
+  overflow: visible;
+}
+
+/* Keep the library's zero-duration offsets and capture copies out of these boards. */
+.piece-motion-board [data-squareid] [data-testid]:not(.piece-motion-moving) {
+  transform: none !important;
+}
+
+.piece-motion-board [data-squareid] [data-testid$="-undefined"] {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.piece-motion-board .piece-motion-moving {
+  z-index: 7 !important;
+  will-change: transform;
+}
