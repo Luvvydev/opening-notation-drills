@@ -4552,11 +4552,16 @@ function GameReview({ active = true }) {
                       </div>
                     ) : (
                       <div className="gr-remote-panel">
-                        <form className="gr-remote-toolbar" onSubmit={(event) => { event.preventDefault(); handleLoadRemoteGames(); }}>
+                        <form className="gr-remote-toolbar" autoComplete="off" onSubmit={(event) => { event.preventDefault(); handleLoadRemoteGames(); }}>
                           <label className="gr-compact-field gr-compact-field-wide">
                             <span>{source === 'lichess' ? 'Lichess username' : 'Chess.com username'}</span>
                             <input
                               className="gr-text-input"
+                              type="search"
+                              name="player-lookup"
+                              autoComplete="off"
+                              autoCapitalize="none"
+                              spellCheck={false}
                               value={remoteUsername}
                               disabled={Boolean(openingRemoteGameId)}
                               onChange={(event) => setRemoteUsername(event.target.value)}

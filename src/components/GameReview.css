@@ -2611,6 +2611,15 @@
   align-items: end;
 }
 
+.gr-remote-toolbar .gr-text-input {
+  appearance: none;
+  font-size: 16px;
+}
+
+.gr-remote-toolbar .gr-text-input:focus-visible {
+  outline-offset: -3px;
+}
+
 .gr-compact-field,
 .gr-compact-field-wide {
   gap: 7px;
@@ -3720,8 +3729,8 @@
 }
 
 @media (max-width: 680px) {
-  .gr-pack-builder-grid {
-    grid-template-columns: 1fr;
+  .gr-sidebar-view-load .gr-pack-builder-grid {
+    grid-template-columns: minmax(0, 1.2fr) repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -3930,7 +3939,8 @@
   }
   .gr-sidebar-view-load .gr-remote-list {
     flex: 0 1 auto;
-    max-height: 180px;
+    max-height: 320px;
+    max-height: clamp(288px, 42svh, 360px);
   }
 }
 
