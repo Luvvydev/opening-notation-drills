@@ -148,12 +148,13 @@ test.each(['paid', 'already saved', 'failure', 'free'])('completed %s review res
   const searches = [];
   window.Worker = class extends TestStockfish {
     postMessage(command) {
+      if (command === 'ucinewgame') this.fairPlaySearch = true;
       if (command.startsWith('position fen ')) this.fen = command.slice('position fen '.length);
       if (!command.startsWith('go ')) {
         super.postMessage(command);
         return;
       }
-      searches.push(command);
+      if (!this.fairPlaySearch) searches.push(command);
       const board = new Chess(this.fen);
       const candidate = board.moves({ verbose: true }).find((move) => move.from + move.to !== nextMoves.get(this.fen));
       const uci = candidate.from + candidate.to + (candidate.promotion || '');

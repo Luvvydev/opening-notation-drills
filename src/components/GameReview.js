@@ -32,7 +32,7 @@ import { BOARD_THEMES, DEFAULT_THEME, PIECE_THEMES } from '../theme/boardThemes'
 import { TRAINING_SCENARIOS, getScenarioReply, getScenarioStartMoves, getRepertoireReply, getAggressiveRepertoireReply, supportsOpeningAttack } from '../data/aggressionTraining';
 import './GameReview.css';
 import { startPieceMotion } from './pieceMotion';
-import { readFairPlayClocks, runFairPlayIndicator } from '../review/fairPlayIndicator';
+import { FAIR_PLAY_PROFILE_GAME_LIMIT, createFairPlayBatchAnalyzer, getFairPlayHistory, getFairPlayProfileScreening, getFairPlayReviewHighlights, getFairPlayReviewQueue, readFairPlayClocks, readFairPlayProfileGames, runFairPlayIndicator, saveFairPlayDepthCheck, saveFairPlayEvidence, saveFairPlayProfileGames, verifyFairPlayReviewMoves } from '../review/fairPlayIndicator';
 import EvaluationBar, { LiveEvaluationBar } from './EvaluationBar';
 import { clamp, getPositionLabel, getPositionWinPercentage, getResultProperty, parseEvaluationResults, uciToMoveObject } from '../review/positionEvaluation';
 import { createReviewWorkerHandle, disposeReviewWorkerHandle, LEGACY_ENGINE_PATH, sendCommandsToWorker, WASM_ENGINE_PATH } from '../review/stockfishWorker';
@@ -673,9 +673,9 @@ function parsePgn(rawText, orientationOverride) {
     }
   }
 
-  if (/\[%(?:clk|emt)\s/i.test(text)) {
+  if (/\[%(?:clk|emt|timestamp)\s/i.test(text)) {
     const comments = new Map(game.get_comments().map(({ fen, comment }) => [fen, comment]));
-    readFairPlayClocks(moves, comments, headers.TimeControl).forEach((seconds, index) => {
+    readFairPlayClocks(moves, comments, headers.TimeControl, headers).forEach((seconds, index) => {
       moves[index].fairPlaySeconds = seconds;
     });
   }
@@ -774,20 +774,24 @@ async function getChessComUserRecentGames(username, signal) {
     urls.push(`https://api.chess.com/pub/player/${encodeURIComponent(trimmed.toLowerCase())}/games/${year}/${getPaddedNumber(month - 1)}`);
   }
 
-  const chunks = await Promise.all(urls.map(async (url) => {
-    const response = await fetch(url, { method: 'GET', signal });
-    const data = await response.json();
-    if (response.status >= 400 && data && data.message !== 'Date cannot be set in the future') {
-      throw new Error('Could not load games from Chess.com.');
-    }
-    return Array.isArray(data && data.games) ? data.games : [];
-  }));
+  const chunks = await Promise.all(urls.map((url) => fetchChessComArchive(url, signal)));
+  return formatChessComGames(chunks.flat(), 50);
+}
 
-  return chunks
-    .reduce((acc, games) => acc.concat(games), [])
+async function fetchChessComArchive(url, signal) {
+  const response = await fetch(url, { method: 'GET', signal });
+  const data = await response.json();
+  if (response.status >= 400 && data?.message !== 'Date cannot be set in the future') {
+    throw new Error('Could not load games from Chess.com.');
+  }
+  return Array.isArray(data?.games) ? data.games : [];
+}
+
+function formatChessComGames(games, limit = Infinity) {
+  return games
     .filter((game) => game && game.pgn && game.end_time)
     .sort((a, b) => (b.end_time || 0) - (a.end_time || 0))
-    .slice(0, 50)
+    .slice(0, limit)
     .map((game) => {
       const result = game.pgn.match(/\[Result "(.*?)"\]/)?.[1] || '*';
       const movesNb = game.pgn.match(/\d+?\. /g)?.length;
@@ -808,6 +812,7 @@ async function getChessComUserRecentGames(username, signal) {
         timeControl,
         speedClass: game.time_class || getSpeedClassFromSeconds(baseSeconds),
         sourceType: 'chesscom',
+        rated: game.rated === true && (game.rules === 'chess' || !game.rules) && game.time_class !== 'daily',
         movesNb: movesNb ? movesNb * 2 : 0,
         white: {
           name: game.white && game.white.username ? game.white.username : 'White',
@@ -823,12 +828,42 @@ async function getChessComUserRecentGames(username, signal) {
     });
 }
 
-async function getLichessUserRecentGames(username, signal) {
+async function getChessComFairPlayGames(username, signal) {
+  const player = encodeURIComponent(username.trim().toLowerCase());
+  const base = `https://api.chess.com/pub/player/${player}/games/`;
+  const response = await fetch(`${base}archives`, { signal });
+  if (!response.ok) throw new Error('Could not load Chess.com archive list.');
+  const { archives } = await response.json();
+  if (!Array.isArray(archives)) throw new Error('Chess.com returned an invalid archive list.');
+  const months = [...new Set(archives)].filter((url) => typeof url === 'string' &&
+    url.startsWith(base) && /^\d{4}\/(?:0[1-9]|1[0-2])$/.test(url.slice(base.length))).sort().reverse();
+  const recent = new Map();
+  let partial = false;
+  for (const month of months) {
+    let games;
+    try {
+      games = formatChessComGames(await fetchChessComArchive(month, signal));
+    } catch (error) {
+      if (signal.aborted || !recent.size) throw error;
+      partial = true;
+      break;
+    }
+    for (const game of games) {
+      if (game.rated && (!game.movesNb || game.movesNb >= 15) && !recent.has(game.id)) {
+        recent.set(game.id, game);
+      }
+    }
+    if (recent.size >= FAIR_PLAY_PROFILE_GAME_LIMIT) break;
+  }
+  return { games: Array.from(recent.values()).slice(0, FAIR_PLAY_PROFILE_GAME_LIMIT), partial };
+}
+
+async function getLichessUserRecentGames(username, signal, fairPlay = false) {
   const trimmed = String(username || '').trim();
   if (!trimmed) return [];
 
   const response = await fetch(
-    `https://lichess.org/api/games/user/${encodeURIComponent(trimmed)}?until=${Date.now()}&max=50&pgnInJson=true&sort=dateDesc&clocks=true`,
+    `https://lichess.org/api/games/user/${encodeURIComponent(trimmed)}?until=${Date.now()}&max=${fairPlay ? 400 : 50}&pgnInJson=true&sort=dateDesc&clocks=true${fairPlay ? '&rated=true&perfType=ultraBullet,bullet,blitz,rapid,classical' : ''}`,
     { method: 'GET', headers: { accept: 'application/x-ndjson' }, signal }
   );
 
@@ -850,6 +885,7 @@ async function getLichessUserRecentGames(username, signal) {
       timeControl: game.clock ? `${Math.floor((game.clock.initial || 0) / 60)}+${game.clock.increment || 0}` : 'Game',
       speedClass: game.speed || (game.clock ? getSpeedClassFromSeconds(game.clock.initial || 0) : 'game'),
       sourceType: 'lichess',
+      rated: game.rated === true && game.variant === 'standard' && game.speed !== 'correspondence',
       movesNb: game.moves ? game.moves.split(' ').length : 0,
       white: {
         name: game.players && game.players.white && game.players.white.user ? game.players.white.user.name : 'White',
@@ -1743,22 +1779,283 @@ function useReviewBoardState({
   return { currentPosition, currentMove, currentClassification, playerSummary, classificationCounts, currentInsight, boardSquareStyles, boardThemeStyles, pieceThemeUrl, playSquareStyles, puzzleSquareStyles };
 }
 
-function FairPlayIndicator({ result, player }) {
+function FairPlayIndicator({ result, player, overall = false }) {
   const hasScore = Number.isFinite(result?.score);
-  const detail = result?.label === 'Few moves' ? 'Too few usable moves for a result.'
-    : result?.basis === 'stockfish' ? 'Stockfish estimate from engine matches, difficult choices, and costly moves. The score is a screening signal.'
-      : 'Stockfish and Maia estimate how unusual the engine matches were at a reference rating of at least 600. The score is a screening signal.';
-  const clockDetail = result?.usedClocks ? 'Clock patterns also contributed.' : '';
+  const profileLabel = {
+    'Too little data': 'Few games',
+    'Review check pending': 'Checking…',
+    'No strong signal found': 'Clean',
+    'Worth reviewing': result?.score < 35 ? 'Sus' : 'Watch',
+  };
+  const label = (overall ? profileLabel[result?.label] : null) || result?.label || 'Checking…';
+  const detail = overall ? `${result?.label || 'Checking…'}. Estimate from recent rated games reviewed on this device.`
+    : result?.label === 'Few moves' ? 'Too few usable moves for a result.'
+      : result?.label === 'Unavailable' ? 'Stockfish could not complete the analysis.'
+        : result?.basis === 'stockfish' ? 'Stockfish screening estimate.'
+          : result?.basis === 'combined' ? 'Stockfish and Maia screening estimate.'
+            : 'Analyzing Fair Play.';
+  const clockDetail = result?.clockEvidence ? ' Move timing contributed to the estimate.' : '';
   return (
-    <div className="gr-fair-indicator" aria-label={`Fair Play for ${player}`} title={clockDetail ? `${detail} ${clockDetail}` : detail}>
+    <div className="gr-fair-indicator" role="status" aria-label={`${overall ? 'Overall Fair Play' : 'Fair Play'} for ${player}`} title={`${detail}${clockDetail}`}>
       <div className="gr-fair-indicator-text">
-        <span>{hasScore ? `${result.score}/100` : 'Fair Play'}</span>{' '}
-        <strong data-status={hasScore ? result.label : undefined}>{result?.label || 'Checking…'}</strong>
+        {hasScore || !overall ? <span>{hasScore ? `${result.score}/100` : 'Fair Play'}</span> : null}
+        {overall && hasScore && <span aria-hidden="true">·</span>}
+        <strong data-status={hasScore ? label : undefined}>{label}</strong>
       </div>
       <div className={`gr-fair-indicator-line${hasScore ? ' is-scored' : ''}`} aria-hidden="true">
         {hasScore && <span style={{ left: `${result.score}%` }} />}
       </div>
     </div>
+  );
+}
+
+function getFairPlayGameLink(game, ply) {
+  const url = typeof game.url === 'string' ? game.url : '';
+  if (game.sourceType === 'chesscom' && /^https:\/\/(?:www\.)?chess\.com\/game\/live\/\d+$/.test(url)) return url;
+  if (game.sourceType === 'lichess' && /^[a-z\d]{8}$/i.test(game.id || '')) {
+    return `https://lichess.org/${game.id}${Number.isInteger(ply) && ply > 0 ? `#${ply}` : ''}`;
+  }
+  return null;
+}
+
+function RemoteFairPlaySummary({ games, username, source, onSelectGame }) {
+  const batchRef = useRef(null);
+  const [progress, setProgress] = useState(null);
+  const [feedback, setFeedback] = useState('');
+  const profileKey = `${source}:${username.trim().toLowerCase()}`;
+  const [archiveGames, setArchiveGames] = useState(() => readFairPlayProfileGames(profileKey));
+  const [accountStatus, setAccountStatus] = useState(null);
+  useEffect(() => {
+    const player = username.trim().toLowerCase();
+    if (source !== 'chesscom' || player.length < 2) return undefined;
+
+    const controller = new AbortController();
+    // Keep recent games usable if the profile endpoint is unavailable.
+    const timer = window.setTimeout(() => {
+      controller.abort();
+      setAccountStatus('unknown');
+    }, 5000);
+    fetch(`https://api.chess.com/pub/player/${encodeURIComponent(player)}`, { signal: controller.signal })
+      .then((response) => response.ok ? response.json() : null)
+      .then((profile) => {
+        if (!controller.signal.aborted) setAccountStatus(profile?.status || 'unknown');
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setAccountStatus('unknown');
+      })
+      .finally(() => window.clearTimeout(timer));
+    return () => {
+      controller.abort();
+      window.clearTimeout(timer);
+    };
+  }, [source, username]);
+  useEffect(() => () => {
+    const batch = batchRef.current;
+    batchRef.current = null;
+    if (batch) batch.controller.abort();
+  }, []);
+
+  const closed = accountStatus === 'closed:fair_play_violations';
+  const checkingStatus = source === 'chesscom' && accountStatus === null;
+  const profileGames = archiveGames ? [...games, ...archiveGames] : games;
+  const result = getFairPlayHistory(null, profileGames, username);
+  const screening = getFairPlayProfileScreening(null, profileGames, username);
+  const pending = getFairPlayReviewQueue(null, profileGames, username).length;
+  const highlights = progress ? [] : getFairPlayReviewHighlights(null, profileGames, username);
+  const start = async () => {
+    if (batchRef.current) return;
+    const controller = new AbortController();
+    const { signal } = controller;
+    const batch = { controller, completed: 0, saved: 0 };
+    batchRef.current = batch;
+    setFeedback('');
+    setProgress({ phase: 'loading' });
+    let limitedHistory = false;
+    try {
+      let recent = games;
+      try {
+        if (source === 'lichess') {
+          recent = await getLichessUserRecentGames(username, signal, true);
+        } else {
+          const archive = await getChessComFairPlayGames(username, signal);
+          recent = archive.games;
+          limitedHistory = archive.partial;
+        }
+      } catch (_) {
+        if (signal.aborted) return;
+        // Game import is still usable when the older archive cannot be loaded.
+        limitedHistory = true;
+      }
+      if (signal.aborted) return;
+      if (limitedHistory) setArchiveGames((previous) => [...recent, ...(previous || [])]);
+      else setArchiveGames(saveFairPlayProfileGames(profileKey, recent, username));
+      const queue = getFairPlayReviewQueue(null, recent, username);
+      // Older scores can be reused. Revisit up to six leading games for move details.
+      const backfill = getFairPlayReviewHighlights(null, recent, username, 6)
+        .filter(({ hasMoveDetails, game }) => !hasMoveDetails && game.pgn)
+        .slice(0, FAIR_PLAY_PROFILE_GAME_LIMIT - queue.length);
+      queue.unshift(...backfill.map(({ game }) => game));
+      if (!queue.length && !getFairPlayProfileScreening(null, recent, username).candidatesToCheck.length) {
+        const cached = getFairPlayHistory(null, recent, username);
+        setFeedback(limitedHistory ? 'Could not load older games. Try again.'
+          : cached?.games >= 5 ? 'The current scan is up to date.' : 'Need 5 eligible rated games.');
+        return;
+      }
+      const total = queue.length;
+      const player = username.trim().toLowerCase();
+      let next = 0;
+      const updateProgress = () => setProgress({ phase: 'scanning', completed: batch.completed, saved: batch.saved, total });
+      updateProgress();
+      const scan = async () => {
+        const analyzer = createFairPlayBatchAnalyzer();
+        try {
+          while (!signal.aborted && next < total) {
+            const game = queue[next++];
+            const parsed = parsePgn(game.pgn);
+            if (parsed.ok) {
+              const players = Object.fromEntries(['white', 'black'].map((side) => {
+                const header = getHeaderPlayer(parsed.headers, side);
+                return [side, { rating: Number(header.rating) > 0 ? header.rating : game[side]?.rating }];
+              }));
+              const side = game.white?.name?.toLowerCase() === player ? 'white' : 'black';
+              const report = await new Promise((resolve) => {
+                const cancel = analyzer.run(parsed, players, (value) => {
+                  signal.removeEventListener('abort', abort);
+                  resolve(value);
+                }, side);
+                const abort = () => {
+                  cancel();
+                  resolve(null);
+                };
+                signal.addEventListener('abort', abort, { once: true });
+              });
+              if (signal.aborted) return;
+              if (report && saveFairPlayEvidence(null, game, { [side]: report[side] })) batch.saved += 1;
+            }
+            batch.completed += 1;
+            updateProgress();
+          }
+        } finally {
+          analyzer.dispose();
+        }
+      };
+      // Limit CPU and model memory so the game list stays responsive.
+      const concurrency = navigator.hardwareConcurrency >= 4 ? 2 : 1;
+      await Promise.all(Array.from({ length: Math.min(concurrency, total) }, scan));
+      if (signal.aborted) return;
+      const candidates = getFairPlayProfileScreening(null, recent, username).candidatesToCheck;
+      for (const [index, { game, side, reviewMoves }] of candidates.entries()) {
+        if (signal.aborted) return;
+        setProgress({ phase: 'verifying', completed: index, total: candidates.length });
+        const parsed = parsePgn(game.pgn);
+        if (!parsed.ok) continue;
+        try {
+          const verification = await verifyFairPlayReviewMoves(parsed, side, reviewMoves, signal);
+          if (!signal.aborted) saveFairPlayDepthCheck(null, game, side, reviewMoves, verification);
+        } catch (_) {
+          // A missing verification leaves the candidate pending for a future scan.
+        }
+      }
+      if (!signal.aborted) {
+        const coverage = limitedHistory ? ' Older games could not be loaded.' : '';
+        setFeedback(total ? `Scored ${batch.saved} of ${total} ${total === 1 ? 'game' : 'games'}.${coverage}`
+          : getFairPlayProfileScreening(null, recent, username).label === 'Review check pending'
+            ? 'Some moves could not be rechecked.' : 'Deeper review complete.');
+      }
+    } catch (_) {
+      if (!signal.aborted) controller.abort();
+      if (batchRef.current === batch) setFeedback('The scan stopped. Saved results are available.');
+    } finally {
+      if (batchRef.current === batch) {
+        batchRef.current = null;
+        setProgress(null);
+      }
+    }
+  };
+  const stop = () => {
+    const batch = batchRef.current;
+    batchRef.current = null;
+    if (batch) batch.controller.abort();
+    setProgress(null);
+    setFeedback(batch?.saved ? `Scan canceled. ${batch.saved} saved.` : 'Scan canceled.');
+  };
+  return (
+    <section className="gr-fair-profile" aria-label="Reviewed player Fair Play">
+      <div className="gr-fair-profile-header">
+        <strong>Overall Fair Play</strong>
+        {!checkingStatus && !progress && (
+          <button type="button" className="gr-button" onClick={start}>
+            {!closed && (pending || result) ? 'Update score' : 'Scan games'}
+          </button>
+        )}
+      </div>
+      {closed && <span className="gr-fair-closure" role="status">Chess.com closed this account for Fair Play.</span>}
+      {checkingStatus ? <span role="status">Checking Chess.com account status…</span> : progress ? (
+        <div className="gr-fair-progress">
+          <div className="gr-fair-progress-detail">
+            <span role="status">{progress.phase === 'loading'
+              ? 'Loading game history…'
+              : progress.phase === 'verifying' ? `Checking game ${progress.completed + 1} of ${progress.total} at greater depth…`
+                : `Scanning ${progress.completed} of ${progress.total} · ${progress.saved} scored`}</span>
+            <progress aria-label="Fair Play scan progress" max={progress.total || 1} value={progress.completed} />
+          </div>
+          <button type="button" className="gr-button" onClick={stop}>Cancel</button>
+        </div>
+      ) : (
+        <>
+          {!closed && (
+            <FairPlayIndicator result={{
+              score: screening.label === 'Too little data' ? undefined : result?.score,
+              label: screening.label,
+            }} player={username} overall />
+          )}
+          {(screening.total > 0 || highlights.length > 0) && (
+            <details className="gr-fair-highlights">
+              <summary>
+                <span>{screening.reviewed}/{screening.total} scored</span>
+                <span className="gr-fair-signals-label">Review signals</span>
+              </summary>
+              {screening.total > 0 && (
+                <div className="gr-fair-coverage" title="Comparable games share a speed category and rating band.">
+                  {screening.comparable} comparable {screening.comparable === 1 ? 'game' : 'games'}
+                  {screening.confirmed > 0 ? ` · ${screening.confirmed} opponents with rechecked moves` : ''}
+                  {!closed && screening.label === 'Too little data' ? ' · Need 25 comparable games and 80% coverage' : ''}
+                </div>
+              )}
+              {highlights.length > 0 && <ul>
+                {highlights.map(({ game, opponent, score, moves, clockEvidence, depthCheck }) => {
+                  const focus = depthCheck?.plies?.[0] || moves[0]?.ply;
+                  const link = getFairPlayGameLink(game, focus);
+                  const title = [opponent ? `vs ${opponent}` : 'Reviewed game', game.date].filter(Boolean).join(' · ');
+                  return (
+                    <li key={`${game.sourceType}:${game.id}`}>
+                      <div>
+                        {game.pgn ? (
+                          <button type="button" className="gr-fair-game-link" onClick={() => onSelectGame(game, focus)}>{title}</button>
+                        ) : link ? (
+                          <a className="gr-fair-game-link" href={link} target="_blank" rel="noopener noreferrer">{title}</a>
+                        ) : <span>{title}</span>}
+                        <span>{score}/100</span>
+                      </div>
+                      {moves.length > 0 && (
+                        <small title="Strong moves with low estimated move probability from Maia.">
+                          Rare strong moves {moves.map(({ ply, san, chance }) =>
+                            `${Math.ceil(ply / 2)}${ply % 2 ? '.' : '…'}${san} (Maia ${chance < 1 ? '<1' : chance}%)`
+                          ).join(' · ')}
+                        </small>
+                      )}
+                      {depthCheck && <small>{depthCheck.plies.length} of {moves.length} still strong at depth {depthCheck.depth}</small>}
+                      {clockEvidence && <small>Clock timing contributed</small>}
+                    </li>
+                  );
+                })}
+              </ul>}
+            </details>
+          )}
+          {feedback && <span role="status">{feedback}</span>}
+        </>
+      )}
+    </section>
   );
 }
 
@@ -2017,7 +2314,10 @@ function GameReview({ active = true }) {
     (sidebarMode === 'overview' || sidebarMode === 'moves');
   useEffect(() => {
     if (!shouldMeasureFairPlay) return undefined;
-    return runFairPlayIndicator(gameData, playerSummary, (result) => setFairPlay({ game: gameData, result }));
+    return runFairPlayIndicator(gameData, playerSummary, (result) => {
+      saveFairPlayEvidence(null, gameData.fairPlayImport, result);
+      setFairPlay({ game: gameData, result });
+    });
   }, [gameData, playerSummary, shouldMeasureFairPlay]);
   const fairPlayResult = fairPlay && fairPlay.game === gameData ? fairPlay.result : null;
   const isMobileSummary = shouldShowLoadView || shouldShowOverviewView;
@@ -2923,7 +3223,7 @@ function GameReview({ active = true }) {
     };
   }, [handleLoadRemoteGames, remoteUsername, source]);
 
-  const handleSelectRemoteGame = useCallback(async (game) => {
+  const handleSelectRemoteGame = useCallback(async (game, focusPly) => {
     if (remoteSelectionRef.current) return;
     remoteSelectionRef.current = true;
     setOpeningRemoteGameId(game.id);
@@ -2942,8 +3242,10 @@ function GameReview({ active = true }) {
       }
       if (!await authorizeReview(parsed) || !isMountedRef.current) return;
       parsed.importedRatings = { white: game.white?.rating, black: game.black?.rating };
+      parsed.fairPlayImport = { sourceType: game.sourceType, id: game.id, rated: game.rated };
       unstable_batchedUpdates(() => {
         resetReviewStateFromParsed(parsed, game.pgn, nextOrientation);
+        if (Number.isInteger(focusPly) && focusPly > 0 && focusPly <= parsed.moves.length) setCurrentPly(focusPly);
         queueAutoReview();
       });
     } catch (_) {
@@ -4272,6 +4574,7 @@ function GameReview({ active = true }) {
                             <span>Opening your game review…</span>
                           </div>
                         ) : null}
+                        {!remoteLoading && remoteAutoLoadKeyRef.current === `${source}|${remoteUsername.trim().toLowerCase()}` && <RemoteFairPlaySummary key={`${source}:${remoteUsername.trim().toLowerCase()}`} games={remoteGames} username={remoteUsername} source={source} onSelectGame={handleSelectRemoteGame} />}
                         <RemoteGameList
                           games={remoteGames}
                           selectedId={selectedRemoteGameId}

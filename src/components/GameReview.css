@@ -4567,3 +4567,112 @@
   background: #f3f5f6;
   box-shadow: 0 0 0 1px #14181d;
 }
+.gr-fair-profile {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 5px;
+  min-width: 0;
+  padding: 6px 0;
+  color: #b7bfca;
+  font-size: 12px;
+}
+.gr-fair-profile-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 8px;
+}
+.gr-fair-profile-header > .gr-button {
+  min-height: 28px;
+  padding: 4px 8px;
+}
+.gr-fair-profile .gr-fair-indicator-text {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  white-space: normal;
+}
+.gr-fair-profile .gr-fair-indicator-text strong[data-status="Worth reviewing"] {
+  color: #edbc68;
+}
+.gr-fair-profile .gr-fair-indicator {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding-inline: 4px;
+}
+.gr-fair-progress {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+}
+.gr-fair-progress-detail {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+.gr-fair-progress-detail progress {
+  width: 100%;
+  height: 5px;
+  accent-color: #edbc68;
+}
+.gr-fair-closure {
+  color: #ff94ac;
+}
+
+.gr-fair-highlights summary {
+  cursor: pointer;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 2px 8px;
+  padding-block: 3px;
+}
+.gr-fair-signals-label {
+  font-weight: 600;
+}
+.gr-fair-signals-label::before {
+  content: '';
+  display: inline-block;
+  width: 0;
+  height: 0;
+  margin-right: 5px;
+  border-block: 3px solid transparent;
+  border-left: 4px solid currentColor;
+  vertical-align: 1px;
+}
+.gr-fair-highlights[open] .gr-fair-signals-label::before {
+  transform: rotate(90deg);
+}
+.gr-fair-coverage {
+  margin-top: 4px;
+}
+.gr-fair-highlights ul {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+}
+.gr-fair-highlights li {
+  padding: 5px 0;
+}
+.gr-fair-highlights li > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+}
+.gr-fair-game-link {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+  text-align: left;
+  cursor: pointer;
+}
+.gr-fair-highlights small {
+  display: block;
+  margin-top: 3px;
+  overflow-wrap: anywhere;
+}
